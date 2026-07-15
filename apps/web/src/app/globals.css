@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
+/*
+ * BrowseJobs design system (CLAUDE.md). All colours and fonts are CSS variables
+ * so a tenant theme can be swapped at runtime for whitelabel. @theme maps them
+ * to Tailwind utilities (bg-ink, text-trust, font-display, ...).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bj-ink: #0a1220; /* ink navy */
+  --bj-deep: #0e3fa9; /* deep navy */
+  --bj-trust: #1b6df0; /* trust blue */
+  --bj-sky: #e7f1fe; /* sky */
+  --bj-verify: #0ba860; /* verify green — proof/success */
+  --bj-warn: #d64545; /* warn red */
+  --bj-amber: #f5a623; /* stars / coach notes */
+  --bj-paper: #f6f9fe; /* paper background */
+  --bj-line: #dce6f5; /* hairlines */
+  --bj-muted: #5a6b85; /* muted text */
+  --bj-white: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--bj-ink);
+  --color-deep: var(--bj-deep);
+  --color-trust: var(--bj-trust);
+  --color-sky: var(--bj-sky);
+  --color-verify: var(--bj-verify);
+  --color-warn: var(--bj-warn);
+  --color-amber: var(--bj-amber);
+  --color-paper: var(--bj-paper);
+  --color-line: var(--bj-line);
+  --color-muted: var(--bj-muted);
+
+  --font-display: var(--font-sora);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bj-paper);
+  color: var(--bj-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mono uppercase kicker — the signature label style (CLAUDE.md). */
+.kicker {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Display headings: Sora 800, tight tracking. */
+.display {
+  font-family: var(--font-sora), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* All numbers/data use IBM Plex Mono. */
+.mono {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skeleton shimmer (paused under reduced motion below). */
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--bj-line) 20%,
+    var(--bj-sky) 40%,
+    var(--bj-line) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .shimmer {
+    animation: none;
+  }
 }
