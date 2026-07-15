@@ -5,10 +5,17 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\Fees\AllowAllFeeGate;
+use App\Support\Fees\FeeGate;
 use App\Support\Otp\LogOtpNotifier;
 use App\Support\Otp\OtpNotifier;
 use App\Support\Tenancy\TenantContext;
+use App\Support\Zoom\HttpZoomClient;
+use App\Support\Zoom\ZoomClient;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +27,16 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantContext::class);
         $this->app->bind(OtpNotifier::class, LogOtpNotifier::class);
+
+        $this->app->bind(ZoomClient::class, function (): HttpZoomClient {
+            /** @var array{account_id: string, client_id: string, client_secret: string, base_url: string, oauth_url: string} $config */
+            $config = config('services.zoom');
+
+            return new HttpZoomClient($config);
+        });
+
+        // Fee gate is a stub until P2.3; callers depend on the interface.
+        $this->app->bind(FeeGate::class, AllowAllFeeGate::class);
     }
 
     /**
@@ -37,5 +54,9 @@ class AppServiceProvider extends ServiceProvider
 
             return $user->hasPermission($ability) ?: null;
         });
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by(
+            $request->user()?->getAuthIdentifier() ?? $request->ip(),
+        ));
     }
 }
