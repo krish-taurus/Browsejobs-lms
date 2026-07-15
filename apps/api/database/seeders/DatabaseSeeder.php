@@ -25,10 +25,12 @@ class DatabaseSeeder extends Seeder
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();
 
+        // Local/dev admin (password: "password"). Staff type; 2FA off locally.
         $admin = User::factory()->create([
             'tenant_id' => $browsejobs->id,
             'name' => 'Test Admin',
             'email' => 'test@example.com',
+            'user_type' => 'staff',
         ]);
 
         $admin->assignRole('admin');

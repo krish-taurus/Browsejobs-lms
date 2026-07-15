@@ -1,6 +1,6 @@
 # ADR 0002 — Auth service layer first; HTTP login + token strategy deferred to P1.8
 
-- **Status:** Accepted
+- **Status:** Accepted — deferred items DELIVERED in the P1.8 second pass (2026-07-16)
 - **Date:** 2026-07-15
 - **Context:** P1.3 Auth, roles, magic links
 
