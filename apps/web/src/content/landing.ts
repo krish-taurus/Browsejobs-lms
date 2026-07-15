@@ -22,14 +22,20 @@ export const contact = {
   entity: "IBrowseJobs Technologies Pvt Ltd",
 } as const;
 
-/** Spec §2.3 stat band: 50/day · ~90% · 98% · 1 year. */
+/** Stat band — labels per the 2026 brochures. */
 export const stats = [
-  { value: 50, suffix: "/day", label: "Real & mock interviews monitored" },
-  // Label provisional — exact meaning of ~90% pending founder confirmation
-  // (docs/browsejobs-lms-requirements.md §14.7).
-  { value: 90, prefix: "~", suffix: "%", label: "Interview-question match rate" },
-  { value: 98, suffix: "%", label: "Historical attend-to-place rate" },
-  { value: 1, suffix: " year", label: "Unlimited access & support" },
+  { value: 50, suffix: "/day", label: "Real interviews monitored by our AI" },
+  { value: 90, prefix: "~", suffix: "%", label: "Of interview questions come from our material" },
+  { value: 98, suffix: "%", label: "Of candidates who attend interviews get placed" },
+  { value: 1, suffix: " year", label: "Unlimited live batches & recordings" },
+] as const;
+
+/** Aggregates from the 2026 brochures (used on /reviews). */
+export const reviewAggregates = [
+  { value: 5000, suffix: "+", label: "Learners trained & empowered" },
+  { value: 4.9, suffix: "/5", decimals: 1, label: "Average rating, based on reviews" },
+  { value: 400, suffix: "+", label: "Hiring partners connected" },
+  { value: 2013, label: "London est. · India since 2020" },
 ] as const;
 
 /** The funnel spine (spec §4): three free steps, then the paid rung. */
@@ -79,24 +85,22 @@ export const courses: CourseCard[] = [
   { code: "SN", slug: "servicenow", name: "ServiceNow", tagline: "The enterprise workflow platform.", live: false },
 ];
 
-/**
- * "Don't trust us. Verify us." (spec §3.5). The spec mandates three checks a
- * user can do on Naukri in 15 minutes but doesn't enumerate them — these are
- * PROVISIONAL, grounded in stated facts, pending the founder's exact copy
- * (requirements §14.7).
- */
+/** "Don't trust us. Verify us." — the exact three checks from the brochures. */
 export const verifyChecks = [
   {
-    title: "Read the unfiltered reviews",
-    body: "Search “BrowseJobs” on Naukri and read what students say — the good and the bad. We don't curate it.",
+    title: "Count the demand",
+    time: "5 min",
+    body: "Open Naukri → search the role + your city → filter “Last 7 days” → count the postings. If hiring is real, you'll see it in the number.",
   },
   {
-    title: "Talk to placed students",
-    body: "Ask us for placed-student profiles and message them directly. Real people, real offers, real companies.",
+    title: "Read 5 job descriptions",
+    time: "5 min",
+    body: "Note the skills that repeat. Then compare them against any institute's syllabus — ours included. A syllabus that doesn't match live JDs is preparing you for the wrong exam.",
   },
   {
-    title: "Ask for your own call recording",
-    body: "Every counselling call is recorded and AI-monitored. Ask for yours — what we promised is on tape.",
+    title: "Pressure-test everyone",
+    time: "5 min",
+    body: "Ask every institute: will you put every promise in writing? Is your success rate defined clearly? Do you guarantee a job? Compare the answers.",
   },
 ] as const;
 

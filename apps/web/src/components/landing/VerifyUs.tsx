@@ -25,9 +25,14 @@ export function VerifyUs() {
         {verifyChecks.map((check, i) => (
           <ScrollReveal key={check.title} delay={i * 0.06}>
             <div className="h-full rounded-[14px] border border-line bg-white p-6">
-              <span className="mono grid h-9 w-9 place-items-center rounded-full bg-verify-bg text-sm font-semibold text-verify">
-                {String(i + 1).padStart(2, "0")}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="mono grid h-9 w-9 place-items-center rounded-full bg-verify-bg text-sm font-semibold text-verify">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="mono text-xs uppercase tracking-widest text-muted">
+                  {check.time}
+                </span>
+              </div>
               <h3 className="display mt-4 text-lg text-ink">{check.title}</h3>
               <p className="mt-2 text-sm text-muted">{check.body}</p>
             </div>

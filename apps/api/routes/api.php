@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
@@ -24,15 +26,20 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
             'name' => $tenant->name,
             'slug' => $tenant->slug,
             'branding' => $tenant->branding,
+            'google_auth' => (string) config('services.google.client_id') !== '',
         ]);
     });
 
     Route::post('leads', [LeadController::class, 'store'])
         ->middleware('throttle:10,1');
 
+    Route::get('reviews', [ReviewController::class, 'index']);
+
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
         Route::post('otp/verify', [StudentAuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
+        Route::post('register/request', [RegisterController::class, 'request'])->middleware('throttle:6,1');
+        Route::post('register/verify', [RegisterController::class, 'verify'])->middleware('throttle:10,1');
         Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:6,1');
         Route::post('staff/2fa', [StaffAuthController::class, 'verify'])->middleware('throttle:10,1');
     });

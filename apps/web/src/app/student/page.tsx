@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 
 export default function StudentLogin() {
   const router = useRouter();
@@ -75,21 +76,24 @@ export default function StudentLogin() {
           )}
 
           {step === "identifier" ? (
-            <form onSubmit={requestOtp} className="mt-6 space-y-4">
-              <input
-                autoFocus
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Phone or email"
-                className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-trust"
-              />
-              <button
-                disabled={busy || !identifier}
-                className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
-              >
-                {busy ? "Sending…" : "Send code"}
-              </button>
-            </form>
+            <>
+              <form onSubmit={requestOtp} className="mt-6 space-y-4">
+                <input
+                  autoFocus
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Phone or email"
+                  className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-trust"
+                />
+                <button
+                  disabled={busy || !identifier}
+                  className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Send code"}
+                </button>
+              </form>
+              <GoogleButton />
+            </>
           ) : (
             <form onSubmit={verifyOtp} className="mt-6 space-y-4">
               <input
@@ -118,7 +122,11 @@ export default function StudentLogin() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted">
-          Staff?{" "}
+          New here?{" "}
+          <Link href="/register" className="text-trust hover:underline">
+            Create an account
+          </Link>
+          {" · "}Staff?{" "}
           <Link href="/admin" className="text-trust hover:underline">
             Sign in here
           </Link>

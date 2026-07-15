@@ -414,7 +414,9 @@ Source: `docs/BrowseJobs_Platform_Spec_v1.pdf` (Master Build Specification v1.0,
 - Marketing mechanics: sticky mobile CTA ("Book Free Masterclass"), lead modal (masterclass/counselling/waitlist variants; name, WhatsApp phone, email, course), UTM capture persisted to lead, CRM POST + WhatsApp confirmation, analytics events (LeadFormOpen, Lead, InitiateCheckout, Purchase).
 
 ### 14.7 Open items requiring founder input (do NOT invent)
-- The exact three "Verify us on Naukri" checks (§3.5) — provisional copy is used, marked for replacement.
-- Precise label/meaning of the ~90% stat.
-- 6 real testimonials + per-course syllabus/tools/projects from brochures.
+- ~~The exact three "Verify us on Naukri" checks~~ — RESOLVED from the 2026 brochures (Count the demand / Read 5 JDs / Pressure-test everyone).
+- ~~Precise label/meaning of the ~90% stat~~ — RESOLVED: "of interview questions come from our material".
+- ~~Per-course syllabus/tools/projects~~ — RESOLVED for DE / DevOps & Cloud / Data Analytics from the 2026 brochures (DE core excludes Kafka/streaming per founder; carried as optional self-study). **Python Backend brochure still needed.**
+- Testimonials: 4 real ones seeded from the brochures; the bulk Google/WhatsApp reviews (1,000+ five-star per founder) need a REAL export — import with `php artisan reviews:import <csv>` (never fabricate reviews).
 - Legal placeholders: [CIN], [GST], Grievance Officer name.
+- Google sign-in: set GOOGLE_CLIENT_ID/SECRET to activate the button (hidden until configured).
