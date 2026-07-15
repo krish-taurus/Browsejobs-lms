@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TenantSeeder::class,
             RolePermissionSeeder::class,
+            CurriculumSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();
