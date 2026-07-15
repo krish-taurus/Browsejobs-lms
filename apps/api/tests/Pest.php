@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Models\Tenant;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -17,7 +20,7 @@ use Tests\TestCase;
 
 uses(
     TestCase::class,
-    // Illuminate\Foundation\Testing\RefreshDatabase::class,
+    RefreshDatabase::class,
 )->in('Feature');
 
 /*
@@ -46,7 +49,19 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Run a block of assertions as if the given tenant were the active tenant.
+ *
+ * This is the reusable cross-tenant pattern: every feature's test suite drives
+ * its "tenant A cannot see tenant B" assertions through here so scoping is
+ * exercised the same way everywhere.
+ *
+ * @template TReturn
+ *
+ * @param  Closure(): TReturn  $callback
+ * @return TReturn
+ */
+function withinTenant(Tenant $tenant, Closure $callback)
 {
-    // ..
+    return app(TenantContext::class)->run($tenant, $callback);
 }

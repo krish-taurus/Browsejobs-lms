@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\ResolveTenantByDomain;
+use App\Http\Middleware\ResolveTenantByUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'tenant.domain' => ResolveTenantByDomain::class,
+            'tenant.user' => ResolveTenantByUser::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
