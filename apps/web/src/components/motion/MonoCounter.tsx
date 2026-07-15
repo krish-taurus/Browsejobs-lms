@@ -16,12 +16,15 @@ export function MonoCounter({
   prefix = "",
   suffix = "",
   decimals = 0,
+  plain = false,
   className = "",
 }: {
   value: number;
   prefix?: string;
   suffix?: string;
   decimals?: number;
+  /** Disable digit grouping (e.g. years: 2013, not 2,013). */
+  plain?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -49,6 +52,7 @@ export function MonoCounter({
       {display.toLocaleString("en-IN", {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
+        useGrouping: !plain,
       })}
       {suffix}
     </span>

@@ -33,6 +33,12 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID', ''),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

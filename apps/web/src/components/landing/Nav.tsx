@@ -2,11 +2,11 @@ import Link from "next/link";
 import { BookCta } from "@/components/landing/BookCta";
 
 const links = [
-  { href: "#courses", label: "Programs" },
-  { href: "#free-steps", label: "How it works" },
-  { href: "#verify", label: "Verify us" },
-  { href: "#fees", label: "Fees" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/courses", label: "Programs" },
+  { href: "/#free-steps", label: "How it works" },
+  { href: "/#verify", label: "Verify us" },
+  { href: "/#fees", label: "Fees" },
+  { href: "/reviews", label: "Reviews" },
 ];
 
 export function Nav() {

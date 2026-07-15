@@ -22,8 +22,23 @@ export function Footer() {
             <p className="mt-3 text-sm text-sky/80">{contact.address}</p>
           </div>
           <div>
-            <p className="kicker text-sky/60">Legal</p>
+            <p className="kicker text-sky/60">Explore</p>
             <ul className="mt-3 space-y-1.5 text-sm">
+              <li>
+                <Link href="/courses" className="text-sky/80 hover:text-white">
+                  Programs
+                </Link>
+              </li>
+              <li>
+                <Link href="/reviews" className="text-sky/80 hover:text-white">
+                  Reviews
+                </Link>
+              </li>
+              <li>
+                <Link href="/student" className="text-sky/80 hover:text-white">
+                  Student sign in
+                </Link>
+              </li>
               <li>
                 <Link href="/privacy-policy" className="text-sky/80 hover:text-white">
                   Privacy Policy
