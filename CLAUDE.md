@@ -36,9 +36,22 @@ Unified AI-driven LMS + Education CRM for IBrowseJobs Technologies. Multi-tenant
 - Navigation: max two taps to anything; sidebar + mobile bottom tabs + Cmd/Ctrl+K command palette; teaching empty states, never dead ends; Next Best Action is always the loudest element on the student dashboard.
 - Dark-mode-ready CSS variables from day one; WCAG AA contrast.
 
-## Design System (BrowseJobs = default tenant theme, via CSS variables)
-Ink navy `#0A1220`, Deep navy `#0E3FA9`, Trust blue `#1B6DF0`, Sky `#E7F1FE`, Verify green `#0BA860` (proof/success), Warn red `#D64545`, Amber `#F5A623` (stars/coach notes only), Paper `#F6F9FE`, Line `#DCE6F5`, Muted `#5A6B85`.
-Fonts: Sora 800 display (letter-spacing -0.02em), Inter 400/600 body, IBM Plex Mono for ALL numbers/data/labels/kickers. Patterns: mono uppercase kickers, ink-navy Proof Engine panel, green/red promise cards. All colors/fonts consumed via CSS variables so whitelabel theming works.
+## Design System (BINDING — Platform Spec v1.0 §2; BrowseJobs = default tenant theme, via CSS variables)
+Ink navy `#0A1220`, Ink-2 `#1B2A44` (secondary text), Deep navy `#0E3FA9`, Trust blue `#1B6DF0`, Sky `#E7F1FE`, Verify green `#0BA860`, Green-bg `#E6F7EF`, Warn red `#D64545`, Amber `#F5A623`, Paper `#F6F9FE`, Line `#DCE6F5`, Muted `#5A6B85`.
+**Semantic colour rules (hard):** green = free/verified/kept-promise/success ONLY — never a paid CTA. Red = refused-promise/danger/error only — never decorative. Amber = review stars + coach notes ONLY. Blue is the single primary action colour — ONE primary CTA per view.
+Fonts: Sora 800/700 display (letter-spacing -0.02em), Inter 400/500/600 body, IBM Plex Mono 500/600 for **every number a user reads** (prices, stats, counts, dates, durations, %) plus kickers/labels/code — this is a brand signature.
+Component rules: radius cards 14px / large panels 22px / pills 999px / inputs 10px; shadows soft only (`0 10px 40px rgba(10,18,32,.10)`); buttons primary = solid blue + subtle glow, ghost = line border + ink text; icons = line icons 1.5–2px stroke in blue/ink; sections ~72px vertical desktop / ~52px mobile; scroll reveal = fade + 18px rise, once, `prefers-reduced-motion` disables ALL motion.
+Signature patterns: mono uppercase kicker (blue; green when the section is about something free/verified), ink Proof Engine panel (LISTEN → EXTRACT → REBUILD + live stats), 4-up mono stat band (ALWAYS followed by the disclaimer), green/red promise cards, free ladder (3 green FREE rungs + 1 blue STEP 04 paid rung), blue left-rule script block, amber left-rule coach note. Footer line: `Every promise in writing · Every call recorded & AI-monitored.` All colors/fonts consumed via CSS variables so whitelabel theming works.
+
+## Brand Voice & Compliance (BINDING — Platform Spec v1.0 §3; enforce in code)
+- Voice: direct, honest, confident, warm. Short sentences. NO hype adjectives ("world-class", "revolutionary", "best-in-class"). Radical honesty is the sales strategy.
+- Positioning: "This syllabus was not written. It was reverse-engineered." Primary tagline: "Built from real interviews."
+- **NEVER render anywhere** (site, LMS, emails, meta): "guaranteed job" / "100% placement" / "assured placement"; any fabricated-experience claim; any fixed salary promise; any claim that hiring is certain. Honest framing instead: "Nobody can guarantee employment — the market decides. What we put in writing: [the process]."
+- **Mandatory disclaimer** immediately after ANY stat (98%, ~90%, 50/day, salary figures, 5,000+, 4.9/5), in muted mono, stored ONCE as `DISCLAIMER` and rendered via the shared `<Disclaimer/>` component: `Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring depends on the live market and your performance.`
+- Fee model (render exactly; all figures server-owned, never client-sent): Registration ₹30,000 payable only AFTER the free masterclass + bootcamp; EMI 3×₹10,000. Placement fee = first 3 months' CTC, due only after the student accepts an offer, 6 monthly EMIs, with the ₹30,000 adjusted inside it. 30-day money-back guarantee, any reason, in writing.
+- Funnel spine (three free steps → paid): free counselling + written Career Analysis Report → free live Masterclass (primary conversion) → free 7-hour Python Bootcamp → paid registration. Every marketing CTA funnels to "Book Free Masterclass".
+- Contact (footer/contact surfaces): +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST.
+- Stack note: Platform Spec §5 recommends Next+Postgres; the stack remains Laravel 11 + MySQL per ADR 0005 — do not "migrate" to the spec stack.
 
 ## Multi-Tenancy Rules (non-negotiable)
 - Every domain model uses `BelongsToTenant` trait → global scope on `tenant_id`.

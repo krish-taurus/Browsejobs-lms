@@ -1,0 +1,541 @@
+BROWSEJOBS.ai
+THE WORLD'S FIRST AI-DRIVEN SKILLING & PLACEMENT PLATFORM
+MASTER BUILD SPECIFICATION · FOR CLAUDE CODE
+VERSION 1.0 · JULY 2026 INTERNAL · IBROWSEJOBS TECHNOLOGIES PVT LTD
+PlatformBuild Spec
+One source of truth for the marketing website + full LMS. Brand,
+design system, data model, features by role, payments,
+compliance and build order — everything the engineer needs, in
+one place.
+BrowseJobs.ai — Master Build Specification Page 2
+BrowseJobs.ai — Master Build Specification
+For: Claude Code (and any engineer building the platform)Owner: Dr. Krish Bhargav, Founder & CEO,
+IBrowseJobs Technologies Pvt Ltd Version: 1.0 · July 2026 Scope: Marketing website + full LMS platform (one
+system, shared design + data)
+How to use this document. This is the single source of truth. Read it top to bottom before writing code.
+Every colour, font, route, table, and rule below is binding. Where this doc says "MUST," treat it as a hard
+requirement. Where it says "SHOULD," it's a strong default you may deviate from only with a stated
+reason. Do not invent brand colours, copy, or claims that aren't here — if something is missing, ask rather
+than guess. Build incrementally, and keep a running PROGRESS.md as you complete each module.
+0. TL;DR for the builder
+You are building one platform with two front doors:
+The marketing website (public) — converts visitors into leads and enrolments. Funnels everything
+toward a free masterclass booking. SEO-driven, fast, trust-first.
+The LMS (authenticated) — where enrolled students learn, instructors teach, the placement team
+runs the job pipeline, and admins run everything.
+Both share: the same design system (Section 2), the same database (Section 8), the same brand voice
+(Section 3), and the same auth (Section 7).
+Recommended stack (Section 5): Next.js 15 (App Router) + TypeScript + Tailwind + PostgreSQL + Prisma + a
+background worker. Rationale inside.
+Non-negotiables: - Follow the exact colour tokens and fonts in Section 2. No substitutions. - Never render
+outcome claims (98%, ~90%) without the disclaimer footnote (Section 3.4). - Never fabricate a placement
+guarantee anywhere in copy (Section 3.3). This is a legal + brand rule. - All money handled server-side; never
+trust client-sent prices (Section 9). - Ship accessible (WCAG 2.1 AA), mobile-first, and fast (Section 11).
+1. What BrowseJobs is
+BrowseJobs is an AI-driven IT skilling & placement platform. Founded in London (2013), expanded to India
+(2020), office in Whitefield, Bengaluru. The core differentiator:
+The syllabus is not written — it's reverse-engineered. An AI system monitors up to ~50 real & mock
+interviews per day, extracts the questions companies are actually asking this month, and the course
+syllabus is rebuilt around that live demand. Students study only what's actually asked.
+The business model is trust-first: three free steps (counselling + written career report → live masterclass → 7-
+hour Python bootcamp) before a student pays anything. Then a registration fee, and a placement fee that is 
+only due after the student is actually placed.
+Company legal entity: IBrowseJobs Technologies Pvt Ltd Primary domain: browsejobs.ai (browsejobs.in 301-
+redirects to it) Contact: +91 86185 19825 · hello@browsejobs.ai Office: Fl 3, Channasandra Main Rd, Ambedkar
+1. 
+2. 
+BrowseJobs.ai — Master Build Specification Page 3
+Nagar, Whitefield, Bengaluru, Karnataka 560066 Hours: Mon–Sat, 9:00 AM – 7:00 PM IST Socials: LinkedIn
+(browsejobsconsultants), Instagram (browsejobs_6666), YouTube (@BrowseJobs), Facebook (BrowseJobs —
+Transform Your Career) Recognition: ILA 2022 award, Global Achievers Award
+2. Design System (BINDING — do not deviate)
+This design system is used across the marketing site, the LMS, brochures, and every document. It already
+exists as a house style; the website MUST match it so print and web feel like one brand.
+2.1 Colour tokens
+Define these as CSS variables / Tailwind theme tokens exactly:
+TOKEN HEX USE
+--ink #0A1220 Primary text, sidebars, dark "Proof Engine" panels
+--ink-2 #1B2A44 Secondary text
+--deep #0E3FA9 Deep navy — gradients, secondary blue, headings on light
+--blue #1B6DF0 Primary accent — buttons, links, numbers, kickers, focus rings
+--sky #E7F1FE Light blue fills, callouts
+--paper #F6F9FE Page background (light)
+--line #DCE6F5 Borders, dividers
+--green #0BA860 Verify green — "free", proof, promises we keep, success states
+--green-bg #E6F7EF Green card fills
+--red #D64545 Warn red — "never say", refused promises, errors, destructive
+--amber #F5A623 Stars + coach notes ONLY. Do not use amber for anything else.
+--muted #5A6B85 Muted text, captions, disclaimers
+Semantic rules: - Green = free / verified / kept-promise / success. Never use green for a paid CTA. - Red =
+refused-promise / danger / error only. Never decorative. - Amber = review stars and "coach note" callouts
+only. - Blue is the single primary action colour. One primary CTA per view.
+2.2 Typography
+FAMILY WEIGHTS USE
+Sora 800 (display),
+700
+All headings. Letter-spacing -0.02em on large display.
+Inter 400, 500, 600 All body text, UI, labels.
+IBM Plex
+Mono
+500, 600 ALL numbers, data, stats, kickers, labels, code. Wide letter-spacing (0.02em–
+0.24em for kickers).
+BrowseJobs.ai — Master Build Specification Page 4
+Rule: every number a user reads (prices, stats, counts, dates, durations, percentages) renders in IBM Plex
+Mono. This is a signature of the brand.
+Load via Google Fonts (Sora:wght@600;700;800, Inter:wght@400;500;600;700, 
+IBM+Plex+Mono:wght@500;600) with preconnect and display=swap.
+2.3 Signature UI patterns (reuse across site + LMS)
+Kicker — a mono, uppercase, wide-letterspaced eyebrow label above headings. Blue normally,
+green when the section is about something free/verified. Example: THE SYLLABUS ENGINE — REBUILT
+MONTHLY.
+Proof Engine panel — the signature dark (--ink) panel. Used to show the AI loop LISTEN →
+EXTRACT → REBUILD and live stats. On the LMS dashboard, reuse this panel to show the student
+their live progress.
+Stat band — a 4-up row of big mono numbers (50/day, ~90%, 98%, 1 year). MUST always be
+immediately followed by the disclaimer (Section 3.4).
+Promise cards (green/red pair) — side-by-side: green "What we promise in writing" vs red "What
+we will never tell you." A core trust device.
+Free ladder — 4 stepped cards: 3 green "FREE" rungs + 1 blue "STEP 04" paid rung. The visual
+spine of the funnel.
+Script / verbatim block — blue left-rule block for quoted text.
+Coach note — amber left-rule callout for tips/guidance.
+Left navy rail — vertical navy rail with rotated document/section name + timeline dots (used in print;
+optional accent in web section dividers).
+Footer line — Every promise in writing · Every call recorded & AI-monitored.
+2.4 Component style rules
+Radius: cards 14px, large panels 22px, pills 999px, inputs 10px.
+Shadow: soft only — 0 10px 40px rgba(10,18,32,.10). No harsh drop shadows.
+Buttons: primary = solid blue, white text, subtle blue glow shadow. Ghost = transparent, --line
+border, ink text. One primary per screen.
+Motion: subtle reveal-on-scroll (fade + 18px rise). Respect prefers-reduced-motion — disable all
+motion when set.
+Spacing: generous. Sections ~72px vertical on desktop, ~52px mobile.
+Icons: line icons, 1.5–2px stroke, in --blue or --ink. (Lucide is fine.)
+3. Brand Voice & Compliance (READ TWICE)
+3.1 Voice
+Direct, honest, confident, warm. Short sentences. No hype adjectives ("world-class," "revolutionary," "best-in-
+class"). The brand's power is radical honesty as a sales strategy — say the true thing others won't. Speak to
+the reader as a peer making a serious career decision.
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 5
+3.2 Positioning line
+"This syllabus was not written. It was reverse-engineered."
+Tagline options (use "Built from real interviews." as primary): Built from real interviews. / Study what's asked.
+Get hired. Keep "Learn. Build. Transform. Get Hired." as a secondary/legacy line.
+3.3 Claims you MUST NEVER make (legal + brand)
+These re-trigger ad-policy problems and are dishonest. Never render them anywhere — site, LMS, emails,
+meta tags: - ❌ "Guaranteed job" / "100% placement guarantee" / "assured placement" - ❌ "We'll adjust/
+fabricate your experience" — we never fabricate employment - ❌ Any fixed salary promise - ❌ Any claim
+implying a shortcut or that hiring is certain
+The honest framing (use this instead):"Nobody can guarantee employment — the market decides. What we
+put in writing: [the process]."
+3.4 The disclaimer (MANDATORY next to any stat)
+Whenever 98%, ~90%, 50/day, salary figures, or 5,000+/ 4.9/5 appear, render this immediately after, in
+muted mono:
+Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring
+depends on the live market and your performance.
+Store this string once as DISCLAIMER and reuse. Do not paraphrase it away.
+3.5 The honesty doctrine (a real feature, build it)
+"Don't trust us. Verify us." section with 3 checks the user can do on Naukri in 15 minutes.
+Promise / Never cards.
+Every commitment framed as "in writing."
+"Every call recorded & AI-monitored" appears in the footer.
+3.6 Fee model (render exactly; all figures server-owned)
+Registration: ₹30,000 — payable only AFTER the free masterclass + bootcamp. EMI: 3 × ₹10,000.
+Placement fee: first 3 months' CTC, due only after the student accepts an offer, paid as 6 monthly
+EMIs from the new salary. The ₹30,000 registration is adjusted inside the placement fee.
+Worked example @ ₹12 LPA offer: 3 months' CTC = ₹3,00,000 − ₹30,000 already paid = ₹2,70,000
+in 6 EMIs.
+30-day money-back guarantee — any reason, full refund in first 30 days, in writing.
+4. The three free steps (the funnel spine)
+Every marketing CTA funnels here. Build these as first-class concepts in data + UI: 1. Free counselling +
+written Career Analysis Report ( lead_type = counselling) 2. Free live Masterclass ( lead_type =
+masterclass) ← the primary conversion 3. Free 7-hour Python Bootcamp ( lead_type = bootcamp) 4. → then 
+paid registration (₹30,000) → enrolment → LMS access.
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 6
+5. Recommended Tech Stack (my CTO recommendation)
+You asked me to choose. For a platform that is both a fast SEO marketing site and a rich authenticated LMS
+with four roles, real-time-ish progress, video, and a payments + placement pipeline:
+5.1 Stack
+Framework:Next.js 15 (App Router) + TypeScript. One codebase serves SSR/SSG marketing pages
+(great SEO, fast) AND the authenticated LMS (React Server Components + client interactivity). This
+avoids running two separate apps.
+Styling:Tailwind CSS with the design tokens from Section 2 wired into tailwind.config. Add a
+small set of primitives (Button, Card, Kicker, StatBand, ProofPanel, PromiseCards) in a /components/
+brand folder so the design system is enforced in code.
+UI primitives: shadcn/ui (Radix under the hood) for accessible dialogs, dropdowns, tabs, toasts.
+Restyle them with brand tokens.
+Database:PostgreSQL. Relational integrity matters here (enrolments, payments, placement pipeline,
+attendance).
+ORM:Prisma. Type-safe, migrations, great DX with Claude Code.
+Auth:Auth.js (NextAuth v5) with email/password + OTP, role-based sessions (Section 7). Or Lucia if
+you prefer fewer abstractions. Passwords hashed with bcrypt/argon2.
+File/video storage: S3-compatible (AWS S3 or Cloudflare R2). Video streamed via a provider (Mux or
+Cloudflare Stream) — do NOT serve raw MP4s from the origin; use signed playback URLs so course
+videos aren't freely downloadable.
+Background jobs: a queue (BullMQ + Redis, or a hosted equivalent) for emails, WhatsApp sends,
+CRM sync, certificate generation, reminder notifications.
+Payments:Razorpay (India-first, UPI/cards/EMI). Orders + webhooks (Section 9).
+Email: transactional provider (Resend / AWS SES). WhatsApp: Cloud API (primary channel for this
+audience).
+Search (optional later): Postgres full-text first; add Meilisearch/Typesense if catalogue grows.
+Hosting: Vercel for the Next.js app (or a Node host if you prefer), managed Postgres (Neon/
+Supabase/RDS), Redis (Upstash), R2/S3 for assets.
+5.2 Why not keep PHP?
+The current marketing site is PHP 8 + MySQL and is fine as a brochure site. But an LMS with four roles, video,
+real-time progress, a placement CRM, and background jobs is a product, not a page. Next.js + Postgres gives
+you: one language (TypeScript) across front and back, type-safe DB access, server components for speed +
+SEO, and a huge ecosystem for auth/video/payments. It's the lower-risk long-term choice. Migration note:
+port the existing marketing copy, courses, testimonials, FAQs, and settings from the current MySQL schema
+into the new Postgres schema (Section 8) — the content is reusable; only the platform changes.
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 7
+5.3 Repo shape (monorepo-lite, single Next app)
+/app
+  /(marketing)        # public site: /, /courses, /[courseSlug], /masterclass, /about, /contact, /reviews, legal
+  /(auth)             # /login, /signup, /forgot, /verify
+  /(lms)
+    /student          # dashboard, my-courses, course player, assignments, live sessions, career, certificates
+    /instructor       # my batches, content, gradebook, live sessions, doubts
+    /placement        # candidate pipeline, job posts, submissions, interviews
+    /admin            # everything (Section 6.4)
+  /api                # route handlers: auth, payments (order/verify/webhook), leads, uploads, crm-sync, webhooks
+/components
+  /brand              # Button, Card, Kicker, StatBand, ProofPanel, PromiseCards, FreeLadder, Disclaimer
+  /ui                 # shadcn primitives (restyled)
+/lib                  # db (prisma), auth, razorpay, storage, email, whatsapp, rbac, seo
+/prisma/schema.prisma
+/content              # editable copy blocks, seeded from current site
+/emails               # react-email templates
+/workers              # queue processors
+/public               # logo, favicon, og image
+6. Feature Requirements
+6.1 Marketing website (public, SEO-critical)
+Pages & routes: | Route | Page | Primary goal | |---|---|---| | / | Home | Hook → Proof Engine → stats →
+courses → free ladder → verify-us → fees → testimonials → FAQ → CTA | | /courses | Course catalogue | List
+all 7 programs (live + coming-soon) | | /[courseSlug] | Course detail | Full syllabus, outcomes, tools,
+projects, placement engine, fees, FAQ, enrol CTA | | /masterclass | Masterclass landing | Primary ad
+destination; single goal = book free seat | | /about | About | Story, method, honesty doctrine, founder | | /
+reviews | Reviews | Testimonials + screenshot gallery | | /contact | Contact | Call/WhatsApp/email/map +
+form | | /privacy-policy, /terms, /refund-policy | Legal | DPDP-aligned (Section 10) | | /payment-status
+| Post-payment | Success/failure states |
+The 7 programs (4 live, 3 waitlist): - Live: Data Engineering · DevOps & Cloud · Python Backend · Data
+Analytics - Coming soon (waitlist): Agentic AI · Cyber Security · ServiceNow
+Course content (syllabus modules, tools, projects, outcomes, roles) already exists in the brochures — seed it
+into the courses table. Each live course has ~8–9 modules, a tools list, 3–5 CV-ready projects, an outcomes
+list, and target roles.
+Conversion mechanics (build all): - Sticky mobile CTA bar → "Book Free Masterclass." - Lead modal with 3
+variants (masterclass / counselling / waitlist) — name, phone (WhatsApp), email, course. - UTM capture
+(source/medium/campaign) persisted to the lead + to session for attribution. - Every lead saved to DB and
+POSTed to the CRM endpoint (configurable) + fires WhatsApp confirmation. - Analytics events: LeadFormOpen,
+Lead, InitiateCheckout, Purchase (GA4 + Meta Pixel, IDs from settings). - Enrolment flow → Razorpay
+checkout → verify → create student account → email/WhatsApp credentials.
+SEO (Section 11): SSG where possible, per-page meta, canonical, OG/Twitter, JSON-LD
+( EducationalOrganization, Course with INR offer, FAQPage), dynamic sitemap.xml, robots.txt, fast LCP.
+BrowseJobs.ai — Master Build Specification Page 8
+6.2 LMS — Student role
+The student's home after enrolment. Reuse the Proof Engine panel to show their live status.
+Dashboard: enrolled program, next live session (date/time IST + join link), progress %, upcoming
+assignment, placement-readiness score, announcements.
+My Courses / Course Player:
+Curriculum tree (modules → lessons). Lesson types: video, reading, code exercise, quiz,
+assignment, live-session recording.
+Video player with signed playback URLs, resume-where-left-off, playback speed, captions, notes
+per lesson.
+Mark-complete, per-lesson progress, module completion, overall % (drives dashboard + certificate
+eligibility).
+Resources/downloads per lesson; lifetime access (1 year unlimited per brand promise) — enforce
+access window from enrolment.
+Assignments & Projects: brief, submission (file/URL/repo), instructor feedback, grade, resubmission.
+The 3–5 CV-ready projects per course live here.
+Quizzes/Assessments: auto-graded MCQ + code checks where possible; scores feed readiness.
+Live Sessions: schedule (IST), join link (Zoom/Meet/embedded), auto-attach recording afterward,
+attendance capture.
+Doubts/Q&A: per-lesson threads to instructors; WhatsApp-style support channel.
+Mock Interviews: book slots, receive AI-analysed feedback + score; scores feed the placement-
+readiness metric ("readiness decided on data").
+Career: resume builder (ATS), LinkedIn/GitHub checklist, interview question bank (role-specific,
+refreshed), placement-readiness meter with what-to-improve.
+Certificates: auto-generated on completion (branded PDF using the design system), verifiable via a
+public URL/QR.
+Billing: registration invoice, EMI schedule, placement-fee agreement + status, 30-day-guarantee
+window countdown.
+Notifications: in-app + email + WhatsApp for sessions, deadlines, feedback, placement events.
+6.3 LMS — Instructor role
+My Batches: assigned cohorts, rosters, per-student progress + attendance.
+Content authoring: create/edit modules, lessons, upload/link videos, attach resources, build
+quizzes, set assignments. (Or admins author; instructors edit — make it role-permissioned.)
+Gradebook: view submissions, grade, leave feedback, request resubmission.
+Live sessions: schedule, start, upload/auto-attach recordings, mark attendance.
+Doubts: answer student Q&A threads.
+Mock interviews: conduct, score, submit structured feedback that feeds readiness.
+Announcements: post to a batch.
+6.4 LMS — Placement team role
+This is the "placement engine" made operational. Three channels: Naukri optimisation, 3,000+ HR broadcast,
+direct clients. - Candidate pipeline (Kanban): stages — Not ready → In prep → Interview-ready (mock-data
+gated) → Profile live (Naukri) → Submitted → Interviewing → Offer → Placed. Readiness gate uses mock-
+interview scores (data, not opinion). - Candidate profile: progress, mock scores, projects, resume versions,
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 9
+target roles, verification status (real projects/internship — BGV-safe). - Job posts / client requirements: create
+roles from client companies; tag skills; match to ready candidates. - Submissions & interviews: track which
+candidate went to which company, interview dates, outcomes, feedback loop. - HR broadcast list: manage the
+3,000+ recruiter network; log shares. - Placement records: offer details (company, role, CTC) → triggers 
+placement-fee schedule (first 3 months' CTC, 6 EMIs, ₹30k adjusted) in billing. - Reporting: funnel metrics
+(attend-to-place rate feeding the 98% figure, always with disclaimer), source effectiveness.
+6.5 LMS — Admin role (superuser)
+Everything above, plus:
+CMS: edit all marketing copy blocks, courses (modules/tools/projects/fees/SEO), testimonials, FAQs,
+page content — no code changes to update the site.
+Users & roles: create/suspend users, assign roles + batches, impersonate (audited) for support.
+Enrolments & payments: view/refund, EMI schedules, guarantee windows, invoices.
+Leads: full lead table, filters, CSV export, CRM-sync status, re-sync.
+Batches/cohorts: create, assign instructors + students, schedule.
+Settings: Razorpay keys, CRM endpoint + token, GA4/Pixel IDs, WhatsApp/email config, all contact/
+stat/disclaimer strings.
+Certificates: templates, issue/revoke, verify.
+Analytics dashboard: enrolments, revenue, funnel, batch health, placement funnel.
+Audit log: sensitive actions (refunds, role changes, impersonation, key changes).
+7. Auth & RBAC
+Roles:student, instructor, placement, admin. A user has exactly one primary role (admin can
+act across all). Store as an enum; gate every route + API by role.
+Auth methods: email + password (argon2/bcrypt) and phone OTP (this audience is phone-first).
+Optional Google sign-in.
+Sessions: secure, httpOnly cookies; short-lived access + refresh, or Auth.js session. CSRF
+protection on all mutations.
+Route protection: middleware guards /(lms)/* by authentication; per-segment guards by role (/
+admin/* → admin only, etc.). Never rely on hiding UI — enforce on the server/API for every action.
+Account creation: a student account is auto-provisioned on successful paid enrolment (or admin
+invite). Credentials sent via email + WhatsApp. Force password set on first login.
+Permissions matrix (enforce server-side):
+Student: own data only.
+Instructor: assigned batches only.
+Placement: candidate pipeline + job/placement data; read student progress; no billing edits.
+Admin: all.
+Security: rate-limit auth + lead + payment endpoints; audit sensitive actions; secrets in env vars only
+(never in the repo); validate + sanitise all input (zod schemas on every API route).
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 10
+8. Data Model (PostgreSQL / Prisma)
+Model at least these tables. Names indicative; keep types tight and add indexes on FKs + lookup columns.
+Identity & org - User (id, name, email unique, phone, passwordHash, role enum, emailVerified, phoneVerified,
+avatarUrl, createdAt) - Batch (id, courseId, name, startDate, endDate, instructorId, mode, status) - 
+Enrollment (id, userId, courseId, batchId, status enum[pending,active,completed,refunded],
+accessExpiresAt, createdAt)
+Catalogue / content (shared with marketing site) - Course (id, slug unique, title, shortTitle, tagline, heroText,
+status enum[live,coming_soon], durationLabel, regFee, emiText, placementFeeText, seoTitle, seoDesc,
+sortOrder) - CourseModule (id, courseId, order, title, summary) - Lesson (id, moduleId, order, title, type
+enum[video,reading,code,quiz,assignment,live_recording], videoAssetId, contentMd, durationSec,
+resourcesJson, isPreview) - CourseMeta — arrays for roles, outcomes, tools, projects (or normalize
+into CourseRole, CourseOutcome, CourseTool, CourseProject). - Testimonial (id, name, course, rating,
+body, isActive, sortOrder) - Faq (id, courseId nullable, question, answer, isActive, sortOrder) - PageContent
+(key unique, label, valueMd) — editable marketing copy blocks - Setting (key unique, value) — razorpay
+keys, crm endpoint/token, GA4/Pixel IDs, contact + stat + disclaimer strings
+Learning & progress - LessonProgress (id, userId, lessonId, status enum[not_started,in_progress,completed],
+lastPositionSec, completedAt) — unique (userId, lessonId) - Assignment (id, lessonId/courseId, title, briefMd,
+dueAt, maxScore) - Submission (id, assignmentId, userId, url/fileKey, note, status
+enum[submitted,graded,resubmit], score, feedbackMd, gradedById, gradedAt) - Quiz (id, lessonId,
+questionsJson) · QuizAttempt (id, quizId, userId, score, answersJson, takenAt) - LiveSession (id, batchId,
+title, startsAt, joinUrl, recordingAssetId, status) - Attendance (id, liveSessionId, userId, status
+enum[present,absent,late]) — unique (liveSessionId, userId) - DoubtThread (id, lessonId, userId) · 
+DoubtMessage (id, threadId, senderId, body, createdAt) - MockInterview (id, userId, interviewerId,
+scheduledAt, scores json, feedbackMd, readinessDelta) - Certificate (id, userId, courseId, serial unique,
+issuedAt, revoked, pdfKey, verifyToken)
+Leads / marketing - Lead (id, leadType enum[masterclass,counselling,bootcamp,contact,waitlist], name,
+email, phone, course, message, utmSource, utmMedium, utmCampaign, page, ip, crmSynced, crmResponse,
+createdAt) — index (createdAt), (leadType)
+Payments & placement - Payment/ Order (id, enrollmentId nullable, userId, reference unique, purpose
+enum[registration,placement_emi], amount, currency, razorpayOrderId, razorpayPaymentId, status
+enum[created,paid,failed,refunded], paidAt) - EmiSchedule (id, userId, kind enum[registration,placement],
+totalAmount, installments, paidCount, nextDueAt, status) - PlacementCandidate (id, userId, stage
+enum[not_ready,in_prep,ready,profile_live,submitted,interviewing,offer,placed], readinessScore,
+targetRolesJson, resumeVersionsJson, ownerId) - JobPost (id, clientCompany, role, skillsJson, ctcRange,
+status, createdById) - Placement (id, userId, jobPostId, company, role, ctcAnnual, offerAcceptedAt) —
+creating this triggers the placement-fee EmiSchedule - AuditLog (id, actorId, action, targetType, targetId,
+metaJson, createdAt)
+Seeding: seed the 4 live courses + 3 waitlist with real syllabus/tools/projects from the brochures; seed 6 real
+testimonials, 8 global FAQs, and all Setting/ PageContent strings (including DISCLAIMER and contact info
+from Section 1).
+9. Payments (Razorpay) — server-owned
+Never trust client-sent amounts. Look up the price server-side from Course.regFee (or the EMI
+schedule) before creating an order.
+• 
+BrowseJobs.ai — Master Build Specification Page 11
+Flow: client requests order → server creates Razorpay order + Order(status=created) → client
+opens Razorpay checkout → on success, client posts payment ids → server verifies HMAC
+signature AND re-fetches the payment from Razorpay to confirm captured + amount match →
+mark paid, provision access, fire receipts (email + WhatsApp), sync to CRM.
+Webhook ( /api/webhooks/razorpay): verify webhook secret; handle payment.captured as the
+source of truth even if the browser closed. Idempotent.
+EMI: registration (3×₹10,000) and placement (6× from CTC) tracked in EmiSchedule; send
+reminders via the job queue.
+Refunds: admin-triggered, audited; the 30-day guarantee window is computed from enrolment date
+and shown to the student.
+Placement fee is created only when a Placement row is added (offer accepted), and the ₹30,000
+registration is deducted inside it.
+10. Legal & Compliance (India / DPDP Act 2023)
+Privacy Policy, Terms, Refund Policy pages — DPDP-aligned. Disclose: data collected, purposes,
+consent basis, Razorpay as processor, call recording + AI monitoring, CRM + analytics (GA4/Meta
+Pixel), placement data sharing with consent, retention windows, user rights (access/correct/erase/
+grievance), and a named Grievance Officer. Leave [CIN], [GST], and officer name as clearly-
+marked placeholders for Krish to fill.
+Consent: explicit checkbox linking to privacy policy on every lead/enrol form. Log consent
+(timestamp + version).
+Call recording notice: since counselling calls are recorded + AI-monitored, disclose it (already in
+footer + privacy policy).
+Placement-fee / CTC recovery requires a signed enrolment agreement, not click-wrap — generate
+the agreement and capture acceptance; flag for legal review.
+Marketing-claims compliance: enforce Section 3.3/3.4 in code — a shared <Disclaimer/>
+component and a lint rule/checklist so no stat ships without it.
+11. Quality Bar
+Accessibility: WCAG 2.1 AA. Semantic HTML, labelled inputs, keyboard-navigable, visible focus
+rings (blue), colour-contrast checked (esp. muted text), prefers-reduced-motion honoured, alt text
+everywhere.
+Performance: LCP < 2.5s on 4G mobile for marketing pages. SSG/ISR for public pages, image
+optimisation, font display=swap + preconnect, code-split the LMS from marketing.
+SEO: per-page meta + canonical + OG/Twitter; JSON-LD (EducationalOrganization, Course+INR
+offer, FAQPage); dynamic sitemap.xml; robots.txt; clean URLs; .in→.ai 301.
+Security: OWASP top-10 hygiene, zod validation on every route, rate limits, secrets in env, audited
+sensitive actions, signed video URLs, no secrets client-side.
+Responsive: mobile-first; test at 360 / 768 / 1024 / 1440. Sticky mobile CTA on marketing.
+i18n-ready: copy in PageContent/dictionaries so Tanglish/Hindi variants are possible later (fonts
+already include Devanagari/Tamil/Kannada/Telugu in the print system).
+Testing: unit tests for pricing, RBAC, signature verification; e2e for enrol→pay→access and
+lead→CRM.
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 12
+Observability: error tracking (Sentry), structured logs, uptime check on payment webhook.
+12. Suggested build order (ship in slices)
+Foundations: repo, Tailwind + design tokens, brand primitives (Button/Card/Kicker/StatBand/
+ProofPanel/PromiseCards/FreeLadder/Disclaimer), Prisma schema + migrations, seed script.
+Marketing site: home, course catalogue + detail, masterclass, about, reviews, contact, legal. Lead
+capture + CRM sync + analytics. SEO. (This can go live first and start generating leads.)
+Auth + payments: signup/login/OTP, Razorpay order/verify/webhook, enrolment → account
+provisioning.
+Student LMS: dashboard, course player, progress, assignments, quizzes, live sessions, certificates,
+billing.
+Instructor LMS: batches, authoring, gradebook, live sessions, doubts, mock interviews.
+Placement module: candidate pipeline, job posts, submissions, placements → billing trigger,
+reporting.
+Admin: CMS, users/roles, enrolments/payments, leads, batches, settings, analytics, audit log.
+Hardening: a11y pass, perf pass, security review, tests, observability.
+Keep a PROGRESS.md and a DECISIONS.md (log every deviation from this spec with a reason). Ask before
+inventing brand copy, colours, or claims not in this document.
+13. Quick reference (pin this)
+Colours: ink #0A1220 · deep #0E3FA9 · blue #1B6DF0 · sky #E7F1FE · paper #F6F9FE · line 
+#DCE6F5 · green #0BA860 · red #D64545 · amber #F5A623 (stars/coach only) · muted #5A6B85.
+Fonts: Sora 800 (headings) · Inter (body) · IBM Plex Mono (ALL numbers/labels/kickers).
+CTA funnel: everything → Book Free Masterclass.
+Never: guarantee a job · fabricate experience · show a stat without the disclaimer · trust a client-sent
+price.
+Fees: ₹30,000 reg (3×₹10k EMI) · placement = first 3 months' CTC (6 EMIs, ₹30k adjusted) · 30-day
+money-back.
+Roles: student · instructor · placement · admin.
+Contact: +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · browsejobs.ai.
+• 
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+BrowseJobs.ai — Master Build Specification Page 13

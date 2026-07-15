@@ -30,45 +30,37 @@ function Cross() {
   );
 }
 
+/** The green/red promise pair — a core trust device (spec §2.3). */
 export function PromiseCards() {
   return (
-    <section className="mx-auto max-w-6xl px-5 py-20">
+    <div className="grid gap-6 md:grid-cols-2">
       <ScrollReveal>
-        <p className="kicker text-trust">Our promise</p>
-        <h2 className="display mt-3 max-w-2xl text-3xl text-ink md:text-4xl">
-          What we&apos;ll always do — and never do
-        </h2>
+        <div className="h-full rounded-[14px] border border-verify/30 bg-verify-bg p-8">
+          <p className="kicker text-verify">What we promise in writing</p>
+          <ul className="mt-5 space-y-4">
+            {promisesKept.map((p) => (
+              <li key={p} className="flex gap-3 text-ink">
+                <Check />
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </ScrollReveal>
 
-      <div className="mt-12 grid gap-6 md:grid-cols-2">
-        <ScrollReveal>
-          <div className="h-full rounded-2xl border border-verify/30 bg-verify/5 p-8">
-            <p className="kicker text-verify">Always</p>
-            <ul className="mt-5 space-y-4">
-              {promisesKept.map((p) => (
-                <li key={p} className="flex gap-3 text-ink">
-                  <Check />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal delay={0.08}>
-          <div className="h-full rounded-2xl border border-warn/30 bg-warn/5 p-8">
-            <p className="kicker text-warn">Never</p>
-            <ul className="mt-5 space-y-4">
-              {promisesNever.map((p) => (
-                <li key={p} className="flex gap-3 text-ink">
-                  <Cross />
-                  <span>{p}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </ScrollReveal>
-      </div>
-    </section>
+      <ScrollReveal delay={0.08}>
+        <div className="h-full rounded-[14px] border border-warn/30 bg-warn/5 p-8">
+          <p className="kicker text-warn">What we will never tell you</p>
+          <ul className="mt-5 space-y-4">
+            {promisesNever.map((p) => (
+              <li key={p} className="flex gap-3 text-ink">
+                <Cross />
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </ScrollReveal>
+    </div>
   );
 }

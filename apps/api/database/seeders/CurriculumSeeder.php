@@ -15,22 +15,24 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 /**
- * Seeds the seven BrowseJobs courses with a sample module/topic/lesson tree so
- * the curriculum and batch features are demo-able immediately.
+ * Seeds the seven BrowseJobs programs (Platform Spec v1.0 §6.1): 4 live +
+ * 3 waitlist. Live courses get a sample module/topic/lesson tree so the
+ * curriculum and batch features are demo-able; the REAL ~8–9-module syllabi
+ * live in the brochures and replace these samples when supplied (spec §14.7).
  */
 class CurriculumSeeder extends Seeder
 {
     /**
-     * @var array<string, string>
+     * @var array<string, array{name: string, status: string, tagline: string}>
      */
     private const COURSES = [
-        'DE' => 'Data Engineering',
-        'FS' => 'Full-Stack Development',
-        'DS' => 'Data Science',
-        'DA' => 'Data Analytics',
-        'CD' => 'Cloud & DevOps',
-        'QA' => 'Software Testing (QA)',
-        'UX' => 'UI/UX Design',
+        'DE' => ['name' => 'Data Engineering', 'status' => 'live', 'tagline' => 'Pipelines, warehouses, and the modern data stack.'],
+        'DC' => ['name' => 'DevOps & Cloud', 'status' => 'live', 'tagline' => 'Ship, scale, and run production systems.'],
+        'PB' => ['name' => 'Python Backend', 'status' => 'live', 'tagline' => 'APIs, databases, and production Python.'],
+        'DA' => ['name' => 'Data Analytics', 'status' => 'live', 'tagline' => 'SQL, dashboards, and decisions from data.'],
+        'AA' => ['name' => 'Agentic AI', 'status' => 'coming_soon', 'tagline' => 'Build with LLMs, agents, and tools.'],
+        'CS' => ['name' => 'Cyber Security', 'status' => 'coming_soon', 'tagline' => 'Defend real systems against real attacks.'],
+        'SN' => ['name' => 'ServiceNow', 'status' => 'coming_soon', 'tagline' => 'The enterprise workflow platform.'],
     ];
 
     public function run(): void
@@ -39,24 +41,28 @@ class CurriculumSeeder extends Seeder
 
         $program = Program::query()->updateOrCreate(
             ['tenant_id' => $tenant->id, 'slug' => 'career-tracks'],
-            ['name' => 'Career Tracks', 'description' => 'BrowseJobs job-ready programs.'],
+            ['name' => 'Career Tracks', 'description' => 'BrowseJobs job-ready programs, reverse-engineered from live interview demand.'],
         );
 
         $position = 0;
 
-        foreach (self::COURSES as $code => $name) {
+        foreach (self::COURSES as $code => $definition) {
             $course = Course::query()->updateOrCreate(
                 ['tenant_id' => $tenant->id, 'code' => $code],
                 [
                     'program_id' => $program->id,
-                    'name' => $name,
-                    'slug' => Str::slug($name),
-                    'description' => "{$name} — from fundamentals to a placement-ready portfolio.",
+                    'name' => $definition['name'],
+                    'slug' => Str::slug($definition['name']),
+                    'status' => $definition['status'],
+                    'tagline' => $definition['tagline'],
+                    'description' => "{$definition['name']} — built from real interviews.",
                     'position' => $position++,
                 ],
             );
 
-            $this->seedModules($tenant->id, $course);
+            if ($definition['status'] === 'live') {
+                $this->seedModules($tenant->id, $course);
+            }
         }
     }
 

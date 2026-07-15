@@ -371,3 +371,50 @@ Definition of done per feature: migrations + API + UI + queue jobs + tests (Pest
 - [ ] Queue workers supervised + failure alerting
 - [ ] Staging with Razorpay test mode + Zoom sandbox
 - [ ] Load target: 500 concurrent students, 20 concurrent live classes, 1,000 concurrent masterclass registrants
+
+---
+
+## 14. Platform Spec v1.0 Addendum (2026-07-15 — BINDING)
+
+Source: `docs/BrowseJobs_Platform_Spec_v1.pdf` (Master Build Specification v1.0, July 2026; extracted text in `docs/browsejobs-platform-spec-v1.txt`). Where this addendum conflicts with earlier sections, **the addendum wins**. Stack recommendation in spec §5 is superseded by ADR 0005 (Laravel 11 + MySQL retained).
+
+### 14.1 Identity & positioning
+- BrowseJobs.ai — AI-driven IT skilling & placement platform. Founded London 2013, India 2020; office Whitefield, Bengaluru. Entity: IBrowseJobs Technologies Pvt Ltd. Domain browsejobs.ai (browsejobs.in 301s to it).
+- Core differentiator: **the syllabus is reverse-engineered** — AI monitors up to ~50 real & mock interviews/day and the syllabus is rebuilt monthly around live demand.
+- Positioning line: "This syllabus was not written. It was reverse-engineered." Primary tagline: "Built from real interviews."
+- Contact: +91 86185 19825 · hello@browsejobs.ai · Mon–Sat 9:00–19:00 IST.
+
+### 14.2 Design system deltas (see CLAUDE.md for the full binding set)
+- New tokens: `--ink-2 #1B2A44`, `--green-bg #E6F7EF`.
+- Semantic rules: green = free/verified only (never paid CTAs); red = refused-promise/error only; amber = stars/coach notes only; ONE blue primary CTA per view.
+- Radii 14/22/999/10; soft shadow only; reveal = fade + 18px rise; every user-facing number in IBM Plex Mono.
+- Signature components to exist in code: Kicker, ProofPanel (LISTEN → EXTRACT → REBUILD), StatBand, PromiseCards, FreeLadder, Disclaimer, script block, coach note.
+
+### 14.3 Compliance (enforce in code)
+- Never-claims list per spec §3.3 (no job guarantees, no fabricated experience, no salary promises, no certain-hiring claims).
+- Mandatory disclaimer after every stat, stored once: "Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring depends on the live market and your performance."
+- Footer line everywhere: "Every promise in writing · Every call recorded & AI-monitored."
+- DPDP: consent checkbox + logged consent on every lead/enrol form; privacy/terms/refund pages with [CIN]/[GST]/Grievance-Officer placeholders; placement-fee agreement is signed (not click-wrap).
+
+### 14.4 Fee model (replaces earlier illustrative pricing)
+- Registration ₹30,000, payable only AFTER free masterclass + bootcamp; EMI 3×₹10,000.
+- Placement fee = first 3 months' CTC, due only after offer acceptance, 6 monthly EMIs, ₹30,000 registration adjusted inside. Worked example @ ₹12 LPA: 3,00,000 − 30,000 = ₹2,70,000 over 6 EMIs.
+- 30-day money-back guarantee, any reason, in writing. All money server-owned (never trust client-sent prices).
+
+### 14.5 Programs (replaces placeholder course list)
+- Live (4): Data Engineering · DevOps & Cloud · Python Backend · Data Analytics.
+- Waitlist (3): Agentic AI · Cyber Security · ServiceNow.
+- Each live course: ~8–9 modules, tools list, 3–5 CV-ready projects, outcomes, target roles (content in brochures — seed when supplied). Courses carry `status` (live/coming_soon).
+
+### 14.6 Funnel spine (three free steps)
+1. Free counselling + written Career Analysis Report (lead_type=counselling)
+2. Free live Masterclass (lead_type=masterclass) — primary conversion & primary ad destination
+3. Free 7-hour Python Bootcamp (lead_type=bootcamp)
+4. → Paid registration ₹30,000 → enrolment → LMS access.
+- Marketing mechanics: sticky mobile CTA ("Book Free Masterclass"), lead modal (masterclass/counselling/waitlist variants; name, WhatsApp phone, email, course), UTM capture persisted to lead, CRM POST + WhatsApp confirmation, analytics events (LeadFormOpen, Lead, InitiateCheckout, Purchase).
+
+### 14.7 Open items requiring founder input (do NOT invent)
+- The exact three "Verify us on Naukri" checks (§3.5) — provisional copy is used, marked for replacement.
+- Precise label/meaning of the ~90% stat.
+- 6 real testimonials + per-course syllabus/tools/projects from brochures.
+- Legal placeholders: [CIN], [GST], Grievance Officer name.

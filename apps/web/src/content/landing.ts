@@ -1,104 +1,157 @@
 /**
- * Landing content. Static for now; P1.8+ swaps this for the CMS-driven,
- * tenant-themed content API (PRD §6.23). Shape kept API-friendly.
+ * Landing content — Platform Spec v1.0 (docs/BrowseJobs_Platform_Spec_v1.pdf).
+ * Copy here is drawn from the spec; do NOT invent claims. Static for now;
+ * later phases move this into the CMS (PageContent).
  */
 
-export const proofStats = [
-  { label: "Learners trained", value: 12480, suffix: "+" },
-  { label: "Placement rate", value: 82, suffix: "%" },
-  { label: "Hiring partners", value: 140, suffix: "+" },
-  { label: "Avg. package", value: 7.4, prefix: "₹", suffix: " LPA", decimals: 1 },
+/**
+ * MANDATORY next to every stat (spec §3.4). Stored once; render only via
+ * the shared <Disclaimer/> component. Do not paraphrase.
+ */
+export const DISCLAIMER =
+  "Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring depends on the live market and your performance.";
+
+export const FOOTER_LINE =
+  "Every promise in writing · Every call recorded & AI-monitored.";
+
+export const contact = {
+  phone: "+91 86185 19825",
+  email: "hello@browsejobs.ai",
+  address: "Whitefield, Bengaluru, Karnataka 560066",
+  hours: "Mon–Sat, 9:00 AM – 7:00 PM IST",
+  entity: "IBrowseJobs Technologies Pvt Ltd",
+} as const;
+
+/** Spec §2.3 stat band: 50/day · ~90% · 98% · 1 year. */
+export const stats = [
+  { value: 50, suffix: "/day", label: "Real & mock interviews monitored" },
+  // Label provisional — exact meaning of ~90% pending founder confirmation
+  // (docs/browsejobs-lms-requirements.md §14.7).
+  { value: 90, prefix: "~", suffix: "%", label: "Interview-question match rate" },
+  { value: 98, suffix: "%", label: "Historical attend-to-place rate" },
+  { value: 1, suffix: " year", label: "Unlimited access & support" },
 ] as const;
 
-export const journey = [
+/** The funnel spine (spec §4): three free steps, then the paid rung. */
+export const freeLadder = [
   {
     step: "01",
-    title: "Free masterclass",
-    body: "Start with a live, no-cost masterclass. See the teaching, meet the mentors, decide for yourself.",
+    free: true,
+    title: "Free counselling + written Career Analysis Report",
+    body: "Talk to us. You leave with a written report on where you stand and what to do — whether you join or not.",
   },
   {
     step: "02",
-    title: "Free bootcamp",
-    body: "Go deeper in a hands-on bootcamp. Build real projects and earn your seat in a paid batch.",
+    free: true,
+    title: "Free live Masterclass",
+    body: "See the method live. How the syllabus is reverse-engineered from real interviews, and what you'd actually study.",
   },
   {
     step: "03",
-    title: "Paid batch + AI coach",
-    body: "Live classes, a personal AI coach tracking every topic, mock interviews, and recordings you own.",
+    free: true,
+    title: "Free 7-hour Python Bootcamp",
+    body: "Sit a real teaching day before you decide. Seven hours of live Python — no card, no commitment.",
   },
   {
     step: "04",
-    title: "Placement",
-    body: "CV built from your work, real interview practice, and a hiring-partner pipeline until you're placed.",
+    free: false,
+    title: "Registration — ₹30,000",
+    body: "Only after all three free steps. EMI available: 3 × ₹10,000. Then full enrolment and LMS access.",
   },
 ] as const;
 
-export const features = [
+export type CourseCard = {
+  code: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  live: boolean;
+};
+
+/** Spec §6.1: 4 live + 3 waitlist. */
+export const courses: CourseCard[] = [
+  { code: "DE", slug: "data-engineering", name: "Data Engineering", tagline: "Pipelines, warehouses, and the modern data stack.", live: true },
+  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tagline: "Ship, scale, and run production systems.", live: true },
+  { code: "PB", slug: "python-backend", name: "Python Backend", tagline: "APIs, databases, and production Python.", live: true },
+  { code: "DA", slug: "data-analytics", name: "Data Analytics", tagline: "SQL, dashboards, and decisions from data.", live: true },
+  { code: "AA", slug: "agentic-ai", name: "Agentic AI", tagline: "Build with LLMs, agents, and tools.", live: false },
+  { code: "CS", slug: "cyber-security", name: "Cyber Security", tagline: "Defend real systems against real attacks.", live: false },
+  { code: "SN", slug: "servicenow", name: "ServiceNow", tagline: "The enterprise workflow platform.", live: false },
+];
+
+/**
+ * "Don't trust us. Verify us." (spec §3.5). The spec mandates three checks a
+ * user can do on Naukri in 15 minutes but doesn't enumerate them — these are
+ * PROVISIONAL, grounded in stated facts, pending the founder's exact copy
+ * (requirements §14.7).
+ */
+export const verifyChecks = [
   {
-    kicker: "Personal AI Coach",
-    title: "Knows exactly what to fix next",
-    body: "A coach panel that reads your attendance, quizzes and labs, then shows the single next best action to close your gap.",
+    title: "Read the unfiltered reviews",
+    body: "Search “BrowseJobs” on Naukri and read what students say — the good and the bad. We don't curate it.",
   },
   {
-    kicker: "Real Interview Practice",
-    title: "Rehearse the actual questions",
-    body: "AI mock interviews drawn from a bank of real interviews at real companies — with a scorecard after every round.",
+    title: "Talk to placed students",
+    body: "Ask us for placed-student profiles and message them directly. Real people, real offers, real companies.",
   },
   {
-    kicker: "Recordings You Own",
-    title: "Never miss a class",
-    body: "Every session recorded, searchable by topic, watermarked and always yours while your fees are clear.",
-  },
-  {
-    kicker: "Placement Engine",
-    title: "A pipeline, not a promise",
-    body: "An ATS-ready CV from your projects, a live job feed matched to you, and a placement team in your corner.",
+    title: "Ask for your own call recording",
+    body: "Every counselling call is recorded and AI-monitored. Ask for yours — what we promised is on tape.",
   },
 ] as const;
 
-export const included = [
-  { feature: "Live mentor-led classes", plan: true },
-  { feature: "Personal AI coach + weekly report", plan: true },
-  { feature: "Class recordings (while fees clear)", plan: true },
-  { feature: "AI mock interviews", plan: "5 / course" },
-  { feature: "1:1 human mentor sessions", plan: "pay-as-you-go" },
-  { feature: "Placement support", plan: true },
-] as const;
-
+/** Green card — what we promise in writing (spec §3.5/3.6). */
 export const promisesKept = [
-  "Live teaching from working engineers — every batch.",
-  "Your fees pause access, never delete your progress.",
-  "Placement support until you're placed, not a fixed window.",
-  "Transparent pricing with EMI — no hidden charges.",
+  "Every commitment you get from us is in writing.",
+  "Three full steps are free before you pay a rupee.",
+  "The placement fee is due only after you accept an offer.",
+  "30-day money-back guarantee — any reason, full refund.",
+  "Every counselling call is recorded & AI-monitored.",
 ] as const;
 
+/** Red card — what we will never tell you (spec §3.3). */
 export const promisesNever = [
-  "No fake “100% guaranteed job” claims.",
-  "No selling your data to third parties.",
-  "No locked-in loans dressed up as “income share”.",
-  "No pre-recorded videos passed off as live classes.",
+  "“We guarantee you a job.” Nobody honestly can — the market decides.",
+  "“We'll adjust your experience.” We never fabricate employment.",
+  "A fixed salary promise.",
+  "That hiring is certain, or that there's a shortcut.",
 ] as const;
+
+/** Spec §3.6 — render exactly; real amounts are server-owned at checkout. */
+export const fees = {
+  registration: 30000,
+  registrationEmi: { months: 3, amount: 10000 },
+  guaranteeDays: 30,
+  placement: {
+    monthsOfCtc: 3,
+    emis: 6,
+    adjusted: 30000,
+  },
+} as const;
 
 export const faqs = [
   {
-    q: "Are classes actually live?",
-    a: "Yes — every paid batch is live and mentor-led over Zoom, with recordings added after each session. We never pass pre-recorded video off as live.",
-  },
-  {
-    q: "What does it cost, and is EMI available?",
-    a: "Course fees are shown upfront with a single-payment or 1/2/3-month EMI option. You see the full schedule before you pay a rupee.",
+    q: "What do I pay, and when?",
+    a: "Nothing until you've finished the three free steps — counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Then registration is ₹30,000 (or 3 EMIs of ₹10,000). The placement fee — your first 3 months' CTC — is due only after you accept an offer, paid as 6 monthly EMIs from your new salary, with the ₹30,000 adjusted inside it.",
   },
   {
     q: "Do you guarantee a job?",
-    a: "No one honestly can. We provide placement support — CV, mock interviews, and a hiring-partner pipeline — until you're placed, and we publish our real placement rate.",
+    a: "Nobody can guarantee employment — the market decides. What we put in writing: the process. A syllabus rebuilt monthly from real interviews, live teaching, mock interviews scored on data, and a placement team that works your profile until you're placed.",
+  },
+  {
+    q: "Are classes actually live?",
+    a: "Yes. Every batch is live and instructor-led, with recordings available afterward. We never pass pre-recorded video off as live teaching.",
+  },
+  {
+    q: "What is the 30-day guarantee?",
+    a: "A full refund within 30 days of registration, for any reason, in writing. No forms designed to make you give up.",
+  },
+  {
+    q: "How is the syllabus different?",
+    a: "It isn't written — it's reverse-engineered. An AI system monitors up to ~50 real and mock interviews a day, extracts what companies are actually asking this month, and the syllabus is rebuilt around that. You study only what's actually asked.",
   },
   {
     q: "What if I miss a class?",
-    a: "Every class is recorded and searchable by topic. Your AI coach also flags exactly what to catch up on.",
+    a: "Every class is recorded and searchable by topic, and your access runs a full year. You can always catch up.",
   },
 ] as const;
-
-export const pricing = {
-  fee: 45000,
-  emiMonths: 3,
-} as const;

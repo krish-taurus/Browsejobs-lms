@@ -22,7 +22,7 @@ class Course extends Model
     use BelongsToTenant;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'program_id', 'code', 'name', 'slug', 'description', 'position'];
+    protected $fillable = ['tenant_id', 'program_id', 'code', 'name', 'slug', 'status', 'tagline', 'description', 'position'];
 
     /**
      * @return BelongsTo<Program, $this>

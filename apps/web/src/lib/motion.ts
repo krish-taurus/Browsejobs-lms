@@ -14,9 +14,9 @@ export const ease = [0.22, 1, 0.36, 1] as const;
 
 export const stagger = 0.07;
 
-/** Scroll-reveal: fade + 20px rise, plays once. Only transform + opacity. */
+/** Scroll-reveal: fade + 18px rise (spec §2.4), plays once. Transform + opacity only. */
 export const revealVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
     y: 0,
