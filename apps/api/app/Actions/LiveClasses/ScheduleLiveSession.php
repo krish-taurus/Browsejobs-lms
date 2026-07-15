@@ -18,6 +18,8 @@ use Carbon\CarbonInterface;
  */
 final readonly class ScheduleLiveSession
 {
+    public function __construct(private ArmSessionReminders $armReminders) {}
+
     public function handle(
         Batch $batch,
         string $title,
@@ -36,6 +38,8 @@ final readonly class ScheduleLiveSession
         ]);
 
         CreateZoomMeeting::dispatch($session->id);
+
+        $this->armReminders->handle($session);
 
         return $session;
     }

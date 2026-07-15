@@ -32,7 +32,7 @@ class LiveSession extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'batch_id', 'topic_id', 'title', 'scheduled_start', 'scheduled_end',
-        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'status',
+        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'status', 'reminder_token',
     ];
 
     /**
