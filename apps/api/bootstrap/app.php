@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Sanctum SPA: requests from stateful (first-party) domains authenticate
+        // via the session cookie (ADR 0004). CSRF is enforced for them.
+        $middleware->statefulApi();
+
         $middleware->alias([
             'tenant.domain' => ResolveTenantByDomain::class,
             'tenant.user' => ResolveTenantByUser::class,

@@ -24,6 +24,14 @@ final class ResolveTenantByDomain
             ->where('status', 'active')
             ->first();
 
+        // Fallback for single-tenant/local hosts that carry no domain mapping.
+        if ($tenant === null && is_string($default = config('tenancy.default_slug'))) {
+            $tenant = Tenant::query()
+                ->where('slug', $default)
+                ->where('status', 'active')
+                ->first();
+        }
+
         if ($tenant === null) {
             abort(404, 'Unknown tenant domain.');
         }
