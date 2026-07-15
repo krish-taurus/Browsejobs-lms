@@ -7,6 +7,8 @@ namespace App\Providers;
 use App\Models\User;
 use App\Support\Fees\AllowAllFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Notifications\LogSessionNotifier;
+use App\Support\Notifications\SessionNotifier;
 use App\Support\Otp\LogOtpNotifier;
 use App\Support\Otp\OtpNotifier;
 use App\Support\Tenancy\TenantContext;
@@ -37,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Fee gate is a stub until P2.3; callers depend on the interface.
         $this->app->bind(FeeGate::class, AllowAllFeeGate::class);
+
+        // Live-class notifications log locally until the P2.4 messaging hub.
+        $this->app->bind(SessionNotifier::class, LogSessionNotifier::class);
     }
 
     /**
