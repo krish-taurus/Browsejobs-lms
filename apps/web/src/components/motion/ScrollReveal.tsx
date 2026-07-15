@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { durations, ease } from "@/lib/motion";
 
 /**
- * Fade + 20px rise as the element scrolls into view, once. Honors
+ * Fade + 18px rise as the element scrolls into view, once (spec §2.4). Honors
  * prefers-reduced-motion (renders statically). Animates transform/opacity only.
  */
 export function ScrollReveal({
@@ -30,7 +30,7 @@ export function ScrollReveal({
   return (
     <MotionTag
       className={className}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: durations.slow, ease, delay }}

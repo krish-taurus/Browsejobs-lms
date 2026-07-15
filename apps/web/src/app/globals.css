@@ -6,30 +6,41 @@
  * to Tailwind utilities (bg-ink, text-trust, font-display, ...).
  */
 :root {
-  --bj-ink: #0a1220; /* ink navy */
-  --bj-deep: #0e3fa9; /* deep navy */
-  --bj-trust: #1b6df0; /* trust blue */
-  --bj-sky: #e7f1fe; /* sky */
-  --bj-verify: #0ba860; /* verify green — proof/success */
-  --bj-warn: #d64545; /* warn red */
-  --bj-amber: #f5a623; /* stars / coach notes */
-  --bj-paper: #f6f9fe; /* paper background */
-  --bj-line: #dce6f5; /* hairlines */
-  --bj-muted: #5a6b85; /* muted text */
+  --bj-ink: #0a1220; /* ink navy — primary text, dark panels */
+  --bj-ink2: #1b2a44; /* secondary text */
+  --bj-deep: #0e3fa9; /* deep navy — gradients, headings on light */
+  --bj-trust: #1b6df0; /* trust blue — THE single primary action colour */
+  --bj-sky: #e7f1fe; /* light blue fills, callouts */
+  --bj-verify: #0ba860; /* verify green — free/verified/kept-promise ONLY */
+  --bj-verify-bg: #e6f7ef; /* green card fills */
+  --bj-warn: #d64545; /* warn red — refused-promise/error ONLY */
+  --bj-amber: #f5a623; /* stars + coach notes ONLY */
+  --bj-paper: #f6f9fe; /* page background */
+  --bj-line: #dce6f5; /* borders, dividers */
+  --bj-muted: #5a6b85; /* muted text, captions, disclaimers */
   --bj-white: #ffffff;
 }
 
 @theme inline {
   --color-ink: var(--bj-ink);
+  --color-ink2: var(--bj-ink2);
   --color-deep: var(--bj-deep);
   --color-trust: var(--bj-trust);
   --color-sky: var(--bj-sky);
   --color-verify: var(--bj-verify);
+  --color-verify-bg: var(--bj-verify-bg);
   --color-warn: var(--bj-warn);
   --color-amber: var(--bj-amber);
   --color-paper: var(--bj-paper);
   --color-line: var(--bj-line);
   --color-muted: var(--bj-muted);
+
+  /* Spec §2.4: soft shadow only. */
+  --shadow-soft: 0 10px 40px rgba(10, 18, 32, 0.1);
+  /* Spec §2.4 radii: cards 14, large panels 22, inputs 10. */
+  --radius-card: 14px;
+  --radius-panel: 22px;
+  --radius-input: 10px;
 
   --font-display: var(--font-sora);
   --font-body: var(--font-inter);

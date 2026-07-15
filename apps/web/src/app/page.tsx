@@ -1,15 +1,23 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { ProofEngine } from "@/components/landing/ProofEngine";
-import { Journey } from "@/components/landing/Journey";
-import { Features } from "@/components/landing/Features";
-import { PromiseCards } from "@/components/landing/PromiseCards";
-import { Pricing } from "@/components/landing/Pricing";
+import { Courses } from "@/components/landing/Courses";
+import { FreeLadder } from "@/components/landing/FreeLadder";
+import { VerifyUs } from "@/components/landing/VerifyUs";
+import { Fees } from "@/components/landing/Fees";
 import { Faq } from "@/components/landing/Faq";
 import { Footer } from "@/components/landing/Footer";
 import { JsonLd } from "@/components/landing/JsonLd";
+import { LeadModal } from "@/components/landing/LeadModal";
+import { StickyCta } from "@/components/landing/StickyCta";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { BookCta } from "@/components/landing/BookCta";
 
+/**
+ * Home, in the spec §6.1 order: hook → Proof Engine + stats → courses →
+ * free ladder → verify-us → fees → FAQ → CTA. (Testimonials slot pending the
+ * six real testimonials — requirements §14.7.)
+ */
 export default function Home() {
   return (
     <>
@@ -18,35 +26,35 @@ export default function Home() {
       <main>
         <Hero />
         <ProofEngine />
-        <Journey />
-        <Features />
-        <PromiseCards />
-        <Pricing />
+        <Courses />
+        <FreeLadder />
+        <VerifyUs />
+        <Fees />
         <Faq />
 
-        {/* Masterclass CTA band */}
+        {/* Closing CTA band */}
         <section id="masterclass" className="mx-auto max-w-6xl px-5 py-16">
           <ScrollReveal>
-            <div className="rounded-3xl bg-trust px-8 py-14 text-center text-white shadow-xl">
-              <p className="kicker text-white/80">Free live masterclass</p>
+            <div className="rounded-[22px] bg-ink px-8 py-14 text-center text-white shadow-soft">
+              <p className="kicker text-sky/70">Step 01 of 3 free steps</p>
               <h2 className="display mx-auto mt-4 max-w-2xl text-3xl md:text-4xl">
-                See the teaching before you spend a rupee
+                See the method live before you spend a rupee
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-white/85">
-                Reserve a seat in the next live masterclass. Get reminders 12
-                hours, 2 hours, and 5 minutes before — with a one-tap join link.
+              <p className="mx-auto mt-4 max-w-xl text-sky/70">
+                A live masterclass on how the syllabus is reverse-engineered
+                from real interviews. Reminders arrive 12h, 2h and 5min before —
+                with a one-tap join link.
               </p>
-              <a
-                href="#"
-                className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 font-semibold text-trust transition-transform hover:-translate-y-0.5"
-              >
-                Reserve my free seat
-              </a>
+              <div className="mt-8">
+                <BookCta className="px-8 py-3.5" />
+              </div>
             </div>
           </ScrollReveal>
         </section>
       </main>
       <Footer />
+      <LeadModal />
+      <StickyCta />
     </>
   );
 }

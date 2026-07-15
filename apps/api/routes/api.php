@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
             'branding' => $tenant->branding,
         ]);
     });
+
+    Route::post('leads', [LeadController::class, 'store'])
+        ->middleware('throttle:10,1');
 
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');

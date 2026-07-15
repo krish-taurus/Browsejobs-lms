@@ -1,29 +1,51 @@
+import { contact, courses, faqs } from "@/content/landing";
+
 /**
- * JSON-LD structured data for the landing page: Organization + a Course entry
- * so the funnel is eligible for rich results (PRD §6.23 SEO requirement).
+ * JSON-LD (spec §11): EducationalOrganization + the live Courses + FAQPage.
  */
 export function JsonLd() {
   const data = {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
+        "@type": "EducationalOrganization",
         name: "BrowseJobs",
-        legalName: "iBrowseJobs Technologies Pvt Ltd",
+        legalName: contact.entity,
         url: "https://browsejobs.ai",
-        description:
-          "Live, mentor-led tech bootcamps with an AI coach and placement support.",
-      },
-      {
-        "@type": "Course",
-        name: "BrowseJobs Career Tracks",
-        description:
-          "Live mentor-led bootcamps in Data Engineering, Full-Stack, Data Science and more, with a personal AI coach and placement support.",
-        provider: {
-          "@type": "Organization",
-          name: "BrowseJobs",
-          sameAs: "https://browsejobs.ai",
+        telephone: contact.phone,
+        email: contact.email,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Bengaluru",
+          addressRegion: "Karnataka",
+          postalCode: "560066",
+          addressCountry: "IN",
         },
+        description:
+          "AI-driven IT skilling & placement platform. The syllabus is reverse-engineered from real interviews.",
+      },
+      ...courses
+        .filter((c) => c.live)
+        .map((c) => ({
+          "@type": "Course",
+          name: c.name,
+          description: c.tagline,
+          url: `https://browsejobs.ai/${c.slug}`,
+          provider: { "@type": "EducationalOrganization", name: "BrowseJobs" },
+          offers: {
+            "@type": "Offer",
+            category: "Registration",
+            price: "30000",
+            priceCurrency: "INR",
+          },
+        })),
+      {
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
       },
     ],
   };

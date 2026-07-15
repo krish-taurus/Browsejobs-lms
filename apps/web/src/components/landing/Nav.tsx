@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { BookCta } from "@/components/landing/BookCta";
 
 const links = [
-  { href: "#journey", label: "How it works" },
-  { href: "#features", label: "Platform" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "#courses", label: "Programs" },
+  { href: "#free-steps", label: "How it works" },
+  { href: "#verify", label: "Verify us" },
+  { href: "#fees", label: "Fees" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -30,12 +32,7 @@ export function Nav() {
           ))}
         </div>
 
-        <a
-          href="#masterclass"
-          className="rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-deep"
-        >
-          Join free masterclass
-        </a>
+        <BookCta className="px-4 py-2 text-sm">Book Free Masterclass</BookCta>
       </nav>
     </header>
   );

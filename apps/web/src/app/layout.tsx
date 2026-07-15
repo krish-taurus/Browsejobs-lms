@@ -25,34 +25,36 @@ const plexMono = IBM_Plex_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://browsejobs.ai";
 
+const TITLE = "BrowseJobs — Built from real interviews.";
+const DESCRIPTION =
+  "This syllabus was not written. It was reverse-engineered — from up to ~50 real & mock interviews monitored daily. Three free steps before you pay anything; placement fee only after you accept an offer.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "BrowseJobs — Learn the skill. Prove it. Get placed.",
+    default: TITLE,
     template: "%s · BrowseJobs",
   },
-  description:
-    "Live, mentor-led tech bootcamps with an AI coach, real interview practice, and placement support. Pay-after-placement options. Proof, not promises.",
+  description: DESCRIPTION,
   keywords: [
-    "tech bootcamp India",
+    "IT skilling India",
     "data engineering course",
-    "full stack developer course",
-    "placement training",
-    "AI interview practice",
+    "devops cloud course",
+    "python backend course",
+    "data analytics course",
+    "placement support training",
   ],
   openGraph: {
     type: "website",
     siteName: "BrowseJobs",
-    title: "BrowseJobs — Learn the skill. Prove it. Get placed.",
-    description:
-      "Live, mentor-led tech bootcamps with an AI coach and placement support.",
+    title: TITLE,
+    description: DESCRIPTION,
     url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "BrowseJobs — Learn the skill. Prove it. Get placed.",
-    description:
-      "Live, mentor-led tech bootcamps with an AI coach and placement support.",
+    title: TITLE,
+    description: DESCRIPTION,
   },
   robots: { index: true, follow: true },
 };
