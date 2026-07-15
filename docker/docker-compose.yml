@@ -1,0 +1,93 @@
+# BrowseJobs LMS — local dev stack (CLAUDE.md §Monorepo Structure).
+# Usage from repo root:  docker compose -f docker/docker-compose.yml up -d
+# Service hosts/ports mirror apps/api/.env.example.
+#
+# NOTE: passwords here are LOCAL DEV placeholders only. Never reuse in any
+# shared/staging/prod environment (see CLAUDE.md Security Guardrails).
+
+name: browsejobs-lms
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: browsejobs-mysql
+    command: --default-authentication-plugin=caching_sha2_password
+    environment:
+      MYSQL_DATABASE: browsejobs
+      MYSQL_USER: browsejobs
+      MYSQL_PASSWORD: changeme
+      MYSQL_ROOT_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pchangeme"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: browsejobs-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: browsejobs-mailpit
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "1025:1025" # SMTP (MAIL_PORT in apps/api/.env.example)
+      - "8025:8025" # Web UI — http://localhost:8025
+
+  minio:
+    image: minio/minio:latest
+    container_name: browsejobs-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: changeme
+    ports:
+      - "9000:9000" # S3 API (AWS_ENDPOINT in apps/api/.env.example)
+      - "9001:9001" # Console — http://localhost:9001
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: create the default bucket so file storage works immediately.
+  minio-createbucket:
+    image: minio/mc:latest
+    container_name: browsejobs-minio-createbucket
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until (mc alias set local http://minio:9000 minioadmin changeme) do echo 'waiting for minio...' && sleep 2; done;
+      mc mb --ignore-existing local/browsejobs;
+      mc anonymous set download local/browsejobs;
+      echo 'minio bucket ready';
+      exit 0;
+      "
+
+volumes:
+  mysql-data:
+  redis-data:
+  minio-data:

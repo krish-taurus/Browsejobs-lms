@@ -1,0 +1,30 @@
+# Root / workspace-level ignores.
+# App-specific ignores live in apps/*/.gitignore.
+
+# node (root workspace install)
+/node_modules
+packages/*/node_modules
+packages/*/dist
+*.tsbuildinfo
+
+# logs
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+/.idea
+/.vscode
+/.fleet
+
+# stray planning artifacts (docs already live under docs/)
+/browsejobs tool.zip
+/browsejobs tool/
+
+# env (never commit real secrets; .env.example files ARE tracked)
+.env
+.env.*
+!.env.example
+!**/.env.example

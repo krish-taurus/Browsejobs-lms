@@ -1,0 +1,20 @@
+{
+  "name": "browsejobs-lms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BrowseJobs LMS — unified AI-driven LMS + Education CRM monorepo (see CLAUDE.md).",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @browsejobs/web",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspace @browsejobs/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
