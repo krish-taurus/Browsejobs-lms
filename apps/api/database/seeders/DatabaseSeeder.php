@@ -16,14 +16,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(TenantSeeder::class);
+        $this->call([
+            TenantSeeder::class,
+            RolePermissionSeeder::class,
+        ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();
 
-        User::factory()->create([
+        $admin = User::factory()->create([
             'tenant_id' => $browsejobs->id,
-            'name' => 'Test User',
+            'name' => 'Test Admin',
             'email' => 'test@example.com',
         ]);
+
+        $admin->assignRole('admin');
     }
 }
