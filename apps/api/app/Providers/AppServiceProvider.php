@@ -7,8 +7,10 @@ namespace App\Providers;
 use App\Models\User;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
-use App\Support\Fees\AllowAllFeeGate;
+use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Notifications\FeeNotifier;
+use App\Support\Notifications\LogFeeNotifier;
 use App\Support\Notifications\LogSessionNotifier;
 use App\Support\Notifications\SessionNotifier;
 use App\Support\Otp\LogOtpNotifier;
@@ -43,8 +45,12 @@ class AppServiceProvider extends ServiceProvider
             return new HttpZoomClient($config);
         });
 
-        // Fee gate is a stub until P2.3; callers depend on the interface.
-        $this->app->bind(FeeGate::class, AllowAllFeeGate::class);
+        // Real fee gate (P2.3): denies access when a student has an active
+        // fee-driven block. AllowAllFeeGate stays available for tests to rebind.
+        $this->app->bind(FeeGate::class, DuesFeeGate::class);
+
+        // Dunning notifications log locally until the P2.4 messaging hub.
+        $this->app->bind(FeeNotifier::class, LogFeeNotifier::class);
 
         // Live-class notifications log locally until the P2.4 messaging hub.
         $this->app->bind(SessionNotifier::class, LogSessionNotifier::class);

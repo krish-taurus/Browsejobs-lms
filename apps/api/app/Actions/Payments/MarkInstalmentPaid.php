@@ -9,6 +9,7 @@ use App\Enums\InstalmentStatus;
 use App\Enums\LedgerDirection;
 use App\Events\PaymentCaptured;
 use App\Jobs\FlipEnrolment;
+use App\Jobs\LiftFeeBlocks;
 use App\Jobs\RenderReceipt;
 use App\Models\Instalment;
 use App\Models\LedgerEntry;
@@ -88,6 +89,9 @@ final readonly class MarkInstalmentPaid
         if ($instalment->seq === 1) {
             FlipEnrolment::dispatch($feePlan->id);
         }
+
+        // Instant fee unblock (P2.3): clears access blocks if no overdue remains.
+        LiftFeeBlocks::dispatch($feePlan->id);
 
         RenderReceipt::dispatch($receipt->id);
     }

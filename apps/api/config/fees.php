@@ -18,4 +18,17 @@ return [
     'gst_rate_bps' => (int) env('FEE_GST_RATE_BPS', 1800),
 
     'currency' => 'INR',
+
+    /*
+    | Dunning ladder (PRD §6.8), tenant-tunable later. Reminders fire the given
+    | number of days BEFORE an instalment's due date (0 = due day); after due,
+    | `grace_days` of daily reminders run, then a SOFT block (live classes +
+    | recordings locked); `hard_block_after_days` later the SOFT block promotes
+    | to a HARD block (fee screen only + counselor task). Paid → instant unblock.
+    */
+    'ladder' => [
+        'reminder_days' => [7, 3, 1, 0],
+        'grace_days' => 5,
+        'hard_block_after_days' => 7,
+    ],
 ];

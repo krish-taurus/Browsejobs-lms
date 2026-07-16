@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
+use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
@@ -63,6 +65,7 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 // Authenticated session endpoints (Sanctum session guard).
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);
+    Route::get('me/fee-status', [FeeStatusController::class, 'show']);
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -134,6 +137,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('instalments/{instalment}/order', [PaymentLinkController::class, 'order']);
 
         Route::get('receipts/{receipt}/download', [ReceiptController::class, 'download']);
+
+        Route::get('dunning', [DunningController::class, 'index']);
     });
 });
 

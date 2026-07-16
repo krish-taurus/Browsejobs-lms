@@ -6,8 +6,10 @@ import { useEffect, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
+import { useFeeStatus } from "@/lib/fee-status";
 import { navItems } from "@/components/portal/nav";
 import { CommandPalette } from "@/components/portal/CommandPalette";
+import { FeeBlockedScreen } from "@/components/portal/FeeBlockedScreen";
 
 function NavIcon({ path, active }: { path: string; active: boolean }) {
   return (
@@ -29,6 +31,7 @@ function NavIcon({ path, active }: { path: string; active: boolean }) {
 
 export function PortalShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const { status: fee } = useFeeStatus();
   const pathname = usePathname();
   const router = useRouter();
   const reduce = useReducedMotion();
@@ -43,6 +46,11 @@ export function PortalShell({ children }: { children: ReactNode }) {
         <div className="shimmer h-12 w-12 rounded-full" />
       </div>
     );
+  }
+
+  // Hard fee block: the whole portal is replaced by the fee screen (PRD §6.8).
+  if (fee?.block === "hard") {
+    return <FeeBlockedScreen status={fee} onSignOut={() => logout().then(() => router.replace("/student"))} />;
   }
 
   return (
