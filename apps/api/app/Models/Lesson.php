@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\LessonType;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Lesson extends Model
 {
     use BelongsToTenant;
+    use HasFactory;
 
     /** @var list<string> */
     protected $fillable = ['tenant_id', 'topic_id', 'title', 'type', 'position'];

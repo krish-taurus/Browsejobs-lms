@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CannedResponseController;
+use App\Http\Controllers\Admin\CodingLabController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
@@ -31,6 +34,7 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\FeeStatusController;
+use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
@@ -102,6 +106,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/career-plus/subscribe', [StoreController::class, 'subscribe']);
     Route::post('me/career-plus/cancel', [StoreController::class, 'cancel']);
     Route::post('me/self-paced/{batch}/upgrade', [StoreController::class, 'upgrade']);
+    Route::post('me/activity', [ActivityController::class, 'store'])->middleware('throttle:60,1');
+    Route::get('me/labs', [LabController::class, 'index']);
+    Route::get('me/labs/{lesson}', [LabController::class, 'show']);
+    Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
+    Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -121,6 +130,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('lessons', [LessonController::class, 'store']);
         Route::patch('lessons/{lesson}', [LessonController::class, 'update']);
         Route::delete('lessons/{lesson}', [LessonController::class, 'destroy']);
+        Route::get('lessons/{lesson}/coding-lab', [CodingLabController::class, 'show']);
+        Route::put('lessons/{lesson}/coding-lab', [CodingLabController::class, 'upsert']);
     });
 
     Route::middleware('can:manage-batches')->group(function () {
@@ -235,6 +246,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('purchases/{purchase}/refund', [MonetizationController::class, 'refund']);
         Route::get('revenue', [RevenueController::class, 'index']);
         Route::get('revenue/purchases', [RevenueController::class, 'purchases']);
+        Route::get('ai-usage', [AiUsageController::class, 'index']);
     });
 });
 

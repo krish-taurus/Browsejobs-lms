@@ -70,6 +70,20 @@ return [
         'tenant_slug' => env('WHATSAPP_TENANT_SLUG', ''),
     ],
 
+    'anthropic' => [
+        // AI Service Layer (CLAUDE.md / PRD §6.4). Tests fake the client.
+        'api_key' => env('ANTHROPIC_API_KEY', ''),
+        'base_url' => env('ANTHROPIC_BASE_URL', 'https://api.anthropic.com/v1'),
+        'version' => env('ANTHROPIC_VERSION', '2023-06-01'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
+    ],
+
+    'judge0' => [
+        // Coding labs code execution (PRD §6.5). Self-hosted; tests fake the client.
+        'url' => env('JUDGE0_URL', 'http://127.0.0.1:2358'),
+        'auth_token' => env('JUDGE0_AUTH_TOKEN', ''),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

@@ -87,7 +87,59 @@ services:
       exit 0;
       "
 
+  # ── Coding labs (PRD §6.5) — opt-in: `docker compose --profile labs up -d`.
+  # Judge0 executes untrusted student code; the server needs privileged mode +
+  # cgroup access on the host. Port 2358 matches JUDGE0_URL in .env.example.
+  # Kept out of the default stack so a plain `up` stays light. Tests fake Judge0.
+  judge0-db:
+    image: postgres:16-alpine
+    container_name: browsejobs-judge0-db
+    profiles: ["labs"]
+    environment:
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - judge0-db-data:/var/lib/postgresql/data
+
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    container_name: browsejobs-judge0-server
+    profiles: ["labs"]
+    command: ["./scripts/server"]
+    privileged: true
+    ports:
+      - "2358:2358"
+    environment:
+      REDIS_HOST: redis
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: changeme
+    depends_on:
+      - judge0-db
+      - redis
+    restart: unless-stopped
+
+  judge0-workers:
+    image: judge0/judge0:1.13.1
+    container_name: browsejobs-judge0-workers
+    profiles: ["labs"]
+    command: ["./scripts/workers"]
+    privileged: true
+    environment:
+      REDIS_HOST: redis
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: changeme
+    depends_on:
+      - judge0-db
+      - redis
+    restart: unless-stopped
+
 volumes:
   mysql-data:
   redis-data:
   minio-data:
+  judge0-db-data:
