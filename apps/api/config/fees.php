@@ -31,4 +31,15 @@ return [
         'grace_days' => 5,
         'hard_block_after_days' => 7,
     ],
+
+    /*
+    | Bootcamp→paid non-payer nudge ladder (PRD §5 Stage 3). Payment-link nudges
+    | fire the given number of days after conversion (fee-plan creation); a
+    | counselor task is raised on `counselor_task_day`. Nudges auto-pause when the
+    | lead replies and stop once the first instalment is paid (member enrolled).
+    */
+    'conversion' => [
+        'nudge_days' => [1, 3, 7],
+        'counselor_task_day' => 3,
+    ],
 ];

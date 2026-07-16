@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Conversion\CompleteBootcamp;
+use App\Actions\Conversion\ConvertBootcampAttendee;
 use App\Actions\Roster\AddStudentToBatch;
 use App\Actions\Roster\FindOrCreateStudent;
 use App\Actions\Roster\ImportRosterCsv;
@@ -15,6 +17,7 @@ use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /** Roster operations over the P1.4 actions — every mutation is audited there. */
 final class RosterController extends Controller
@@ -68,5 +71,21 @@ final class RosterController extends Controller
         $remove->handle($member, $request->string('reason')->toString(), $request->user());
 
         return response()->json(['data' => $member->fresh()]);
+    }
+
+    /** Complete a bootcamp and convert its attendees to the linked paid batch (Stage 3). */
+    public function completeBootcamp(Request $request, Batch $batch, CompleteBootcamp $complete): JsonResponse
+    {
+        $summary = $complete->handle($batch, $request->user());
+
+        return response()->json(['data' => $summary]);
+    }
+
+    /** Convert a single bootcamp attendee to the linked paid batch. */
+    public function convert(Request $request, BatchMember $member, ConvertBootcampAttendee $convert): JsonResponse
+    {
+        $paidMember = $convert->handle($member, $request->user());
+
+        return response()->json(['data' => $paidMember->load('student:id,name,email,phone')]);
     }
 }

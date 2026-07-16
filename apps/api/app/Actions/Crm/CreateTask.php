@@ -17,7 +17,7 @@ final readonly class CreateTask
 {
     public function __construct(private RecordTimelineEvent $timeline) {}
 
-    public function handle(Lead $lead, User $assignee, string $title, ?Carbon $dueAt = null, ?User $actor = null): CrmTask
+    public function handle(Lead $lead, User $assignee, string $title, ?Carbon $dueAt = null, ?User $actor = null, string $source = CrmTask::SOURCE_MANUAL): CrmTask
     {
         $task = CrmTask::query()->create([
             'tenant_id' => $lead->tenant_id,
@@ -25,7 +25,7 @@ final readonly class CreateTask
             'assigned_to' => $assignee->id,
             'title' => $title,
             'due_at' => $dueAt,
-            'source' => CrmTask::SOURCE_MANUAL,
+            'source' => $source,
         ]);
 
         $this->timeline->handle(

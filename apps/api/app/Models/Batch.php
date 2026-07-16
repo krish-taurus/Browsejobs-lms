@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -46,6 +47,26 @@ class Batch extends Model
     public function members(): HasMany
     {
         return $this->hasMany(BatchMember::class);
+    }
+
+    /**
+     * The bootcamp this paid batch draws its attendees from (Stage 3).
+     *
+     * @return BelongsTo<Batch, $this>
+     */
+    public function sourceBatch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class, 'linked_source_batch_id');
+    }
+
+    /**
+     * The paid batch fed by this bootcamp (reverse of sourceBatch).
+     *
+     * @return HasOne<Batch, $this>
+     */
+    public function linkedPaidBatch(): HasOne
+    {
+        return $this->hasOne(Batch::class, 'linked_source_batch_id');
     }
 
     /**

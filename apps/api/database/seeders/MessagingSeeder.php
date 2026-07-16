@@ -36,6 +36,7 @@ class MessagingSeeder extends Seeder
         ['key' => 'fee_blocked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your access is paused ({{level}}) until your fees are cleared.'],
         ['key' => 'fee_unblocked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your access is restored. Welcome back!'],
         ['key' => 'payment_link', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, complete your registration here: {{link}}'],
+        ['key' => 'conversion_nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, secure your seat in {{batch}} — {{seats}} left, starts {{starts}}. Complete payment: {{link}}'],
     ];
 
     public function run(): void

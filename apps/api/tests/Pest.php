@@ -111,3 +111,30 @@ function reservedMemberIn(Tenant $tenant, string $phone = '+91 90000 12345', ?st
 
     return compact('batch', 'student', 'member');
 }
+
+/**
+ * A bootcamp batch linked to a paid batch with one Enrolled attendee — for the
+ * P2.5 conversion suite.
+ *
+ * @return array{bootcamp: Batch, paid: Batch, student: User, member: BatchMember}
+ */
+function bootcampConversionSetup(Tenant $tenant, string $phone = '+91 90000 33333', ?string $email = 'attendee@example.com'): array
+{
+    $course = Course::factory()->for($tenant)->create();
+    $bootcamp = Batch::factory()->for($tenant)->create([
+        'course_id' => $course->id, 'type' => BatchType::Bootcamp->value,
+    ]);
+    $paid = Batch::factory()->for($tenant)->create([
+        'course_id' => $course->id, 'type' => BatchType::Paid->value,
+        'linked_source_batch_id' => $bootcamp->id,
+    ]);
+    $student = User::factory()->for($tenant)->create([
+        'user_type' => 'student', 'phone' => $phone, 'email' => $email,
+    ]);
+    $member = BatchMember::factory()->for($tenant)->create([
+        'batch_id' => $bootcamp->id, 'user_id' => $student->id,
+        'status' => BatchMemberStatus::Enrolled->value,
+    ]);
+
+    return compact('bootcamp', 'paid', 'student', 'member');
+}
