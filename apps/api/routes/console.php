@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 
 // Dunning ladder (PRD §6.8): daily reminders + soft/hard access blocks.
 Schedule::command('fees:run-ladder')->dailyAt('07:00');
+
+// Bootcamp-conversion nudge ladder (PRD §5 Stage 3): daily non-payer nudges.
+Schedule::command('conversions:run-nudges')->dailyAt('08:00');

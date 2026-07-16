@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
+use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
@@ -105,8 +106,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-rosters')->group(function () {
         Route::post('batches/{batch}/members', [RosterController::class, 'store']);
         Route::post('batches/{batch}/import', [RosterController::class, 'import']);
+        Route::post('batches/{batch}/complete', [RosterController::class, 'completeBootcamp']);
         Route::post('members/{member}/transfer', [RosterController::class, 'transfer']);
         Route::post('members/{member}/remove', [RosterController::class, 'remove']);
+        Route::post('members/{member}/convert', [RosterController::class, 'convert']);
     });
 
     // Built-in CRM (PRD §6.12).
@@ -130,6 +133,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
         Route::get('crm-assignment-rule', [CrmAssignmentRuleController::class, 'show']);
         Route::put('crm-assignment-rule', [CrmAssignmentRuleController::class, 'update']);
+
+        Route::get('funnel', [FunnelController::class, 'index']);
     });
 
     // Payments + EMI (PRD §6.8).

@@ -98,6 +98,20 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
     onError,
   });
 
+  const complete = useMutation({
+    mutationFn: () =>
+      apiJson<{ data: { converted: number; skipped: unknown[] } }>(`/api/v1/admin/batches/${id}/complete`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    onSuccess: (res) => {
+      setError(null);
+      setImportSummary(`Bootcamp completed — ${res.data.converted} attendee(s) converted to the paid batch.`);
+      void refresh();
+    },
+    onError,
+  });
+
   const batch = data?.data;
   const inputCls =
     "rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
@@ -127,7 +141,20 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
     <div className="mx-auto max-w-5xl">
       <Link href="/admin/batches" className="text-sm text-trust hover:underline">← All batches</Link>
       <p className="kicker mt-4 text-trust">Batch · {batch?.course.name}</p>
-      <h1 className="display mono mt-2 text-3xl text-ink">{batch?.number ?? "…"}</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display mono text-3xl text-ink">{batch?.number ?? "…"}</h1>
+        {batch?.type === "bootcamp" && (
+          <button
+            onClick={() => {
+              if (window.confirm("Complete this bootcamp and convert all attendees to the linked paid batch?")) complete.mutate();
+            }}
+            disabled={complete.isPending}
+            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
+          >
+            {complete.isPending ? "Converting…" : "Complete bootcamp & convert"}
+          </button>
+        )}
+      </div>
 
       {error && (
         <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">
@@ -225,6 +252,14 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
               </span>
               {m.status !== "dropped" && m.status !== "transferred" && (
                 <span className="flex gap-3 text-xs font-semibold">
+                  {batch?.type === "bootcamp" && (m.status === "enrolled" || m.status === "reserved") && (
+                    <button
+                      onClick={() => act.mutate({ path: `/api/v1/admin/members/${m.id}/convert`, body: {} })}
+                      className="text-verify hover:underline"
+                    >
+                      Convert to paid
+                    </button>
+                  )}
                   <button onClick={() => transfer(m)} className="text-trust hover:underline">Transfer</button>
                   <button onClick={() => remove(m)} className="text-warn hover:underline">Remove</button>
                 </span>
