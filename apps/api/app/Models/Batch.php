@@ -30,7 +30,7 @@ class Batch extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'course_id', 'number', 'type', 'capacity',
-        'starts_on', 'ends_on', 'linked_source_batch_id', 'status',
+        'starts_on', 'ends_on', 'linked_source_batch_id', 'status', 'trainer_id',
     ];
 
     /**
@@ -47,6 +47,16 @@ class Batch extends Model
     public function members(): HasMany
     {
         return $this->hasMany(BatchMember::class);
+    }
+
+    /**
+     * The trainer assigned to this batch (PRD §6.13 Training ticket routing).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function trainer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'trainer_id');
     }
 
     /**

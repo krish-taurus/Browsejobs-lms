@@ -17,6 +17,7 @@ const nav = [
   { href: "/admin/dunning", label: "Dunning" },
   { href: "/admin/vouchers", label: "Vouchers" },
   { href: "/admin/reviews", label: "Testimonials" },
+  { href: "/admin/support", label: "Support" },
   { href: "/admin/messages", label: "Messaging" },
   { href: "/admin/funnel", label: "Funnel" },
 ];
