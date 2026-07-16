@@ -31,6 +31,7 @@ return [
         'payments' => ['team', 'accounts', 120, 1440],           // 2h / 24h
         'technical' => ['team', 'technical', 240, 2880],         // 4h / 48h
         'training' => ['batch_trainer', 'training', 240, 1440],  // 4h / 24h
+        'academic' => ['batch_trainer', 'training', 240, 1440],  // 4h / 24h — AI Tutor escalations
         'mentorship' => ['team', 'mentorship', 480, 2880],       // 8h / 48h
         'interview_prep' => ['team', 'interview-prep', 480, 2880], // 8h / 48h
         'other' => ['admin', null, 480, 2880],                   // 8h / 48h

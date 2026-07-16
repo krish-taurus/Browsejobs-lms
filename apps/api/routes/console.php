@@ -21,3 +21,6 @@ Schedule::command('support:check-sla')->hourly();
 
 // Student rescore (PRD §6.4): nightly mastery/engagement/risk/PRI + snapshots.
 Schedule::command('scores:recompute')->dailyAt('06:00');
+
+// AI Tutor knowledge base (PRD §6.4): weekly rebuild from course/program/lab content.
+Schedule::command('tutor:reindex')->weeklyOn(1, '05:00');

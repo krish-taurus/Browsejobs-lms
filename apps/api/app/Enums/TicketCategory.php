@@ -10,6 +10,7 @@ enum TicketCategory: string
     case Technical = 'technical';
     case Mentorship = 'mentorship';
     case Training = 'training';
+    case Academic = 'academic';
     case InterviewPrep = 'interview_prep';
     case Other = 'other';
 
@@ -20,6 +21,7 @@ enum TicketCategory: string
             self::Technical => 'Technical',
             self::Mentorship => 'Mentorship',
             self::Training => 'Training',
+            self::Academic => 'Academic',
             self::InterviewPrep => 'Interview Prep',
             self::Other => 'Other',
         };

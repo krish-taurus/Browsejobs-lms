@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
+import { type TutorConversation, isBudgetError } from "@/lib/tutor";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -29,11 +31,15 @@ type Result = {
 
 export default function LabPage({ params }: { params: Promise<{ lesson: string }> }) {
   const { lesson } = use(params);
+  const router = useRouter();
   const [lab, setLab] = useState<Lab | null>(null);
   const [code, setCode] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"run" | "submit" | null>(null);
+  const [tutorQ, setTutorQ] = useState("");
+  const [tutorBusy, setTutorBusy] = useState(false);
+  const [tutorErr, setTutorErr] = useState<string | null>(null);
 
   const load = useCallback(() => {
     apiJson<{ data: Lab }>(`/api/v1/me/labs/${lesson}`)
@@ -53,6 +59,23 @@ export default function LabPage({ params }: { params: Promise<{ lesson: string }
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function askTutor() {
+    if (!tutorQ.trim()) return;
+    setTutorErr(null);
+    setTutorBusy(true);
+    try {
+      const r = await apiJson<{ data: TutorConversation }>(`/api/v1/me/tutor/labs/${lesson}`, {
+        method: "POST",
+        body: JSON.stringify({ question: tutorQ }),
+      });
+      router.push(`/tutor/${r.data.id}`);
+    } catch (err) {
+      if (isBudgetError(err)) setTutorErr("You've reached today's AI tutor limit. It resets tomorrow.");
+      else setTutorErr(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
+      setTutorBusy(false);
     }
   }
 
@@ -106,6 +129,27 @@ export default function LabPage({ params }: { params: Promise<{ lesson: string }
           {result.stderr && <pre className="mono mt-2 max-h-48 overflow-auto rounded-[10px] bg-warn/10 p-3 text-xs text-warn">{result.stderr}</pre>}
         </div>
       )}
+
+      {/* Stuck? The tutor gives a hint (never the full solution) using your last run. */}
+      <div className="mt-6 rounded-[14px] border border-line bg-white p-4">
+        <p className="kicker text-trust">Stuck? Ask the tutor</p>
+        <p className="mt-1 text-xs text-muted">You&apos;ll get a hint, not the answer — the tutor sees your latest run.</p>
+        <textarea
+          value={tutorQ}
+          onChange={(e) => setTutorQ(e.target.value)}
+          rows={2}
+          placeholder="e.g. Why is my loop not printing anything?"
+          className="mt-3 w-full resize-none rounded-[10px] border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-trust"
+        />
+        {tutorErr && <p className="mt-2 text-sm text-warn">{tutorErr}</p>}
+        <button
+          onClick={askTutor}
+          disabled={tutorBusy || !tutorQ.trim()}
+          className="mt-2 rounded-full border border-line px-5 py-2 text-sm font-semibold text-trust hover:bg-sky disabled:opacity-50"
+        >
+          {tutorBusy ? "Thinking…" : "Ask for a hint"}
+        </button>
+      </div>
     </div>
   );
 }
