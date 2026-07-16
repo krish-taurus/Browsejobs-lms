@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BatchMemberStatus;
+use App\Enums\EnrolmentType;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $batch_id
  * @property int $user_id
  * @property BatchMemberStatus $status
+ * @property EnrolmentType $enrolment_type
  * @property Carbon|null $enrolled_at
  */
 class BatchMember extends Model
@@ -25,7 +27,7 @@ class BatchMember extends Model
     use HasFactory;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'batch_id', 'user_id', 'status', 'enrolled_at'];
+    protected $fillable = ['tenant_id', 'batch_id', 'user_id', 'status', 'enrolment_type', 'enrolled_at'];
 
     /**
      * @return BelongsTo<Batch, $this>
@@ -50,6 +52,7 @@ class BatchMember extends Model
     {
         return [
             'status' => BatchMemberStatus::class,
+            'enrolment_type' => EnrolmentType::class,
             'enrolled_at' => 'datetime',
         ];
     }

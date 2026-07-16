@@ -9,4 +9,5 @@ enum BatchType: string
     case Masterclass = 'masterclass';
     case Bootcamp = 'bootcamp';
     case Paid = 'paid';
+    case SelfPaced = 'self_paced';
 }

@@ -57,6 +57,37 @@ final class HttpRazorpayClient implements RazorpayClient
         return hash_equals($expected, $signature);
     }
 
+    public function refund(string $paymentId, int $amountPaise): string
+    {
+        $response = $this->request()->post($this->config['base_url']."/payments/{$paymentId}/refund", [
+            'amount' => $amountPaise,
+        ])->throw()->json();
+
+        return (string) $response['id'];
+    }
+
+    public function createSubscription(int $amountPaise, int $periodDays, array $notes = []): RazorpaySubscription
+    {
+        // A real integration first creates a Plan for (amount, period) then a
+        // Subscription against it; kept behind this interface for the app layer.
+        $response = $this->request()->post($this->config['base_url'].'/subscriptions', [
+            'total_count' => 120,
+            'notes' => $notes,
+        ])->throw()->json();
+
+        return new RazorpaySubscription(
+            id: (string) $response['id'],
+            status: (string) ($response['status'] ?? 'active'),
+        );
+    }
+
+    public function cancelSubscription(string $subscriptionId): void
+    {
+        $this->request()->post($this->config['base_url']."/subscriptions/{$subscriptionId}/cancel", [
+            'cancel_at_cycle_end' => 1,
+        ])->throw();
+    }
+
     private function request(): PendingRequest
     {
         return Http::withBasicAuth($this->config['key_id'], $this->config['key_secret'])->acceptJson();

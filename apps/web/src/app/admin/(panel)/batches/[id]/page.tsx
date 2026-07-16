@@ -112,6 +112,19 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
     onError,
   });
 
+  const publishSelfPaced = useMutation({
+    mutationFn: () =>
+      apiJson<{ data: { price_paise: number } }>(`/api/v1/admin/batches/${id}/publish-self-paced`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    onSuccess: () => {
+      setError(null);
+      setImportSummary("Published as a self-paced recorded course — it's now in the store.");
+    },
+    onError,
+  });
+
   const batch = data?.data;
   const inputCls =
     "rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
@@ -152,6 +165,17 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
             className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
           >
             {complete.isPending ? "Converting…" : "Complete bootcamp & convert"}
+          </button>
+        )}
+        {batch?.type === "paid" && (
+          <button
+            onClick={() => {
+              if (window.confirm("Publish this completed batch's recordings as a self-paced course?")) publishSelfPaced.mutate();
+            }}
+            disabled={publishSelfPaced.isPending}
+            className="rounded-full border border-line px-5 py-2 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50"
+          >
+            {publishSelfPaced.isPending ? "Publishing…" : "Publish as self-paced"}
           </button>
         )}
       </div>

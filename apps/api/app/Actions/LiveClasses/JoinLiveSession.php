@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\LiveClasses;
 
 use App\Enums\BatchMemberStatus;
+use App\Enums\EnrolmentType;
 use App\Models\LiveSession;
 use App\Models\User;
 use App\Support\Fees\FeeGate;
@@ -28,6 +29,13 @@ final readonly class JoinLiveSession
         if ($member === null || ! in_array($member->status->value, $occupying, true)) {
             throw ValidationException::withMessages([
                 'enrolment' => 'You are not enrolled in this batch.',
+            ]);
+        }
+
+        // Self-paced buyers get recordings, not live classes (PRD §6.3).
+        if ($member->enrolment_type === EnrolmentType::SelfPaced) {
+            throw ValidationException::withMessages([
+                'enrolment' => 'Self-paced enrolment does not include live classes. Upgrade to live to join.',
             ]);
         }
 
