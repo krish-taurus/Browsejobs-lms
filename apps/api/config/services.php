@@ -48,6 +48,14 @@ return [
         'tenant_slug' => env('META_TENANT_SLUG', ''),
     ],
 
+    'razorpay' => [
+        // Payments (PRD §6.8). Test keys in non-prod; tests mock the client.
+        'key_id' => env('RAZORPAY_KEY_ID', ''),
+        'key_secret' => env('RAZORPAY_KEY_SECRET', ''),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET', ''),
+        'base_url' => env('RAZORPAY_BASE_URL', 'https://api.razorpay.com/v1'),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

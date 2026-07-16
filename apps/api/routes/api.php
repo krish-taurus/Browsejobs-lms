@@ -6,10 +6,13 @@ use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
+use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Admin\PaymentLinkController;
+use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\TopicController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -19,6 +22,7 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
+use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
@@ -115,6 +119,22 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('crm-assignment-rule', [CrmAssignmentRuleController::class, 'show']);
         Route::put('crm-assignment-rule', [CrmAssignmentRuleController::class, 'update']);
     });
+
+    // Payments + EMI (PRD §6.8).
+    Route::middleware('can:manage-fees')->group(function () {
+        Route::get('fee-plans', [FeePlanController::class, 'index']);
+        Route::get('fee-plans/batches', [FeePlanController::class, 'batches']);
+        Route::get('fee-plans/candidates', [FeePlanController::class, 'candidates']);
+        Route::post('fee-plans/preview', [FeePlanController::class, 'preview']);
+        Route::post('fee-plans/bulk-links', [PaymentLinkController::class, 'bulk']);
+        Route::post('fee-plans', [FeePlanController::class, 'store']);
+        Route::get('fee-plans/{feePlan}', [FeePlanController::class, 'show']);
+
+        Route::post('instalments/{instalment}/link', [PaymentLinkController::class, 'store']);
+        Route::post('instalments/{instalment}/order', [PaymentLinkController::class, 'order']);
+
+        Route::get('receipts/{receipt}/download', [ReceiptController::class, 'download']);
+    });
 });
 
 // Signature-verified inbound webhooks (no user auth).
@@ -132,3 +152,9 @@ Route::post('webhooks/meta/leads', [MetaLeadController::class, 'store'])
     ->middleware('meta.signed')
     ->withoutMiddleware('throttle:api')
     ->name('webhooks.meta.store');
+
+// Razorpay payments (PRD §6.8). Signature-verified, idempotent reconciliation.
+Route::post('webhooks/razorpay', RazorpayWebhookController::class)
+    ->middleware('razorpay.signed')
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.razorpay');

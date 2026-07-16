@@ -28,6 +28,7 @@ class RolePermissionSeeder extends Seeder
         'teach-classes' => 'Run live classes and mark attendance',
         'mentor-students' => 'Mentor students and take bookings',
         'manage-leads' => 'Work the CRM lead pipeline',
+        'manage-fees' => 'Manage fee plans, payments and receipts',
         'manage-placements' => 'Manage placement pipeline and jobs',
         'handle-tickets' => 'Work the student support desk',
         'view-student-portal' => 'Access the student learning portal',
@@ -40,7 +41,7 @@ class RolePermissionSeeder extends Seeder
         'super-admin' => ['name' => 'Super Admin', 'is_staff' => true, 'permissions' => '*'],
         'admin' => ['name' => 'Admin (Institute)', 'is_staff' => true, 'permissions' => [
             'manage-users', 'manage-roles', 'manage-curriculum', 'manage-batches',
-            'manage-rosters', 'manage-leads', 'manage-placements', 'handle-tickets',
+            'manage-rosters', 'manage-leads', 'manage-fees', 'manage-placements', 'handle-tickets',
         ]],
         'trainer' => ['name' => 'Trainer', 'is_staff' => true, 'permissions' => [
             'teach-classes', 'manage-curriculum', 'manage-rosters',

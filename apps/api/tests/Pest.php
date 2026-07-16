@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\BatchMemberStatus;
+use App\Enums\BatchType;
+use App\Models\Batch;
+use App\Models\BatchMember;
+use App\Models\Course;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
@@ -80,4 +85,29 @@ function counselorIn(Tenant $tenant, ?string $name = null): User
     $user->assignRole('counselor');
 
     return $user;
+}
+
+/**
+ * A paid batch with one Reserved student, for the payments suite.
+ *
+ * @return array{batch: Batch, student: User, member: BatchMember}
+ */
+function reservedMemberIn(Tenant $tenant, string $phone = '+91 90000 12345', ?string $email = null): array
+{
+    $email ??= fake()->unique()->safeEmail();
+    $course = Course::factory()->for($tenant)->create();
+    $batch = Batch::factory()->for($tenant)->create([
+        'course_id' => $course->id,
+        'type' => BatchType::Paid->value,
+    ]);
+    $student = User::factory()->for($tenant)->create([
+        'user_type' => 'student', 'phone' => $phone, 'email' => $email,
+    ]);
+    $member = BatchMember::factory()->for($tenant)->create([
+        'batch_id' => $batch->id,
+        'user_id' => $student->id,
+        'status' => BatchMemberStatus::Reserved->value,
+    ]);
+
+    return compact('batch', 'student', 'member');
 }
