@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\CoachController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
@@ -86,6 +88,7 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 // Authenticated session endpoints (Sanctum session guard).
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);
+    Route::get('me/coach', [CoachController::class, 'show']);
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
     Route::get('me/notifications', [NotificationController::class, 'index']);
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
@@ -172,6 +175,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::put('crm-assignment-rule', [CrmAssignmentRuleController::class, 'update']);
 
         Route::get('funnel', [FunnelController::class, 'index']);
+        Route::get('risk', [RiskController::class, 'index']);
     });
 
     // Payments + EMI (PRD §6.8).

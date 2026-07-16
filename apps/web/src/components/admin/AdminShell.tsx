@@ -18,6 +18,7 @@ const nav = [
   { href: "/admin/vouchers", label: "Vouchers" },
   { href: "/admin/reviews", label: "Testimonials" },
   { href: "/admin/support", label: "Support" },
+  { href: "/admin/risk", label: "Risk" },
   { href: "/admin/monetization", label: "Monetization" },
   { href: "/admin/revenue", label: "Revenue" },
   { href: "/admin/ai-usage", label: "AI usage" },

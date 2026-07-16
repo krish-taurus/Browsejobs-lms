@@ -9,6 +9,7 @@ use App\Models\Concerns\BelongsToTenant;
 use App\Models\Concerns\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -72,5 +73,15 @@ class User extends Authenticatable
     public function supportTeams(): BelongsToMany
     {
         return $this->belongsToMany(SupportTeam::class, 'support_team_user');
+    }
+
+    /**
+     * The student's batch memberships (P3.2 scoring reads these for course context).
+     *
+     * @return HasMany<BatchMember, $this>
+     */
+    public function batchMemberships(): HasMany
+    {
+        return $this->hasMany(BatchMember::class);
     }
 }

@@ -9,13 +9,14 @@ use App\Models\AccessBlock;
 use App\Models\Attendance;
 use App\Models\BatchMember;
 use App\Models\Instalment;
+use App\Models\StudentScore;
 use App\Models\Ticket;
 use App\Models\User;
 
 /**
  * Assembles the staff workspace's student-context sidebar (PRD §6.13) so staff
  * never have to ask "which batch are you in?": active batch, fee status,
- * attendance, and recent tickets. (Risk score is deferred to the AI phase.)
+ * attendance, risk score (P3.2), and recent tickets.
  */
 final readonly class TicketStudentContext
 {
@@ -47,6 +48,8 @@ final readonly class TicketStudentContext
             ->where('user_id', $student->id)
             ->avg('attended_pct'));
 
+        $riskScore = StudentScore::query()->where('user_id', $student->id)->value('risk_dropout');
+
         $recent = Ticket::query()
             ->where('student_id', $student->id)
             ->orderByDesc('id')
@@ -67,6 +70,7 @@ final readonly class TicketStudentContext
             ],
             'fee' => ['outstanding_paise' => $outstanding, 'blocked' => $blocked],
             'attendance_pct' => $attendancePct,
+            'risk_score' => $riskScore === null ? null : (int) $riskScore,
             'recent_tickets' => $recent->map(fn (Ticket $t) => [
                 'id' => $t->id,
                 'reference' => $t->reference,
