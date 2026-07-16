@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FunnelController;
+use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
 use App\Http\Controllers\Testimonials\TestimonialController;
+use App\Http\Controllers\Tutor\TutorController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
@@ -114,6 +116,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/labs/{lesson}', [LabController::class, 'show']);
     Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
     Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
+    Route::get('me/tutor', [TutorController::class, 'index']);
+    Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
+    Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
+    Route::post('me/tutor/labs/{lesson}', [TutorController::class, 'askLab'])->middleware('throttle:ai');
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -135,6 +141,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::delete('lessons/{lesson}', [LessonController::class, 'destroy']);
         Route::get('lessons/{lesson}/coding-lab', [CodingLabController::class, 'show']);
         Route::put('lessons/{lesson}/coding-lab', [CodingLabController::class, 'upsert']);
+        Route::get('knowledge', [KnowledgeController::class, 'index']);
+        Route::post('knowledge', [KnowledgeController::class, 'store']);
+        Route::patch('knowledge/{knowledge}', [KnowledgeController::class, 'update']);
+        Route::delete('knowledge/{knowledge}', [KnowledgeController::class, 'destroy']);
+        Route::post('knowledge/reindex', [KnowledgeController::class, 'reindex']);
     });
 
     Route::middleware('can:manage-batches')->group(function () {

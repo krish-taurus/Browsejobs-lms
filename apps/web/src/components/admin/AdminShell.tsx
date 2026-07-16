@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 
 const nav = [
   { href: "/admin/curriculum", label: "Curriculum" },
+  { href: "/admin/knowledge", label: "Tutor KB" },
   { href: "/admin/batches", label: "Batches" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/tasks", label: "Tasks" },

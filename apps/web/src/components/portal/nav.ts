@@ -31,6 +31,11 @@ export const navItems: NavItem[] = [
     icon: "M8 6 3 12l5 6M16 6l5 6-5 6M13 4l-2 16",
   },
   {
+    href: "/tutor",
+    label: "AI Tutor",
+    icon: "M12 3a7 7 0 0 0-7 7c0 2.4 1.2 4.1 3 5.3V18h8v-2.7c1.8-1.2 3-2.9 3-5.3a7 7 0 0 0-7-7ZM9 21h6",
+  },
+  {
     href: "/store",
     label: "Store",
     icon: "M4 7h16l-1 12H5L4 7ZM9 7a3 3 0 0 1 6 0",
