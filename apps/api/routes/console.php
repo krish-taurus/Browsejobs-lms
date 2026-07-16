@@ -18,3 +18,6 @@ Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
+
+// Student rescore (PRD §6.4): nightly mastery/engagement/risk/PRI + snapshots.
+Schedule::command('scores:recompute')->dailyAt('06:00');
