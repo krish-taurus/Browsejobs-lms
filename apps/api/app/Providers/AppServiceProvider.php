@@ -9,17 +9,21 @@ use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Messaging\NullPushSender;
+use App\Support\Messaging\PushSender;
 use App\Support\Notifications\FeeNotifier;
-use App\Support\Notifications\LogFeeNotifier;
-use App\Support\Notifications\LogSessionNotifier;
+use App\Support\Notifications\MessengerFeeNotifier;
+use App\Support\Notifications\MessengerSessionNotifier;
 use App\Support\Notifications\SessionNotifier;
-use App\Support\Otp\LogOtpNotifier;
+use App\Support\Otp\MessengerOtpNotifier;
 use App\Support\Otp\OtpNotifier;
 use App\Support\Razorpay\HttpRazorpayClient;
 use App\Support\Razorpay\RazorpayClient;
 use App\Support\Receipts\HtmlReceiptRenderer;
 use App\Support\Receipts\ReceiptRenderer;
 use App\Support\Tenancy\TenantContext;
+use App\Support\WhatsApp\HttpWhatsAppClient;
+use App\Support\WhatsApp\WhatsAppClient;
 use App\Support\Zoom\HttpZoomClient;
 use App\Support\Zoom\ZoomClient;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -36,7 +40,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class);
-        $this->app->bind(OtpNotifier::class, LogOtpNotifier::class);
+
+        // OTP + live-class + dunning notifications route through the P2.4
+        // messaging hub (Messenger). Log* stubs remain for tests to force-bind.
+        $this->app->bind(OtpNotifier::class, MessengerOtpNotifier::class);
 
         $this->app->bind(ZoomClient::class, function (): HttpZoomClient {
             /** @var array{account_id: string, client_id: string, client_secret: string, base_url: string, oauth_url: string} $config */
@@ -49,11 +56,8 @@ class AppServiceProvider extends ServiceProvider
         // fee-driven block. AllowAllFeeGate stays available for tests to rebind.
         $this->app->bind(FeeGate::class, DuesFeeGate::class);
 
-        // Dunning notifications log locally until the P2.4 messaging hub.
-        $this->app->bind(FeeNotifier::class, LogFeeNotifier::class);
-
-        // Live-class notifications log locally until the P2.4 messaging hub.
-        $this->app->bind(SessionNotifier::class, LogSessionNotifier::class);
+        $this->app->bind(FeeNotifier::class, MessengerFeeNotifier::class);
+        $this->app->bind(SessionNotifier::class, MessengerSessionNotifier::class);
 
         // CRM lead scoring is rule-based in P2.1; the AI telemetry model (P3)
         // will rebind this interface.
@@ -69,6 +73,17 @@ class AppServiceProvider extends ServiceProvider
 
         // GST receipts render to branded HTML now; WeasyPrint PDF swaps in later.
         $this->app->bind(ReceiptRenderer::class, HtmlReceiptRenderer::class);
+
+        // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.
+        $this->app->bind(WhatsAppClient::class, function (): HttpWhatsAppClient {
+            /** @var array{phone_number_id: string, access_token: string, base_url: string} $config */
+            $config = config('services.whatsapp');
+
+            return new HttpWhatsAppClient($config);
+        });
+
+        // Web push is deferred in P2.4.
+        $this->app->bind(PushSender::class, NullPushSender::class);
     }
 
     /**
@@ -90,5 +105,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by(
             $request->user()?->getAuthIdentifier() ?? $request->ip(),
         ));
+
+        // Note: the P2.4 SendLeadWelcomeMessage listener on LeadCaptured is
+        // auto-registered by Laravel 11's app/Listeners discovery — no explicit
+        // Event::listen needed.
     }
 }

@@ -43,6 +43,10 @@ class ContactTimelineEvent extends Model
 
     public const TYPE_SLA_BREACHED = 'sla_breached';
 
+    public const TYPE_MESSAGE_OUT = 'message_out';
+
+    public const TYPE_MESSAGE_IN = 'message_in';
+
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'lead_id', 'type', 'actor_id', 'body', 'meta', 'occurred_at',

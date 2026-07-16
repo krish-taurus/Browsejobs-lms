@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             CrmSeeder::class,
             PaymentsSeeder::class,
+            MessagingSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();

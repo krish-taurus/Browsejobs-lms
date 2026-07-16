@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\MessageController;
+use App\Http\Controllers\Admin\MessageTemplateController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\ReceiptController;
@@ -22,9 +24,12 @@ use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\MessagePreferenceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
+use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +71,10 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
+    Route::get('me/notifications', [NotificationController::class, 'index']);
+    Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
+    Route::get('me/message-preferences', [MessagePreferenceController::class, 'show']);
+    Route::put('me/message-preferences', [MessagePreferenceController::class, 'update']);
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -140,6 +149,15 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
         Route::get('dunning', [DunningController::class, 'index']);
     });
+
+    // Messaging hub (PRD §6.9).
+    Route::middleware('can:manage-messaging')->group(function () {
+        Route::get('messages', [MessageController::class, 'index']);
+        Route::get('message-templates', [MessageTemplateController::class, 'index']);
+        Route::post('message-templates/preview', [MessageTemplateController::class, 'preview']);
+        Route::post('message-templates', [MessageTemplateController::class, 'store']);
+        Route::put('message-templates/{template}', [MessageTemplateController::class, 'update']);
+    });
 });
 
 // Signature-verified inbound webhooks (no user auth).
@@ -163,3 +181,12 @@ Route::post('webhooks/razorpay', RazorpayWebhookController::class)
     ->middleware('razorpay.signed')
     ->withoutMiddleware('throttle:api')
     ->name('webhooks.razorpay');
+
+// WhatsApp Cloud API (PRD §6.9). GET = handshake; POST = inbound, HMAC-verified.
+Route::get('webhooks/whatsapp', [WhatsAppController::class, 'verify'])
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.whatsapp.verify');
+Route::post('webhooks/whatsapp', [WhatsAppController::class, 'store'])
+    ->middleware('whatsapp.signed')
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.whatsapp.store');
