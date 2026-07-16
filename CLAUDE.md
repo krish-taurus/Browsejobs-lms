@@ -67,7 +67,7 @@ Signature patterns: mono uppercase kicker (blue; green when the section is about
 - Audit log entry for: grade changes, fee waivers, access blocks/unblocks, roster changes, role changes, ticket escalations.
 
 ## AI Service Layer
-- Single `app/Services/AI/` gateway wrapping the Anthropic API. Every call logs to `ai_events` (purpose, model, tokens, cost, latency).
+- Single `app/Services/AI/` gateway with a provider-switchable transport (`AI_PROVIDER`: anthropic | openai | kimi | deepseek | grok | custom — any OpenAI-compatible endpoint; registry in `config/ai.php`, ADR 0016). Every call logs to `ai_events` (purpose, model, tokens, cost, latency) regardless of vendor. Consumers depend on `AiGateway`/`AiClient` only — never on a vendor SDK or API shape.
 - Prompts live in `resources/prompts/` as versioned files — never inline strings.
 - AI outputs that face students (grades, reports, syllabi) go through the human-approval flow defined in PRD §7 unless the PRD marks them auto-send (nudges within approved templates, coach panel, tutor answers).
 

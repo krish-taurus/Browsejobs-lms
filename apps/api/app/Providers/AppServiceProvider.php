@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Services\AI\AiClient;
 use App\Services\AI\AnthropicClient;
+use App\Services\AI\OpenAiCompatibleClient;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
 use App\Support\Fees\DuesFeeGate;
@@ -35,6 +36,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -89,13 +91,23 @@ class AppServiceProvider extends ServiceProvider
         // Web push is deferred in P2.4.
         $this->app->bind(PushSender::class, NullPushSender::class);
 
-        // AI Service Layer (P3.1). Real Anthropic transport from config; tests bind
-        // FakeAiClient. The AiGateway (budget + ai_events) composes this.
-        $this->app->bind(AiClient::class, function (): AnthropicClient {
-            /** @var array{api_key: string, base_url: string, version: string, model: string} $config */
-            $config = config('services.anthropic');
+        // AI Service Layer (P3.1). The transport is provider-switchable via
+        // AI_PROVIDER (anthropic | openai | kimi | deepseek | grok | custom —
+        // see config/ai.php); tests bind FakeAiClient. The AiGateway (budget +
+        // ai_events) composes this, so switching vendors changes nothing else.
+        $this->app->bind(AiClient::class, function (): AiClient {
+            $provider = (string) config('ai.provider', 'anthropic');
+            $config = config("ai.providers.{$provider}");
 
-            return new AnthropicClient($config);
+            if (! is_array($config)) {
+                throw new RuntimeException("Unknown AI provider [{$provider}] — see config/ai.php.");
+            }
+
+            return match ($config['driver'] ?? null) {
+                'anthropic' => new AnthropicClient($config),
+                'openai_compatible' => new OpenAiCompatibleClient($config),
+                default => throw new RuntimeException("Unknown AI driver for provider [{$provider}]."),
+            };
         });
 
         // Coding labs code execution (P3.1). Real Judge0 client from config; tests
