@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\CannedResponseController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
@@ -19,6 +20,8 @@ use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
+use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Admin\TicketRouteController;
 use App\Http\Controllers\Admin\TopicController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -31,6 +34,7 @@ use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviews\ReviewController;
+use App\Http\Controllers\Support\StudentTicketController;
 use App\Http\Controllers\Testimonials\TestimonialController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
@@ -82,6 +86,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::put('me/message-preferences', [MessagePreferenceController::class, 'update']);
     Route::post('me/testimonials', [TestimonialController::class, 'store']);
     Route::get('me/vouchers', [MyVoucherController::class, 'index']);
+    Route::get('me/tickets', [StudentTicketController::class, 'index']);
+    Route::post('me/tickets', [StudentTicketController::class, 'store']);
+    Route::get('me/tickets/{ticket}', [StudentTicketController::class, 'show']);
+    Route::post('me/tickets/{ticket}/reply', [StudentTicketController::class, 'reply']);
+    Route::post('me/tickets/{ticket}/reopen', [StudentTicketController::class, 'reopen']);
+    Route::post('me/tickets/{ticket}/csat', [StudentTicketController::class, 'csat']);
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -182,6 +192,25 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('testimonials', [AdminTestimonialController::class, 'index']);
         Route::post('testimonials/{testimonial}/approve', [AdminTestimonialController::class, 'approve']);
         Route::post('testimonials/{testimonial}/reject', [AdminTestimonialController::class, 'reject']);
+    });
+
+    // Student Support Desk (PRD §6.13).
+    Route::middleware('can:handle-tickets')->group(function () {
+        Route::get('tickets', [TicketController::class, 'index']);
+        Route::get('tickets/staff', [TicketController::class, 'staff']);
+        Route::get('tickets/{ticket}', [TicketController::class, 'show']);
+        Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply']);
+        Route::post('tickets/{ticket}/status', [TicketController::class, 'status']);
+        Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign']);
+        Route::post('tickets/{ticket}/escalate', [TicketController::class, 'escalate']);
+
+        Route::get('canned-responses', [CannedResponseController::class, 'index']);
+        Route::post('canned-responses', [CannedResponseController::class, 'store']);
+        Route::put('canned-responses/{cannedResponse}', [CannedResponseController::class, 'update']);
+        Route::delete('canned-responses/{cannedResponse}', [CannedResponseController::class, 'destroy']);
+
+        Route::get('ticket-routes', [TicketRouteController::class, 'index']);
+        Route::put('ticket-routes/{ticketRoute}', [TicketRouteController::class, 'update']);
     });
 });
 

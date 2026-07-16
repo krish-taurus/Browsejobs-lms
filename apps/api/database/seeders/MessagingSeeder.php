@@ -39,6 +39,11 @@ class MessagingSeeder extends Seeder
         ['key' => 'conversion_nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, secure your seat in {{batch}} — {{seats}} left, starts {{starts}}. Complete payment: {{link}}'],
         ['key' => 'review_request', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, how was your bootcamp? Share a quick testimonial and get a voucher toward your registration: {{link}}. (This reward is for your BrowseJobs testimonial only — a Google review is separate and never required.)'],
         ['key' => 'voucher_issued', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Thanks {{name}}! Your voucher {{code}} is ready — we will pre-apply it to your registration link. Valid until {{expires}}.'],
+        ['key' => 'ticket_created_ack', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, we received your request ({{ref}}) about "{{subject}}". Our team is on it — track it here: {{link}}'],
+        ['key' => 'ticket_assigned', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, ticket {{ref}} ("{{subject}}") is assigned to you. Open the workspace: {{link}}'],
+        ['key' => 'ticket_reply', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, there is a new reply on ticket {{ref}}. View it here: {{link}}'],
+        ['key' => 'ticket_resolved', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, ticket {{ref}} is marked resolved. If it helped, please rate your experience: {{link}}'],
+        ['key' => 'ticket_sla_warning', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Reminder: ticket {{ref}} ("{{subject}}") is approaching its first-response SLA. {{link}}'],
     ];
 
     public function run(): void
