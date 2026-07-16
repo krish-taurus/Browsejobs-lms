@@ -16,6 +16,15 @@ final class FakeRazorpayClient implements RazorpayClient
     /** @var list<array<string, mixed>> */
     public array $links = [];
 
+    /** @var list<array<string, mixed>> */
+    public array $refunds = [];
+
+    /** @var list<array<string, mixed>> */
+    public array $subscriptions = [];
+
+    /** @var list<string> */
+    public array $cancelled = [];
+
     private int $sequence = 0;
 
     public function createOrder(int $amountPaise, string $receipt, array $notes = []): RazorpayOrder
@@ -39,5 +48,28 @@ final class FakeRazorpayClient implements RazorpayClient
     public function verifyPaymentSignature(string $orderId, string $paymentId, string $signature): bool
     {
         return $signature === 'valid-signature';
+    }
+
+    public function refund(string $paymentId, int $amountPaise): string
+    {
+        $this->sequence++;
+        $id = 'rfnd_TEST'.str_pad((string) $this->sequence, 6, '0', STR_PAD_LEFT);
+        $this->refunds[] = ['id' => $id, 'payment_id' => $paymentId, 'amount' => $amountPaise];
+
+        return $id;
+    }
+
+    public function createSubscription(int $amountPaise, int $periodDays, array $notes = []): RazorpaySubscription
+    {
+        $this->sequence++;
+        $id = 'sub_TEST'.str_pad((string) $this->sequence, 6, '0', STR_PAD_LEFT);
+        $this->subscriptions[] = ['id' => $id, 'amount' => $amountPaise, 'period_days' => $periodDays, 'notes' => $notes];
+
+        return new RazorpaySubscription(id: $id);
+    }
+
+    public function cancelSubscription(string $subscriptionId): void
+    {
+        $this->cancelled[] = $subscriptionId;
     }
 }

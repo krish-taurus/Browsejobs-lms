@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ConversionSeeder::class,
             VoucherSeeder::class,
             SupportSeeder::class,
+            MonetizationSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();

@@ -18,6 +18,8 @@ const nav = [
   { href: "/admin/vouchers", label: "Vouchers" },
   { href: "/admin/reviews", label: "Testimonials" },
   { href: "/admin/support", label: "Support" },
+  { href: "/admin/monetization", label: "Monetization" },
+  { href: "/admin/revenue", label: "Revenue" },
   { href: "/admin/messages", label: "Messaging" },
   { href: "/admin/funnel", label: "Funnel" },
 ];

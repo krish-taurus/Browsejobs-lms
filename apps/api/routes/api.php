@@ -16,8 +16,10 @@ use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\MessageTemplateController;
 use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\ReceiptController;
+use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviews\ReviewController;
+use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
 use App\Http\Controllers\Testimonials\TestimonialController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
@@ -92,6 +95,13 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/tickets/{ticket}/reply', [StudentTicketController::class, 'reply']);
     Route::post('me/tickets/{ticket}/reopen', [StudentTicketController::class, 'reopen']);
     Route::post('me/tickets/{ticket}/csat', [StudentTicketController::class, 'csat']);
+    Route::get('me/store', [StoreController::class, 'index']);
+    Route::get('me/entitlements', [StoreController::class, 'entitlements']);
+    Route::get('me/purchases', [StoreController::class, 'purchases']);
+    Route::post('me/purchases', [StoreController::class, 'purchase']);
+    Route::post('me/career-plus/subscribe', [StoreController::class, 'subscribe']);
+    Route::post('me/career-plus/cancel', [StoreController::class, 'cancel']);
+    Route::post('me/self-paced/{batch}/upgrade', [StoreController::class, 'upgrade']);
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -211,6 +221,20 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
         Route::get('ticket-routes', [TicketRouteController::class, 'index']);
         Route::put('ticket-routes/{ticketRoute}', [TicketRouteController::class, 'update']);
+    });
+
+    // Entitlement engine + monetization (PRD §6.17 / §6.3).
+    Route::middleware('can:manage-monetization')->group(function () {
+        Route::get('monetization-settings', [MonetizationController::class, 'settings']);
+        Route::put('monetization-settings', [MonetizationController::class, 'updateSettings']);
+        Route::get('products', [MonetizationController::class, 'products']);
+        Route::post('products', [MonetizationController::class, 'storeProduct']);
+        Route::put('products/{product}', [MonetizationController::class, 'updateProduct']);
+        Route::delete('products/{product}', [MonetizationController::class, 'destroyProduct']);
+        Route::post('batches/{batch}/publish-self-paced', [MonetizationController::class, 'publishSelfPaced']);
+        Route::post('purchases/{purchase}/refund', [MonetizationController::class, 'refund']);
+        Route::get('revenue', [RevenueController::class, 'index']);
+        Route::get('revenue/purchases', [RevenueController::class, 'purchases']);
     });
 });
 
