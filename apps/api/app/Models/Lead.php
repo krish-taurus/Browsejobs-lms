@@ -50,7 +50,7 @@ class Lead extends Model
         'utm_source', 'utm_medium', 'utm_campaign', 'page', 'ip',
         'consented_at', 'consent_version', 'crm_synced',
         'lead_stage_id', 'assigned_to', 'score',
-        'first_touch_at', 'sla_due_at', 'sla_breached_at', 'merged_into_id',
+        'first_touch_at', 'sla_due_at', 'sla_breached_at', 'merged_into_id', 'last_replied_at',
     ];
 
     /**
@@ -65,6 +65,7 @@ class Lead extends Model
             'first_touch_at' => 'datetime',
             'sla_due_at' => 'datetime',
             'sla_breached_at' => 'datetime',
+            'last_replied_at' => 'datetime',
         ];
     }
 

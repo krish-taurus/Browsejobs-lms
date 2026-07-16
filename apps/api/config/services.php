@@ -56,6 +56,20 @@ return [
         'base_url' => env('RAZORPAY_BASE_URL', 'https://api.razorpay.com/v1'),
     ],
 
+    'whatsapp' => [
+        // WhatsApp Cloud API (PRD §6.9). `app_secret` signs the inbound webhook
+        // (X-Hub-Signature-256); `verify_token` guards the GET handshake. Tests
+        // mock the client.
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID', ''),
+        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID', ''),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN', ''),
+        'verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN', ''),
+        'app_secret' => env('WHATSAPP_APP_SECRET', ''),
+        'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v21.0'),
+        // Maps the connected WABA to a tenant slug (single-business P2.4).
+        'tenant_slug' => env('WHATSAPP_TENANT_SLUG', ''),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

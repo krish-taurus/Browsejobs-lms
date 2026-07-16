@@ -15,6 +15,7 @@ const nav = [
   { href: "/admin/tasks", label: "Tasks" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/dunning", label: "Dunning" },
+  { href: "/admin/messages", label: "Messaging" },
 ];
 
 const STAFF_ROLES = new Set([

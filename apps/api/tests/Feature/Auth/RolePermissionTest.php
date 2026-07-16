@@ -16,7 +16,7 @@ beforeEach(function () {
 
 it('seeds the eight roles and their permissions', function () {
     expect(Role::query()->count())->toBe(8)
-        ->and(Permission::query()->count())->toBe(13)
+        ->and(Permission::query()->count())->toBe(14)
         ->and(Role::query()->where('slug', 'student')->value('is_staff'))->toBe(false);
 });
 
