@@ -48,9 +48,12 @@ export async function apiJson<T = unknown>(
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
 
+  const isForm = options.body instanceof FormData;
+
   if (method !== "GET" && method !== "HEAD") {
     await ensureCsrf();
-    headers.set("Content-Type", "application/json");
+    // Let the browser set the multipart boundary for FormData bodies.
+    if (!isForm) headers.set("Content-Type", "application/json");
     const xsrf = getCookie("XSRF-TOKEN");
     if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
   }
