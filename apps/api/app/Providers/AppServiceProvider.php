@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\AI\AiClient;
+use App\Services\AI\AnthropicClient;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Judge0\HttpJudge0Client;
+use App\Support\Judge0\Judge0Client;
 use App\Support\Messaging\NullPushSender;
 use App\Support\Messaging\PushSender;
 use App\Support\Notifications\FeeNotifier;
@@ -84,6 +88,24 @@ class AppServiceProvider extends ServiceProvider
 
         // Web push is deferred in P2.4.
         $this->app->bind(PushSender::class, NullPushSender::class);
+
+        // AI Service Layer (P3.1). Real Anthropic transport from config; tests bind
+        // FakeAiClient. The AiGateway (budget + ai_events) composes this.
+        $this->app->bind(AiClient::class, function (): AnthropicClient {
+            /** @var array{api_key: string, base_url: string, version: string, model: string} $config */
+            $config = config('services.anthropic');
+
+            return new AnthropicClient($config);
+        });
+
+        // Coding labs code execution (P3.1). Real Judge0 client from config; tests
+        // bind FakeJudge0Client.
+        $this->app->bind(Judge0Client::class, function (): HttpJudge0Client {
+            /** @var array{url: string, auth_token: string} $config */
+            $config = config('services.judge0');
+
+            return new HttpJudge0Client($config);
+        });
     }
 
     /**
@@ -103,6 +125,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by(
+            $request->user()?->getAuthIdentifier() ?? $request->ip(),
+        ));
+
+        // Tight limit for AI-backed endpoints (CLAUDE.md: rate limit AI endpoints).
+        RateLimiter::for('ai', fn (Request $request) => Limit::perMinute(20)->by(
             $request->user()?->getAuthIdentifier() ?? $request->ip(),
         ));
 
