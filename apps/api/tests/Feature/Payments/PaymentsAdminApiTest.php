@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use App\Enums\FeePlanType;
+use App\Models\AccessBlock;
 use App\Models\Batch;
 use App\Models\FeePlan;
 use App\Models\Instalment;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\Fees\AllowAllFeeGate;
+use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Razorpay\FakeRazorpayClient;
 use App\Support\Razorpay\RazorpayClient;
@@ -88,11 +89,15 @@ it('denies a staff user without manage-fees', function () {
     $this->getJson('/api/v1/admin/fee-plans')->assertForbidden();
 });
 
-it('leaves the FeeGate as the allow-all stub (blocks are P2.3)', function () {
-    expect(app(FeeGate::class))->toBeInstanceOf(AllowAllFeeGate::class);
+it('binds the real DuesFeeGate: allows a clear student, denies a blocked one (P2.3)', function () {
+    expect(app(FeeGate::class))->toBeInstanceOf(DuesFeeGate::class);
 
     $student = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
     $batch = Batch::factory()->for($this->tenant)->create();
 
     expect(app(FeeGate::class)->allowsLiveAccess($student, $batch))->toBeTrue();
+
+    AccessBlock::factory()->for($this->tenant)->create(['user_id' => $student->id]);
+
+    expect(app(FeeGate::class)->allowsLiveAccess($student, $batch))->toBeFalse();
 });

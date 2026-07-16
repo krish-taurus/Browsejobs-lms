@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Actions\Payments\CreateFeePlan;
+use App\Enums\AccessBlockLevel;
 use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
+use App\Enums\FeePlanStatus;
 use App\Enums\FeePlanType;
 use App\Enums\InstalmentStatus;
 use App\Enums\LedgerDirection;
 use App\Enums\PaymentStatus;
+use App\Models\AccessBlock;
 use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\FeePlan;
+use App\Models\Instalment;
 use App\Models\LedgerEntry;
 use App\Models\Payment;
 use App\Models\Receipt;
@@ -105,5 +109,47 @@ class PaymentsSeeder extends Seeder
         ]);
 
         $member->update(['status' => BatchMemberStatus::Enrolled->value, 'enrolled_at' => now()]);
+
+        $this->seedOverdueDemo($tenant, $batch);
+    }
+
+    /** A second student with an overdue instalment + soft block (dunning demo). */
+    private function seedOverdueDemo(Tenant $tenant, Batch $batch): void
+    {
+        $student = User::query()->firstOrCreate(
+            ['email' => 'ravi.overdue@example.com'],
+            ['tenant_id' => $tenant->id, 'name' => 'Ravi Kumar', 'user_type' => 'student', 'phone' => '+919876520000'],
+        );
+
+        BatchMember::query()->create([
+            'tenant_id' => $tenant->id, 'batch_id' => $batch->id, 'user_id' => $student->id,
+            'status' => BatchMemberStatus::Enrolled->value, 'enrolled_at' => now()->subDays(30),
+        ]);
+
+        $plan = FeePlan::query()->create([
+            'tenant_id' => $tenant->id, 'user_id' => $student->id, 'batch_id' => $batch->id,
+            'type' => FeePlanType::Single->value, 'total_paise' => (int) config('fees.registration_paise'),
+            'discount_paise' => 0, 'gst_rate_bps' => 1800, 'currency' => 'INR',
+            'status' => FeePlanStatus::Active->value,
+        ]);
+
+        Instalment::query()->create([
+            'tenant_id' => $tenant->id, 'fee_plan_id' => $plan->id, 'seq' => 1,
+            'amount_paise' => $plan->total_paise, 'due_on' => now()->subDays(20)->toDateString(),
+            'status' => InstalmentStatus::Pending->value,
+            'payment_link_url' => 'https://rzp.test/l/plink_DEMO_OVERDUE',
+        ]);
+
+        LedgerEntry::query()->create([
+            'tenant_id' => $tenant->id, 'user_id' => $student->id, 'fee_plan_id' => $plan->id,
+            'direction' => LedgerDirection::Debit->value, 'amount_paise' => $plan->total_paise,
+            'description' => 'Instalment 1 due', 'occurred_at' => now()->subDays(27),
+        ]);
+
+        AccessBlock::query()->create([
+            'tenant_id' => $tenant->id, 'user_id' => $student->id, 'batch_id' => $batch->id,
+            'fee_plan_id' => $plan->id, 'level' => AccessBlockLevel::Soft->value,
+            'reason' => 'Overdue instalment 1', 'blocked_at' => now()->subDays(15),
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { FeeWidget } from "@/components/portal/FeeWidget";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -12,6 +13,8 @@ export default function DashboardPage() {
       <h1 className="display mt-2 text-3xl text-ink">
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>
+
+      <FeeWidget />
 
       {/* Next Best Action — the loudest element on the dashboard (CLAUDE.md). */}
       <div className="mt-8 rounded-2xl bg-ink p-7 text-white shadow-lg">
