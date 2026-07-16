@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BatchMemberStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
 class BatchMember extends Model
 {
     use BelongsToTenant;
+    use HasFactory;
 
     /** @var list<string> */
     protected $fillable = ['tenant_id', 'batch_id', 'user_id', 'status', 'enrolled_at'];

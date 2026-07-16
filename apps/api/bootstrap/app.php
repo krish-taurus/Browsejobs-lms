@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\ResolveTenantByDomain;
 use App\Http\Middleware\ResolveTenantByUser;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
+use App\Http\Middleware\VerifyRazorpayWebhookSignature;
 use App\Http\Middleware\VerifyZoomWebhookSignature;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.user' => ResolveTenantByUser::class,
             'zoom.signed' => VerifyZoomWebhookSignature::class,
             'meta.signed' => VerifyMetaWebhookSignature::class,
+            'razorpay.signed' => VerifyRazorpayWebhookSignature::class,
         ]);
 
         // Tenant resolution MUST run before route-model binding so the global

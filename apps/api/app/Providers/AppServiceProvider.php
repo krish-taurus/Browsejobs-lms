@@ -13,6 +13,10 @@ use App\Support\Notifications\LogSessionNotifier;
 use App\Support\Notifications\SessionNotifier;
 use App\Support\Otp\LogOtpNotifier;
 use App\Support\Otp\OtpNotifier;
+use App\Support\Razorpay\HttpRazorpayClient;
+use App\Support\Razorpay\RazorpayClient;
+use App\Support\Receipts\HtmlReceiptRenderer;
+use App\Support\Receipts\ReceiptRenderer;
 use App\Support\Tenancy\TenantContext;
 use App\Support\Zoom\HttpZoomClient;
 use App\Support\Zoom\ZoomClient;
@@ -48,6 +52,17 @@ class AppServiceProvider extends ServiceProvider
         // CRM lead scoring is rule-based in P2.1; the AI telemetry model (P3)
         // will rebind this interface.
         $this->app->bind(LeadScorer::class, RuleBasedLeadScorer::class);
+
+        // Payments (P2.2). Real Razorpay client from config; tests bind a fake.
+        $this->app->bind(RazorpayClient::class, function (): HttpRazorpayClient {
+            /** @var array{key_id: string, key_secret: string, webhook_secret: string, base_url: string} $config */
+            $config = config('services.razorpay');
+
+            return new HttpRazorpayClient($config);
+        });
+
+        // GST receipts render to branded HTML now; WeasyPrint PDF swaps in later.
+        $this->app->bind(ReceiptRenderer::class, HtmlReceiptRenderer::class);
     }
 
     /**
