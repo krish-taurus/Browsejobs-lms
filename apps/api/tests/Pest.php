@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -64,4 +65,19 @@ expect()->extend('toBeOne', function () {
 function withinTenant(Tenant $tenant, Closure $callback)
 {
     return app(TenantContext::class)->run($tenant, $callback);
+}
+
+/**
+ * A staff counselor in the tenant (role `counselor` grants `manage-leads`).
+ * Requires RolePermissionSeeder to have run.
+ */
+function counselorIn(Tenant $tenant, ?string $name = null): User
+{
+    $user = User::factory()->for($tenant)->create([
+        'user_type' => 'staff',
+        'name' => $name ?? fake()->name(),
+    ]);
+    $user->assignRole('counselor');
+
+    return $user;
 }
