@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Crm\LeadScorer;
+use App\Services\Crm\RuleBasedLeadScorer;
 use App\Support\Fees\AllowAllFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Notifications\LogSessionNotifier;
@@ -42,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Live-class notifications log locally until the P2.4 messaging hub.
         $this->app->bind(SessionNotifier::class, LogSessionNotifier::class);
+
+        // CRM lead scoring is rule-based in P2.1; the AI telemetry model (P3)
+        // will rebind this interface.
+        $this->app->bind(LeadScorer::class, RuleBasedLeadScorer::class);
     }
 
     /**

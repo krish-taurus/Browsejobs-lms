@@ -39,6 +39,15 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'meta' => [
+        // Meta Lead Ads webhook (PRD §6.12). `app_secret` signs the POST body
+        // (X-Hub-Signature-256); `verify_token` guards the GET subscription
+        // handshake; `tenant_slug` maps the connected Meta business to a tenant.
+        'app_secret' => env('META_APP_SECRET', ''),
+        'verify_token' => env('META_LEAD_WEBHOOK_VERIFY_TOKEN', ''),
+        'tenant_slug' => env('META_TENANT_SLUG', ''),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

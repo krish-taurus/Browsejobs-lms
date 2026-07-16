@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\CrmAssignmentRuleController;
+use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
+use App\Http\Controllers\Admin\LeadAdminController;
+use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\RosterController;
@@ -14,6 +18,7 @@ use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Reviews\ReviewController;
+use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +92,29 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('members/{member}/transfer', [RosterController::class, 'transfer']);
         Route::post('members/{member}/remove', [RosterController::class, 'remove']);
     });
+
+    // Built-in CRM (PRD §6.12).
+    Route::middleware('can:manage-leads')->group(function () {
+        Route::get('leads', [LeadAdminController::class, 'index']);
+        Route::get('leads/board', [LeadAdminController::class, 'board']);
+        Route::get('leads/counselors', [LeadAdminController::class, 'counselors']);
+        Route::post('leads', [LeadAdminController::class, 'store']);
+        Route::post('leads/import', [LeadAdminController::class, 'import']);
+        Route::get('leads/{lead}', [LeadAdminController::class, 'show']);
+        Route::post('leads/{lead}/assign', [LeadAdminController::class, 'assign']);
+        Route::post('leads/{lead}/stage', [LeadAdminController::class, 'moveStage']);
+        Route::post('leads/{lead}/merge', [LeadAdminController::class, 'merge']);
+        Route::post('leads/{lead}/notes', [LeadAdminController::class, 'note']);
+
+        Route::get('lead-stages', [LeadStageController::class, 'index']);
+
+        Route::get('crm-tasks', [CrmTaskController::class, 'index']);
+        Route::post('crm-tasks', [CrmTaskController::class, 'store']);
+        Route::post('crm-tasks/{task}/complete', [CrmTaskController::class, 'complete']);
+
+        Route::get('crm-assignment-rule', [CrmAssignmentRuleController::class, 'show']);
+        Route::put('crm-assignment-rule', [CrmAssignmentRuleController::class, 'update']);
+    });
 });
 
 // Signature-verified inbound webhooks (no user auth).
@@ -94,3 +122,13 @@ Route::post('webhooks/zoom', ZoomWebhookController::class)
     ->middleware('zoom.signed')
     ->withoutMiddleware('throttle:api')
     ->name('webhooks.zoom');
+
+// Meta Lead Ads (PRD §6.12). GET = subscription handshake (no body, no
+// signature); POST = leadgen delivery, HMAC-verified by meta.signed.
+Route::get('webhooks/meta/leads', [MetaLeadController::class, 'verify'])
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.meta.verify');
+Route::post('webhooks/meta/leads', [MetaLeadController::class, 'store'])
+    ->middleware('meta.signed')
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.meta.store');
