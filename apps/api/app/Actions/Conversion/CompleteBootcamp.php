@@ -6,6 +6,7 @@ namespace App\Actions\Conversion;
 
 use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
+use App\Events\BootcampCompleted;
 use App\Models\Batch;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
@@ -69,6 +70,9 @@ final readonly class CompleteBootcamp
             metadata: ['converted' => $converted, 'paid_batch_id' => $paid->id],
             actor: $actor,
         );
+
+        // Auto-request a testimonial from each attendee (Review-for-Voucher engine).
+        BootcampCompleted::dispatch($bootcamp);
 
         return ['converted' => $converted, 'skipped' => $skipped];
     }

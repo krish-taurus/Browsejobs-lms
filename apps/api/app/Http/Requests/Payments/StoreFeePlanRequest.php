@@ -26,6 +26,7 @@ final class StoreFeePlanRequest extends FormRequest
             'type' => ['required', Rule::enum(FeePlanType::class)],
             'emi_count' => ['nullable', 'integer', 'in:1,2,3'],
             'discount_paise' => ['nullable', 'integer', 'min:0'],
+            'voucher_code' => ['nullable', 'string', 'max:64'],
         ];
     }
 }

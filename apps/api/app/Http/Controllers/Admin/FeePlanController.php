@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Payments\CreateFeePlan;
 use App\Actions\Payments\PreviewSchedule;
+use App\Actions\Vouchers\ApplyVoucherToFeePlan;
+use App\Actions\Vouchers\ResolveVoucherDiscount;
 use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
 use App\Enums\FeePlanStatus;
@@ -21,6 +23,7 @@ use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Admin fee-plan management (PRD §6.8). Gated by `can:manage-fees`; route-model
@@ -54,11 +57,31 @@ final class FeePlanController extends Controller
         return (new FeePlanResource($feePlan))->response();
     }
 
-    public function store(StoreFeePlanRequest $request, CreateFeePlan $create): JsonResponse
-    {
+    public function store(
+        StoreFeePlanRequest $request,
+        CreateFeePlan $create,
+        ResolveVoucherDiscount $resolve,
+        ApplyVoucherToFeePlan $apply,
+    ): JsonResponse {
         $tenant = app(TenantContext::class)->get();
         $student = User::query()->findOrFail($request->integer('user_id'));
         $batch = Batch::query()->findOrFail($request->integer('batch_id'));
+
+        // A voucher (server-owned discount) takes precedence over any client discount.
+        $discountPaise = $request->integer('discount_paise');
+        $resolvedIssue = null;
+        $voucherCode = $request->string('voucher_code')->toString();
+
+        if ($voucherCode !== '') {
+            $resolved = $resolve->handle($student, $batch, $voucherCode);
+            if ($resolved === null) {
+                throw ValidationException::withMessages([
+                    'voucher_code' => 'This voucher is not valid for this student and batch.',
+                ]);
+            }
+            $resolvedIssue = $resolved['issue'];
+            $discountPaise = $resolved['discount_paise'];
+        }
 
         $feePlan = $create->handle(
             $tenant,
@@ -66,13 +89,39 @@ final class FeePlanController extends Controller
             $batch,
             FeePlanType::from($request->string('type')->toString()),
             $request->integer('emi_count') ?: 1,
-            $request->integer('discount_paise'),
+            $discountPaise,
             $request->user(),
         );
+
+        if ($resolvedIssue !== null) {
+            $apply->handle($resolvedIssue, $feePlan, $discountPaise, $request->user());
+        }
 
         $feePlan->load('student:id,name,phone,email', 'batch:id,number,course_id', 'batch.course:id,name', 'instalments');
 
         return (new FeePlanResource($feePlan))->response()->setStatusCode(201);
+    }
+
+    /**
+     * The redeemable voucher (if any) a student can pre-apply against a batch —
+     * powers the "voucher available" hint on the create-plan screen.
+     */
+    public function voucher(Request $request, ResolveVoucherDiscount $resolve): JsonResponse
+    {
+        $student = User::query()->findOrFail($request->integer('user_id'));
+        $batch = Batch::query()->findOrFail($request->integer('batch_id'));
+
+        $resolved = $resolve->handle($student, $batch);
+        if ($resolved === null) {
+            return response()->json(['data' => null]);
+        }
+
+        return response()->json(['data' => [
+            'code' => $resolved['issue']->code,
+            'discount_paise' => $resolved['discount_paise'],
+            'voucher_name' => $resolved['issue']->voucher?->name,
+            'expires_at' => $resolved['issue']->expires_at?->toIso8601String(),
+        ]]);
     }
 
     public function preview(PreviewScheduleRequest $request, PreviewSchedule $schedule): JsonResponse

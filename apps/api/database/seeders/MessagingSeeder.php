@@ -37,6 +37,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'fee_unblocked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your access is restored. Welcome back!'],
         ['key' => 'payment_link', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, complete your registration here: {{link}}'],
         ['key' => 'conversion_nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, secure your seat in {{batch}} — {{seats}} left, starts {{starts}}. Complete payment: {{link}}'],
+        ['key' => 'review_request', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, how was your bootcamp? Share a quick testimonial and get a voucher toward your registration: {{link}}. (This reward is for your BrowseJobs testimonial only — a Google review is separate and never required.)'],
+        ['key' => 'voucher_issued', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Thanks {{name}}! Your voucher {{code}} is ready — we will pre-apply it to your registration link. Valid until {{expires}}.'],
     ];
 
     public function run(): void

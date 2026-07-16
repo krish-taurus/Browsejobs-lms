@@ -15,6 +15,8 @@ const nav = [
   { href: "/admin/tasks", label: "Tasks" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/dunning", label: "Dunning" },
+  { href: "/admin/vouchers", label: "Vouchers" },
+  { href: "/admin/reviews", label: "Testimonials" },
   { href: "/admin/messages", label: "Messaging" },
   { href: "/admin/funnel", label: "Funnel" },
 ];

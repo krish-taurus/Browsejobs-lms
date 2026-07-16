@@ -106,6 +106,7 @@ export default function AdminPaymentsPage() {
 
 function CreatePlanPanel({ onDone, onError }: { onDone: (msg: string) => void; onError: (msg: string) => void }) {
   const [form, setForm] = useState({ batch_id: "", user_id: "", type: "single", emi_count: "3", discount_paise: "0" });
+  const [applyVoucher, setApplyVoucher] = useState(true);
 
   const { data: batches } = useQuery({
     queryKey: ["admin", "payments", "batches"],
@@ -116,6 +117,16 @@ function CreatePlanPanel({ onDone, onError }: { onDone: (msg: string) => void; o
     queryFn: () => apiJson<{ data: Candidate[] }>(`/api/v1/admin/fee-plans/candidates?batch_id=${form.batch_id}`),
     enabled: !!form.batch_id,
   });
+
+  const voucher = useQuery({
+    queryKey: ["admin", "payments", "voucher", form.batch_id, form.user_id],
+    queryFn: () =>
+      apiJson<{ data: { code: string; discount_paise: number; voucher_name: string | null } | null }>(
+        `/api/v1/admin/fee-plans/voucher?user_id=${form.user_id}&batch_id=${form.batch_id}`,
+      ),
+    enabled: !!form.batch_id && !!form.user_id,
+  });
+  const available = voucher.data?.data ?? null;
 
   const preview = useQuery({
     queryKey: ["admin", "payments", "preview", form.type, form.emi_count, form.discount_paise],
@@ -140,9 +151,10 @@ function CreatePlanPanel({ onDone, onError }: { onDone: (msg: string) => void; o
           type: form.type,
           emi_count: form.type === "emi" ? Number(form.emi_count) : 1,
           discount_paise: Number(form.discount_paise) || 0,
+          voucher_code: applyVoucher && available ? available.code : undefined,
         }),
       }),
-    onSuccess: () => onDone("Fee plan created."),
+    onSuccess: () => onDone(applyVoucher && available ? "Fee plan created with voucher applied." : "Fee plan created."),
     onError: (err) => onError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not create plan."),
   });
 
@@ -176,6 +188,23 @@ function CreatePlanPanel({ onDone, onError }: { onDone: (msg: string) => void; o
           </label>
         )}
       </div>
+
+      {/* Voucher pre-apply hint */}
+      {available && (
+        <label className="mt-4 flex items-center gap-2 rounded-[10px] border-l-2 border-verify bg-verify-bg px-3 py-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={applyVoucher}
+            onChange={(e) => setApplyVoucher(e.target.checked)}
+            className="h-4 w-4 rounded border-line text-trust"
+          />
+          <span className="mono font-semibold text-verify">{available.code}</span>
+          <span>
+            — {formatPaise(available.discount_paise)} off
+            {available.voucher_name ? ` (${available.voucher_name})` : ""}, pre-applies to instalment 1
+          </span>
+        </label>
+      )}
 
       {/* Schedule preview */}
       <div className="mt-5 rounded-[10px] border border-line bg-paper p-4">

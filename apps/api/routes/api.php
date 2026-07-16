@@ -18,7 +18,9 @@ use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TopicController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
@@ -26,8 +28,10 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\MessagePreferenceController;
+use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviews\ReviewController;
+use App\Http\Controllers\Testimonials\TestimonialController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
@@ -76,6 +80,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
     Route::get('me/message-preferences', [MessagePreferenceController::class, 'show']);
     Route::put('me/message-preferences', [MessagePreferenceController::class, 'update']);
+    Route::post('me/testimonials', [TestimonialController::class, 'store']);
+    Route::get('me/vouchers', [MyVoucherController::class, 'index']);
     Route::post('logout', [SessionController::class, 'destroy']);
 });
 
@@ -142,6 +148,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('fee-plans', [FeePlanController::class, 'index']);
         Route::get('fee-plans/batches', [FeePlanController::class, 'batches']);
         Route::get('fee-plans/candidates', [FeePlanController::class, 'candidates']);
+        Route::get('fee-plans/voucher', [FeePlanController::class, 'voucher']);
         Route::post('fee-plans/preview', [FeePlanController::class, 'preview']);
         Route::post('fee-plans/bulk-links', [PaymentLinkController::class, 'bulk']);
         Route::post('fee-plans', [FeePlanController::class, 'store']);
@@ -162,6 +169,19 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('message-templates/preview', [MessageTemplateController::class, 'preview']);
         Route::post('message-templates', [MessageTemplateController::class, 'store']);
         Route::put('message-templates/{template}', [MessageTemplateController::class, 'update']);
+    });
+
+    // Review-for-Voucher engine (PRD §5 Stage 3 / §6.8).
+    Route::middleware('can:manage-vouchers')->group(function () {
+        Route::get('vouchers', [VoucherController::class, 'index']);
+        Route::get('vouchers/analytics', [VoucherController::class, 'analytics']);
+        Route::post('vouchers', [VoucherController::class, 'store']);
+        Route::put('vouchers/{voucher}', [VoucherController::class, 'update']);
+        Route::delete('vouchers/{voucher}', [VoucherController::class, 'destroy']);
+
+        Route::get('testimonials', [AdminTestimonialController::class, 'index']);
+        Route::post('testimonials/{testimonial}/approve', [AdminTestimonialController::class, 'approve']);
+        Route::post('testimonials/{testimonial}/reject', [AdminTestimonialController::class, 'reject']);
     });
 });
 
