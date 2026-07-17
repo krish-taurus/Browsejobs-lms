@@ -9,6 +9,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -31,6 +32,14 @@ class Lesson extends Model
     public function topic(): BelongsTo
     {
         return $this->belongsTo(Topic::class);
+    }
+
+    /**
+     * @return HasOne<Assignment, $this>
+     */
+    public function assignment(): HasOne
+    {
+        return $this->hasOne(Assignment::class);
     }
 
     /**

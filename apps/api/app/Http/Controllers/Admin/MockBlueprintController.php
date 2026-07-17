@@ -53,6 +53,7 @@ final class MockBlueprintController extends Controller
             'tenant_id' => $course->tenant_id,
             'course_id' => $course->id,
             'role_title' => $data['role_title'],
+            'skill' => $data['skill'] ?? null,
             'competencies' => $data['competencies'],
             'opening_question' => $data['opening_question'],
             'is_active' => $data['is_active'] ?? true,
@@ -88,6 +89,7 @@ final class MockBlueprintController extends Controller
         return $request->validate([
             'course_id' => [$updating ? 'sometimes' : 'required', 'integer'],
             'role_title' => [$required, 'string', 'max:190'],
+            'skill' => ['nullable', 'string', 'max:100'],
             'competencies' => [$required, 'array', 'min:1', 'max:8'],
             'competencies.*' => ['string', 'max:100'],
             'opening_question' => [$required, 'string', 'max:1000'],

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BatchMemberStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $tenant_id
  * @property int $course_id
  * @property string $role_title
+ * @property string|null $skill
  * @property list<string> $competencies
  * @property string $opening_question
  * @property bool $is_active
@@ -30,7 +32,7 @@ class MockBlueprint extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'course_id', 'role_title', 'competencies', 'opening_question', 'is_active',
+        'tenant_id', 'course_id', 'role_title', 'skill', 'competencies', 'opening_question', 'is_active',
     ];
 
     /**
@@ -50,6 +52,28 @@ class MockBlueprint extends Model
             ->where('is_active', true)
             ->latest('id')
             ->first();
+    }
+
+    /**
+     * Every active blueprint for the student's occupying-batch courses — the skill
+     * choices they can practise (Python, SQL, …). Ordered so the picker is stable.
+     *
+     * @return Collection<int, self>
+     */
+    public static function availableFor(User $student): Collection
+    {
+        $courseIds = BatchMember::query()
+            ->where('user_id', $student->id)
+            ->whereIn('status', array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying()))
+            ->pluck('batch_id')
+            ->pipe(fn ($batchIds) => Batch::query()->whereIn('id', $batchIds)->pluck('course_id'));
+
+        return self::query()
+            ->whereIn('course_id', $courseIds)
+            ->where('is_active', true)
+            ->orderBy('skill')
+            ->orderBy('role_title')
+            ->get();
     }
 
     /**
