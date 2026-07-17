@@ -14,5 +14,6 @@ enum NextActionKey: string
     case PracticeModule = 'practice_module';
     case ReEngage = 're_engage';
     case BookMock = 'book_mock';
+    case BookMentor = 'book_mentor';
     case NextTopic = 'next_topic';
 }

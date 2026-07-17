@@ -46,6 +46,11 @@ export const navItems: NavItem[] = [
     icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8",
   },
   {
+    href: "/mentors",
+    label: "Mentors",
+    icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M17 14.5a7 7 0 0 1 5 6.5",
+  },
+  {
     href: "/grades",
     label: "Grades",
     icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4",
