@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
+use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
@@ -50,6 +52,7 @@ use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyLessonNotesController;
 use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\Me\MyReportController;
+use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
@@ -90,6 +93,10 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     });
 
     Route::post('leads', [LeadController::class, 'store'])
+        ->middleware('throttle:10,1');
+
+    // Lead-gated syllabus download (PRD §6.2 lead magnet). Public, host tenant.
+    Route::post('courses/{slug}/syllabus/download', [SyllabusDownloadController::class, 'store'])
         ->middleware('throttle:10,1');
 
     Route::get('reviews', [ReviewController::class, 'index']);
@@ -142,6 +149,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports', [MyReportController::class, 'index']);
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
+    Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
@@ -182,6 +190,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('lessons/{lesson}/notes/generate', [LessonNoteController::class, 'generate']);
         Route::patch('lessons/{lesson}/notes', [LessonNoteController::class, 'updateNotes']);
         Route::post('lesson-notes/{note}/approve', [LessonNoteController::class, 'approve']);
+        Route::get('course-syllabuses', [SyllabusController::class, 'index']);
+        Route::get('courses/{course}/syllabus', [SyllabusController::class, 'show']);
+        Route::post('courses/{course}/syllabus/generate', [SyllabusController::class, 'generate']);
+        Route::patch('courses/{course}/syllabus', [SyllabusController::class, 'update']);
+        Route::post('syllabuses/{syllabus}/approve', [SyllabusController::class, 'approve']);
         Route::get('assignment-lessons', [AssignmentController::class, 'index']);
         Route::get('lessons/{lesson}/assignment', [AssignmentController::class, 'show']);
         Route::put('lessons/{lesson}/assignment', [AssignmentController::class, 'upsert']);

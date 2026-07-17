@@ -9,6 +9,7 @@ import { BookCta } from "@/components/landing/BookCta";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SyllabusAccordion } from "@/components/courses/SyllabusAccordion";
+import { SyllabusDownload } from "@/components/courses/SyllabusDownload";
 import {
   careerServices,
   courseDetails,
@@ -303,8 +304,9 @@ export default async function CoursePage({
               <h2 className="display mx-auto mt-3 max-w-2xl text-3xl">
                 Judge the teaching before you pay a rupee
               </h2>
-              <div className="mt-7">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                 <BookCta courseSlug={course.slug} className="px-8 py-3.5" />
+                <SyllabusDownload courseSlug={course.slug} />
               </div>
             </div>
           </ScrollReveal>

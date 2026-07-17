@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\CurriculumChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CurriculumNodeRequest;
 use App\Models\Course;
@@ -24,6 +25,8 @@ final class ModuleController extends Controller
             'position' => (int) $request->input('position', $course->modules()->count()),
         ]);
 
+        CurriculumChanged::dispatch($course->id, (int) $course->tenant_id);
+
         return response()->json(['data' => $module], 201);
     }
 
@@ -31,12 +34,18 @@ final class ModuleController extends Controller
     {
         $module->update($request->safe()->only(['name', 'position']));
 
+        CurriculumChanged::dispatch($module->course_id, (int) $module->tenant_id);
+
         return response()->json(['data' => $module]);
     }
 
     public function destroy(Module $module): JsonResponse
     {
+        $courseId = $module->course_id;
+        $tenantId = (int) $module->tenant_id;
         $module->delete();
+
+        CurriculumChanged::dispatch($courseId, $tenantId);
 
         return response()->json(status: 204);
     }
