@@ -13,6 +13,7 @@ use App\Models\ActivityEvent;
 use App\Models\Attendance;
 use App\Models\BatchMember;
 use App\Models\Instalment;
+use App\Models\MockInterview;
 use App\Models\Module;
 use App\Models\QuizAttempt;
 use App\Models\TopicCompletion;
@@ -52,6 +53,18 @@ final class ScoreCalculator
                 + $engagement * (float) $priWeights['engagement']
                 + $attendance * (float) $priWeights['attendance'],
             );
+
+            // PRD §6.6: a completed AI mock is real interview signal — blend the
+            // best score in. No completed mock = PRI unchanged (P4.1).
+            $bestMock = MockInterview::query()
+                ->where('user_id', $student->id)
+                ->where('status', MockInterview::STATUS_COMPLETED)
+                ->max('overall_score');
+
+            if ($bestMock !== null) {
+                $blend = (float) config('scoring.pri.mock_blend', 0.15);
+                $pri = (int) round((1 - $blend) * $pri + $blend * (int) $bestMock);
+            }
 
             $riskDropout = (int) round(0.55 * (100 - $engagement) + 0.25 * ($stalled ? 100 : 0) + 0.20 * ($feeBlocked ? 100 : 0));
             $riskPlacement = (int) round(0.6 * (100 - $avgMastery) + 0.4 * (100 - $pri));
@@ -276,7 +289,7 @@ final class ScoreCalculator
         }
 
         if ($pri >= (int) config('scoring.risk.placement_ready_pri', 70)) {
-            return ['key' => NextActionKey::BookMock->value, 'title' => "You're on track — book a mock interview", 'detail' => 'Pressure-test your readiness before the real thing.', 'href' => '/dashboard'];
+            return ['key' => NextActionKey::BookMock->value, 'title' => "You're on track — book a mock interview", 'detail' => 'Pressure-test your readiness before the real thing.', 'href' => '/mock'];
         }
 
         return ['key' => NextActionKey::NextTopic->value, 'title' => 'Complete your next topic', 'detail' => 'Keep the momentum going.', 'href' => '/classes'];

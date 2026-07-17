@@ -23,7 +23,7 @@ return [
         'seven-day-streak' => '7-Day Streak',
         'module-ace' => 'Module Ace',
         'first-lab-pass' => 'First Lab Pass',
-        'first-mock-done' => 'First Mock Done', // reserved for P4
+        'first-mock-done' => 'First Mock Done',
     ],
 
     /** How many active batchmates get the celebration notification. */

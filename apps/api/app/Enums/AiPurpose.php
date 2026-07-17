@@ -21,6 +21,7 @@ enum AiPurpose: string
     case Content = 'content';
     case Report = 'report';
     case MarketPulse = 'market_pulse';
+    case Mock = 'mock';
     case Coach = 'coach';
     case General = 'general';
 }

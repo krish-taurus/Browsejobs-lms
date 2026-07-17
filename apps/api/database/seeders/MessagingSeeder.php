@@ -55,6 +55,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'weekly_report', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your weekly progress report', 'body' => 'Hi {{name}}, your weekly progress report is ready. Read it here: {{link}}'],
         ['key' => 'trainer_brief', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, pre-class brief for {{batch}}: {{body}}'],
         ['key' => 'counselor_digest', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your daily risk digest: {{body}}'],
+        ['key' => 'mock_nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Nice work {{name}} — you just finished {{topic}}. Lock it in with a 10-minute practice interview: {{link}}'],
+        ['key' => 'mock_nudge', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Practice interview on {{topic}}', 'body' => 'Hi {{name}}, you just finished {{topic}}. A quick practice interview locks it in while it\'s fresh: {{link}}'],
         // P3.7 weekly Market Pulse — MARKETING category: opt-in only, quiet hours + caps enforced.
         ['key' => 'market_pulse_weekly', 'channel' => 'whatsapp', 'category' => 'marketing', 'subject' => null, 'body' => "Hi {{name}}, this week's Market Pulse from BrowseJobs:\n{{body}}"],
         ['key' => 'market_pulse_weekly', 'channel' => 'email', 'category' => 'marketing', 'subject' => 'Your weekly Market Pulse', 'body' => "Hi {{name}},\n\nThis week's IT job-market pulse:\n\n{{body}}"],

@@ -15,6 +15,15 @@ final class FakeAiClient implements AiClient
 
     public string $reply = 'This is a deterministic test reply.';
 
+    /**
+     * Optional FIFO queue for multi-turn tests (P4.1 adaptive flows): when
+     * non-empty, each call shifts the next reply; when drained, falls back to
+     * $reply. Backwards-compatible with every single-reply test.
+     *
+     * @var list<string>
+     */
+    public array $replies = [];
+
     public int $promptTokens = 42;
 
     public int $completionTokens = 18;
@@ -23,8 +32,10 @@ final class FakeAiClient implements AiClient
     {
         $this->calls[] = $message;
 
+        $text = $this->replies !== [] ? array_shift($this->replies) : $this->reply;
+
         return new AiResult(
-            text: $this->reply,
+            text: $text,
             promptTokens: $this->promptTokens,
             completionTokens: $this->completionTokens,
             model: $message->model ?? 'claude-sonnet-5',

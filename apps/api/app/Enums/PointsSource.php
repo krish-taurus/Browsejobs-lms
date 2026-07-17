@@ -16,5 +16,5 @@ enum PointsSource: string
     case Quiz = 'quiz';
     case Lab = 'lab';
     case Streak = 'streak';
-    case Mock = 'mock'; // reserved — hooks arrive with P4 mock interviews
+    case Mock = 'mock'; // awarded on mock-interview completion (P4.1)
 }
