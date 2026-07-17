@@ -24,14 +24,27 @@ final class HttpZoomClient implements ZoomClient
      */
     public function __construct(private readonly array $config) {}
 
-    public function createMeeting(string $topic, CarbonInterface $start, int $durationMinutes): ZoomMeeting
-    {
-        $response = $this->request()->post($this->config['base_url'].'/users/me/meetings', [
+    public function createMeeting(
+        string $topic,
+        CarbonInterface $start,
+        int $durationMinutes,
+        ?string $hostUserId = null,
+        ?bool $autoRecord = null,
+    ): ZoomMeeting {
+        $settings = ['waiting_room' => true, 'join_before_host' => false];
+        if ($autoRecord !== null) {
+            $settings['auto_recording'] = $autoRecord ? 'cloud' : 'none';
+        }
+
+        // Host under the allocated license's Zoom user, else the account's own user.
+        $host = $hostUserId !== null && $hostUserId !== '' ? rawurlencode($hostUserId) : 'me';
+
+        $response = $this->request()->post($this->config['base_url']."/users/{$host}/meetings", [
             'topic' => $topic,
             'type' => 2, // scheduled
             'start_time' => $start->toIso8601ZuluString(),
             'duration' => $durationMinutes,
-            'settings' => ['waiting_room' => true, 'join_before_host' => false],
+            'settings' => $settings,
         ])->throw()->json();
 
         return new ZoomMeeting(

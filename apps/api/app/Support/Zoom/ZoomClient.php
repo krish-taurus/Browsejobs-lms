@@ -12,7 +12,17 @@ use Carbon\CarbonInterface;
  */
 interface ZoomClient
 {
-    public function createMeeting(string $topic, CarbonInterface $start, int $durationMinutes): ZoomMeeting;
+    /**
+     * @param  string|null  $hostUserId  Zoom user to host under; null = the account's own user ("me").
+     * @param  bool|null  $autoRecord  true = cloud-record, false = never; null = leave the account default (existing behaviour).
+     */
+    public function createMeeting(
+        string $topic,
+        CarbonInterface $start,
+        int $durationMinutes,
+        ?string $hostUserId = null,
+        ?bool $autoRecord = null,
+    ): ZoomMeeting;
 
     public function updateMeeting(string $meetingId, CarbonInterface $start, int $durationMinutes): void;
 

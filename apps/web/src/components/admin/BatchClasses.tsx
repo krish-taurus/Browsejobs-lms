@@ -40,7 +40,7 @@ function toIso(local: string): string {
 export function BatchClasses({ batchId }: { batchId: string }) {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [schedule, setSchedule] = useState({ title: "", start: "", end: "" });
+  const [schedule, setSchedule] = useState({ title: "", start: "", end: "", record: true });
   const [reschedulingId, setReschedulingId] = useState<number | null>(null);
   const [reschedule, setReschedule] = useState({ start: "", reason: "" });
 
@@ -61,9 +61,10 @@ export function BatchClasses({ batchId }: { batchId: string }) {
           title: schedule.title,
           scheduled_start: toIso(schedule.start),
           scheduled_end: schedule.end ? toIso(schedule.end) : null,
+          record: schedule.record,
         }),
       }),
-    onSuccess: () => { setSchedule({ title: "", start: "", end: "" }); setError(null); void refresh(); },
+    onSuccess: () => { setSchedule({ title: "", start: "", end: "", record: true }); setError(null); void refresh(); },
     onError,
   });
 
@@ -122,6 +123,12 @@ export function BatchClasses({ batchId }: { batchId: string }) {
                 onChange={(e) => setSchedule({ ...schedule, end: e.target.value })} className={inputCls} />
             </label>
           </div>
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input type="checkbox" checked={schedule.record}
+              onChange={(e) => setSchedule({ ...schedule, record: e.target.checked })}
+              className="h-4 w-4 rounded border-line text-trust" />
+            Record this class to the cloud
+          </label>
         </div>
         <button
           disabled={create.isPending || !schedule.title || !schedule.start}

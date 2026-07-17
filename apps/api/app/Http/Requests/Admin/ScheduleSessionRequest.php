@@ -28,6 +28,7 @@ final class ScheduleSessionRequest extends FormRequest
             'scheduled_start' => ['required', 'date', 'after:now'],
             'scheduled_end' => ['nullable', 'date', 'after:scheduled_start'],
             'topic_id' => ['nullable', 'integer'],
+            'record' => ['nullable', 'boolean'],
         ];
     }
 }

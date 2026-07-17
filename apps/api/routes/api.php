@@ -51,6 +51,7 @@ use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
 use App\Http\Controllers\Admin\TopicController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\ZoomLicenseController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
@@ -318,6 +319,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('batches', [BatchController::class, 'index']);
         Route::post('batches', [BatchController::class, 'store']);
         Route::get('batches/{batch}', [BatchController::class, 'show']);
+
+        // Zoom host-license pool (PRD §6.3) — allocate a license per mentor.
+        Route::get('zoom-licenses', [ZoomLicenseController::class, 'index']);
+        Route::post('zoom-licenses', [ZoomLicenseController::class, 'store']);
+        Route::put('zoom-licenses/{zoomLicense}', [ZoomLicenseController::class, 'update']);
+        Route::delete('zoom-licenses/{zoomLicense}', [ZoomLicenseController::class, 'destroy']);
     });
 
     // Platform integration settings (PRD §6.14) — super-admin only.

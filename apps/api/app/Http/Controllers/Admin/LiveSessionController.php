@@ -57,6 +57,7 @@ final class LiveSessionController extends Controller
             CarbonImmutable::parse($request->string('scheduled_start')->toString()),
             $request->filled('scheduled_end') ? CarbonImmutable::parse($request->string('scheduled_end')->toString()) : null,
             $topic,
+            $request->boolean('record', true),
         );
 
         return (new LiveSessionResource($session->load('topic:id,name')))->response()->setStatusCode(201);
