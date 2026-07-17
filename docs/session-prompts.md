@@ -18,12 +18,12 @@ P2.7 support desk · P2.8 entitlement engine.
 P3.3 AI tutor (RAG) · P3.4 MCQ automation · P3.4b assignment grading · P3.4c
 certificates · P3.5a reports/digests · P3.5b content AI · P3.5c syllabus
 generator · P3.5d-a support corpus + deflection · P3.5d-b triage/reply
-drafts/themes — all merged to `main`. **P3.5 is complete.**
-**Next: P3.6 — leaderboards + points.**
+drafts/themes · P3.6 leaderboards + points — all merged to `main`.
+**Next: P3.7 — motivation engine + Market Pulse + Content Hub (last of Phase 3).**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 508 passing
-  as of P3.5d-c.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 528 passing
+  as of P3.6.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -37,37 +37,33 @@ drafts/themes — all merged to `main`. **P3.5 is complete.**
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0026 in `docs/adr/`.
+  before building. ADRs 0001–0027 in `docs/adr/`.
 
 ---
 
-## NEXT → P3.6 — Leaderboards + points
+## NEXT → P3.7 — Motivation engine + Market Pulse + Content Hub
 
-Read `CLAUDE.md` and `docs/browsejobs-lms-requirements.md` fully (PRD §6.16).
-This is **P3.6 — Leaderboards + points** from `docs/BUILD-PLAYBOOK.md`. Draft the
-detailed prompt from the playbook bullet + §6.16 before starting.
+Read `CLAUDE.md` and `docs/browsejobs-lms-requirements.md` fully (PRD §6.18 +
+§6.19). This is **P3.7** from `docs/BUILD-PLAYBOOK.md` — the LAST Phase 3
+milestone. Draft the detailed prompt from the playbook bullet before starting.
 
-Headline requirements: `points_events` emitted from attendance, quizzes, labs,
-mocks, streaks, and punctuality with **admin-configurable weights**; a batch
-leaderboard on the student dashboard (weekly + all-time); **top-10 named with
-opt-out, everyone else sees only their own rank + distance-to-next** —
-motivating, never humiliating; badges with batch-feed celebrations; coach
-integration ("one mock closes the gap to #3"). **Anti-gaming: points only from
-verified events, daily caps.**
+Headline requirements: consented offer-celebration broadcasts (named or
+anonymous mode) with the personalized "Your Path to the Same" AI guidance card
+built from each recipient's gap report (3 concrete actions + one-tap mock
+booking — mocks are P4, so stub the booking CTA); celebration wall. Market
+Pulse: curated-feed ingestion → daily AI digest with sources +
+course-relevance tie-ins, dashboard card; WhatsApp/email weekly **opt-in
+only**. Content Hub: YouTube RSS/API + Instagram Graph + manual podcast
+entries → dashboard feed, watch tracking into engagement score.
+Marketing-category WhatsApp requires explicit opt-in (P2.4 hub enforces
+category rules — reuse it).
 
-**P3.5 is complete** (ADRs 0024, 0025, 0026). One thing it left behind that P3.6
-does not need, but someone should pick up:
+P3.6 notes for reuse: celebrations already have a lightweight pattern
+(in_app_notifications fan-out in PointsService::grantBadge under
+app/Support/Points, opt-out respected) — §6.18's consented offer celebrations
+are the richer, consent-gated evolution of it. Content Hub watch events should
+flow through RecordActivity so they feed the engagement score.
 
-- **`e2e/admin-support-triage.spec.ts` has never run green.** Not a code defect:
-  the local box had two Next processes sharing one `.next`, and the
-  **pre-existing** `admin-support-desk.spec.ts` fails identically in that state.
-  Run the e2e suite with a single Next dev server on **:3000** — Sanctum's
-  stateful domains and CORS are pinned to that port, so another port fails login.
-
-Staff can now author the support corpus at `/admin/support/settings` ("Policy
-answers", ADR 0026), so it no longer changes only by deploy. **The screen exists;
-the answers still do not** — see the founder input below. Deflection quality is a
-function of what is written there, not of the model.
 
 ---
 
