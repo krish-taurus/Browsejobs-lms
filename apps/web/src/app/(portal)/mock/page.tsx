@@ -12,12 +12,26 @@ type GapItem = {
   gap: boolean;
 };
 
+type VoiceTopup = {
+  product_id: number;
+  sku: string;
+  name: string;
+  price_paise: number;
+  sessions: number;
+};
+
 type MockSummary = {
   enabled: boolean;
   in_progress_id: number | null;
   best_score: number;
   human_mock_unlocked: boolean;
   gap_report: { role_title: string | null; items: GapItem[] };
+  voice: {
+    credits: number;
+    max_minutes: number;
+    in_progress: { id: number; join_url: string | null } | null;
+    topups: VoiceTopup[];
+  };
   mocks: { id: number; overall_score: number | null; completed_at: string | null }[];
 };
 
@@ -34,6 +48,9 @@ export default function MockHubPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceBusy, setVoiceBusy] = useState<number | "start" | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 
   const load = useCallback(() => {
     apiJson<{ data: MockSummary }>("/api/v1/me/mocks")
@@ -56,14 +73,44 @@ export default function MockHubPage() {
     }
   }
 
+  async function startVoice() {
+    setVoiceError(null);
+    setVoiceBusy("start");
+    try {
+      const r = await apiJson<{ data: { join_url: string | null } }>("/api/v1/me/mocks/voice", { method: "POST" });
+      if (r.data.join_url) window.open(r.data.join_url, "_blank", "noopener");
+      load();
+    } catch (err) {
+      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
+    } finally {
+      setVoiceBusy(null);
+    }
+  }
+
+  async function buyTopup(t: VoiceTopup) {
+    setVoiceError(null);
+    setVoiceBusy(t.product_id);
+    try {
+      await apiJson("/api/v1/me/purchases", {
+        method: "POST",
+        body: JSON.stringify({ product_id: t.product_id }),
+      });
+      setVoiceNotice("Order created — complete the payment from the Store page and your sessions land instantly.");
+    } catch (err) {
+      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the purchase.");
+    } finally {
+      setVoiceBusy(null);
+    }
+  }
+
   if (loading) return <div className="mx-auto max-w-2xl"><div className="shimmer h-64 rounded-[14px]" /></div>;
 
-  if (!summary || !summary.enabled) {
+  if (!summary) {
     return (
       <div className="mx-auto max-w-2xl">
         <h1 className="display text-2xl text-ink">Mock Interviews</h1>
         <div className="mt-6 rounded-2xl border border-line bg-white p-8 text-center">
-          <p className="text-sm text-ink">Practice interviews aren&apos;t switched on for your batch yet.</p>
+          <p className="text-sm text-ink">Practice interviews aren&apos;t available right now.</p>
           <p className="mt-1 text-sm text-muted">Ask your counselor — or check back soon.</p>
         </div>
       </div>
@@ -88,28 +135,97 @@ export default function MockHubPage() {
         </div>
       )}
 
-      <div className="mt-6 rounded-2xl border border-line bg-white p-6">
-        {summary.in_progress_id ? (
+      {summary.enabled ? (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Text practice · free</p>
+          {summary.in_progress_id ? (
+            <>
+              <p className="mt-2 text-sm text-ink">You have an interview in progress.</p>
+              <Link
+                href={`/mock/${summary.in_progress_id}`}
+                className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white"
+              >
+                Resume interview →
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-ink">Ready when you are — it takes about 10 minutes.</p>
+              {error && <p className="mt-2 text-sm text-warn">{error}</p>}
+              <button
+                onClick={start}
+                disabled={busy}
+                className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {busy ? "Setting up…" : "Start a mock interview"}
+              </button>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-6">
+          <p className="text-sm text-muted">Text practice isn&apos;t switched on for your batch yet — voice interviews below are ready when you are.</p>
+        </div>
+      )}
+
+      <div className="mt-4 rounded-2xl border border-line bg-white p-6">
+        <div className="flex items-baseline justify-between">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">
+            Voice interview · up to {summary.voice.max_minutes} min
+          </p>
+          <span className="mono text-xs text-muted">
+            {summary.voice.credits} session{summary.voice.credits === 1 ? "" : "s"} left
+          </span>
+        </div>
+        {voiceError && <p className="mt-2 text-sm text-warn">{voiceError}</p>}
+        {voiceNotice && <p className="mt-2 text-sm text-verify">{voiceNotice}</p>}
+
+        {summary.voice.in_progress?.join_url ? (
           <>
-            <p className="text-sm text-ink">You have an interview in progress.</p>
-            <Link
-              href={`/mock/${summary.in_progress_id}`}
+            <p className="mt-2 text-sm text-ink">Your voice interview room is open.</p>
+            <a
+              href={summary.voice.in_progress.join_url}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white"
             >
-              Resume interview →
-            </Link>
+              Rejoin the call →
+            </a>
+          </>
+        ) : summary.voice.credits > 0 ? (
+          <>
+            <p className="mt-2 text-sm text-ink">
+              A spoken interview with the AI interviewer — the closest thing to the real room. You get
+              the same scorecard afterwards.
+            </p>
+            <button
+              onClick={startVoice}
+              disabled={voiceBusy === "start"}
+              className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {voiceBusy === "start" ? "Opening the room…" : "Start a voice interview"}
+            </button>
+            <p className="mt-2 text-xs text-muted">
+              Each session uses 1 credit. Finish a module to unlock another — dropped calls are refunded.
+            </p>
           </>
         ) : (
           <>
-            <p className="text-sm text-ink">Ready when you are — it takes about 10 minutes.</p>
-            {error && <p className="mt-2 text-sm text-warn">{error}</p>}
-            <button
-              onClick={start}
-              disabled={busy}
-              className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {busy ? "Setting up…" : "Start a mock interview"}
-            </button>
+            <p className="mt-2 text-sm text-ink">You&apos;re out of voice sessions. Finish a module to unlock one, or top up:</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {summary.voice.topups.map((t) => (
+                <button
+                  key={t.product_id}
+                  onClick={() => buyTopup(t)}
+                  disabled={voiceBusy === t.product_id}
+                  className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
+                >
+                  {voiceBusy === t.product_id
+                    ? "Creating order…"
+                    : `${t.sessions} session${t.sessions === 1 ? "" : "s"} · ₹${Math.round(t.price_paise / 100)}`}
+                </button>
+              ))}
+            </div>
           </>
         )}
       </div>

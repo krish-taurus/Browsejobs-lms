@@ -7,14 +7,18 @@ namespace App\Http\Controllers\Mocks;
 use App\Actions\Mocks\AnswerMockInterview;
 use App\Actions\Mocks\FinishMockInterview;
 use App\Actions\Mocks\StartMockInterview;
+use App\Actions\Mocks\StartVoiceMock;
+use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
 use App\Models\MockInterview;
+use App\Models\Product;
 use App\Services\AI\AiBudgetExceeded;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Interviews\GapReport;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Student AI mock interviewer (PRD §6.6, text mode). Under auth:sanctum
@@ -27,6 +31,7 @@ final class MockController extends Controller
         private readonly StartMockInterview $start,
         private readonly AnswerMockInterview $answer,
         private readonly FinishMockInterview $finish,
+        private readonly StartVoiceMock $startVoice,
         private readonly EntitlementService $entitlements,
         private readonly GapReport $gaps,
     ) {}
@@ -48,6 +53,13 @@ final class MockController extends Controller
                     'best_score' => $best,
                     'human_mock_unlocked' => $best >= (int) config('mocks.human_gate_score', 70),
                     'gap_report' => $this->gaps->for($request->user()),
+                    'voice' => [
+                        'credits' => $this->entitlements->balance($request->user(), EntitlementFeature::VoiceMock->value),
+                        'max_minutes' => intdiv((int) config('mocks.voice.max_seconds', 600), 60),
+                        'in_progress' => $mocks->first(fn (MockInterview $m) => $m->mode === MockInterview::MODE_VOICE
+                            && $m->status === MockInterview::STATUS_IN_PROGRESS)?->only(['id', 'join_url']),
+                        'topups' => $this->voiceTopups(),
+                    ],
                     'mocks' => $mocks
                         ->where('status', MockInterview::STATUS_COMPLETED)
                         ->values()
@@ -104,6 +116,58 @@ final class MockController extends Controller
         ));
     }
 
+    /**
+     * Start (or resume) a voice session. An empty wallet answers 402 with the
+     * one-tap top-up products instead of a bare error.
+     */
+    public function storeVoice(Request $request): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
+            try {
+                $interview = $this->startVoice->handle($request->user());
+            } catch (ValidationException $e) {
+                if (str_contains($e->getMessage(), 'credits')) {
+                    return response()->json([
+                        'error' => [
+                            'code' => 'no_voice_credits',
+                            'message' => 'You are out of voice interview credits.',
+                            'topups' => $this->voiceTopups(),
+                        ],
+                    ], 402);
+                }
+
+                throw $e;
+            }
+
+            return response()->json(['data' => [
+                'id' => $interview->id,
+                'join_url' => $interview->join_url,
+                'session_id' => $interview->provider_session_id,
+                'max_seconds' => (int) config('mocks.voice.max_seconds', 600),
+            ]], 201);
+        });
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function voiceTopups(): array
+    {
+        return Product::query()
+            ->where('feature', EntitlementFeature::VoiceMock->value)
+            ->where('active', true)
+            ->orderBy('price_paise')
+            ->get(['id', 'sku', 'name', 'price_paise', 'grant_amount'])
+            ->map(fn (Product $p) => [
+                'product_id' => $p->id,
+                'sku' => $p->sku,
+                'name' => $p->name,
+                'price_paise' => $p->price_paise,
+                'sessions' => $p->grant_amount,
+            ])
+            ->all();
+    }
+
     private function owned(Request $request, int $id): MockInterview
     {
         return MockInterview::query()
@@ -120,6 +184,9 @@ final class MockController extends Controller
             'data' => [
                 'id' => $interview->id,
                 'status' => $interview->status,
+                'mode' => $interview->mode,
+                'join_url' => $interview->status === MockInterview::STATUS_IN_PROGRESS ? $interview->join_url : null,
+                'duration_seconds' => $interview->duration_seconds,
                 'role_title' => $interview->blueprint?->role_title,
                 'questions_asked' => $interview->turns->where('role', 'interviewer')->count(),
                 'max_questions' => $max,

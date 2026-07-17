@@ -20,6 +20,9 @@ use App\Support\Judge0\HttpJudge0Client;
 use App\Support\Judge0\Judge0Client;
 use App\Support\Messaging\NullPushSender;
 use App\Support\Messaging\PushSender;
+use App\Support\Mocks\HttpVapiClient;
+use App\Support\Mocks\NullVoiceMockClient;
+use App\Support\Mocks\VoiceMockClient;
 use App\Support\Notifications\FeeNotifier;
 use App\Support\Notifications\MessengerFeeNotifier;
 use App\Support\Notifications\MessengerSessionNotifier;
@@ -124,6 +127,15 @@ class AppServiceProvider extends ServiceProvider
         // Interview transcript speech-to-text (P4.2). Null until a provider is
         // configured; tests bind FakeTranscriptionClient. Text uploads bypass this.
         $this->app->bind(TranscriptionClient::class, NullTranscriptionClient::class);
+
+        // Voice mock transport (P4.3). Vapi when a key is configured, else Null
+        // (start fails loudly and refunds the credit); tests bind the fake.
+        $this->app->bind(VoiceMockClient::class, function (): VoiceMockClient {
+            /** @var array{api_key: string, base_url: string, webhook_secret: string} $config */
+            $config = config('services.vapi');
+
+            return $config['api_key'] !== '' ? new HttpVapiClient($config) : new NullVoiceMockClient;
+        });
 
         // Coding labs code execution (P3.1). Real Judge0 client from config; tests
         // bind FakeJudge0Client.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\BatchMemberStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,25 @@ class MockBlueprint extends Model
     protected $fillable = [
         'tenant_id', 'course_id', 'role_title', 'competencies', 'opening_question', 'is_active',
     ];
+
+    /**
+     * The active blueprint for the student's occupying-batch course, if any.
+     * Shared by the text (P4.1) and voice (P4.3) start paths.
+     */
+    public static function activeFor(User $student): ?self
+    {
+        $courseIds = BatchMember::query()
+            ->where('user_id', $student->id)
+            ->whereIn('status', array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying()))
+            ->pluck('batch_id')
+            ->pipe(fn ($batchIds) => Batch::query()->whereIn('id', $batchIds)->pluck('course_id'));
+
+        return self::query()
+            ->whereIn('course_id', $courseIds)
+            ->where('is_active', true)
+            ->latest('id')
+            ->first();
+    }
 
     /**
      * @return BelongsTo<Course, $this>

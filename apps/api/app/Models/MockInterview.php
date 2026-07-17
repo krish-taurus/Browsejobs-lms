@@ -34,10 +34,19 @@ class MockInterview extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    // Voice session that ended without enough signal to grade (P4.3) —
+    // the consumed credit is refunded and no scorecard exists.
+    public const STATUS_ABANDONED = 'abandoned';
+
+    public const MODE_TEXT = 'text';
+
+    public const MODE_VOICE = 'voice';
+
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'status',
         'overall_score', 'scorecard', 'scorecard_source', 'started_at', 'completed_at',
+        'provider_session_id', 'join_url', 'duration_seconds', 'cost_micros',
     ];
 
     /**

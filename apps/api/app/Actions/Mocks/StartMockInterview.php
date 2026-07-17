@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Actions\Mocks;
 
-use App\Enums\BatchMemberStatus;
-use App\Models\Batch;
-use App\Models\BatchMember;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\MockTurn;
@@ -31,6 +28,7 @@ final readonly class StartMockInterview
 
         $existing = MockInterview::query()
             ->where('user_id', $student->id)
+            ->where('mode', MockInterview::MODE_TEXT)
             ->where('status', MockInterview::STATUS_IN_PROGRESS)
             ->latest('id')
             ->first();
@@ -62,17 +60,7 @@ final readonly class StartMockInterview
 
     private function blueprintFor(User $student): MockBlueprint
     {
-        $courseIds = BatchMember::query()
-            ->where('user_id', $student->id)
-            ->whereIn('status', array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying()))
-            ->pluck('batch_id')
-            ->pipe(fn ($batchIds) => Batch::query()->whereIn('id', $batchIds)->pluck('course_id'));
-
-        $blueprint = MockBlueprint::query()
-            ->whereIn('course_id', $courseIds)
-            ->where('is_active', true)
-            ->latest('id')
-            ->first();
+        $blueprint = MockBlueprint::activeFor($student);
 
         if ($blueprint === null) {
             throw ValidationException::withMessages([

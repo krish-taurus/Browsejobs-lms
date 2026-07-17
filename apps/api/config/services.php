@@ -78,6 +78,14 @@ return [
         'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
     ],
 
+    'vapi' => [
+        // Voice mock transport (PRD §6.6, P4.3). Vapi by default; Retell or any
+        // compatible provider slots in behind VoiceMockClient. No key = voice off.
+        'api_key' => env('VAPI_API_KEY', ''),
+        'base_url' => env('VAPI_BASE_URL', 'https://api.vapi.ai'),
+        'webhook_secret' => env('VAPI_WEBHOOK_SECRET', ''),
+    ],
+
     'judge0' => [
         // Coding labs code execution (PRD §6.5). Self-hosted; tests fake the client.
         'url' => env('JUDGE0_URL', 'http://127.0.0.1:2358'),

@@ -6,6 +6,7 @@ use App\Http\Middleware\ResolveTenantByDomain;
 use App\Http\Middleware\ResolveTenantByUser;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
 use App\Http\Middleware\VerifyRazorpayWebhookSignature;
+use App\Http\Middleware\VerifyVoiceWebhookSignature;
 use App\Http\Middleware\VerifyWhatsAppWebhookSignature;
 use App\Http\Middleware\VerifyZoomWebhookSignature;
 use Illuminate\Auth\Middleware\Authorize;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'meta.signed' => VerifyMetaWebhookSignature::class,
             'razorpay.signed' => VerifyRazorpayWebhookSignature::class,
             'whatsapp.signed' => VerifyWhatsAppWebhookSignature::class,
+            'voice.signed' => VerifyVoiceWebhookSignature::class,
         ]);
 
         // Tenant resolution MUST run before route-model binding so the global
