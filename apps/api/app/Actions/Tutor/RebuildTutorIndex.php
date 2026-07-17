@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Tutor;
 
+use App\Enums\NoteStatus;
 use App\Models\CodingLab;
 use App\Models\Course;
 use App\Models\KnowledgeDocument;
+use App\Models\LessonNote;
 use App\Models\Program;
 use App\Models\Tenant;
 use App\Support\Tenancy\TenantContext;
@@ -93,6 +95,21 @@ final readonly class RebuildTutorIndex
                 'title' => 'Lab: '.($lab->lesson?->title ?? 'Coding lab'),
                 'body' => (string) $lab->instructions,
                 'course_id' => $courseId, 'lesson_id' => $lab->lesson_id,
+            ];
+        }
+
+        // Approved class transcripts only (PRD §6.10) — drafts must never be citable.
+        $transcripts = LessonNote::query()
+            ->where('status', NoteStatus::Approved->value)
+            ->with('lesson.topic.module')
+            ->get();
+        foreach ($transcripts as $note) {
+            $rows[] = [
+                'source_type' => 'transcript', 'source_id' => $note->id,
+                'title' => 'Transcript: '.($note->lesson?->title ?? 'Lesson'),
+                'body' => $note->transcript,
+                'course_id' => $note->lesson?->topic?->module?->course_id,
+                'lesson_id' => $note->lesson_id,
             ];
         }
 
