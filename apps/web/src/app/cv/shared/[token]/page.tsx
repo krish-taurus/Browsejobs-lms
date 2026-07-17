@@ -51,7 +51,23 @@ export default function SharedCvPage({ params }: { params: Promise<{ token: stri
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <div className="rounded-[22px] border border-line bg-white p-8 shadow-sm">
+      <style>{`
+        @page { size: A4; margin: 14mm 16mm; }
+        @media print {
+          .no-print { display: none !important; }
+          main { padding: 0 !important; max-width: none !important; }
+          .cv-card { border: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; }
+        }
+      `}</style>
+      <div className="no-print mb-4 flex justify-end">
+        <button
+          onClick={() => window.print()}
+          className="rounded-full bg-trust px-5 py-1.5 text-xs font-semibold text-white"
+        >
+          Download PDF
+        </button>
+      </div>
+      <div className="cv-card rounded-[22px] border border-line bg-white p-8 shadow-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-4">
           <div>
             <h1 className="display text-2xl text-ink">{c.name}</h1>
@@ -59,7 +75,7 @@ export default function SharedCvPage({ params }: { params: Promise<{ token: stri
           </div>
           <div className="text-right">
             {cv.approved && (
-              <span className="mono rounded-full bg-verify-bg px-2.5 py-0.5 text-[11px] uppercase tracking-widest text-verify">
+              <span className="no-print mono rounded-full bg-verify-bg px-2.5 py-0.5 text-[11px] uppercase tracking-widest text-verify">
                 verified by BrowseJobs placement team
               </span>
             )}
@@ -138,7 +154,7 @@ export default function SharedCvPage({ params }: { params: Promise<{ token: stri
           </>
         )}
       </div>
-      <p className="mono mt-4 text-center text-[10px] uppercase tracking-widest text-muted">
+      <p className="no-print mono mt-4 text-center text-[10px] uppercase tracking-widest text-muted">
         Shared via BrowseJobs · browsejobs.ai
       </p>
     </main>

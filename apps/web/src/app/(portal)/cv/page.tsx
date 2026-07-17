@@ -343,12 +343,16 @@ export default function CvPage() {
         )}
         {cv && !editing && (
           <>
+            <a href={`/cv/print/${cv.id}`} target="_blank" rel="noopener noreferrer"
+              className="rounded-full border border-line bg-white px-5 py-2 text-sm font-semibold text-ink hover:border-trust">
+              Download PDF
+            </a>
             <button onClick={share} className="rounded-full border border-line bg-white px-5 py-2 text-sm font-semibold text-ink hover:border-trust">
               {cv.share_token ? "Copy share link" : "Create share link"}
             </button>
             <a href={`${API}/api/v1/me/cv/${cv.id}/ats-text`}
               className="rounded-full border border-line bg-white px-5 py-2 text-sm font-semibold text-ink hover:border-trust">
-              Download ATS .txt
+              ATS .txt
             </a>
           </>
         )}
