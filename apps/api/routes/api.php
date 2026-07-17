@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
@@ -310,6 +311,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         // AI reply draft (PRD §6.13) — throttled as an AI endpoint; drafts, never sends.
         Route::post('tickets/{ticket}/draft-reply', [TicketController::class, 'draftReply'])->middleware('throttle:ai');
         Route::post('tickets/{ticket}/clear-ai-priority', [TicketController::class, 'clearAiPriority']);
+
+        // The support policy corpus AI deflection answers from (PRD §6.13).
+        Route::get('support-documents', [SupportDocumentController::class, 'index']);
+        Route::post('support-documents', [SupportDocumentController::class, 'store']);
+        Route::put('support-documents/{document}', [SupportDocumentController::class, 'update']);
+        Route::delete('support-documents/{document}', [SupportDocumentController::class, 'destroy']);
 
         Route::get('canned-responses', [CannedResponseController::class, 'index']);
         Route::post('canned-responses', [CannedResponseController::class, 'store']);
