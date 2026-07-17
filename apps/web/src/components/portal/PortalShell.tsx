@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
 import { useFeeStatus } from "@/lib/fee-status";
-import { navItems } from "@/components/portal/nav";
+import { navGroups, primaryTabs } from "@/components/portal/nav";
 import { CommandPalette } from "@/components/portal/CommandPalette";
 import { FeeBlockedScreen } from "@/components/portal/FeeBlockedScreen";
 
@@ -35,10 +35,13 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const reduce = useReducedMotion();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/student");
   }, [loading, user, router]);
+
+  useEffect(() => { setMoreOpen(false); }, [pathname]);
 
   if (loading || !user) {
     return (
@@ -65,22 +68,29 @@ export function PortalShell({ children }: { children: ReactNode }) {
           </span>
           <span className="display text-ink">BrowseJobs</span>
         </div>
-        <nav className="flex-1 space-y-1 px-3">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  active ? "bg-sky text-ink" : "text-muted hover:bg-paper"
-                }`}
-              >
-                <NavIcon path={item.icon} active={active} />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+          {navGroups.map((group) => (
+            <div key={group.label}>
+              <p className="mono px-3 pb-1 text-[10px] uppercase tracking-widest text-muted/70">{group.label}</p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        active ? "bg-sky text-ink" : "text-muted hover:bg-paper"
+                      }`}
+                    >
+                      <NavIcon path={item.icon} active={active} />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <button
           onClick={() => logout().then(() => router.replace("/student"))}
@@ -112,25 +122,54 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </motion.main>
       </div>
 
-      {/* Mobile bottom tabs */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-white md:hidden">
-        {navItems.map((item) => {
+      {/* Mobile "More" sheet — the full grouped menu (bottom bar only pins a few). */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-40 bg-ink/40 md:hidden" onClick={() => setMoreOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 max-h-[75vh] overflow-y-auto rounded-t-[22px] bg-white px-5 pb-24 pt-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+              {navGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="mono pb-1 text-[10px] uppercase tracking-widest text-muted">{group.label}</p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-2 py-1.5 text-sm font-medium ${pathname === item.href ? "text-trust" : "text-ink"}`}
+                      >
+                        <NavIcon path={item.icon} active={pathname === item.href} />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => logout().then(() => router.replace("/student"))} className="mt-5 text-sm font-medium text-muted">
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom tabs: a few primary destinations + More. */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white md:hidden">
+        {primaryTabs.map((item) => {
           const active = pathname === item.href;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center gap-1 py-2.5"
-            >
+            <Link key={item.href} href={item.href} className="flex flex-col items-center gap-1 py-2.5">
               <NavIcon path={item.icon} active={active} />
-              <span
-                className={`text-[10px] ${active ? "text-trust" : "text-muted"}`}
-              >
-                {item.label}
-              </span>
+              <span className={`text-[10px] ${active ? "text-trust" : "text-muted"}`}>{item.short ?? item.label}</span>
             </Link>
           );
         })}
+        <button onClick={() => setMoreOpen((o) => !o)} className="flex flex-col items-center gap-1 py-2.5">
+          <NavIcon path="M4 6h16M4 12h16M4 18h16" active={moreOpen} />
+          <span className={`text-[10px] ${moreOpen ? "text-trust" : "text-muted"}`}>More</span>
+        </button>
       </nav>
     </div>
   );
