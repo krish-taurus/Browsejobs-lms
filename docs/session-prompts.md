@@ -23,12 +23,14 @@ drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merg
 **Phase 4 — in progress.** P4.1 AI mock interviewer core (ADR 0029) · P4.2
 Real Interview Intelligence + transcript ingestion (ADR 0030) · P4.3 voice
 mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) · P4.4 native mentor
-scheduling, course-scoped multi-mentor calendar (ADR 0032) — merged.
-**Next: P4.5 — CV generator + placement.**
+scheduling, course-scoped multi-mentor calendar (ADR 0032) · P4.5a AI CV
+generator + ATS suite, own-CV import, brand-silent output, PDF/txt/share
+downloads (ADR 0033) — merged.
+**Next: P4.5b — placement pipeline.**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 602 passing
-  as of P4.4.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 617 passing
+  as of P4.5a.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -42,39 +44,38 @@ scheduling, course-scoped multi-mentor calendar (ADR 0032) — merged.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0032 in `docs/adr/`.
+  before building. ADRs 0001–0033 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.5 — CV generator + placement
+## NEXT → P4.5b — Placement pipeline
 
-Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.7 + §6.11
-placement) and **ADRs 0029–0032** before building. This is **P4.5** from
-`docs/BUILD-PLAYBOOK.md`. Draft the detailed prompt from the playbook
-bullet before starting. Large — consider splitting CV suite (P4.5a) and
-placement pipeline (P4.5b) into separate sessions/branches.
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.11
+placement + §6.7) and **ADRs 0029–0033** before building. This is the
+second half of **P4.5** from `docs/BUILD-PLAYBOOK.md`. Draft the detailed
+prompt from the playbook bullet before starting.
 
-Headline requirements: CourseCompleted → auto-generation of the
-comprehensive CV (credit-free first build + celebration notification); ATS
-suite (parse-simulation score, JD keyword match, format lint, quantified
-bullets); 3 free generations then ₹99/3-pack via the Entitlement Service;
-branded templates (HTML now, WeasyPrint later — certificate/receipt
-pattern); placement-officer approval; versioning + share links. Placement:
-pool gating (PRI + approved CV + human mock), job board, application
-pipeline, debrief capture after every real round (feeds the P4.2 bank!),
-offer tracking → Proof Engine aggregates + pay-after-placement fee
-milestone + consent-gated offer celebrations (P3.7 celebrations machinery
-exists). End-of-course comprehensive report.
+Headline requirements: placement-pool gating (PRI threshold + APPROVED CV
++ passed human mock); job board (staff-curated postings per course/role);
+application pipeline (applied → shortlisted → interviewing → offer →
+placed, kanban for placement officers); debrief capture after EVERY real
+interview round; offer tracking → Proof Engine aggregates (with the
+mandatory DISCLAIMER next to every stat) + pay-after-placement fee
+milestone + consent-gated offer celebrations. End-of-course comprehensive
+report.
 
-Reuse notes (all merged): `cv` wallet + `cv-3pack` (₹99) product + 402
-top-up pattern (see voice/mentor controllers); CourseCompleted event exists
-(certificates listen to it — mirror that listener); renderer interface
-pattern: `CertificateRenderer`/`HtmlCertificateRenderer`; human-mock gate =
-`mocks.human_gate_score` + mentor `purpose: placement_interview` sessions
-(ADR 0032); debriefs should create `interview_transcripts` (source
-'debrief') so the P4.2 parse→anonymise→review pipeline enriches the bank
-for free; celebrations: consent-first `celebrations` table from P3.7;
-share links: signed public route like certificate verify (P3.4c).
+Reuse notes (all merged): pool gate inputs exist — `ScoreCalculator` PRI,
+`CvDocument::STATUS_APPROVED` (ADR 0033), human mock = completed
+`MentorSession` with `purpose: placement_interview` + feedback_score ≥
+threshold (ADR 0032); debriefs MUST create `interview_transcripts`
+(source 'debrief') so the P4.2 parse→anonymise→review pipeline enriches
+the bank for free; offer celebrations ride the consent-first
+`celebrations` machinery from P3.7 (never fire without consent);
+pay-after-placement = a fee-plan instalment triggered on offer
+acceptance (P2.2/P2.3 fee engine); placement interviews book through the
+P4.4 mentor engine; recruiter handoff = the CV share link + PDF
+(ADR 0033). Compliance: never-claims — the Proof Engine shows historical
+aggregates with the stored DISCLAIMER, never promises.
 
 
 ---
