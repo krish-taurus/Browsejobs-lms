@@ -13,6 +13,7 @@ const nav = [
   { href: "/admin/quizzes", label: "Quizzes" },
   { href: "/admin/assignments", label: "Assignments" },
   { href: "/admin/grading", label: "Grading" },
+  { href: "/admin/certificates", label: "Certificates" },
   { href: "/admin/knowledge", label: "Tutor KB" },
   { href: "/admin/batches", label: "Batches" },
   { href: "/admin/leads", label: "Leads" },

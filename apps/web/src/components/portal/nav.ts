@@ -41,6 +41,11 @@ export const navItems: NavItem[] = [
     icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4",
   },
   {
+    href: "/certificates",
+    label: "Certificates",
+    icon: "M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9 2.6.9-5.5-4-3.9 5.5-.8zM8 20v-4M16 20v-4",
+  },
+  {
     href: "/store",
     label: "Store",
     icon: "M4 7h16l-1 12H5L4 7ZM9 7a3 3 0 0 1 6 0",

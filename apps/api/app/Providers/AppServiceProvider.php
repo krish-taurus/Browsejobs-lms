@@ -10,6 +10,8 @@ use App\Services\AI\AnthropicClient;
 use App\Services\AI\OpenAiCompatibleClient;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
+use App\Support\Certificates\CertificateRenderer;
+use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Judge0\HttpJudge0Client;
@@ -79,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
 
         // GST receipts render to branded HTML now; WeasyPrint PDF swaps in later.
         $this->app->bind(ReceiptRenderer::class, HtmlReceiptRenderer::class);
+        $this->app->bind(CertificateRenderer::class, HtmlCertificateRenderer::class);
 
         // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.
         $this->app->bind(WhatsAppClient::class, function (): HttpWhatsAppClient {
