@@ -31,6 +31,7 @@ const nav = [
   { href: "/admin/revenue", label: "Revenue" },
   { href: "/admin/ai-usage", label: "AI usage" },
   { href: "/admin/messages", label: "Messaging" },
+  { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/funnel", label: "Funnel" },
 ];
 

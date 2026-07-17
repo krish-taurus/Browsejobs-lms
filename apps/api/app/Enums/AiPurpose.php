@@ -20,6 +20,7 @@ enum AiPurpose: string
     case QuizGen = 'quiz_gen';
     case Content = 'content';
     case Report = 'report';
+    case MarketPulse = 'market_pulse';
     case Coach = 'coach';
     case General = 'general';
 }

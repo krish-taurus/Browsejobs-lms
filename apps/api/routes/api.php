@@ -7,8 +7,10 @@ use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CannedResponseController;
+use App\Http\Controllers\Admin\CelebrationController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CodingLabController;
+use App\Http\Controllers\Admin\ContentHubController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\PointsSettingController;
+use App\Http\Controllers\Admin\PulseAdminController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
@@ -56,6 +59,7 @@ use App\Http\Controllers\Me\MyLessonNotesController;
 use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
+use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
@@ -120,6 +124,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/coach', [CoachController::class, 'show']);
     Route::get('me/leaderboard', [LeaderboardController::class, 'show']);
     Route::put('me/leaderboard', [LeaderboardController::class, 'updatePreference']);
+    Route::get('me/pulse', [PulsePageController::class, 'show']);
+    Route::post('me/pulse/celebrations/{celebration}/guidance', [PulsePageController::class, 'guidance'])->middleware('throttle:ai');
+    Route::post('me/pulse/content/{item}/viewed', [PulsePageController::class, 'contentViewed'])->middleware('throttle:60,1');
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
     Route::get('me/notifications', [NotificationController::class, 'index']);
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
@@ -288,6 +295,19 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('message-templates/preview', [MessageTemplateController::class, 'preview']);
         Route::post('message-templates', [MessageTemplateController::class, 'store']);
         Route::put('message-templates/{template}', [MessageTemplateController::class, 'update']);
+
+        // P3.7 engagement (PRD §6.18/§6.19): celebrations, Market Pulse, Content Hub.
+        Route::get('celebrations', [CelebrationController::class, 'index']);
+        Route::post('celebrations', [CelebrationController::class, 'store']);
+        Route::post('celebrations/{celebration}/publish', [CelebrationController::class, 'publish']);
+        Route::delete('celebrations/{celebration}', [CelebrationController::class, 'destroy']);
+        Route::get('pulse', [PulseAdminController::class, 'index']);
+        Route::post('pulse/items', [PulseAdminController::class, 'storeItem']);
+        Route::delete('pulse/items/{item}', [PulseAdminController::class, 'destroyItem']);
+        Route::post('pulse/generate', [PulseAdminController::class, 'generate'])->middleware('throttle:ai');
+        Route::get('content-hub', [ContentHubController::class, 'index']);
+        Route::post('content-hub', [ContentHubController::class, 'store']);
+        Route::delete('content-hub/{item}', [ContentHubController::class, 'destroy']);
     });
 
     // Review-for-Voucher engine (PRD §5 Stage 3 / §6.8).

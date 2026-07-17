@@ -36,3 +36,7 @@ Schedule::command('digest:counselor-daily')->dailyAt('06:30');
 
 // Weekly support themes to admin (PRD §6.13): Monday, covering the week just closed.
 Schedule::command('digest:support-themes')->weeklyOn(1, '08:00');
+
+// P3.7 — Market Pulse (PRD §6.19): daily digest build + weekly opt-in send.
+Schedule::command('digest:market-pulse')->dailyAt('06:45');
+Schedule::command('pulse:weekly-send')->weeklyOn(1, '10:00');
