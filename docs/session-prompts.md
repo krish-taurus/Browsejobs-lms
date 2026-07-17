@@ -22,12 +22,13 @@ drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merg
 
 **Phase 4 — in progress.** P4.1 AI mock interviewer core (ADR 0029) · P4.2
 Real Interview Intelligence + transcript ingestion (ADR 0030) · P4.3 voice
-mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) — merged.
-**Next: P4.4 — mentor scheduling (native).**
+mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) · P4.4 native mentor
+scheduling, course-scoped multi-mentor calendar (ADR 0032) — merged.
+**Next: P4.5 — CV generator + placement.**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 582 passing
-  as of P4.3.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 602 passing
+  as of P4.4.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -41,35 +42,39 @@ mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) — merged.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0031 in `docs/adr/`.
+  before building. ADRs 0001–0032 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.4 — Mentor scheduling (native)
+## NEXT → P4.5 — CV generator + placement
 
-Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.11) and
-**ADRs 0029–0031** before building. This is **P4.4** from
-`docs/BUILD-PLAYBOOK.md`. Draft the detailed prompt from the playbook bullet
-before starting.
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.7 + §6.11
+placement) and **ADRs 0029–0032** before building. This is **P4.5** from
+`docs/BUILD-PLAYBOOK.md`. Draft the detailed prompt from the playbook
+bullet before starting. Large — consider splitting CV suite (P4.5a) and
+placement pipeline (P4.5b) into separate sessions/branches.
 
-Headline requirements (fully native, no Calendly): mentor profiles +
-expertise tags; recurring availability + exceptions (IST) + optional Google
-Calendar busy-sync; student combined-availability calendar with expertise
-filter; booking → Zoom auto-create → instant both-side notifications + .ics
-→ T-24h/T-1h reminders; 4h reschedule/cancel rule; no-show tracking;
-post-session mentor feedback → PRI; ratings. Coach recommends bookings on
-persistent weakness. Placement interviews reuse this engine.
+Headline requirements: CourseCompleted → auto-generation of the
+comprehensive CV (credit-free first build + celebration notification); ATS
+suite (parse-simulation score, JD keyword match, format lint, quantified
+bullets); 3 free generations then ₹99/3-pack via the Entitlement Service;
+branded templates (HTML now, WeasyPrint later — certificate/receipt
+pattern); placement-officer approval; versioning + share links. Placement:
+pool gating (PRI + approved CV + human mock), job board, application
+pipeline, debrief capture after every real round (feeds the P4.2 bank!),
+offer tracking → Proof Engine aggregates + pay-after-placement fee
+milestone + consent-gated offer celebrations (P3.7 celebrations machinery
+exists). End-of-course comprehensive report.
 
-Reuse notes (all merged): Zoom meeting creation lives in the P1.5 live-class
-flow (`ZoomClient` + `HttpZoomClient`; tests bind a fake) — reuse it for
-mentor sessions; reminders follow the class-reminder pattern (Messenger
-templates + queued delayed jobs, see `CheckQuizCompletion` for the
-delay-arming idiom); the `mentor` credit wallet + `mentor-extra` (₹499)
-product already exist in the entitlement engine (extra 1:1s consume a
-credit, first ones per policy are included); post-session feedback should
-feed `ScoreCalculator` the way mock scorecards do (ADR 0029's PRI-blend
-pattern); `.ics` generation is plain text — no package needed. Notification
-templates go in `MessagingSeeder` (utility category).
+Reuse notes (all merged): `cv` wallet + `cv-3pack` (₹99) product + 402
+top-up pattern (see voice/mentor controllers); CourseCompleted event exists
+(certificates listen to it — mirror that listener); renderer interface
+pattern: `CertificateRenderer`/`HtmlCertificateRenderer`; human-mock gate =
+`mocks.human_gate_score` + mentor `purpose: placement_interview` sessions
+(ADR 0032); debriefs should create `interview_transcripts` (source
+'debrief') so the P4.2 parse→anonymise→review pipeline enriches the bank
+for free; celebrations: consent-first `celebrations` table from P3.7;
+share links: signed public route like certificate verify (P3.4c).
 
 
 ---
