@@ -44,6 +44,9 @@ class MessagingSeeder extends Seeder
         ['key' => 'ticket_reply', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, there is a new reply on ticket {{ref}}. View it here: {{link}}'],
         ['key' => 'ticket_resolved', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, ticket {{ref}} is marked resolved. If it helped, please rate your experience: {{link}}'],
         ['key' => 'ticket_sla_warning', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Reminder: ticket {{ref}} ("{{subject}}") is approaching its first-response SLA. {{link}}'],
+        ['key' => 'mcq_dispatch', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Nice work {{name}}! You finished {{module}}. Take the quick quiz to lock in your progress: {{link}}'],
+        ['key' => 'mcq_dispatch', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your {{module}} quiz is ready', 'body' => 'Hi {{name}}, you finished {{module}}. Take the quiz to update your progress: {{link}}'],
+        ['key' => 'mcq_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your {{module}} quiz is still waiting — it only takes a few minutes: {{link}}'],
     ];
 
     public function run(): void

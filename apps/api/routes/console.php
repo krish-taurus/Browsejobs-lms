@@ -24,3 +24,6 @@ Schedule::command('scores:recompute')->dailyAt('06:00');
 
 // AI Tutor knowledge base (PRD §6.4): weekly rebuild from course/program/lab content.
 Schedule::command('tutor:reindex')->weeklyOn(1, '05:00');
+
+// Quiz-dispatch reminder ladder (PRD §6.5): safety net for 48h reminders / 96h flags.
+Schedule::command('quizzes:check-dispatch')->hourly();

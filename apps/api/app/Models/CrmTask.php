@@ -34,6 +34,8 @@ class CrmTask extends Model
 
     public const SOURCE_CONVERSION = 'conversion';
 
+    public const SOURCE_QUIZ = 'quiz';
+
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'lead_id', 'assigned_to', 'title', 'due_at', 'completed_at', 'source',

@@ -19,6 +19,9 @@ return [
     'mastery' => [
         'weak_below' => 40,   // < this = weak (needs work)
         'strong_above' => 70, // > this = strong (went well)
+        // Weight of a module's latest submitted quiz score vs topic-completion % —
+        // applied ONLY when a submitted attempt exists (P3.4). topic keeps 1 - this.
+        'quiz_weight' => 0.4,
     ],
 
     'pri' => [
