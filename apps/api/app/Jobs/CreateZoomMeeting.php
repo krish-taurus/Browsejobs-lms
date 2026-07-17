@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\LiveSession;
+use App\Models\ZoomLicense;
 use App\Support\Zoom\ZoomClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,16 +31,29 @@ final class CreateZoomMeeting implements ShouldQueue
 
     public function handle(ZoomClient $zoom): void
     {
-        $session = LiveSession::query()->withoutGlobalScopes()->find($this->liveSessionId);
+        $session = LiveSession::query()->withoutGlobalScopes()->with('batch:id,trainer_id')->find($this->liveSessionId);
 
         if ($session === null || $session->zoom_meeting_id !== null) {
             return;
+        }
+
+        // Host under the batch trainer's allocated Zoom license, if any — so concurrent
+        // classes run on different licenses instead of clashing on one host.
+        $hostUserId = null;
+        $trainerId = $session->batch?->trainer_id;
+        if ($trainerId !== null) {
+            $hostUserId = ZoomLicense::query()->withoutGlobalScopes()
+                ->where('mentor_id', $trainerId)
+                ->where('active', true)
+                ->value('zoom_user_id');
         }
 
         $meeting = $zoom->createMeeting(
             $session->title,
             $session->scheduled_start,
             (int) ceil($session->plannedSeconds() / 60),
+            $hostUserId,
+            (bool) $session->auto_record,
         );
 
         $session->update([

@@ -26,6 +26,7 @@ final readonly class ScheduleLiveSession
         CarbonInterface $start,
         ?CarbonInterface $end = null,
         ?Topic $topic = null,
+        bool $record = true,
     ): LiveSession {
         $session = LiveSession::query()->create([
             'tenant_id' => $batch->tenant_id,
@@ -35,6 +36,7 @@ final readonly class ScheduleLiveSession
             'scheduled_start' => $start,
             'scheduled_end' => $end,
             'status' => LiveSessionStatus::Scheduled->value,
+            'auto_record' => $record,
         ]);
 
         CreateZoomMeeting::dispatch($session->id);

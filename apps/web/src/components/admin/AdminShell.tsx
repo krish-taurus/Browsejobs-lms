@@ -30,6 +30,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/batches", label: "Batches" },
       { href: "/admin/students", label: "Candidates" },
+      { href: "/admin/zoom", label: "Zoom licenses" },
     ],
   },
   {

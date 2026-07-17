@@ -32,7 +32,7 @@ class LiveSession extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'batch_id', 'topic_id', 'title', 'scheduled_start', 'scheduled_end',
-        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'status', 'reminder_token',
+        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'status', 'reminder_token', 'auto_record',
     ];
 
     /**
@@ -91,6 +91,7 @@ class LiveSession extends Model
             'scheduled_start' => 'datetime',
             'scheduled_end' => 'datetime',
             'status' => LiveSessionStatus::class,
+            'auto_record' => 'boolean',
         ];
     }
 }
