@@ -41,6 +41,8 @@ class DatabaseSeeder extends Seeder
             CertificateSeeder::class,
             ReportsSeeder::class,
             MockBlueprintSeeder::class,
+            // After MockBlueprintSeeder — bank rows link to blueprint courses.
+            InterviewBankSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();

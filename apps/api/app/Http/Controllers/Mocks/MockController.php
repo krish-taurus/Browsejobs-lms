@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MockInterview;
 use App\Services\AI\AiBudgetExceeded;
 use App\Support\Entitlements\EntitlementService;
+use App\Support\Interviews\GapReport;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ final class MockController extends Controller
         private readonly AnswerMockInterview $answer,
         private readonly FinishMockInterview $finish,
         private readonly EntitlementService $entitlements,
+        private readonly GapReport $gaps,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -45,6 +47,7 @@ final class MockController extends Controller
                     'in_progress_id' => $mocks->firstWhere('status', MockInterview::STATUS_IN_PROGRESS)?->id,
                     'best_score' => $best,
                     'human_mock_unlocked' => $best >= (int) config('mocks.human_gate_score', 70),
+                    'gap_report' => $this->gaps->for($request->user()),
                     'mocks' => $mocks
                         ->where('status', MockInterview::STATUS_COMPLETED)
                         ->values()

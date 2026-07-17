@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 
+type GapItem = {
+  topic: string;
+  real_weight_pct: number;
+  your_score: number | null;
+  gap: boolean;
+};
+
 type MockSummary = {
   enabled: boolean;
   in_progress_id: number | null;
   best_score: number;
   human_mock_unlocked: boolean;
+  gap_report: { role_title: string | null; items: GapItem[] };
   mocks: { id: number; overall_score: number | null; completed_at: string | null }[];
 };
 
@@ -105,6 +113,41 @@ export default function MockHubPage() {
           </>
         )}
       </div>
+
+      {summary.gap_report.items.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
+            What real {summary.gap_report.role_title ?? ""} interviews test
+          </h2>
+          <p className="mt-1 text-xs text-muted">
+            Weights come from questions asked in actual interviews. Your score is from your best mock —
+            close the red gaps first.
+          </p>
+          <div className="mt-3 space-y-3 rounded-2xl border border-line bg-white p-5">
+            {summary.gap_report.items.map((item) => (
+              <div key={item.topic}>
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="text-ink">{item.topic}</span>
+                  <span className="mono text-xs text-muted">
+                    real weight {item.real_weight_pct}% ·{" "}
+                    {item.your_score !== null ? (
+                      <span className={item.gap ? "text-warn" : "text-verify"}>you: {item.your_score}</span>
+                    ) : (
+                      <span className="text-warn">untested</span>
+                    )}
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-paper">
+                  <div
+                    className={`h-1.5 rounded-full ${item.gap ? "bg-warn/70" : "bg-verify"}`}
+                    style={{ width: `${Math.max(4, item.real_weight_pct)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted">Past interviews</h2>
       {summary.mocks.length === 0 ? (
