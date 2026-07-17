@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
+use App\Http\Controllers\Admin\InterviewBankController;
 use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
@@ -234,6 +235,16 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('mock-blueprints', [MockBlueprintController::class, 'store']);
         Route::patch('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'update']);
         Route::delete('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'destroy']);
+    });
+
+    // Real Interview Intelligence (PRD §6.6) — placement team only.
+    Route::middleware('can:manage-placements')->group(function () {
+        Route::get('interview-transcripts', [InterviewBankController::class, 'transcripts']);
+        Route::post('interview-transcripts', [InterviewBankController::class, 'upload'])->middleware('throttle:30,1');
+        Route::get('interview-bank', [InterviewBankController::class, 'index']);
+        Route::post('interview-bank/approve-batch', [InterviewBankController::class, 'approveBatch']);
+        Route::post('interview-bank/{question}/approve', [InterviewBankController::class, 'approve']);
+        Route::post('interview-bank/{question}/reject', [InterviewBankController::class, 'reject']);
     });
 
     Route::middleware('can:manage-batches')->group(function () {

@@ -14,6 +14,8 @@ use App\Support\Certificates\CertificateRenderer;
 use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Interviews\NullTranscriptionClient;
+use App\Support\Interviews\TranscriptionClient;
 use App\Support\Judge0\HttpJudge0Client;
 use App\Support\Judge0\Judge0Client;
 use App\Support\Messaging\NullPushSender;
@@ -118,6 +120,10 @@ class AppServiceProvider extends ServiceProvider
                 default => throw new RuntimeException("Unknown AI driver for provider [{$provider}]."),
             };
         });
+
+        // Interview transcript speech-to-text (P4.2). Null until a provider is
+        // configured; tests bind FakeTranscriptionClient. Text uploads bypass this.
+        $this->app->bind(TranscriptionClient::class, NullTranscriptionClient::class);
 
         // Coding labs code execution (P3.1). Real Judge0 client from config; tests
         // bind FakeJudge0Client.

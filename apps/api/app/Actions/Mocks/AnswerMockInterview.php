@@ -7,6 +7,7 @@ namespace App\Actions\Mocks;
 use App\Enums\AiPurpose;
 use App\Models\MockInterview;
 use App\Models\MockTurn;
+use App\Models\RealInterviewQuestion;
 use App\Services\AI\AiGateway;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -56,12 +57,16 @@ final readonly class AnswerMockInterview
         }
 
         $blueprint = $interview->blueprint;
+        $transcript = $this->transcript($interview);
 
-        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 1, [
+        // v2 prompt (P4.2): the interviewer prefers questions asked in REAL
+        // interviews for this role — the bank is the product's edge.
+        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 2, [
             'role_title' => $blueprint->role_title,
             'competencies' => implode(', ', $blueprint->competencies),
             'remaining' => (string) max(0, $max - $asked - 1),
-            'transcript' => $this->transcript($interview),
+            'bank_questions' => $this->bankQuestions($interview, $transcript),
+            'transcript' => $transcript,
         ], ['max_tokens' => 300]);
 
         $question = trim($result->text);
@@ -77,6 +82,32 @@ final readonly class AnswerMockInterview
         ]);
 
         return ['turn' => $turn, 'ready_to_finish' => $asked + 1 >= $max];
+    }
+
+    /**
+     * Up to five approved bank questions for this blueprint's course/role,
+     * most-frequently-asked first, minus any already asked this session.
+     */
+    private function bankQuestions(MockInterview $interview, string $transcript): string
+    {
+        $blueprint = $interview->blueprint;
+
+        $questions = RealInterviewQuestion::query()
+            ->where('status', RealInterviewQuestion::STATUS_APPROVED)
+            ->where(fn ($q) => $q
+                ->where('course_id', $blueprint->course_id)
+                ->orWhere('role_title', $blueprint->role_title))
+            ->orderByDesc('asked_count')
+            ->limit(10)
+            ->pluck('question')
+            ->reject(fn (string $question) => str_contains($transcript, $question))
+            ->take(5);
+
+        if ($questions->isEmpty()) {
+            return '(none available)';
+        }
+
+        return $questions->map(fn (string $question) => '- '.$question)->implode("\n");
     }
 
     public function transcript(MockInterview $interview): string
