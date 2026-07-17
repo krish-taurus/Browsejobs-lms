@@ -67,8 +67,10 @@ use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
+use App\Http\Controllers\Me\MyClassController;
 use App\Http\Controllers\Me\MyLessonNotesController;
 use App\Http\Controllers\Me\MyQuizController;
+use App\Http\Controllers\Me\MyRecordingController;
 use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
@@ -160,6 +162,13 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::put('me/message-preferences', [MessagePreferenceController::class, 'update']);
     Route::post('me/testimonials', [TestimonialController::class, 'store']);
     Route::get('me/vouchers', [MyVoucherController::class, 'index']);
+
+    // Live classes + recordings (PRD §6.3). Join and download are fee/enrolment gated.
+    Route::get('me/classes', [MyClassController::class, 'index']);
+    Route::post('me/classes/{session}/join', [MyClassController::class, 'join']);
+    Route::get('me/recordings', [MyRecordingController::class, 'index']);
+    Route::get('me/recordings/{recording}/download', [MyRecordingController::class, 'download']);
+
     Route::get('me/tickets', [StudentTicketController::class, 'index']);
     Route::post('me/tickets', [StudentTicketController::class, 'store']);
     // AI first-response (PRD §6.13) — declared before `me/tickets/{ticket}` so the
