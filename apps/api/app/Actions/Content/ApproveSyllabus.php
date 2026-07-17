@@ -41,7 +41,10 @@ final readonly class ApproveSyllabus
                 'approved_by' => $actor?->id ?? $syllabus->approved_by,
                 'approved_at' => $syllabus->approved_at ?? now(),
                 'is_stale' => false,
-                'render_status' => Syllabus::RENDER_PENDING, // re-render with the current content
+                // render_status is deliberately NOT reset to pending here: a previously
+                // rendered artifact must keep serving (PRD §6.21 — running batches
+                // unaffected) until RenderSyllabus overwrites it on success. On a first
+                // approval it is still 'pending' until the render below writes the doc.
             ]);
 
             if (! $wasApproved) {

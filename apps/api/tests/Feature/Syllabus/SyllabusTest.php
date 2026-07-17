@@ -23,6 +23,7 @@ use App\Services\AI\FakeAiClient;
 use App\Support\Syllabus\SyllabusHasher;
 use App\Support\Syllabus\SyllabusRenderer;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\Sanctum;
@@ -124,6 +125,33 @@ it('approves a syllabus, audits it, renders the branded doc, and is idempotent',
 
     Storage::disk('s3')->assertExists($fresh->storage_path);
     expect(Storage::disk('s3')->get($fresh->storage_path))->toContain('Course Syllabus');
+});
+
+it('keeps the last approved artifact serving while a re-approval re-render is pending', function () {
+    Storage::fake('s3');
+    $course = syllabusCourse($this->tenant);
+    $staff = syllabusStaff($this->tenant);
+    $syllabus = Syllabus::factory()->for($this->tenant)->create(['course_id' => $course->id]);
+
+    // First approval renders a live artifact.
+    app(ApproveSyllabus::class)->handle($syllabus, $staff);
+    $livePath = $syllabus->fresh()->storage_path;
+    expect($syllabus->fresh()->isDownloadable())->toBeTrue();
+
+    // A trainer edit reverts to draft (SyllabusController@update) — the old doc still serves.
+    $syllabus->fresh()->update(['content' => "## Overview\n\nEdited.", 'status' => SyllabusStatus::Draft->value]);
+    expect($syllabus->fresh()->isDownloadable())->toBeTrue();
+
+    // Re-approve but hold the render in the queue (not yet run).
+    Bus::fake();
+    app(ApproveSyllabus::class)->handle($syllabus->fresh(), $staff);
+    Bus::assertDispatched(RenderSyllabus::class);
+
+    // The last approved artifact keeps serving until the re-render lands (never a 404 window).
+    $after = $syllabus->fresh();
+    expect($after->status)->toBe(SyllabusStatus::Approved)
+        ->and($after->storage_path)->toBe($livePath)
+        ->and($after->isDownloadable())->toBeTrue();
 });
 
 it('refuses to approve an empty syllabus', function () {

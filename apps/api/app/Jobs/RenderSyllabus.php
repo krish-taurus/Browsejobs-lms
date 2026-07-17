@@ -17,9 +17,10 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Renders + stores an approved syllabus's branded document (PRD §6.2; renders are
- * queued jobs per CLAUDE.md). Idempotent: skips an already-rendered syllabus. Never
- * renders a draft — only ApproveSyllabus dispatches this, having set the row Approved
- * + render_status=pending. Mirrors RenderCertificate.
+ * queued jobs per CLAUDE.md). Re-renders the current approved content and swaps the
+ * served artifact only on success — so the previously rendered (approved) document
+ * keeps serving until this completes (PRD §6.21). Never renders a draft. Mirrors
+ * RenderCertificate.
  */
 final class RenderSyllabus implements ShouldQueue
 {
@@ -33,11 +34,13 @@ final class RenderSyllabus implements ShouldQueue
     public function handle(SyllabusRenderer $renderer): void
     {
         $syllabus = Syllabus::query()->withoutGlobalScopes()->find($this->syllabusId);
-        if ($syllabus === null || $syllabus->render_status === Syllabus::RENDER_RENDERED) {
+        if ($syllabus === null) {
             return;
         }
 
-        // Never render an unapproved draft into a serveable artifact.
+        // Never render an unapproved draft into a serveable artifact. (No render_status
+        // skip: a re-approval leaves the row 'rendered' so the old doc keeps serving,
+        // and this job must still re-render the newly approved content.)
         if ($syllabus->status !== SyllabusStatus::Approved) {
             return;
         }

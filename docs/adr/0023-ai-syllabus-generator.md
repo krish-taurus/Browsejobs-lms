@@ -38,20 +38,24 @@ are deferred.
    Blade `resources/views/syllabus/default.blade.php`, a tiny dependency-free markdown→HTML
    converter) stored on the render disk. A WeasyPrint/PDF binarizer swaps in behind the same
    interface later, exactly like certificates/receipts (the repo has no PDF engine — this is the
-   "PDF later" reality). `Jobs/RenderSyllabus` is the idempotent queued render; it refuses to
-   render a non-approved draft.
+   "PDF later" reality). `Jobs/RenderSyllabus` is the queued render; it refuses to render a
+   non-approved draft and **overwrites the served artifact only on success**.
 
 4. **`ApproveSyllabus`** mirrors `ApproveQuiz`/`ApproveNotes`: idempotent; requires non-empty
-   content else `ValidationException`; audits `syllabus.approved`; clears `is_stale`; sets
-   `render_status=pending` and dispatches `RenderSyllabus`. Only this action renders.
+   content else `ValidationException`; audits `syllabus.approved`; clears `is_stale`; dispatches
+   `RenderSyllabus`. Only this action renders. It does **not** reset `render_status` to `pending`:
+   on a re-approval (after an edit) the row stays `rendered` so the previously approved document
+   keeps serving until the new render lands — there is no 404 window, and a failed re-render leaves
+   the old artifact live rather than blanking the download. On a first approval `render_status` is
+   already `pending` (nothing was ever served), so it becomes downloadable only once the render writes.
 
 5. **Invariant — the served artifact is always the last approved render.** `isDownloadable()`
    keys off the **rendered artifact** (`render_status=rendered && storage_path`), not the current
    `status`. Because only `ApproveSyllabus` renders, a rendered artifact is by definition a
-   previously-approved one. So an edit or a curriculum-change regenerates a fresh **draft** while
-   the last approved document keeps serving — running batches unaffected (PRD §6.21). A
-   never-approved syllabus is `pending` → not downloadable → 404. A draft's unapproved `content` is
-   never rendered and never served.
+   previously-approved one. So an edit, a curriculum-change regeneration, **or a re-approval's
+   in-flight re-render** all leave the last approved document serving — running batches unaffected
+   (PRD §6.21). A never-approved syllabus is `pending` → not downloadable → 404. A draft's
+   unapproved `content` is never rendered and never served.
 
 6. **Regenerate on curriculum change.** A new first-class `CurriculumChanged` event is dispatched
    from the Module/Topic/Lesson admin controllers on every create/update/delete. The queued
@@ -82,14 +86,16 @@ are deferred.
 
 ## Verification
 
-`php artisan test` — full suite **434 passing**, incl. `Feature/Syllabus/SyllabusTest` (19 tests):
+`php artisan test` — full suite **435 passing**, incl. `Feature/Syllabus/SyllabusTest` (20 tests):
 AI draft stamps the hash + billed to staff; empty-output and budget-exceeded → content untouched, no
 throw; hash changes with the tree; approve audits + renders the branded doc + idempotent; render job
 refuses a draft; **curriculum change regenerates a new draft while the last approved stays live**;
+**a re-approval's in-flight re-render keeps the last approved artifact serving (no 404 window)**;
 no-op when unchanged; public download serves an approved syllabus + captures a `syllabus` lead, 404s
 (no lead) when none approved, rejects without consent; student surface gated on approval + auth +
 cross-tenant denial; admin gate + cross-tenant denial. Pint clean. Fresh `migrate --seed`
-(`SyllabusSeeder`) attaches an approved, rendered syllabus to a seeded course. Frontend: admin
+(`SyllabusSeeder`) attaches an approved, rendered syllabus to a seeded course (downloadable when the
+render disk/MinIO is up; graceful-degrades to an approved draft otherwise). Frontend: admin
 `admin/(panel)/syllabus` list + `[course]` builder, public course-page lead-gated download dialog,
-student dashboard download link (web build not run in this environment — no `node_modules`).
+student dashboard download link — `npm run typecheck`, `lint`, and `build` all pass.
 Playwright `syllabus.spec.ts` covers the trainer generate→approve and the public lead-gated download.
