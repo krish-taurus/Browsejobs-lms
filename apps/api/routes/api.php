@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CannedResponseController;
+use App\Http\Controllers\Admin\CareAdminController;
 use App\Http\Controllers\Admin\CelebrationController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CodingLabController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\Care\CareController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
@@ -186,6 +188,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    // Review protection & retention (PRD §6.20).
+    Route::get('me/checkin', [CareController::class, 'index']);
+    Route::post('me/nps/{pulse}', [CareController::class, 'respond'])->middleware('throttle:10,1');
+    Route::post('me/pause', [CareController::class, 'requestPause'])->middleware('throttle:5,1');
     // Placement pipeline (PRD §6.11).
     Route::get('me/placement', [PlacementController::class, 'index']);
     Route::post('me/applications', [PlacementController::class, 'store'])->middleware('throttle:20,1');
@@ -325,6 +331,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Built-in CRM (PRD §6.12).
     Route::middleware('can:manage-leads')->group(function () {
+        // Review protection & retention (PRD §6.20) — counselor care desk.
+        Route::get('care', [CareAdminController::class, 'index']);
+        Route::post('care/alerts/{alert}/handle', [CareAdminController::class, 'handleAlert']);
+        Route::post('care/pauses/{pause}/decide', [CareAdminController::class, 'decidePause']);
+        Route::patch('care/onboarding/{checklist}', [CareAdminController::class, 'updateOnboarding']);
         Route::get('leads', [LeadAdminController::class, 'index']);
         Route::get('leads/board', [LeadAdminController::class, 'board']);
         Route::get('leads/counselors', [LeadAdminController::class, 'counselors']);

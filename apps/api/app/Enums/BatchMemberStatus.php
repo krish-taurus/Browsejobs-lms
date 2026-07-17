@@ -12,6 +12,9 @@ enum BatchMemberStatus: string
     case Dropped = 'dropped';
     case Transferred = 'transferred';
     case Completed = 'completed';
+    // Frozen enrolment (PRD §6.20 pause/defer) — rejoins a later batch.
+    // Not occupying: the seat frees up for the running batch.
+    case Paused = 'paused';
 
     /**
      * Statuses that occupy a seat for capacity purposes.
