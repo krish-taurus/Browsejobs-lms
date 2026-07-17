@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\MessageTemplateController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
+use App\Http\Controllers\Admin\PointsSettingController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyLessonNotesController;
@@ -116,6 +118,8 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);
     Route::get('me/coach', [CoachController::class, 'show']);
+    Route::get('me/leaderboard', [LeaderboardController::class, 'show']);
+    Route::put('me/leaderboard', [LeaderboardController::class, 'updatePreference']);
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
     Route::get('me/notifications', [NotificationController::class, 'index']);
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
@@ -331,6 +335,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-monetization')->group(function () {
         Route::get('monetization-settings', [MonetizationController::class, 'settings']);
         Route::put('monetization-settings', [MonetizationController::class, 'updateSettings']);
+        Route::get('points-settings', [PointsSettingController::class, 'show']);
+        Route::put('points-settings', [PointsSettingController::class, 'update']);
         Route::get('products', [MonetizationController::class, 'products']);
         Route::post('products', [MonetizationController::class, 'storeProduct']);
         Route::put('products/{product}', [MonetizationController::class, 'updateProduct']);

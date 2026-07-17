@@ -31,6 +31,7 @@ class User extends Authenticatable
         'phone',
         'user_type',
         'two_factor_enabled',
+        'leaderboard_opt_out',
         'password',
     ];
 
@@ -55,6 +56,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
+            'leaderboard_opt_out' => 'boolean',
             'password' => 'hashed',
         ];
     }

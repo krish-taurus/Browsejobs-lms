@@ -27,6 +27,7 @@ const nav = [
   { href: "/admin/support", label: "Support" },
   { href: "/admin/risk", label: "Risk" },
   { href: "/admin/monetization", label: "Monetization" },
+  { href: "/admin/points", label: "Points" },
   { href: "/admin/revenue", label: "Revenue" },
   { href: "/admin/ai-usage", label: "AI usage" },
   { href: "/admin/messages", label: "Messaging" },

@@ -7,6 +7,7 @@ namespace App\Actions\Telemetry;
 use App\Enums\ActivityType;
 use App\Models\ActivityEvent;
 use App\Models\User;
+use App\Support\Points\PointsService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,12 +18,14 @@ use Illuminate\Database\Eloquent\Model;
  */
 final readonly class RecordActivity
 {
+    public function __construct(private PointsService $points) {}
+
     /**
      * @param  array<string, mixed>|null  $meta
      */
     public function handle(User $user, ActivityType $type, ?Model $subject = null, ?int $value = null, ?array $meta = null): ActivityEvent
     {
-        return app(TenantContext::class)->run($user->tenant, fn (): ActivityEvent => ActivityEvent::query()->create([
+        $event = app(TenantContext::class)->run($user->tenant, fn (): ActivityEvent => ActivityEvent::query()->create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
             'type' => $type->value,
@@ -32,5 +35,18 @@ final readonly class RecordActivity
             'meta' => $meta,
             'occurred_at' => now(),
         ]));
+
+        // Streak points (P3.6): a day's streak state is settled by its first
+        // event, so only the first write of the day pays for the evaluation.
+        $isFirstToday = ActivityEvent::query()->withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->where('occurred_at', '>=', now()->startOfDay())
+            ->count() === 1;
+
+        if ($isFirstToday && $user->tenant_id !== null) {
+            $this->points->evaluateStreak($user, $user->tenant_id);
+        }
+
+        return $event;
     }
 }

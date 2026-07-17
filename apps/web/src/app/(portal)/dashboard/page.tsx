@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth";
 import { FeeWidget } from "@/components/portal/FeeWidget";
 import { CoachPanel } from "@/components/portal/CoachPanel";
+import { LeaderboardCard } from "@/components/portal/LeaderboardCard";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -18,6 +19,9 @@ export default function DashboardPage() {
 
       {/* Coach Panel — Next Best Action, PRI ring, mastery, wins & focus (PRD §6.4). */}
       <CoachPanel />
+
+      {/* Batch leaderboard + badges (PRD §6.16). */}
+      <LeaderboardCard />
     </div>
   );
 }
