@@ -18,12 +18,12 @@ P2.7 support desk · P2.8 entitlement engine.
 P3.3 AI tutor (RAG) · P3.4 MCQ automation · P3.4b assignment grading · P3.4c
 certificates · P3.5a reports/digests · P3.5b content AI · P3.5c syllabus
 generator · P3.5d-a support corpus + deflection · P3.5d-b triage/reply
-drafts/themes · P3.6 leaderboards + points — all merged to `main`.
-**Next: P3.7 — motivation engine + Market Pulse + Content Hub (last of Phase 3).**
+drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merged.
+**PHASE 3 COMPLETE. Next: P4.1 — AI mock interviewer core (Phase 4 begins).**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 528 passing
-  as of P3.6.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 538 passing
+  as of P3.7.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -37,32 +37,31 @@ drafts/themes · P3.6 leaderboards + points — all merged to `main`.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0027 in `docs/adr/`.
+  before building. ADRs 0001–0028 in `docs/adr/`.
 
 ---
 
-## NEXT → P3.7 — Motivation engine + Market Pulse + Content Hub
+## NEXT → P4.1 — AI mock interviewer core
 
-Read `CLAUDE.md` and `docs/browsejobs-lms-requirements.md` fully (PRD §6.18 +
-§6.19). This is **P3.7** from `docs/BUILD-PLAYBOOK.md` — the LAST Phase 3
-milestone. Draft the detailed prompt from the playbook bullet before starting.
+Read `CLAUDE.md` and `docs/browsejobs-lms-requirements.md` fully (PRD §6.6).
+This is **P4.1** from `docs/BUILD-PLAYBOOK.md` — Phase 4 begins. Draft the
+detailed prompt from the playbook bullet before starting.
 
-Headline requirements: consented offer-celebration broadcasts (named or
-anonymous mode) with the personalized "Your Path to the Same" AI guidance card
-built from each recipient's gap report (3 concrete actions + one-tap mock
-booking — mocks are P4, so stub the booking CTA); celebration wall. Market
-Pulse: curated-feed ingestion → daily AI digest with sources +
-course-relevance tie-ins, dashboard card; WhatsApp/email weekly **opt-in
-only**. Content Hub: YouTube RSS/API + Instagram Graph + manual podcast
-entries → dashboard feed, watch tracking into engagement score.
-Marketing-category WhatsApp requires explicit opt-in (P2.4 hub enforces
-category rules — reuse it).
+Headline requirements (transport-agnostic core; voice via Vapi/Retell is
+P4.3): role-specific interview blueprints per course; adaptive follow-up
+logic; scorecard generation (competency scores, strong/weak moments, model
+answers, 3 actions) feeding PRI; TopicCompleted → mock prompt card +
+magic-link nudge (per-topic toggle); progression gate to human mock. Include
+the optional text-practice mode behind the existing admin feature flag
+(monetization settings `text_practice_enabled`, off by default).
 
-P3.6 notes for reuse: celebrations already have a lightweight pattern
-(in_app_notifications fan-out in PointsService::grantBadge under
-app/Support/Points, opt-out respected) — §6.18's consented offer celebrations
-are the richer, consent-gated evolution of it. Content Hub watch events should
-flow through RecordActivity so they feed the engagement score.
+Reuse notes: the AI gateway is multi-provider (config/ai.php) with budget +
+ai_events; `AiPurpose` needs a Mock case; `points_settings.mock_points` and
+the `first-mock-done` badge are already reserved and wire up via
+`PointsService::award(PointsSource::Mock, ...)` + `grantBadge`; scorecards
+should feed `ScoreCalculator`/PRI like quiz/lab telemetry does (add an
+ActivityType if needed); magic-link nudges follow the P3.4 MCQ dispatch
+pattern (listener on TopicCompleted + Messenger utility template).
 
 
 ---
