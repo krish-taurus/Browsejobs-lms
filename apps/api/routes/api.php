@@ -73,6 +73,7 @@ use App\Http\Controllers\Testimonials\TestimonialController;
 use App\Http\Controllers\Tutor\TutorController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
+use App\Http\Controllers\Webhooks\VoiceWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
 use App\Support\Tenancy\TenantContext;
@@ -171,6 +172,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     Route::get('me/mocks', [MockController::class, 'index']);
     Route::post('me/mocks', [MockController::class, 'store']);
+    Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
     Route::get('me/mocks/{mock}', [MockController::class, 'show']);
     Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
@@ -406,6 +408,12 @@ Route::post('webhooks/meta/leads', [MetaLeadController::class, 'store'])
     ->middleware('meta.signed')
     ->withoutMiddleware('throttle:api')
     ->name('webhooks.meta.store');
+
+// Voice mock provider (PRD §6.6, P4.3). Secret-verified end-of-call reports.
+Route::post('webhooks/voice', VoiceWebhookController::class)
+    ->middleware('voice.signed')
+    ->withoutMiddleware('throttle:api')
+    ->name('webhooks.voice');
 
 // Razorpay payments (PRD §6.8). Signature-verified, idempotent reconciliation.
 Route::post('webhooks/razorpay', RazorpayWebhookController::class)

@@ -18,7 +18,10 @@ type Scorecard = {
 
 type MockSession = {
   id: number;
-  status: "in_progress" | "completed";
+  status: "in_progress" | "completed" | "abandoned";
+  mode: "text" | "voice";
+  join_url: string | null;
+  duration_seconds: number | null;
   role_title: string | null;
   questions_asked: number;
   max_questions: number;
@@ -196,6 +199,27 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
 
       {done ? (
         <ScorecardView session={session} />
+      ) : session.status === "abandoned" ? (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-6 text-center">
+          <p className="text-sm text-ink">This call ended before there was enough to grade.</p>
+          <p className="mt-1 text-sm text-muted">Your session credit was refunded — start a fresh one when you&apos;re ready.</p>
+        </div>
+      ) : session.mode === "voice" ? (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-6 text-center">
+          <p className="text-sm text-ink">This is a live voice interview.</p>
+          {session.join_url ? (
+            <a
+              href={session.join_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white"
+            >
+              Rejoin the call →
+            </a>
+          ) : (
+            <p className="mt-1 text-sm text-muted">Your scorecard appears here once the call ends.</p>
+          )}
+        </div>
       ) : budgetHit ? (
         <div className="mt-6 rounded-2xl border border-line bg-white p-6 text-center">
           <p className="text-sm text-ink">You&apos;ve reached today&apos;s AI practice limit.</p>
