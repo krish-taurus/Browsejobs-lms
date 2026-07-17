@@ -33,6 +33,7 @@ use App\Support\Razorpay\HttpRazorpayClient;
 use App\Support\Razorpay\RazorpayClient;
 use App\Support\Receipts\HtmlReceiptRenderer;
 use App\Support\Receipts\ReceiptRenderer;
+use App\Support\Settings\PlatformSettings;
 use App\Support\Syllabus\HtmlSyllabusRenderer;
 use App\Support\Syllabus\SyllabusRenderer;
 use App\Support\Tenancy\TenantContext;
@@ -55,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class);
+        $this->app->singleton(PlatformSettings::class);
 
         // OTP + live-class + dunning notifications route through the P2.4
         // messaging hub (Messenger). Log* stubs remain for tests to force-bind.
@@ -152,6 +154,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Admin-entered integration keys (LLM/WhatsApp/Vapi/Zoom) override config here,
+        // before any client binding resolves; blank/missing settings fall back to .env.
+        $this->app->make(PlatformSettings::class)->apply();
+
         // Super admins bypass every gate; any other ability resolves to a
         // permission slug the user's roles may grant. Returning null lets a
         // non-match fall through to explicitly defined gates/policies.

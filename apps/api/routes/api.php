@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
@@ -317,6 +318,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('batches', [BatchController::class, 'index']);
         Route::post('batches', [BatchController::class, 'store']);
         Route::get('batches/{batch}', [BatchController::class, 'show']);
+    });
+
+    // Platform integration settings (PRD §6.14) — super-admin only.
+    Route::middleware('can:manage-settings')->group(function () {
+        Route::get('settings', [SettingsController::class, 'index']);
+        Route::put('settings', [SettingsController::class, 'update']);
     });
 
     // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.

@@ -8,8 +8,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
+type NavItem = { href: string; label: string; role?: string };
+
 /** Grouped so 30+ destinations stay scannable (one flat list is not). */
-const navGroups: { label: string; items: { href: string; label: string }[] }[] = [
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Teaching",
     items: [
@@ -75,6 +77,7 @@ const navGroups: { label: string; items: { href: string; label: string }[] }[] =
     items: [
       { href: "/admin/messages", label: "Messaging" },
       { href: "/admin/ai-usage", label: "AI usage" },
+      { href: "/admin/settings", label: "Settings", role: "super-admin" },
     ],
   },
 ];
@@ -101,6 +104,13 @@ function Guarded({ children }: { children: ReactNode }) {
 
   const isStaff = user?.roles.some((r) => STAFF_ROLES.has(r)) ?? false;
 
+  // Role-gated items (e.g. super-admin-only Settings) are hidden from the menu for
+  // anyone who can't use them — the API enforces it too, this just avoids a dead link.
+  const roles = user?.roles ?? [];
+  const visibleGroups = navGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.role || roles.includes(i.role)) }))
+    .filter((g) => g.items.length > 0);
+
   useEffect(() => {
     if (!loading && (!user || !isStaff)) router.replace("/admin");
   }, [loading, user, isStaff, router]);
@@ -124,7 +134,7 @@ function Guarded({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-          {navGroups.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.label}>
               <p className="mono px-3 pb-1 text-[10px] uppercase tracking-widest text-sky/40">{group.label}</p>
               <div className="space-y-0.5">
@@ -175,7 +185,7 @@ function Guarded({ children }: { children: ReactNode }) {
         {menuOpen && (
           <div className="border-b border-line bg-white px-5 py-4 md:hidden">
             <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-              {navGroups.map((group) => (
+              {visibleGroups.map((group) => (
                 <div key={group.label}>
                   <p className="mono pb-1 text-[10px] uppercase tracking-widest text-muted">{group.label}</p>
                   <div className="space-y-0.5">
