@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 
 type Lesson = { id: number; title: string; type: string };
-type Topic = { id: number; name: string; lessons: Lesson[] };
+type Topic = { id: number; name: string; mock_enabled: boolean; lessons: Lesson[] };
 type Module = { id: number; name: string; topics: Topic[] };
 type CourseTree = { id: number; code: string; name: string; modules: Module[] };
 
@@ -133,16 +133,33 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
                   <div key={t.id} className="rounded-[10px] bg-paper p-3.5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-ink">{t.name}</p>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Delete topic “${t.name}”?`)) {
-                            mutate.mutate({ path: `/api/v1/admin/topics/${t.id}`, method: "DELETE" });
-                          }
-                        }}
-                        className="text-xs text-warn hover:underline"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted" title="Nudge students into a practice interview when they finish this topic">
+                          <input
+                            type="checkbox"
+                            checked={t.mock_enabled}
+                            onChange={(e) =>
+                              mutate.mutate({
+                                path: `/api/v1/admin/topics/${t.id}`,
+                                method: "PATCH",
+                                body: { mock_enabled: e.target.checked },
+                              })
+                            }
+                            className="accent-trust"
+                          />
+                          Mock nudge
+                        </label>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete topic “${t.name}”?`)) {
+                              mutate.mutate({ path: `/api/v1/admin/topics/${t.id}`, method: "DELETE" });
+                            }
+                          }}
+                          className="text-xs text-warn hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                     <ul className="mt-2 space-y-1">
                       {t.lessons.map((l) => (

@@ -19,6 +19,7 @@ enum ActivityType: string
     case CodeSubmitted = 'code_submitted';
     case QuizSubmitted = 'quiz_submitted';
     case ContentViewed = 'content_viewed';
+    case MockCompleted = 'mock_completed';
 
     /** Event types a client (student browser) may self-report. */
     public static function clientReportable(): array

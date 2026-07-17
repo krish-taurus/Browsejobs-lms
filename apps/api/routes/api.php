@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonNoteController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\MessageTemplateController;
+use App\Http\Controllers\Admin\MockBlueprintController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
@@ -61,6 +62,7 @@ use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\MessagePreferenceController;
+use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Reviews\ReviewController;
@@ -166,6 +168,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    Route::get('me/mocks', [MockController::class, 'index']);
+    Route::post('me/mocks', [MockController::class, 'store']);
+    Route::get('me/mocks/{mock}', [MockController::class, 'show']);
+    Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
+    Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
@@ -223,6 +230,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::patch('knowledge/{knowledge}', [KnowledgeController::class, 'update']);
         Route::delete('knowledge/{knowledge}', [KnowledgeController::class, 'destroy']);
         Route::post('knowledge/reindex', [KnowledgeController::class, 'reindex']);
+        Route::get('mock-blueprints', [MockBlueprintController::class, 'index']);
+        Route::post('mock-blueprints', [MockBlueprintController::class, 'store']);
+        Route::patch('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'update']);
+        Route::delete('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'destroy']);
     });
 
     Route::middleware('can:manage-batches')->group(function () {

@@ -41,6 +41,11 @@ export const navItems: NavItem[] = [
     icon: "M12 3a7 7 0 0 0-7 7c0 2.4 1.2 4.1 3 5.3V18h8v-2.7c1.8-1.2 3-2.9 3-5.3a7 7 0 0 0-7-7ZM9 21h6",
   },
   {
+    href: "/mock",
+    label: "Mock Interviews",
+    icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8",
+  },
+  {
     href: "/grades",
     label: "Grades",
     icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4",
