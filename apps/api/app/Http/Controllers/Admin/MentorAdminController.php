@@ -37,6 +37,7 @@ final class MentorAdminController extends Controller
                 'email' => $m->user?->email,
                 'headline' => $m->headline,
                 'expertise' => $m->expertise_tags,
+                'course_ids' => $m->course_ids ?? [],
                 'is_active' => $m->is_active,
                 'rating' => $m->averageRating(),
                 'booked' => $m->booked_count,
@@ -76,6 +77,7 @@ final class MentorAdminController extends Controller
                 'headline' => $validated['headline'] ?? null,
                 'bio' => $validated['bio'] ?? null,
                 'expertise_tags' => $validated['expertise'],
+                'course_ids' => $validated['course_ids'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
             ],
         );
@@ -111,6 +113,8 @@ final class MentorAdminController extends Controller
             'bio' => ['nullable', 'string', 'max:2000'],
             'expertise' => [$required, 'array', 'min:1', 'max:10'],
             'expertise.*' => ['string', 'max:60'],
+            'course_ids' => ['sometimes', 'nullable', 'array', 'max:20'],
+            'course_ids.*' => ['integer'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
     }

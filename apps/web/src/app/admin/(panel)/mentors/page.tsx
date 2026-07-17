@@ -12,12 +12,15 @@ type MentorRow = {
   email: string | null;
   headline: string | null;
   expertise: string[];
+  course_ids: number[];
   is_active: boolean;
   rating: number | null;
   booked: number;
   completed: number;
   no_shows: number;
 };
+
+type Course = { id: number; name: string };
 
 type SessionRow = {
   id: number;
@@ -42,11 +45,16 @@ export default function AdminMentorsPage() {
   const [userId, setUserId] = useState("");
   const [headline, setHeadline] = useState("");
   const [expertise, setExpertise] = useState("");
+  const [courseIds, setCourseIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "mentors"],
     queryFn: () => apiJson<{ data: { mentors: MentorRow[]; sessions: SessionRow[] } }>("/api/v1/admin/mentors"),
+  });
+  const { data: coursesData } = useQuery({
+    queryKey: ["admin", "courses"],
+    queryFn: () => apiJson<{ data: Course[] }>("/api/v1/admin/courses"),
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "mentors"] });
@@ -61,9 +69,10 @@ export default function AdminMentorsPage() {
           user_id: Number(userId),
           headline: headline.trim() || null,
           expertise: expertise.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean),
+          course_ids: courseIds,
         }),
       }),
-    onSuccess: () => { setUserId(""); setHeadline(""); setExpertise(""); setError(null); refresh(); },
+    onSuccess: () => { setUserId(""); setHeadline(""); setExpertise(""); setCourseIds([]); setError(null); refresh(); },
     onError,
   });
 
@@ -97,6 +106,23 @@ export default function AdminMentorsPage() {
           <input value={expertise} onChange={(e) => setExpertise(e.target.value)} placeholder="Expertise, comma-separated"
             className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust" />
         </div>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-muted">Covers courses</p>
+        <p className="text-xs text-muted">Students only see mentors for their own course. Leave all unticked for a generalist visible to everyone.</p>
+        <div className="mt-2 flex flex-wrap gap-3">
+          {(coursesData?.data ?? []).map((c) => (
+            <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-ink">
+              <input
+                type="checkbox"
+                checked={courseIds.includes(c.id)}
+                onChange={(e) =>
+                  setCourseIds(e.target.checked ? [...courseIds, c.id] : courseIds.filter((id) => id !== c.id))
+                }
+                className="accent-trust"
+              />
+              {c.name}
+            </label>
+          ))}
+        </div>
         <button onClick={() => create.mutate()} disabled={create.isPending || !userId || !expertise.trim()}
           className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {create.isPending ? "Saving…" : "Add mentor"}
@@ -116,7 +142,11 @@ export default function AdminMentorsPage() {
                   {m.name} {m.rating !== null && <span className="mono text-xs text-amber">★ {m.rating}</span>}
                 </p>
                 <p className="mono truncate text-[11px] uppercase tracking-widest text-muted">
-                  {m.expertise.join(" · ")} · {m.booked} booked · {m.completed} done · {m.no_shows} no-show
+                  {m.expertise.join(" · ")} ·{" "}
+                  {m.course_ids.length === 0
+                    ? "all courses"
+                    : (coursesData?.data ?? []).filter((c) => m.course_ids.includes(c.id)).map((c) => c.name).join(", ") || `${m.course_ids.length} courses`}{" "}
+                  · {m.booked} booked · {m.completed} done · {m.no_shows} no-show
                 </p>
               </div>
               <span className={`mono rounded-full px-2.5 py-0.5 text-[11px] uppercase tracking-widest ${m.is_active ? "bg-verify-bg text-verify" : "bg-paper text-muted"}`}>

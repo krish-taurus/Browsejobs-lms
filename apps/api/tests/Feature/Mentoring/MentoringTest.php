@@ -187,6 +187,70 @@ it('rejects a time that is not a real slot', function () {
     ])->assertUnprocessable();
 });
 
+it('shows every mentor free at the same time as separate bookable slots', function () {
+    ['mentor' => $first, 'student' => $student] = mentoringSetup($this->tenant, credits: 2);
+    // A second mentor with the same Tue 10:00–12:00 window.
+    $secondUser = User::factory()->for($this->tenant)->create(['user_type' => 'staff', 'name' => 'Second Mentor']);
+    $second = MentorProfile::factory()->for($this->tenant)->create(['user_id' => $secondUser->id]);
+    MentorAvailability::query()->create([
+        'tenant_id' => $this->tenant->id, 'mentor_profile_id' => $second->id,
+        'weekday' => 2, 'start_minute' => 600, 'end_minute' => 720,
+    ]);
+
+    Sanctum::actingAs($student);
+
+    $slots = collect(getJson('/api/v1/me/mentors')->assertOk()->json('data.slots'));
+    $tenAm = $slots->where('starts_at', tueTenIst());
+    expect($tenAm->pluck('mentor_profile_id')->sort()->values()->all())->toBe([$first->id, $second->id]);
+
+    // Booking one mentor at 10:00 leaves the other mentor's 10:00 open.
+    postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $first->id, 'starts_at' => tueTenIst()])
+        ->assertCreated();
+
+    $after = collect(getJson('/api/v1/me/mentors')->json('data.slots'))->where('starts_at', tueTenIst());
+    expect($after->pluck('mentor_profile_id')->all())->toBe([$second->id]);
+});
+
+it('scopes mentors to the student\'s course — a DevOps mentor never reaches a DE student', function () {
+    $de = Course::factory()->for($this->tenant)->create(['name' => 'Data Engineering']);
+    $devops = Course::factory()->for($this->tenant)->create(['name' => 'DevOps & Cloud']);
+    $batch = Batch::factory()->for($this->tenant)->create(['course_id' => $de->id, 'type' => 'paid']);
+    $student = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
+    BatchMember::factory()->for($this->tenant)->create([
+        'batch_id' => $batch->id, 'user_id' => $student->id, 'status' => 'enrolled',
+    ]);
+    app(EntitlementService::class)->grantCredits($student, 'mentor', 1, 'test');
+
+    $make = function (string $name, ?array $courseIds) {
+        $user = User::factory()->for($this->tenant)->create(['user_type' => 'staff', 'name' => $name]);
+        $profile = MentorProfile::factory()->for($this->tenant)->create(['user_id' => $user->id, 'course_ids' => $courseIds]);
+        MentorAvailability::query()->create([
+            'tenant_id' => $this->tenant->id, 'mentor_profile_id' => $profile->id,
+            'weekday' => 2, 'start_minute' => 600, 'end_minute' => 720,
+        ]);
+
+        return $profile;
+    };
+
+    $deMentor = $make('DE Mentor', [$de->id]);
+    $devopsMentor = $make('DevOps Mentor', [$devops->id]);
+    $generalist = $make('Generalist', null);
+
+    Sanctum::actingAs($student);
+    $payload = getJson('/api/v1/me/mentors')->assertOk()->json('data');
+
+    $mentorIds = collect($payload['mentors'])->pluck('id')->sort()->values()->all();
+    $slotMentors = collect($payload['slots'])->pluck('mentor_profile_id')->unique()->sort()->values()->all();
+
+    expect($mentorIds)->toBe([$deMentor->id, $generalist->id])
+        ->and($slotMentors)->toBe([$deMentor->id, $generalist->id]);
+
+    // The calendar filter is also enforced at booking.
+    postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $devopsMentor->id, 'starts_at' => tueTenIst()])
+        ->assertUnprocessable();
+    expect(app(EntitlementService::class)->balance($student, 'mentor'))->toBe(1);
+});
+
 /* ---- Cancel / reschedule / reminders ---- */
 
 it('cancels with notice: refunds the credit, deletes Zoom, and tells both sides', function () {

@@ -37,6 +37,12 @@ final readonly class BookMentorSession
             throw ValidationException::withMessages(['purpose' => 'Unknown session purpose.']);
         }
 
+        // Relevance is enforced at booking too — the calendar filter alone
+        // would leave the API open to booking any tenant mentor.
+        if (! $mentor->coversAnyCourse(MentorProfile::courseIdsFor($student))) {
+            throw ValidationException::withMessages(['mentor_profile_id' => 'This mentor does not cover your course.']);
+        }
+
         if (! $this->slots->isBookable($mentor, $startsAt)) {
             throw ValidationException::withMessages(['starts_at' => 'That slot is no longer available.']);
         }

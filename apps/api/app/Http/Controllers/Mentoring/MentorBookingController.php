@@ -41,10 +41,16 @@ final class MentorBookingController extends Controller
     public function index(Request $request): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
+            // Only mentors covering the student's course (or generalists) —
+            // a DevOps mentor never appears for a Data Engineering student.
+            $courseIds = MentorProfile::courseIdsFor($request->user());
+
             $mentors = MentorProfile::query()
                 ->where('is_active', true)
                 ->with('user:id,name')
                 ->get()
+                ->filter(fn (MentorProfile $m) => $m->coversAnyCourse($courseIds))
+                ->values()
                 ->map(fn (MentorProfile $m) => [
                     'id' => $m->id,
                     'name' => $m->user?->name,
@@ -55,7 +61,7 @@ final class MentorBookingController extends Controller
 
             return response()->json(['data' => [
                 'mentors' => $mentors,
-                'slots' => $this->slots->combined($request->query('tag')),
+                'slots' => $this->slots->combined($request->query('tag'), null, $courseIds),
                 'credits' => $this->entitlements->balance($request->user(), EntitlementFeature::Mentor->value),
                 'topups' => $this->topups(),
             ]]);

@@ -57,13 +57,18 @@ export default function MentorsPage() {
     [data?.mentors],
   );
 
+  // Day → time → the mentors free at that time, so parallel availability is
+  // first-class: 10:00 with three mentors shows three bookable chips.
   const byDay = useMemo(() => {
-    const groups = new Map<string, Slot[]>();
+    const days = new Map<string, Map<string, Slot[]>>();
     for (const slot of data?.slots ?? []) {
-      const key = istDay(slot.starts_at);
-      groups.set(key, [...(groups.get(key) ?? []), slot]);
+      const day = istDay(slot.starts_at);
+      const time = istTime(slot.starts_at);
+      const times = days.get(day) ?? new Map<string, Slot[]>();
+      times.set(time, [...(times.get(time) ?? []), slot]);
+      days.set(day, times);
     }
-    return Array.from(groups.entries()).slice(0, 7);
+    return Array.from(days.entries()).slice(0, 7);
   }, [data?.slots]);
 
   async function book(slot: Slot) {
@@ -169,24 +174,29 @@ export default function MentorsPage() {
         <p className="mt-3 text-sm text-muted">No open slots{tag ? ` for ${tag}` : ""} in the next two weeks.</p>
       ) : (
         <div className="mt-3 space-y-4">
-          {byDay.map(([day, slots]) => (
+          {byDay.map(([day, times]) => (
             <div key={day}>
               <p className="text-xs font-semibold text-ink">{day}</p>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {slots.map((slot) => {
-                  const key = `${slot.mentor_profile_id}-${slot.starts_at}`;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => book(slot)}
-                      disabled={busySlot === key}
-                      title={slot.mentor}
-                      className="rounded-[10px] border border-line bg-white px-3 py-1.5 text-xs text-ink hover:border-trust disabled:opacity-50"
-                    >
-                      {busySlot === key ? "Booking…" : `${istTime(slot.starts_at)} · ${slot.mentor.split(" ")[0]}`}
-                    </button>
-                  );
-                })}
+              <div className="mt-1.5 space-y-1.5">
+                {Array.from(times.entries()).map(([time, mentorSlots]) => (
+                  <div key={time} className="flex flex-wrap items-center gap-2">
+                    <span className="mono w-20 shrink-0 text-xs text-muted">{time}</span>
+                    {mentorSlots.map((slot) => {
+                      const key = `${slot.mentor_profile_id}-${slot.starts_at}`;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => book(slot)}
+                          disabled={busySlot === key}
+                          title={`Book ${slot.mentor} at ${time}`}
+                          className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink hover:border-trust disabled:opacity-50"
+                        >
+                          {busySlot === key ? "Booking…" : slot.mentor}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             </div>
           ))}

@@ -19,16 +19,20 @@ use Illuminate\Support\Collection;
 final class SlotFinder
 {
     /**
-     * Combined availability calendar.
+     * Combined availability calendar. When $courseIds is given, only mentors
+     * covering one of those courses (or generalists) appear — a DevOps
+     * mentor's slots never reach a Data Engineering student.
      *
+     * @param  list<int>|null  $courseIds
      * @return list<array{mentor_profile_id: int, mentor: string, expertise: list<string>, starts_at: string}>
      */
-    public function combined(?string $tag = null, ?int $days = null): array
+    public function combined(?string $tag = null, ?int $days = null, ?array $courseIds = null): array
     {
         return MentorProfile::query()
             ->where('is_active', true)
             ->with(['user:id,name', 'availabilities', 'exceptions'])
             ->get()
+            ->filter(fn (MentorProfile $mentor) => $courseIds === null || $mentor->coversAnyCourse($courseIds))
             ->filter(fn (MentorProfile $mentor) => $tag === null || in_array(
                 mb_strtolower($tag),
                 array_map(mb_strtolower(...), $mentor->expertise_tags),

@@ -9,6 +9,15 @@
 
 ## Decisions
 
+**Mentors are course-scoped; parallel availability is first-class.**
+`mentor_profiles.course_ids` restricts a mentor to the courses they cover
+(null/empty = generalist, visible to all); the calendar AND booking both
+enforce it against the student's occupying-batch courses, so a DevOps
+mentor's slots never reach a Data Engineering student even by raw API. The
+calendar groups day → time → free mentors, so three mentors free at 10:00
+are three bookable chips, and booking one leaves the other two open —
+capacity scales with the pool, not one global slot per time.
+
 **One deterministic slot engine, used by display AND booking.** `SlotFinder`
 cuts slots from weekly IST windows (minutes-of-day, weekday rows) minus
 dated exceptions (full-day or window) minus booked sessions minus the
@@ -59,13 +68,14 @@ exists on the profile; the sync job lands when Google credentials arrive
 
 ## Consequences
 
-- 18 Pest tests in `tests/Feature/Mentoring/`: slot math (windows,
+- 20 Pest tests in `tests/Feature/Mentoring/`: slot math (windows,
   exceptions, bookings, lead time), tag filtering, booking side-effects,
   402 top-up, double-book race, off-grid rejection, cancel/4h-rule/refund,
   reschedule + stale-reminder guard, reminder idempotence, both no-show
   policies, feedback → PRI, ratings, .ics, hub gating + availability
-  round-trip, cross-mentor session isolation, admin gating, and the coach
-  recommendation (suite: 600).
+  round-trip, cross-mentor session isolation, admin gating, the coach
+  recommendation, same-time multi-mentor slots, and course scoping on both
+  the calendar and booking (suite: 602).
 - P4.5's placement flow books `purpose: placement_interview` through the
   same endpoints; mentor wallets need an admin/counselor grant path or an
   included-quota policy — flagged as a follow-up policy decision for the
