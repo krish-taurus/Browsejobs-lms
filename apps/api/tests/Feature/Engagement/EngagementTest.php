@@ -168,6 +168,10 @@ it('refuses to generate a digest with nothing curated', function () {
 });
 
 it('sends the weekly pulse only to marketing-opted-in students', function () {
+    // Pin to mid-morning: marketing sends are suppressed during quiet hours,
+    // so an unpinned clock makes this test fail when the suite runs at night.
+    Carbon\Carbon::setTestNow(now()->setTime(11, 0));
+
     foreach (['whatsapp', 'email'] as $channel) {
         MessageTemplate::query()->create([
             'tenant_id' => $this->tenant->id, 'key' => 'market_pulse_weekly', 'channel' => $channel,
