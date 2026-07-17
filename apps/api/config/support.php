@@ -23,6 +23,22 @@ return [
     'sla_warning_pct' => 0.75,
 
     /*
+    | AI first-response / deflection layer (PRD §6.13, P3.5d-a). Retrieval is scoped
+    | to the `support` corpus — policy documents, not course material.
+    |
+    | `min_confidence` is the floor for showing an answer at all: below it the student
+    | goes straight to a human. Deflection is assistive; a wrong confident answer on a
+    | fee dispute costs far more than a ticket a human would have handled anyway.
+    */
+    'ai' => [
+        'enabled' => (bool) env('SUPPORT_DEFLECTION_ENABLED', true),
+        'prompt_version' => (int) env('SUPPORT_DEFLECTION_PROMPT_VERSION', 1),
+        'retrieve_k' => (int) env('SUPPORT_DEFLECTION_RETRIEVE_K', 4),
+        'max_answer_tokens' => (int) env('SUPPORT_DEFLECTION_MAX_TOKENS', 500),
+        'min_confidence' => env('SUPPORT_DEFLECTION_MIN_CONFIDENCE', 'medium'),
+    ],
+
+    /*
     | Per-category routing + SLA defaults (PRD §6.13 table). Seeds ticket_routes.
     | Each: [routing, team_slug|null, first_response_minutes, resolution_minutes].
     | routing ∈ team | batch_trainer | admin.

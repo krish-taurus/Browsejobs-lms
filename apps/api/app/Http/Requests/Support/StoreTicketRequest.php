@@ -29,6 +29,10 @@ final class StoreTicketRequest extends FormRequest
             'subject' => ['required', 'string', 'max:200'],
             'body' => ['required', 'string', 'min:5', 'max:5000'],
             'priority' => ['nullable', Rule::enum(TicketPriority::class)],
+            // The AI answer this student saw and rejected (PRD §6.13). Ownership is
+            // re-checked in the controller; a bad id is ignored, never a 422 — a
+            // deflection bookkeeping problem must not stop someone raising a ticket.
+            'deflection_id' => ['nullable', 'integer'],
             'attachments' => ['nullable', 'array', 'max:5'],
             'attachments.*' => ['file', "mimes:{$mimes}", "max:{$maxKb}"],
         ];

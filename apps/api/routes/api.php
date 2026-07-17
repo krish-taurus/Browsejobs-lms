@@ -124,6 +124,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/vouchers', [MyVoucherController::class, 'index']);
     Route::get('me/tickets', [StudentTicketController::class, 'index']);
     Route::post('me/tickets', [StudentTicketController::class, 'store']);
+    // AI first-response (PRD §6.13) — declared before `me/tickets/{ticket}` so the
+    // literal segment is not swallowed by the parameter, and throttled as an AI endpoint.
+    Route::post('me/tickets/deflect', [StudentTicketController::class, 'deflect'])->middleware('throttle:ai');
+    Route::post('me/tickets/deflect/{deflection}/accept', [StudentTicketController::class, 'acceptDeflection']);
     Route::get('me/tickets/{ticket}', [StudentTicketController::class, 'show']);
     Route::post('me/tickets/{ticket}/reply', [StudentTicketController::class, 'reply']);
     Route::post('me/tickets/{ticket}/reopen', [StudentTicketController::class, 'reopen']);

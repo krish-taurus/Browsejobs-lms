@@ -17,6 +17,29 @@ use Illuminate\Support\Collection;
 final class CitationResolver
 {
     /**
+     * Resolve a bare chunk-id list to citations. Support deflection (PRD §6.13) cites
+     * the same way the tutor does — derived from what was retrieved, never parsed out
+     * of the model's answer, so a citation cannot be hallucinated.
+     *
+     * @param  array<int, int>  $chunkIds
+     * @return list<array{label: string, href: string|null}>
+     */
+    public function resolve(array $chunkIds): array
+    {
+        if ($chunkIds === []) {
+            return [];
+        }
+
+        $chunks = KnowledgeChunk::query()
+            ->with('document.course:id,slug')
+            ->whereIn('id', $chunkIds)
+            ->get()
+            ->keyBy('id');
+
+        return $this->build($chunkIds, $chunks);
+    }
+
+    /**
      * Attach a resolved `citations` array onto each tutor message in the set.
      *
      * @param  Collection<int, TutorMessage>  $messages

@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
             LabSeeder::class,
             ScoringSeeder::class,
             TutorSeeder::class,
+            // After SupportSeeder (teams/routes) and PaymentsSeeder (the instalment a
+            // deflection answer quotes back to the student).
+            SupportCorpusSeeder::class,
             QuizSeeder::class,
             ContentSeeder::class,
             SyllabusSeeder::class,

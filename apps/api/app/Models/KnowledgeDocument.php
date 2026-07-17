@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $title
  * @property string $source_type
  * @property int|null $source_id
+ * @property string|null $category
  * @property string $body
  * @property int|null $course_id
  * @property int|null $lesson_id
@@ -32,7 +33,7 @@ class KnowledgeDocument extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'title', 'source_type', 'source_id', 'body',
+        'tenant_id', 'title', 'source_type', 'source_id', 'category', 'body',
         'course_id', 'lesson_id', 'is_active', 'authored_by',
     ];
 

@@ -62,7 +62,7 @@ final readonly class AskTutor
                 ['max_tokens' => (int) config('ai.tutor.max_answer_tokens', 700)],
             );
 
-            [$answer, $confidence] = $this->splitConfidence($result->text);
+            [$answer, $confidence] = TutorConfidence::split($result->text);
 
             $repeat = $this->isRepeat($student, $fingerprint);
             $escalate = $confidence->shouldEscalate() || $repeat;
@@ -133,22 +133,6 @@ final readonly class AskTutor
         }
 
         return implode("\n\n", $blocks);
-    }
-
-    /**
-     * Split the trailing `CONFIDENCE:` line off the answer; missing → Low (fail-safe).
-     *
-     * @return array{0: string, 1: TutorConfidence}
-     */
-    private function splitConfidence(string $text): array
-    {
-        if (preg_match('/CONFIDENCE:\s*(high|medium|low)\s*$/i', trim($text), $m) === 1) {
-            $answer = trim(preg_replace('/CONFIDENCE:\s*(high|medium|low)\s*$/i', '', trim($text)) ?? '');
-
-            return [$answer, TutorConfidence::fromLabel($m[1])];
-        }
-
-        return [trim($text), TutorConfidence::Low];
     }
 
     private function isRepeat(User $student, string $fingerprint): bool
