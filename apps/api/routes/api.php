@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonNoteController;
+use App\Http\Controllers\Admin\MentorAdminController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\MessageTemplateController;
 use App\Http\Controllers\Admin\MockBlueprintController;
@@ -62,6 +63,8 @@ use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
+use App\Http\Controllers\Mentoring\MentorBookingController;
+use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\MyVoucherController;
@@ -170,6 +173,20 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    // Mentor scheduling (PRD §6.11).
+    Route::get('me/mentors', [MentorBookingController::class, 'index']);
+    Route::get('me/mentor-sessions', [MentorBookingController::class, 'sessions']);
+    Route::post('me/mentor-sessions', [MentorBookingController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('me/mentor-sessions/{session}/cancel', [MentorBookingController::class, 'destroy']);
+    Route::post('me/mentor-sessions/{session}/reschedule', [MentorBookingController::class, 'move']);
+    Route::post('me/mentor-sessions/{session}/rate', [MentorBookingController::class, 'rate']);
+    Route::get('me/mentor-sessions/{session}/ics', [MentorBookingController::class, 'ics']);
+    // The mentor's own workspace (ownership-gated, no extra permission).
+    Route::get('me/mentorhub', [MentorHubController::class, 'index']);
+    Route::post('me/mentorhub/{session}/feedback', [MentorHubController::class, 'submitFeedback']);
+    Route::post('me/mentorhub/{session}/no-show', [MentorHubController::class, 'markNoShow']);
+    Route::get('me/mentorhub/availability', [MentorHubController::class, 'availability']);
+    Route::put('me/mentorhub/availability', [MentorHubController::class, 'updateAvailability']);
     Route::get('me/mocks', [MockController::class, 'index']);
     Route::post('me/mocks', [MockController::class, 'store']);
     Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
@@ -241,6 +258,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Real Interview Intelligence (PRD §6.6) — placement team only.
     Route::middleware('can:manage-placements')->group(function () {
+        Route::get('mentors', [MentorAdminController::class, 'index']);
+        Route::post('mentors', [MentorAdminController::class, 'store']);
+        Route::patch('mentors/{mentor}', [MentorAdminController::class, 'update']);
         Route::get('interview-transcripts', [InterviewBankController::class, 'transcripts']);
         Route::post('interview-transcripts', [InterviewBankController::class, 'upload'])->middleware('throttle:30,1');
         Route::get('interview-bank', [InterviewBankController::class, 'index']);

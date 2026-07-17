@@ -13,6 +13,7 @@ use App\Models\ActivityEvent;
 use App\Models\Attendance;
 use App\Models\BatchMember;
 use App\Models\Instalment;
+use App\Models\MentorSession;
 use App\Models\MockInterview;
 use App\Models\Module;
 use App\Models\QuizAttempt;
@@ -32,6 +33,9 @@ use Illuminate\Support\Collection;
  */
 final class ScoreCalculator
 {
+    /** Whether the student has a completed AI mock — gates the mentor recommendation. */
+    private bool $hasCompletedMock = false;
+
     /**
      * @return ScoreData
      */
@@ -61,9 +65,23 @@ final class ScoreCalculator
                 ->where('status', MockInterview::STATUS_COMPLETED)
                 ->max('overall_score');
 
+            $this->hasCompletedMock = $bestMock !== null;
+
             if ($bestMock !== null) {
                 $blend = (float) config('scoring.pri.mock_blend', 0.15);
                 $pri = (int) round((1 - $blend) * $pri + $blend * (int) $bestMock);
+            }
+
+            // PRD §6.11: post-session mentor feedback calibrates PRI — human
+            // judgment on top of the machine number. No feedback = unchanged.
+            $mentorAvg = MentorSession::query()
+                ->where('student_id', $student->id)
+                ->whereNotNull('feedback_score')
+                ->avg('feedback_score');
+
+            if ($mentorAvg !== null) {
+                $blend = (float) config('scoring.pri.mentor_blend', 0.10);
+                $pri = (int) round((1 - $blend) * $pri + $blend * (float) $mentorAvg);
             }
 
             $riskDropout = (int) round(0.55 * (100 - $engagement) + 0.25 * ($stalled ? 100 : 0) + 0.20 * ($feeBlocked ? 100 : 0));
@@ -279,7 +297,16 @@ final class ScoreCalculator
             return ['key' => NextActionKey::ClearFee->value, 'title' => 'Clear your dues to unlock classes & recordings', 'detail' => 'Your access is limited until the balance is settled.', 'href' => '/dashboard'];
         }
 
-        $weakest = collect($mastery)->where('band', MasteryBand::Weak->value)->sortBy('pct')->first();
+        // Persistent weakness (PRD §6.11): they practised (completed a mock)
+        // and are still weak across 2+ modules — time for a human, not
+        // another lap. Without a completed mock this never fires, so the
+        // P3.2 action ladder is unchanged for everyone else.
+        $weakModules = collect($mastery)->where('band', MasteryBand::Weak->value);
+        if ($weakModules->count() >= 2 && $this->hasCompletedMock) {
+            return ['key' => NextActionKey::BookMentor->value, 'title' => 'Book a mentor 1:1 — several modules need a human eye', 'detail' => 'A focused session beats another solo lap when more than one area is stuck.', 'href' => '/mentors'];
+        }
+
+        $weakest = $weakModules->sortBy('pct')->first();
         if ($weakest !== null) {
             return ['key' => NextActionKey::PracticeModule->value, 'title' => "Practice {$weakest['name']} — you're at {$weakest['pct']}%", 'detail' => 'A focused session here moves your PRI the most.', 'href' => '/labs'];
         }
