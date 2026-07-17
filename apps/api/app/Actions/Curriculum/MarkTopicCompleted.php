@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Curriculum;
 
+use App\Events\CourseCompleted;
 use App\Events\ModuleCompleted;
 use App\Events\TopicCompleted;
+use App\Models\Course;
 use App\Models\Module;
 use App\Models\Topic;
 use App\Models\TopicCompletion;
@@ -51,6 +53,31 @@ final readonly class MarkTopicCompleted
 
         if ($completed === $topicIds->count()) {
             ModuleCompleted::dispatch($user, $module);
+            $module->loadMissing('course');
+            if ($module->course !== null) {
+                $this->fireCourseCompletedIfFinished($user, $module->course);
+            }
+        }
+    }
+
+    private function fireCourseCompletedIfFinished(User $user, Course $course): void
+    {
+        // Batched: every topic in the course in one query, one completion count.
+        $topicIds = Topic::query()
+            ->whereIn('module_id', $course->modules()->select('id'))
+            ->pluck('id');
+
+        if ($topicIds->isEmpty()) {
+            return; // a course with no topics never "completes"
+        }
+
+        $completed = TopicCompletion::query()
+            ->where('user_id', $user->id)
+            ->whereIn('topic_id', $topicIds)
+            ->count();
+
+        if ($completed === $topicIds->count()) {
+            CourseCompleted::dispatch($user, $course);
         }
     }
 }

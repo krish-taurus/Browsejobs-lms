@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /*
@@ -28,6 +29,11 @@ uses(
     TestCase::class,
     RefreshDatabase::class,
 )->in('Feature');
+
+// Never touch real object storage in tests. Course-completion now auto-issues a
+// certificate (which renders to the s3 disk), so any completion path must have a
+// faked disk; individual tests can re-fake to assert file contents.
+uses()->beforeEach(fn () => Storage::fake('s3'))->in('Feature');
 
 /*
 |--------------------------------------------------------------------------

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\CannedResponseController;
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CodingLabController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
@@ -38,11 +39,13 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\MyAssignmentController;
+use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
@@ -63,6 +66,12 @@ use Illuminate\Support\Facades\Route;
 | API routes. The `api` group (throttle:api + Sanctum stateful) is applied
 | automatically. Auth uses the Sanctum SPA cookie flow (ADR 0004).
 */
+
+// Public certificate verification (PRD §6.5). NO tenant.domain — a printed QR must
+// verify from any host, so the lookup is by the globally-unique code (withoutGlobalScopes).
+Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('certificates.verify');
 
 // Public + auth endpoints, tenant resolved by request host.
 Route::prefix('v1')->middleware('tenant.domain')->group(function () {
@@ -126,6 +135,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/assignments/{lesson}', [MyAssignmentController::class, 'show']);
     Route::post('me/assignments/{lesson}/submit', [MyAssignmentController::class, 'submit'])->middleware('throttle:20,1');
     Route::get('me/grades', [MyAssignmentController::class, 'grades']);
+    Route::get('me/certificates', [MyCertificateController::class, 'index']);
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
@@ -180,6 +190,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     });
 
     Route::middleware('can:manage-rosters')->group(function () {
+        Route::get('certificates', [CertificateController::class, 'index']);
+        Route::post('certificates', [CertificateController::class, 'store']);
+        Route::post('certificates/{certificate}/revoke', [CertificateController::class, 'revoke']);
         Route::post('batches/{batch}/members', [RosterController::class, 'store']);
         Route::post('batches/{batch}/import', [RosterController::class, 'import']);
         Route::post('batches/{batch}/complete', [RosterController::class, 'completeBootcamp']);
