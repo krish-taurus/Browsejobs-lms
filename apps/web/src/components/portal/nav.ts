@@ -51,6 +51,11 @@ export const navItems: NavItem[] = [
     icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M17 14.5a7 7 0 0 1 5 6.5",
   },
   {
+    href: "/placement",
+    label: "Placement",
+    icon: "M4 8h16v12H4zM9 8V5a3 3 0 0 1 6 0v3M4 13h16",
+  },
+  {
     href: "/cv",
     label: "My CV",
     icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h6M9 20h3",

@@ -14,6 +14,7 @@ const nav = [
   { href: "/admin/quizzes", label: "Quizzes" },
   { href: "/admin/mocks", label: "Mocks" },
   { href: "/admin/interviews", label: "Interview bank" },
+  { href: "/admin/placements", label: "Placements" },
   { href: "/admin/cvs", label: "CV approvals" },
   { href: "/admin/mentors", label: "Mentors" },
   { href: "/admin/mentoring", label: "My mentoring" },
