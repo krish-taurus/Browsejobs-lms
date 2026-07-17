@@ -11,6 +11,8 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 const nav = [
   { href: "/admin/curriculum", label: "Curriculum" },
   { href: "/admin/quizzes", label: "Quizzes" },
+  { href: "/admin/assignments", label: "Assignments" },
+  { href: "/admin/grading", label: "Grading" },
   { href: "/admin/knowledge", label: "Tutor KB" },
   { href: "/admin/batches", label: "Batches" },
   { href: "/admin/leads", label: "Leads" },
