@@ -1,0 +1,206 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError, apiJson } from "@/lib/api";
+
+type Recording = { id: number; title: string; status: string };
+type Session = {
+  id: number;
+  title: string;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  status: string;
+  has_meeting: boolean;
+  recordings?: Recording[];
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  scheduled: "bg-sky text-deep",
+  live: "bg-verify-bg text-verify",
+  ended: "bg-paper text-muted",
+  cancelled: "bg-warn/10 text-warn",
+};
+
+const inputCls =
+  "rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
+
+function fmt(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString(undefined, {
+    weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+/** datetime-local value ("YYYY-MM-DDTHH:mm", local) → ISO for the API. */
+function toIso(local: string): string {
+  return new Date(local).toISOString();
+}
+
+export function BatchClasses({ batchId }: { batchId: string }) {
+  const qc = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const [schedule, setSchedule] = useState({ title: "", start: "", end: "" });
+  const [reschedulingId, setReschedulingId] = useState<number | null>(null);
+  const [reschedule, setReschedule] = useState({ start: "", reason: "" });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "batch-sessions", batchId],
+    queryFn: () => apiJson<{ data: Session[] }>(`/api/v1/admin/batches/${batchId}/sessions`),
+  });
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "batch-sessions", batchId] });
+  const onError = (err: unknown) =>
+    setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Request failed.");
+
+  const create = useMutation({
+    mutationFn: () =>
+      apiJson(`/api/v1/admin/batches/${batchId}/sessions`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: schedule.title,
+          scheduled_start: toIso(schedule.start),
+          scheduled_end: schedule.end ? toIso(schedule.end) : null,
+        }),
+      }),
+    onSuccess: () => { setSchedule({ title: "", start: "", end: "" }); setError(null); void refresh(); },
+    onError,
+  });
+
+  const doReschedule = useMutation({
+    mutationFn: (id: number) =>
+      apiJson(`/api/v1/admin/sessions/${id}/reschedule`, {
+        method: "POST",
+        body: JSON.stringify({ scheduled_start: toIso(reschedule.start), reason: reschedule.reason }),
+      }),
+    onSuccess: () => { setReschedulingId(null); setReschedule({ start: "", reason: "" }); setError(null); void refresh(); },
+    onError,
+  });
+
+  const cancel = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      apiJson(`/api/v1/admin/sessions/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
+    onSuccess: () => { setError(null); void refresh(); },
+    onError,
+  });
+
+  const sessions = data?.data ?? [];
+
+  return (
+    <div className="mt-10">
+      <h2 className="display text-xl text-ink">Classes</h2>
+      <p className="mt-1 text-sm text-muted">
+        Reschedule or cancel a class and the whole batch is notified by email and WhatsApp at once.
+        An extra session lands its recording in this batch&rsquo;s library automatically.
+      </p>
+
+      {error && (
+        <p className="mt-3 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">
+          {error} <button onClick={() => setError(null)} className="mono underline">dismiss</button>
+        </p>
+      )}
+
+      {/* Schedule a class */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); create.mutate(); }}
+        className="mt-4 rounded-[14px] border border-line bg-white p-5"
+      >
+        <p className="kicker text-muted">Schedule a class</p>
+        <div className="mt-3 space-y-2.5">
+          <input
+            required value={schedule.title}
+            onChange={(e) => setSchedule({ ...schedule, title: e.target.value })}
+            placeholder="Class title, e.g. SQL — Window functions" className={`${inputCls} w-full`} maxLength={200}
+          />
+          <div className="flex flex-wrap gap-2.5">
+            <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Starts
+              <input required type="datetime-local" value={schedule.start}
+                onChange={(e) => setSchedule({ ...schedule, start: e.target.value })} className={inputCls} />
+            </label>
+            <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Ends (optional)
+              <input type="datetime-local" value={schedule.end}
+                onChange={(e) => setSchedule({ ...schedule, end: e.target.value })} className={inputCls} />
+            </label>
+          </div>
+        </div>
+        <button
+          disabled={create.isPending || !schedule.title || !schedule.start}
+          className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {create.isPending ? "Scheduling…" : "Schedule class"}
+        </button>
+      </form>
+
+      {/* Session list */}
+      {isLoading ? (
+        <div className="mt-4 space-y-2">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="shimmer h-16 rounded-[14px]" />)}</div>
+      ) : sessions.length === 0 ? (
+        <p className="mt-4 rounded-[14px] border border-line bg-paper px-5 py-6 text-center text-sm text-muted">
+          No classes scheduled yet.
+        </p>
+      ) : (
+        <div className="mt-4 divide-y divide-line rounded-[14px] border border-line bg-white">
+          {sessions.map((s) => (
+            <div key={s.id} className="px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="min-w-40 flex-1">
+                  <span className="block font-semibold text-ink">{s.title}</span>
+                  <span className="mono block text-xs text-muted">{fmt(s.scheduled_start)}</span>
+                </span>
+                <span className={`mono rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${STATUS_STYLES[s.status] ?? "bg-paper text-muted"}`}>
+                  {s.status}
+                </span>
+                {s.status === "scheduled" && (
+                  <span className="flex gap-3 text-xs font-semibold">
+                    <button
+                      onClick={() => { setReschedulingId(reschedulingId === s.id ? null : s.id); setReschedule({ start: "", reason: "" }); }}
+                      className="text-trust hover:underline"
+                    >
+                      Reschedule
+                    </button>
+                    <button
+                      onClick={() => {
+                        const reason = window.prompt(`Cancel "${s.title}"? This notifies the whole batch. Reason:`);
+                        if (reason) cancel.mutate({ id: s.id, reason });
+                      }}
+                      className="text-warn hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                )}
+              </div>
+
+              {reschedulingId === s.id && (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); doReschedule.mutate(s.id); }}
+                  className="mt-3 flex flex-wrap items-end gap-2.5 rounded-[10px] bg-paper p-3"
+                >
+                  <label className="flex flex-col gap-1 text-xs text-muted">New time
+                    <input required type="datetime-local" value={reschedule.start}
+                      onChange={(e) => setReschedule({ ...reschedule, start: e.target.value })} className={inputCls} />
+                  </label>
+                  <input required value={reschedule.reason}
+                    onChange={(e) => setReschedule({ ...reschedule, reason: e.target.value })}
+                    placeholder="Reason (shown to students)" className={`${inputCls} min-w-48 flex-1`} maxLength={500} />
+                  <button
+                    disabled={doReschedule.isPending || !reschedule.start || !reschedule.reason}
+                    className="rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {doReschedule.isPending ? "Saving…" : "Save & notify"}
+                  </button>
+                </form>
+              )}
+
+              {(s.recordings?.length ?? 0) > 0 && (
+                <p className="mt-2 text-xs text-muted">
+                  Recording: {s.recordings!.map((r) => `${r.title} (${r.status})`).join(", ")}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

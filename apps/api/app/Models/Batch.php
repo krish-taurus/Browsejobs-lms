@@ -50,6 +50,14 @@ class Batch extends Model
     }
 
     /**
+     * @return HasMany<LiveSession, $this>
+     */
+    public function liveSessions(): HasMany
+    {
+        return $this->hasMany(LiveSession::class);
+    }
+
+    /**
      * The trainer assigned to this batch (PRD §6.13 Training ticket routing).
      *
      * @return BelongsTo<User, $this>

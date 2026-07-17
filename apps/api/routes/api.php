@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonNoteController;
+use App\Http\Controllers\Admin\LiveSessionController;
 use App\Http\Controllers\Admin\MentorAdminController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\MessageTemplateController;
@@ -315,6 +316,14 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('batches', [BatchController::class, 'index']);
         Route::post('batches', [BatchController::class, 'store']);
         Route::get('batches/{batch}', [BatchController::class, 'show']);
+    });
+
+    // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.
+    Route::middleware('can:teach-classes')->group(function () {
+        Route::get('batches/{batch}/sessions', [LiveSessionController::class, 'index']);
+        Route::post('batches/{batch}/sessions', [LiveSessionController::class, 'store']);
+        Route::post('sessions/{session}/reschedule', [LiveSessionController::class, 'reschedule']);
+        Route::post('sessions/{session}/cancel', [LiveSessionController::class, 'cancel']);
     });
 
     Route::middleware('can:manage-rosters')->group(function () {
