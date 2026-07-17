@@ -31,11 +31,9 @@ final readonly class HttpVapiClient implements VoiceMockClient
                 'maxDurationSeconds' => $opts['max_seconds'],
                 'assistant' => [
                     'firstMessage' => $blueprint->opening_question,
-                    'model' => [
-                        'provider' => 'anthropic',
-                        'model' => (string) config('ai.providers.anthropic.model', 'claude-sonnet-5'),
-                        'messages' => [['role' => 'system', 'content' => $opts['system_prompt']]],
-                    ],
+                    // The interviewer brain follows AI_PROVIDER (ADR 0016):
+                    // OpenAI/Anthropic natively, Kimi/DeepSeek/Grok via custom-llm.
+                    'model' => VoiceBrain::modelConfig($opts['system_prompt']),
                     'server' => [
                         'url' => rtrim((string) config('app.url'), '/').'/api/webhooks/voice',
                         'secret' => $this->config['webhook_secret'],

@@ -37,6 +37,15 @@ persona is instructed to wrap up gracefully in the final minute rather than
 cut the candidate off. The persona carries the same compliance rules as the
 text prompt (adaptive, neutral, no job/salary promises).
 
+**The voice brain follows AI_PROVIDER (ADR 0016).** `VoiceBrain` maps the
+platform's active LLM onto the Vapi assistant: Anthropic and OpenAI as
+native Vapi providers, Kimi/DeepSeek/Grok/custom via Vapi's custom-llm
+passthrough (any OpenAI-compatible endpoint). A misconfigured provider
+falls back to Anthropic — a broken brain choice degrades to the default,
+never to a dead call. One caveat by design: for custom-llm vendors the API
+key is registered once in the Vapi dashboard as a custom-LLM credential —
+keys are never sent in per-call payloads.
+
 **Provider-agnostic behind one interface.** `VoiceMockClient` —
 `HttpVapiClient` when `VAPI_API_KEY` is set (inline assistant, metadata,
 webhook target), `NullVoiceMockClient` otherwise (fails loudly, credit
@@ -51,11 +60,13 @@ voice spend sits in the same ledger the admin AI-usage page already reads.
 
 ## Consequences
 
-- 8 Pest tests in `tests/Feature/Mocks/VoiceMockTest.php`: consume/resume
-  without double-charge, 402 + top-ups, failed-create refund, unsigned
-  webhook rejection, full end-of-call → scorecard/points/cost (idempotent),
-  short-call abandon + refund, failed-call refund, summary payload
-  (suite: 576).
+- 14 Pest tests: `VoiceMockTest` (consume/resume without double-charge,
+  402 + top-ups, failed-create refund, unsigned webhook rejection, full
+  end-of-call → scorecard/points/cost idempotently, short-call abandon +
+  refund, failed-call refund, summary payload) and `VoiceBrainTest`
+  (provider mapping for anthropic/openai/kimi, misconfiguration fallback,
+  the full Vapi create payload via Http::fake, provider-error throw)
+  (suite: 582).
 - Launch checklist: set `VAPI_API_KEY` + `VAPI_WEBHOOK_SECRET`, point the
   provider at `/api/webhooks/voice` — everything else is already live.
 - P4.4 (mentor scheduling) reuses the `mentor` wallet the same way.
