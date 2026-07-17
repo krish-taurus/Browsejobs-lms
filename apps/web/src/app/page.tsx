@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/Hero";
 import { ProofEngine } from "@/components/landing/ProofEngine";
 import { Journey } from "@/components/landing/Journey";
 import { Courses } from "@/components/landing/Courses";
+import { AiShowcase } from "@/components/landing/AiShowcase";
 import { VerifyUs } from "@/components/landing/VerifyUs";
 import { Fees } from "@/components/landing/Fees";
 import { Faq } from "@/components/landing/Faq";
@@ -30,6 +31,7 @@ export default function Home() {
         <ProofEngine />
         <Journey />
         <Courses />
+        <AiShowcase />
         <VerifyUs />
         <Fees />
         <Faq />
