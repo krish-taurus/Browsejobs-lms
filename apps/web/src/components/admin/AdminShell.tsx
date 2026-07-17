@@ -32,6 +32,7 @@ const nav = [
   { href: "/admin/reviews", label: "Testimonials" },
   { href: "/admin/support", label: "Support" },
   { href: "/admin/risk", label: "Risk" },
+  { href: "/admin/care", label: "Care desk" },
   { href: "/admin/monetization", label: "Monetization" },
   { href: "/admin/points", label: "Points" },
   { href: "/admin/revenue", label: "Revenue" },

@@ -40,3 +40,7 @@ Schedule::command('digest:support-themes')->weeklyOn(1, '08:00');
 // P3.7 — Market Pulse (PRD §6.19): daily digest build + weekly opt-in send.
 Schedule::command('digest:market-pulse')->dailyAt('06:45');
 Schedule::command('pulse:weekly-send')->weeklyOn(1, '10:00');
+
+// P4.6a review protection & retention (PRD §6.20).
+Schedule::command('care:dispatch')->dailyAt('09:00');
+Schedule::command('care:signals')->dailyAt('06:15');
