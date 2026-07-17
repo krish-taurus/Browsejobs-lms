@@ -16,6 +16,7 @@ enum AiPurpose: string
     case LeadScore = 'lead_score';
     case SupportDeflection = 'support_deflection';
     case SupportReply = 'support_reply';
+    case SupportTriage = 'support_triage';
     case QuizGen = 'quiz_gen';
     case Content = 'content';
     case Report = 'report';

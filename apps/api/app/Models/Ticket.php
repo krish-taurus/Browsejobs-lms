@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\TicketCategory;
 use App\Enums\TicketPriority;
+use App\Enums\TicketSentiment;
 use App\Enums\TicketStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,6 +37,13 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $closed_at
  * @property Carbon|null $escalated_at
  * @property int|null $csat_rating
+ * @property TicketCategory|null $ai_category
+ * @property TicketPriority|null $ai_urgency
+ * @property TicketSentiment|null $ai_sentiment
+ * @property bool $ai_priority_raised
+ * @property int|null $ai_duplicate_of_id
+ * @property Carbon|null $ai_triaged_at
+ * @property int|null $ai_event_id
  */
 class Ticket extends Model
 {
@@ -49,6 +57,8 @@ class Ticket extends Model
         'resolution_due_at', 'first_response_at', 'resolved_at', 'closed_at', 'reopened_at',
         'response_warned_at', 'breached_at', 'resolution_breached_at', 'escalated_at',
         'escalated_to_id', 'csat_rating', 'csat_comment', 'csat_at',
+        'ai_category', 'ai_urgency', 'ai_sentiment', 'ai_priority_raised',
+        'ai_duplicate_of_id', 'ai_triaged_at', 'ai_event_id',
     ];
 
     /**
@@ -60,6 +70,11 @@ class Ticket extends Model
             'category' => TicketCategory::class,
             'priority' => TicketPriority::class,
             'status' => TicketStatus::class,
+            'ai_category' => TicketCategory::class,
+            'ai_urgency' => TicketPriority::class,
+            'ai_sentiment' => TicketSentiment::class,
+            'ai_priority_raised' => 'boolean',
+            'ai_triaged_at' => 'datetime',
             'csat_rating' => 'integer',
             'first_response_due_at' => 'datetime',
             'resolution_due_at' => 'datetime',

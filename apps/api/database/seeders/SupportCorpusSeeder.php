@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Actions\Support\CreateTicket;
 use App\Actions\Support\DeflectTicket;
+use App\Actions\Support\TriageTicket;
 use App\Actions\Tutor\IngestKnowledgeDocument;
 use App\Enums\BatchMemberStatus;
 use App\Enums\TicketCategory;
 use App\Models\BatchMember;
 use App\Models\KnowledgeDocument;
 use App\Models\Tenant;
+use App\Models\Ticket;
+use App\Models\User;
 use App\Services\AI\AiClient;
 use App\Services\AI\FakeAiClient;
 use App\Support\Tenancy\TenantContext;
@@ -59,6 +63,7 @@ class SupportCorpusSeeder extends Seeder
         });
 
         $this->demoDeflection($tenant);
+        $this->demoTriage($tenant);
     }
 
     /**
@@ -129,6 +134,40 @@ class SupportCorpusSeeder extends Seeder
                     .'Raising a ticket here reaches the right team directly, and you can see who it was assigned to.',
             ],
         ];
+    }
+
+    /**
+     * Triage the seeded demo ticket, plus one angry payments ticket, so the staff
+     * workspace demonstrates what P3.5d-b actually does: an AI-raised priority that
+     * jumps the queue, carries an "AI raised this" line, and can be undone.
+     */
+    private function demoTriage(Tenant $tenant): void
+    {
+        $fake = new FakeAiClient;
+        app()->instance(AiClient::class, $fake);
+
+        app(TenantContext::class)->run($tenant, function () use ($fake): void {
+            $existing = Ticket::query()->where('subject', 'Recordings will not play on my phone')->first();
+            if ($existing !== null) {
+                $fake->reply = '{"category":"technical","urgency":"normal","sentiment":"frustrated","duplicate_of":null}';
+                app(TriageTicket::class)->handle($existing);
+            }
+
+            $student = $existing?->student ?? User::query()->where('user_type', 'student')->first();
+            if ($student === null) {
+                return;
+            }
+
+            $angry = app(CreateTicket::class)->handle(
+                $student,
+                TicketCategory::Payments,
+                'My EMI was debited twice',
+                'You have taken ₹10,000 from my account twice this month. I have emailed twice and nobody has replied. This is not acceptable — fix it or refund me today.',
+            );
+
+            $fake->reply = '{"category":"payments","urgency":"high","sentiment":"angry","duplicate_of":null}';
+            app(TriageTicket::class)->handle($angry);
+        });
     }
 
     /** One offered deflection so the student support page has something to show. */

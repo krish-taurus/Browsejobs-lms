@@ -6,13 +6,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Support\AssignTicket;
 use App\Actions\Support\ChangeTicketStatus;
+use App\Actions\Support\ClearAiPriority;
+use App\Actions\Support\DraftTicketReply;
 use App\Actions\Support\EscalateTicket;
 use App\Actions\Support\PostTicketReply;
 use App\Actions\Support\TicketStudentContext;
+use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Support\AssignTicketRequest;
 use App\Http\Requests\Support\ChangeStatusRequest;
+use App\Http\Requests\Support\ClearAiPriorityRequest;
 use App\Http\Requests\Support\ReplyTicketRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
@@ -35,6 +39,11 @@ final class TicketController extends Controller
             ->when($request->filled('category'), fn ($q) => $q->where('category', $request->string('category')))
             ->when($request->string('assignee')->toString() === 'me', fn ($q) => $q->where('assignee_id', $request->user()->id))
             ->when($request->boolean('breached'), fn ($q) => $q->where(fn ($x) => $x->whereNotNull('breached_at')->orWhereNotNull('resolution_breached_at')))
+            // Priority first, then recency. Without this ordering "an angry payment
+            // dispute jumps the queue" (PRD §6.13) would be decorative — the raise
+            // would be recorded and nothing would move. CASE, not the enum's string
+            // order, and portable across MySQL/SQLite.
+            ->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
             ->paginate(25);
 
@@ -89,6 +98,23 @@ final class TicketController extends Controller
         $escalate->handle($ticket, 'Manually escalated', $request->user());
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * An AI-drafted reply suggestion (PRD §6.13). Returns a draft for the staff
+     * member's reply box — it sends nothing. Null when there is no draft to offer.
+     */
+    public function draftReply(Ticket $ticket, DraftTicketReply $draft, Request $request): JsonResponse
+    {
+        return response()->json(['data' => $draft->handle($ticket, $request->user())]);
+    }
+
+    /** Staff undo for an AI priority raise. */
+    public function clearAiPriority(ClearAiPriorityRequest $request, Ticket $ticket, ClearAiPriority $clear): JsonResponse
+    {
+        $updated = $clear->handle($ticket, TicketPriority::from($request->string('priority')->toString()), $request->user());
+
+        return (new TicketResource($updated))->response();
     }
 
     /** Assignable staff (holders of handle-tickets) for the reassign picker. */

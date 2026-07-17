@@ -12,6 +12,7 @@ enum ReportType: string
     case WeeklyStudent = 'weekly_student';
     case TrainerBrief = 'trainer_brief';
     case CounselorDigest = 'counselor_digest';
+    case SupportThemes = 'support_themes';
 
     /** The versioned prompt file name for this report's narration. */
     public function prompt(): string
@@ -20,6 +21,7 @@ enum ReportType: string
             self::WeeklyStudent => 'report',
             self::TrainerBrief => 'trainer_brief',
             self::CounselorDigest => 'counselor_digest',
+            self::SupportThemes => 'support_themes',
         };
     }
 }

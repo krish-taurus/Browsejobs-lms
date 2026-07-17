@@ -12,11 +12,13 @@ type Ticket = {
   subject: string;
   category: string;
   status: string;
+  priority: string;
   breached: boolean;
   escalated: boolean;
   first_response_due_at: string | null;
   student: { name: string } | null;
   assignee: { name: string } | null;
+  ai?: { sentiment: string | null; priority_raised: boolean };
 };
 
 const TABS = [
@@ -87,8 +89,16 @@ export default function AdminSupportPage() {
               <span className="mono text-xs text-muted">{t.reference}</span>
               <span className="min-w-[140px] flex-1">
                 <span className="block font-semibold text-ink">{t.subject}</span>
-                <span className="mono block text-xs text-muted">{t.student?.name} · {t.category.replace(/_/g, " ")}</span>
+                <span className="mono block text-xs text-muted">
+                  {t.student?.name} · {t.category.replace(/_/g, " ")}
+                  {/* The queue sorts by priority, so say why this one is up here rather
+                      than letting it silently outrank a human's ordering. */}
+                  {t.ai?.priority_raised && ` · AI raised to ${t.priority}`}
+                </span>
               </span>
+              {t.ai?.sentiment === "angry" && (
+                <span className="mono rounded-full bg-ink px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-white">upset</span>
+              )}
               {t.breached ? (
                 <span className="mono rounded-full bg-warn px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-white">breached</span>
               ) : (

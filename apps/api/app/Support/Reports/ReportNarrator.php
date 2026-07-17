@@ -66,6 +66,7 @@ final readonly class ReportNarrator
             ReportType::WeeklyStudent => $this->weeklyFallback($vars),
             ReportType::TrainerBrief => $this->briefFallback($vars),
             ReportType::CounselorDigest => $this->digestFallback($vars),
+            ReportType::SupportThemes => $this->themesFallback($vars),
         };
 
         return ['narrative' => $this->sanitize($narrative), 'ai_event_id' => null, 'source' => 'fallback'];
@@ -109,6 +110,25 @@ final readonly class ReportNarrator
         $digest .= $movers !== '' ? " Rising fastest: {$movers}. Prioritise a call to each — the scripts are on your risk dashboard." : ' No sharp movers today — a good day to follow up on open interventions.';
 
         return $digest;
+    }
+
+    /**
+     * The themes report without a model: the counts alone, stated plainly. They are
+     * already computed, so this loses the interpretation, not the facts.
+     *
+     * @param  array<string, string>  $vars
+     */
+    private function themesFallback(array $vars): string
+    {
+        $total = trim($vars['total'] ?? '0');
+        $categories = trim($vars['by_category'] ?? '');
+        $duplicates = trim($vars['duplicates'] ?? '0');
+
+        $note = "Support last week: {$total} ticket(s).";
+        $note .= $categories !== '' ? " By category: {$categories}." : '';
+        $note .= $duplicates !== '0' ? " {$duplicates} repeated an open ticket — worth a look at what the first answer missed." : '';
+
+        return $note;
     }
 
     private function sanitize(string $text): string
