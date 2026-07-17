@@ -12,9 +12,11 @@ type SharedCv = {
     headline?: string;
     summary?: string;
     skills?: string[];
+    experience?: { title: string; company: string; period?: string | null; bullets: string[] }[];
     projects?: { name: string; bullets: string[] }[];
-    education?: { name: string; detail: string }[];
+    education?: { name: string; detail?: string | null }[];
     certifications?: string[];
+    links?: { label: string; url: string }[];
   };
   approved: boolean;
   updated_at: string | null;
@@ -76,6 +78,30 @@ export default function SharedCvPage({ params }: { params: Promise<{ token: stri
           </>
         )}
 
+        {(c.links?.length ?? 0) > 0 && (
+          <p className="mono mt-3 text-[11px] text-muted">
+            {c.links!.map((l, i) => (
+              <span key={i}>{i > 0 && " · "}<a href={l.url} className="text-trust hover:underline" target="_blank" rel="noopener noreferrer">{l.label}</a></span>
+            ))}
+          </p>
+        )}
+
+        {(c.experience?.length ?? 0) > 0 && (
+          <>
+            <h2 className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">Experience</h2>
+            <div className="mt-2 space-y-3">
+              {c.experience!.map((e, i) => (
+                <div key={i}>
+                  <p className="text-sm font-semibold text-ink">{e.title} — {e.company} <span className="mono text-[10px] text-muted">{e.period}</span></p>
+                  <ul className="mt-1 space-y-0.5 text-sm text-ink">
+                    {e.bullets.map((b, j) => <li key={j}>• {b}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {(c.projects?.length ?? 0) > 0 && (
           <>
             <h2 className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">Projects</h2>
@@ -97,7 +123,7 @@ export default function SharedCvPage({ params }: { params: Promise<{ token: stri
             <h2 className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">Education & Training</h2>
             <div className="mt-2 space-y-1">
               {c.education!.map((e, i) => (
-                <p key={i} className="text-sm text-ink"><span className="font-semibold">{e.name}</span> — {e.detail}</p>
+                <p key={i} className="text-sm text-ink"><span className="font-semibold">{e.name}</span>{e.detail && ` — ${e.detail}`}</p>
               ))}
             </div>
           </>

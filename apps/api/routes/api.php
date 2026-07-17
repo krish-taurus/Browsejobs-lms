@@ -183,6 +183,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // AI CV suite (PRD §6.7).
     Route::get('me/cv', [CvController::class, 'index']);
     Route::post('me/cv', [CvController::class, 'store'])->middleware('throttle:ai');
+    Route::get('me/cv/profile', [CvController::class, 'profile']);
+    Route::put('me/cv/profile', [CvController::class, 'updateProfile']);
+    Route::post('me/cv/profile/import', [CvController::class, 'importCv'])->middleware('throttle:ai');
+    Route::get('me/cv/{cv}/ats-text', [CvController::class, 'atsText']);
     Route::get('me/cv/{cv}', [CvController::class, 'show']);
     Route::patch('me/cv/{cv}', [CvController::class, 'update']);
     Route::post('me/cv/{cv}/ats', [CvController::class, 'atsCheck'])->middleware('throttle:30,1');

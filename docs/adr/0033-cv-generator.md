@@ -8,6 +8,28 @@
 
 ## Decisions
 
+**The candidate owns their facts; the platform owns its evidence.**
+`cv_profiles` holds the candidate's own truth — imported from their
+uploaded CV (txt/docx or pasted text, AI-parsed by `cv_parse.v1` under an
+extraction-only rule) and hand-editable (experience, personal projects,
+education, links). Generation (`cv_generate.v2`) merges both fact blocks;
+custom projects and experience are first-class. Parse failures degrade to
+a 422 pointing at the manual editor — never a dead end.
+
+**The document never says where they trained.** The prompt forbids any
+BrowseJobs/bootcamp/course mention, and a deterministic scrub enforces it:
+brand strings are stripped from every field and education entries left
+without an institution (course-as-education) are dropped. education comes
+ONLY from candidate-supplied facts; platform certificates stay off the CV
+because they name courses. Verified live against a model reply that
+deliberately leaked the brand five ways.
+
+**ATS armour is structural + exportable.** Standard section names, single-
+keyword skills mirroring the JD's spelling, action-verb one-line bullets,
+reverse-chronological experience with the candidate's dates verbatim, no
+tables/columns/symbols — plus a plain-text export (`/ats-text`) that any
+parser on earth reads.
+
 **Facts in, prose out — the compliance boundary is code.** `CvProfileData`
 assembles the only things a CV may say: fully-completed modules, all-tests-
 passed lab submissions as projects, issued certificates, mock-interview
@@ -51,12 +73,15 @@ student can walk back a bad tailor.
 
 ## Consequences
 
-- 10 Pest tests in `tests/Feature/Cv/`: auto-build (free, grant-once,
+- 15 Pest tests in `tests/Feature/Cv/`: auto-build (free, grant-once,
   celebration, idempotent), credit consumption + versioning, 402 + pack,
   JD tailoring (prompt carries JD, match report scores it), fallback from
-  facts, free edits resetting approval, deterministic ATS scoring, share
+  facts, own-CV import (text + docx, unreadable-format rejection),
+  hand-edited profile facts flowing into generation, the brand scrub
+  surviving a deliberately leaky model reply, plain-text ATS export, free
+  edits resetting approval, deterministic ATS scoring, share
   mint/public-read/revoke, officer approval + audit, cross-student
-  isolation (suite: 612).
+  isolation (suite: 617).
 - Rendered PDF (WeasyPrint) slots in later behind the same content JSON —
   the share page and portal render from structure, not markup.
 - P4.5b consumes: `CvDocument::STATUS_APPROVED` for pool gating, share

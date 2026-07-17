@@ -9,6 +9,7 @@ use App\Jobs\TranscribeInterviewMedia;
 use App\Models\InterviewTranscript;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
+use App\Support\Files\DocxExtractor;
 use App\Support\Interviews\Anonymizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
@@ -101,7 +102,7 @@ final readonly class IngestInterviewTranscript
         }
 
         if ($extension === 'docx') {
-            return $this->fromText($base, $this->extractDocxText($contents));
+            return $this->fromText($base, (new DocxExtractor)->extract($contents));
         }
 
         if ($extension === 'zip') {
@@ -189,30 +190,6 @@ final readonly class IngestInterviewTranscript
         ]);
 
         return $parent;
-    }
-
-    /** Word documents are zip archives; the body text lives in word/document.xml. */
-    private function extractDocxText(string $contents): string
-    {
-        $tmp = tempnam(sys_get_temp_dir(), 'bjl-docx');
-        file_put_contents($tmp, $contents);
-
-        try {
-            $zip = new ZipArchive;
-            if ($zip->open($tmp) !== true) {
-                return '';
-            }
-
-            $xml = (string) $zip->getFromName('word/document.xml');
-            $zip->close();
-
-            // Paragraph/break tags become newlines so Q/A structure survives.
-            $xml = (string) preg_replace('/<w:(p|br)[^>]*>/', "\n", $xml);
-
-            return trim(html_entity_decode(strip_tags($xml)));
-        } finally {
-            @unlink($tmp);
-        }
     }
 
     private function storeEncrypted(string $contents, string $extension): string

@@ -10,6 +10,7 @@ use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\CvDocument;
+use App\Models\CvProfile;
 use App\Models\InAppNotification;
 use App\Models\Module;
 use App\Models\Product;
@@ -21,12 +22,14 @@ use App\Services\AI\AiClient;
 use App\Services\AI\FakeAiClient;
 use App\Support\Entitlements\EntitlementService;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
 use function Pest\Laravel\postJson;
+use function Pest\Laravel\putJson;
 
 beforeEach(function () {
     $this->fake = new FakeAiClient;
@@ -157,6 +160,106 @@ it('falls back to a deterministic CV built from real facts when the AI returns g
     postJson('/api/v1/me/cv')->assertCreated()
         ->assertJsonPath('data.content_source', 'fallback')
         ->assertJsonPath('data.content.skills.0', 'SQL Foundations'); // the completed module
+});
+
+/* ---- Own-CV import + profile ---- */
+
+it('imports an uploaded CV into the profile — extraction, not invention', function () {
+    ['student' => $student] = cvReadyStudent($this->tenant);
+    $this->fake->reply = json_encode([
+        'summary' => 'Backend developer with 2 years at a product startup.',
+        'skills' => ['php', 'laravel'],
+        'experience' => [['title' => 'Backend Developer', 'company' => 'Acme Tech', 'period' => '2022 – 2024', 'bullets' => ['Shipped payment APIs used by 40k users']]],
+        'projects' => [], 'education' => [['name' => 'B.Sc Computer Science', 'detail' => 'Pune University, 2021']],
+        'certifications' => [], 'links' => [['label' => 'GitHub', 'url' => 'https://github.com/x']],
+    ], JSON_THROW_ON_ERROR);
+    Sanctum::actingAs($student);
+
+    postJson('/api/v1/me/cv/profile/import', [
+        'text' => "PRIYA CV\nBackend Developer at Acme Tech 2022-2024\n- Shipped payment APIs...",
+    ])->assertCreated()
+        ->assertJsonPath('data.experience.0.company', 'Acme Tech');
+
+    expect($this->fake->calls[0]->user)->toContain('Shipped payment APIs')
+        ->and(getJson('/api/v1/me/cv/profile')->json('data.profile.education.0.name'))->toBe('B.Sc Computer Science');
+});
+
+it('extracts text from a docx CV upload and rejects unreadable formats', function () {
+    ['student' => $student] = cvReadyStudent($this->tenant);
+    $this->fake->reply = json_encode(array_merge(CvProfile::EMPTY, ['skills' => ['java']]), JSON_THROW_ON_ERROR);
+    Sanctum::actingAs($student);
+
+    $docxPath = tempnam(sys_get_temp_dir(), 'bjl-cv').'.docx';
+    $zip = new ZipArchive;
+    $zip->open($docxPath, ZipArchive::CREATE);
+    $zip->addFromString('word/document.xml', '<w:document><w:body><w:p><w:r><w:t>Java Developer at Initech since 2020</w:t></w:r></w:p></w:body></w:document>');
+    $zip->close();
+
+    postJson('/api/v1/me/cv/profile/import', [
+        'file' => new UploadedFile($docxPath, 'my-cv.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', null, true),
+    ])->assertCreated();
+    expect($this->fake->calls[0]->user)->toContain('Java Developer at Initech');
+
+    postJson('/api/v1/me/cv/profile/import', [
+        'file' => UploadedFile::fake()->create('scan.pdf', 10, 'application/pdf'),
+    ])->assertStatus(422);
+
+    @unlink($docxPath);
+});
+
+it('feeds hand-edited profile facts (custom projects, experience) into generation', function () {
+    ['student' => $student] = cvReadyStudent($this->tenant);
+    app(EntitlementService::class)->grantCredits($student, 'cv', 1, 'test');
+    Sanctum::actingAs($student);
+
+    putJson('/api/v1/me/cv/profile', array_merge(CvProfile::EMPTY, [
+        'projects' => [['name' => 'Personal expense tracker', 'bullets' => ['Built a Flutter app with 500 downloads']]],
+        'experience' => [['title' => 'Intern', 'company' => 'Initech', 'period' => '2023', 'bullets' => ['Automated 3 reporting jobs']]],
+        'education' => [['name' => 'B.Tech IT', 'detail' => 'Mumbai University, 2022']],
+    ]))->assertOk();
+
+    $this->fake->reply = 'garbage so the deterministic path runs';
+    $cv = postJson('/api/v1/me/cv')->assertCreated()->json('data');
+
+    // The AI prompt carried the candidate's own facts…
+    expect($this->fake->calls[0]->user)->toContain('Personal expense tracker')->toContain('Initech');
+    // …and the fallback document includes them verbatim.
+    expect(collect($cv['content']['projects'])->pluck('name'))->toContain('Personal expense tracker')
+        ->and($cv['content']['experience'][0]['company'])->toBe('Initech')
+        ->and($cv['content']['education'][0]['name'])->toBe('B.Tech IT');
+});
+
+it('never lets BrowseJobs or course branding into the document — even if the model slips', function () {
+    ['student' => $student] = cvReadyStudent($this->tenant);
+    app(EntitlementService::class)->grantCredits($student, 'cv', 1, 'test');
+    $this->fake->reply = json_encode([
+        'headline' => 'Data Engineer trained at BrowseJobs',
+        'summary' => 'Completed the BrowseJobs Data Engineering course with distinction.',
+        'skills' => ['sql', 'BrowseJobs'],
+        'projects' => [['name' => 'ETL lab', 'bullets' => ['Built pipelines during the BrowseJobs bootcamp']]],
+        'education' => [['name' => 'Data Engineering', 'detail' => 'BrowseJobs'], ['name' => 'B.Sc', 'detail' => 'Delhi University']],
+        'certifications' => [],
+    ], JSON_THROW_ON_ERROR);
+    Sanctum::actingAs($student);
+
+    $content = postJson('/api/v1/me/cv')->assertCreated()->json('data.content');
+
+    expect(mb_strtolower(json_encode($content)))->not->toContain('browsejobs')
+        ->and($content['education'])->toHaveCount(1) // the brand-only entry dropped
+        ->and($content['education'][0]['detail'])->toBe('Delhi University');
+});
+
+it('exports a plain-text ATS version any parser can read', function () {
+    ['student' => $student] = cvReadyStudent($this->tenant);
+    $cv = CvDocument::factory()->for($this->tenant)->create(['user_id' => $student->id]);
+    Sanctum::actingAs($student);
+
+    $response = getJson("/api/v1/me/cv/{$cv->id}/ats-text")->assertOk();
+
+    expect($response->headers->get('Content-Type'))->toContain('text/plain')
+        ->and($response->getContent())->toContain('STUDENT')
+        ->toContain('SKILLS')
+        ->toContain('- Built a pipeline passing 6 tests');
 });
 
 /* ---- Edits + ATS ---- */

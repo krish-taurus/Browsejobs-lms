@@ -7,9 +7,9 @@ namespace App\Support\Cv;
 use App\Enums\BatchMemberStatus;
 use App\Models\Batch;
 use App\Models\BatchMember;
-use App\Models\Certificate;
 use App\Models\CodeSubmission;
 use App\Models\CodingLab;
+use App\Models\CvProfile;
 use App\Models\MockInterview;
 use App\Models\Module;
 use App\Models\TopicCompletion;
@@ -29,7 +29,8 @@ final class CvProfileData
      *   name: string, email: string|null, phone: string|null,
      *   role_title: string|null, courses: list<string>,
      *   completed_modules: list<string>, projects: list<array{name: string, detail: string}>,
-     *   certifications: list<string>, mock_strengths: list<string>, best_mock_score: int|null
+     *   mock_strengths: list<string>, best_mock_score: int|null,
+     *   profile: array<string, mixed>
      * }
      */
     public function for(User $student): array
@@ -90,13 +91,12 @@ final class CvProfileData
             'courses' => $courses->pluck('name')->unique()->values()->all(),
             'completed_modules' => $modules->all(),
             'projects' => $projects,
-            'certifications' => Certificate::query()
-                ->where('user_id', $student->id)
-                ->where('status', '!=', 'revoked')
-                ->pluck('title')
-                ->all(),
             'mock_strengths' => array_slice((array) ($best?->scorecard['strong_moments'] ?? []), 0, 5),
             'best_mock_score' => $best?->overall_score,
+            // The candidate's own claims (uploaded CV + manual edits) — they
+            // own this truth; platform certificates stay OFF the CV because
+            // they name courses (the document never reveals the bootcamp).
+            'profile' => CvProfile::dataFor($student),
         ];
     }
 
