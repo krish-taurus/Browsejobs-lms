@@ -1,8 +1,8 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { ProofEngine } from "@/components/landing/ProofEngine";
+import { Journey } from "@/components/landing/Journey";
 import { Courses } from "@/components/landing/Courses";
-import { FreeLadder } from "@/components/landing/FreeLadder";
 import { VerifyUs } from "@/components/landing/VerifyUs";
 import { Fees } from "@/components/landing/Fees";
 import { Faq } from "@/components/landing/Faq";
@@ -10,6 +10,7 @@ import { Footer } from "@/components/landing/Footer";
 import { JsonLd } from "@/components/landing/JsonLd";
 import { LeadModal } from "@/components/landing/LeadModal";
 import { StickyCta } from "@/components/landing/StickyCta";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { BookCta } from "@/components/landing/BookCta";
 
@@ -21,13 +22,14 @@ import { BookCta } from "@/components/landing/BookCta";
 export default function Home() {
   return (
     <>
+      <SmoothScroll />
       <JsonLd />
       <Nav />
       <main>
         <Hero />
         <ProofEngine />
+        <Journey />
         <Courses />
-        <FreeLadder />
         <VerifyUs />
         <Fees />
         <Faq />
