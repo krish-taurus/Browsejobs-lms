@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\MockBlueprintController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
+use App\Http\Controllers\Admin\PlacementAdminController;
 use App\Http\Controllers\Admin\PointsSettingController;
 use App\Http\Controllers\Admin\PulseAdminController;
 use App\Http\Controllers\Admin\QuizController;
@@ -71,6 +72,8 @@ use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Placement\PlacementController;
+use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
@@ -121,6 +124,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         ->middleware('throttle:10,1');
 
     Route::get('reviews', [ReviewController::class, 'index']);
+
+    // Proof Engine aggregates (PRD §6.11) — anonymised, disclaimered.
+    Route::get('proof', ProofController::class)->middleware('throttle:30,1');
 
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
@@ -180,6 +186,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    // Placement pipeline (PRD §6.11).
+    Route::get('me/placement', [PlacementController::class, 'index']);
+    Route::post('me/applications', [PlacementController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('me/applications/{application}/rounds', [PlacementController::class, 'storeRound'])->middleware('throttle:20,1');
+    Route::post('me/applications/{application}/withdraw', [PlacementController::class, 'withdraw']);
     // AI CV suite (PRD §6.7).
     Route::get('me/cv', [CvController::class, 'index']);
     Route::post('me/cv', [CvController::class, 'store'])->middleware('throttle:ai');
@@ -277,6 +288,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Real Interview Intelligence (PRD §6.6) — placement team only.
     Route::middleware('can:manage-placements')->group(function () {
+        Route::get('placements', [PlacementAdminController::class, 'index']);
+        Route::post('jobs', [PlacementAdminController::class, 'storeJob']);
+        Route::patch('jobs/{job}', [PlacementAdminController::class, 'updateJob']);
+        Route::patch('applications/{application}', [PlacementAdminController::class, 'updateApplication']);
         Route::get('cvs', [CvApprovalController::class, 'index']);
         Route::post('cvs/{cv}/approve', [CvApprovalController::class, 'approve']);
         Route::get('mentors', [MentorAdminController::class, 'index']);
