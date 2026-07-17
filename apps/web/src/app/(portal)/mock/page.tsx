@@ -25,6 +25,7 @@ type MockSummary = {
   in_progress_id: number | null;
   best_score: number;
   human_mock_unlocked: boolean;
+  blueprints: { id: number; skill: string | null; role_title: string }[];
   gap_report: { role_title: string | null; items: GapItem[] };
   voice: {
     credits: number;
@@ -51,6 +52,13 @@ export default function MockHubPage() {
   const [voiceBusy, setVoiceBusy] = useState<number | "start" | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<string>("");
+
+  // A dispatched mock links here as /mock?start=<blueprintId> — preselect it.
+  useEffect(() => {
+    const start = new URLSearchParams(window.location.search).get("start");
+    if (start) setChosen(start);
+  }, []);
 
   const load = useCallback(() => {
     apiJson<{ data: MockSummary }>("/api/v1/me/mocks")
@@ -65,7 +73,8 @@ export default function MockHubPage() {
     setError(null);
     setBusy(true);
     try {
-      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", { method: "POST" });
+      const body = chosen ? JSON.stringify({ blueprint_id: Number(chosen) }) : undefined;
+      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", { method: "POST", body });
       router.push(`/mock/${r.data.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
@@ -151,10 +160,22 @@ export default function MockHubPage() {
           ) : (
             <>
               <p className="mt-2 text-sm text-ink">Ready when you are — it takes about 10 minutes.</p>
+              {summary.blueprints.length > 1 && (
+                <select
+                  value={chosen}
+                  onChange={(e) => setChosen(e.target.value)}
+                  className="mt-3 block rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
+                >
+                  <option value="">Pick a skill…</option>
+                  {summary.blueprints.map((b) => (
+                    <option key={b.id} value={b.id}>{b.skill ?? b.role_title}</option>
+                  ))}
+                </select>
+              )}
               {error && <p className="mt-2 text-sm text-warn">{error}</p>}
               <button
                 onClick={start}
-                disabled={busy}
+                disabled={busy || (summary.blueprints.length > 1 && !chosen)}
                 className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {busy ? "Setting up…" : "Start a mock interview"}

@@ -5,6 +5,7 @@ import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 import { BatchClasses } from "@/components/admin/BatchClasses";
+import { BatchDispatch } from "@/components/admin/BatchDispatch";
 
 type Member = {
   id: number;
@@ -295,6 +296,7 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
       )}
 
       <BatchClasses batchId={id} />
+      <BatchDispatch batchId={id} />
     </div>
   );
 }

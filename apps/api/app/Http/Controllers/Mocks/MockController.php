@@ -10,6 +10,7 @@ use App\Actions\Mocks\StartMockInterview;
 use App\Actions\Mocks\StartVoiceMock;
 use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
+use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\Product;
 use App\Services\AI\AiBudgetExceeded;
@@ -52,6 +53,10 @@ final class MockController extends Controller
                     'in_progress_id' => $mocks->firstWhere('status', MockInterview::STATUS_IN_PROGRESS)?->id,
                     'best_score' => $best,
                     'human_mock_unlocked' => $best >= (int) config('mocks.human_gate_score', 70),
+                    // Skill choices the student can practise (Python, SQL, …).
+                    'blueprints' => MockBlueprint::availableFor($request->user())
+                        ->map(fn ($b) => ['id' => $b->id, 'skill' => $b->skill, 'role_title' => $b->role_title])
+                        ->values(),
                     'gap_report' => $this->gaps->for($request->user()),
                     'voice' => [
                         'credits' => $this->entitlements->balance($request->user(), EntitlementFeature::VoiceMock->value),
@@ -76,7 +81,10 @@ final class MockController extends Controller
     public function store(Request $request): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
-            $interview = $this->start->handle($request->user());
+            $interview = $this->start->handle(
+                $request->user(),
+                $request->filled('blueprint_id') ? (int) $request->integer('blueprint_id') : null,
+            );
 
             return $this->session($interview, 201);
         });

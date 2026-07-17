@@ -6,6 +6,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\BatchDispatchController;
 use App\Http\Controllers\Admin\CannedResponseController;
 use App\Http\Controllers\Admin\CareAdminController;
 use App\Http\Controllers\Admin\CelebrationController;
@@ -348,6 +349,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('batches/{batch}/sessions', [LiveSessionController::class, 'store']);
         Route::post('sessions/{session}/reschedule', [LiveSessionController::class, 'reschedule']);
         Route::post('sessions/{session}/cancel', [LiveSessionController::class, 'cancel']);
+
+        // Send a specific mock / assignment to a batch (PRD §6.5/§6.6).
+        Route::get('batches/{batch}/dispatch-options', [BatchDispatchController::class, 'options']);
+        Route::post('batches/{batch}/dispatch-mock', [BatchDispatchController::class, 'sendMock']);
+        Route::post('batches/{batch}/dispatch-assignment', [BatchDispatchController::class, 'sendAssignment']);
     });
 
     Route::middleware('can:manage-rosters')->group(function () {

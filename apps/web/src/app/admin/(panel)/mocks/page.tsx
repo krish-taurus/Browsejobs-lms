@@ -9,6 +9,7 @@ type Blueprint = {
   id: number;
   course_id: number;
   role_title: string;
+  skill: string | null;
   competencies: string[];
   opening_question: string;
   is_active: boolean;
@@ -29,11 +30,12 @@ type Course = { id: number; name: string };
 type Form = {
   course_id: string;
   role_title: string;
+  skill: string;
   competencies: string; // comma-separated in the form
   opening_question: string;
 };
 
-const emptyForm: Form = { course_id: "", role_title: "", competencies: "", opening_question: "" };
+const emptyForm: Form = { course_id: "", role_title: "", skill: "", competencies: "", opening_question: "" };
 
 export default function AdminMocksPage() {
   const qc = useQueryClient();
@@ -61,6 +63,7 @@ export default function AdminMocksPage() {
   const payload = () => ({
     course_id: Number(form.course_id),
     role_title: form.role_title,
+    skill: form.skill.trim() || null,
     competencies: form.competencies.split(",").map((c) => c.trim()).filter(Boolean),
     opening_question: form.opening_question,
   });
@@ -92,6 +95,7 @@ export default function AdminMocksPage() {
     setForm({
       course_id: String(b.course_id),
       role_title: b.role_title,
+      skill: b.skill ?? "",
       competencies: b.competencies.join(", "),
       opening_question: b.opening_question,
     });
@@ -128,6 +132,12 @@ export default function AdminMocksPage() {
             className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
           />
         </div>
+        <input
+          value={form.skill}
+          onChange={(e) => setForm({ ...form, skill: e.target.value })}
+          placeholder="Skill for this mock (e.g. Python, SQL) — optional, lets a course have several"
+          className="mt-3 w-full rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
+        />
         <input
           value={form.competencies}
           onChange={(e) => setForm({ ...form, competencies: e.target.value })}

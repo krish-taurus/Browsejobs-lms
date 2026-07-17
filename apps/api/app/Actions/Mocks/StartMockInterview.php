@@ -22,7 +22,7 @@ final readonly class StartMockInterview
 {
     public function __construct(private EntitlementService $entitlements) {}
 
-    public function handle(User $student): MockInterview
+    public function handle(User $student, ?int $blueprintId = null): MockInterview
     {
         abort_unless($this->entitlements->settings()->text_practice_enabled, 403, 'Text practice is not enabled.');
 
@@ -37,7 +37,7 @@ final readonly class StartMockInterview
             return $existing; // Resume rather than fork parallel sessions.
         }
 
-        $blueprint = $this->blueprintFor($student);
+        $blueprint = $this->blueprintFor($student, $blueprintId);
 
         $interview = MockInterview::query()->create([
             'tenant_id' => $student->tenant_id,
@@ -58,8 +58,17 @@ final readonly class StartMockInterview
         return $interview;
     }
 
-    private function blueprintFor(User $student): MockBlueprint
+    private function blueprintFor(User $student, ?int $blueprintId): MockBlueprint
     {
+        // A specific skill was requested (student picked it, or a dispatch linked it):
+        // honour it only if it's one of the student's available blueprints.
+        if ($blueprintId !== null) {
+            $chosen = MockBlueprint::availableFor($student)->firstWhere('id', $blueprintId);
+            if ($chosen !== null) {
+                return $chosen;
+            }
+        }
+
         $blueprint = MockBlueprint::activeFor($student);
 
         if ($blueprint === null) {
