@@ -24,13 +24,16 @@ drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merg
 Real Interview Intelligence + transcript ingestion (ADR 0030) · P4.3 voice
 mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) · P4.4 native mentor
 scheduling, course-scoped multi-mentor calendar (ADR 0032) · P4.5a AI CV
-generator + ATS suite, own-CV import, brand-silent output, PDF/txt/share
-downloads (ADR 0033) — merged.
-**Next: P4.5b — placement pipeline.**
+generator + ATS suite (ADR 0033) · P4.5b placement pipeline: pool gating,
+job board, application kanban, debrief→bank, consent-gated celebrations,
+Proof Engine (ADR 0034) — merged.
+**Next: P4.6 — review protection + job-probability boosters** (founder may
+pull **P4.8 Live Job Feed + Apply Assist** forward instead — ask).
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 617 passing
-  as of P4.5a.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 628 passing
+  as of P4.5b. Local `.env` sets PLACEMENT_MIN_PRI=0 for demos (tests pin 70
+  in phpunit.xml; production default is 70).
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -44,38 +47,53 @@ downloads (ADR 0033) — merged.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0033 in `docs/adr/`.
+  before building. ADRs 0001–0034 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.5b — Placement pipeline
+## NEXT → P4.6 — Review protection + job-probability boosters
+*(founder may pull P4.8 forward instead — confirm before starting)*
 
-Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.11
-placement + §6.7) and **ADRs 0029–0033** before building. This is the
-second half of **P4.5** from `docs/BUILD-PLAYBOOK.md`. Draft the detailed
-prompt from the playbook bullet before starting.
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.20) and
+**ADRs 0029–0034** before building. This is **P4.6** from
+`docs/BUILD-PLAYBOOK.md`. Large — consider splitting retention mechanics
+(NPS/rage/pause/onboarding) and boosters (LinkedIn/GitHub/prep packs +
+Career+) into two branches.
 
-Headline requirements: placement-pool gating (PRI threshold + APPROVED CV
-+ passed human mock); job board (staff-curated postings per course/role);
-application pipeline (applied → shortlisted → interviewing → offer →
-placed, kanban for placement officers); debrief capture after EVERY real
-interview round; offer tracking → Proof Engine aggregates (with the
-mandatory DISCLAIMER next to every stat) + pay-after-placement fee
-milestone + consent-gated offer celebrations. End-of-course comprehensive
-report.
+Headline requirements: NPS pulses at week-1/mid/pre-placement (9–10 →
+unconditioned Google-review routing; ≤6 → instant counselor rescue task +
+admin alert); rage-signal detection (failed payments, low CSATs,
+engagement cliffs, angry sentiment) → priority interventions;
+pause/defer enrolment workflow (admin rules; the refund-dispute killer);
+week-1 white-glove onboarding checklist + call task; LinkedIn profile
+optimizer; GitHub portfolio auto-builder from lab projects; application
+tracker AI tailoring; interview-day prep packs from the real-interview
+bank; Career+ subscription (₹499/mo product exists on the Entitlement
+Service since P2.8).
 
-Reuse notes (all merged): pool gate inputs exist — `ScoreCalculator` PRI,
-`CvDocument::STATUS_APPROVED` (ADR 0033), human mock = completed
-`MentorSession` with `purpose: placement_interview` + feedback_score ≥
-threshold (ADR 0032); debriefs MUST create `interview_transcripts`
-(source 'debrief') so the P4.2 parse→anonymise→review pipeline enriches
-the bank for free; offer celebrations ride the consent-first
-`celebrations` machinery from P3.7 (never fire without consent);
-pay-after-placement = a fee-plan instalment triggered on offer
-acceptance (P2.2/P2.3 fee engine); placement interviews book through the
-P4.4 mentor engine; recruiter handoff = the CV share link + PDF
-(ADR 0033). Compliance: never-claims — the Proof Engine shows historical
-aggregates with the stored DISCLAIMER, never promises.
+Reuse notes: NPS → Messenger templates + magic links (P3.4 dispatch
+pattern); rescue tasks → counselor flows (see CheckQuizCompletion's flag
+phase + support ticket routing); rage signals read existing telemetry,
+payments (P2.2 failures), CSAT (P3.5d tickets) and risk flags (P3.2);
+prep packs pull approved `real_interview_questions` by role (ADR 0030);
+LinkedIn/GitHub boosters follow the CV pattern — facts from
+CvProfileData + profile, AI rephrases, never invents (ADR 0033); the
+application tracker lives in `job_applications` (ADR 0034 — add the
+AI-tailoring hook there); Career+ gates boosters via
+`hasEntitlement('career_plus')`.
+
+### Alternative if pulled forward: P4.8 — Live Job Feed + Apply Assist
+PRD §6.22 + playbook P4.8: `JobFeedSource` adapter interface (internal
+postings, hiring-partner feeds, ONE licensed job API — evaluate Adzuna vs
+JSearch vs Jooble for Indian IT coverage + cost, record an ADR; public
+Greenhouse/Lever endpoints; manual/CSV import — **NO raw portal
+scraping**); ingestion through the §6.21 JD pipeline (dedupe, freshness
+expiry, quality filter); "Jobs for You" feed with per-student relevance +
+match badges + gap explanations + daily coach nudge; Apply Assist (tap →
+FREE JD-tailored CV → deep link → auto-logged in the tracker with
+follow-up reminders); Apply Copilot stubbed behind a feature flag
+(human-confirm, Phase 5). Fully autonomous auto-apply stays deferred per
+the PRD. Natural trigger: pool eligibility (ADR 0034) activates the feed.
 
 
 ---
