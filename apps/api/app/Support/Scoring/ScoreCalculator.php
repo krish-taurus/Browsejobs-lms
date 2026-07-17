@@ -7,12 +7,14 @@ namespace App\Support\Scoring;
 use App\Enums\BatchMemberStatus;
 use App\Enums\MasteryBand;
 use App\Enums\NextActionKey;
+use App\Enums\QuizAttemptStatus;
 use App\Models\AccessBlock;
 use App\Models\ActivityEvent;
 use App\Models\Attendance;
 use App\Models\BatchMember;
 use App\Models\Instalment;
 use App\Models\Module;
+use App\Models\QuizAttempt;
 use App\Models\TopicCompletion;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
@@ -93,17 +95,24 @@ final class ScoreCalculator
         }
 
         $completed = TopicCompletion::query()->where('user_id', $student->id)->pluck('topic_id')->flip();
+        $quizScores = $this->quizScores($student);
+        $quizWeight = (float) config('scoring.mastery.quiz_weight', 0.4);
 
         return Module::query()
             ->whereIn('course_id', $courseIds)
             ->with('topics:id,module_id')
             ->orderBy('position')
             ->get()
-            ->map(function (Module $module) use ($completed): array {
+            ->map(function (Module $module) use ($completed, $quizScores, $quizWeight): array {
                 $topicIds = $module->topics->pluck('id');
                 $total = $topicIds->count();
                 $done = $total === 0 ? 0 : $topicIds->filter(fn ($id) => $completed->has($id))->count();
                 $pct = $total === 0 ? 0 : (int) round($done / $total * 100);
+
+                // Blend the module's latest submitted quiz score, if any (PRD §6.5).
+                if (isset($quizScores[$module->id])) {
+                    $pct = (int) round($pct * (1 - $quizWeight) + $quizScores[$module->id] * $quizWeight);
+                }
 
                 return [
                     'module_id' => $module->id,
@@ -112,6 +121,33 @@ final class ScoreCalculator
                     'band' => MasteryBand::fromPct($pct)->value,
                 ];
             })->all();
+    }
+
+    /**
+     * Latest submitted quiz score per module for the student (PRD §6.5). Batch-loaded
+     * to avoid N+1; empty when the student has taken no quizzes (so mastery is
+     * unchanged from pure topic-completion).
+     *
+     * @return array<int, int> module_id => score_pct
+     */
+    private function quizScores(User $student): array
+    {
+        $scores = [];
+
+        QuizAttempt::query()
+            ->where('user_id', $student->id)
+            ->where('status', QuizAttemptStatus::Submitted->value)
+            ->with('quiz.lesson.topic:id,module_id')
+            ->orderByDesc('submitted_at')
+            ->get()
+            ->each(function (QuizAttempt $attempt) use (&$scores): void {
+                $moduleId = $attempt->quiz?->lesson?->topic?->module_id;
+                if ($moduleId !== null && ! isset($scores[$moduleId])) {
+                    $scores[$moduleId] = (int) $attempt->score_pct;
+                }
+            });
+
+        return $scores;
     }
 
     private function engagement(User $student): int
