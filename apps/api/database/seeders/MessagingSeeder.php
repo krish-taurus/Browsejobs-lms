@@ -47,6 +47,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'mcq_dispatch', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Nice work {{name}}! You finished {{module}}. Take the quick quiz to lock in your progress: {{link}}'],
         ['key' => 'mcq_dispatch', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your {{module}} quiz is ready', 'body' => 'Hi {{name}}, you finished {{module}}. Take the quiz to update your progress: {{link}}'],
         ['key' => 'mcq_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your {{module}} quiz is still waiting — it only takes a few minutes: {{link}}'],
+        ['key' => 'grade_ready', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your grade for "{{assignment}}" is ready: {{score}}/{{max}}. See the feedback: {{link}}'],
+        ['key' => 'grade_ready', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your grade for {{assignment}}', 'body' => 'Hi {{name}}, your grade for "{{assignment}}" is {{score}}/{{max}}. View the feedback: {{link}}'],
     ];
 
     public function run(): void

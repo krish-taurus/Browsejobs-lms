@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ScoringSeeder::class,
             TutorSeeder::class,
             QuizSeeder::class,
+            AssignmentSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();
