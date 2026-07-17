@@ -22,19 +22,22 @@ drafts/themes — all merged to `main`. **P3.5 is complete.**
 **Next: P3.6 — leaderboards + points.**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 435 passing
-  as of P3.5c.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 508 passing
+  as of P3.5d-c.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
-  same-site).
+  same-site). **Only one Next process may run at a time** — two sharing `.next`
+  corrupt each other's artifacts and every admin spec fails on a dead sign-in
+  button. Check nothing else holds :3000 before starting `npm run dev`.
 - Docker works: `docker compose -f docker/docker-compose.yml up -d`
-  (MySQL/Redis/Mailpit/MinIO). Local `.env` uses MySQL.
+  (MySQL/Redis/Mailpit/MinIO). Local `.env` currently uses **SQLite**
+  (`DB_CONNECTION=sqlite`), not MySQL — `migrate:fresh --seed` rebuilds it.
 - Composer works from **PowerShell** (`composer …`), not Git Bash.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0025 in `docs/adr/`.
+  before building. ADRs 0001–0026 in `docs/adr/`.
 
 ---
 
@@ -52,19 +55,19 @@ motivating, never humiliating; badges with batch-feed celebrations; coach
 integration ("one mock closes the gap to #3"). **Anti-gaming: points only from
 verified events, daily caps.**
 
-**P3.5 is complete** (ADRs 0024, 0025). Two things it left behind that P3.6 does
-not need, but someone should pick up:
+**P3.5 is complete** (ADRs 0024, 0025, 0026). One thing it left behind that P3.6
+does not need, but someone should pick up:
 
-1. **Staff cannot author support policy documents.** The deflection corpus is
-   seeder-only (`SupportCorpusSeeder`); an admin CRUD over `knowledge_documents`
-   where `source_type=support` is the missing piece. Until it lands the corpus
-   only changes by deploy — and deflection quality is gated on the corpus, not
-   the model (see the founder input below).
-2. **`e2e/admin-support-triage.spec.ts` has never run green.** Not a code defect:
-   the local box had two Next processes sharing one `.next`, and the
-   **pre-existing** `admin-support-desk.spec.ts` fails identically in that state.
-   Run the e2e suite with a single Next dev server on **:3000** — Sanctum's
-   stateful domains and CORS are pinned to that port, so another port fails login.
+- **`e2e/admin-support-triage.spec.ts` has never run green.** Not a code defect:
+  the local box had two Next processes sharing one `.next`, and the
+  **pre-existing** `admin-support-desk.spec.ts` fails identically in that state.
+  Run the e2e suite with a single Next dev server on **:3000** — Sanctum's
+  stateful domains and CORS are pinned to that port, so another port fails login.
+
+Staff can now author the support corpus at `/admin/support/settings` ("Policy
+answers", ADR 0026), so it no longer changes only by deploy. **The screen exists;
+the answers still do not** — see the founder input below. Deflection quality is a
+function of what is written there, not of the model.
 
 ---
 
@@ -83,13 +86,14 @@ not need, but someone should pick up:
    retention/refund windows in /privacy-policy, /terms, /refund-policy.
 5. **Zoom + Razorpay + WhatsApp credentials** — needed before P2.2+ can be
    exercised against real sandboxes (tests stay mocked regardless).
-6. **Support corpus source-of-truth (blocks P3.5d-a quality).** Deflection can
-   only answer from documents that exist; the KB today indexes course content
-   only. The PRD fee model covers registration/EMI/placement-fee/money-back, but
-   the real 30–50% of ticket volume is operational: reschedule rules, recording
-   access windows, batch-transfer policy, refund mechanics, what happens on a
-   missed EMI. Either confirm the PRD text is the whole truth, or supply the
-   actual policy answers. **The deflection rate is a function of this list, not
-   of the model** — shipping the code against a thin corpus produces a feature
-   that looks built and deflects nothing. Overlaps with input 4 (retention/
-   refund windows in /privacy-policy, /terms, /refund-policy).
+6. **Support policy answers (the last thing gating deflection).** The screen is
+   built — `/admin/support/settings` → "Policy answers" — and 8 starter documents
+   are seeded, every fact transcribed from the PRD. What is missing is the
+   operational truth that drives most real ticket volume: batch-transfer rules,
+   reschedule rules, recording-access windows, refund mechanics past the 30-day
+   window, what actually happens on a missed EMI, hardware requirements. Nobody
+   can write these but you — inventing them in code would put a promise in a
+   student's hands that the company never made. **The deflection rate is a
+   function of this list, not of the model.** Type them into the screen (no
+   deploy needed) or send them over. Overlaps with input 4 (retention/refund
+   windows in /privacy-policy, /terms, /refund-policy).
