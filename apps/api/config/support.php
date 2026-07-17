@@ -36,6 +36,17 @@ return [
         'retrieve_k' => (int) env('SUPPORT_DEFLECTION_RETRIEVE_K', 4),
         'max_answer_tokens' => (int) env('SUPPORT_DEFLECTION_MAX_TOKENS', 500),
         'min_confidence' => env('SUPPORT_DEFLECTION_MIN_CONFIDENCE', 'medium'),
+
+        // Triage (P3.5d-b): category suggestion, urgency, sentiment, duplicates.
+        // Each toggle is independent so a tenant can run deflection without triage.
+        'triage_enabled' => (bool) env('SUPPORT_TRIAGE_ENABLED', true),
+        'triage_prompt_version' => (int) env('SUPPORT_TRIAGE_PROMPT_VERSION', 1),
+        'triage_max_tokens' => (int) env('SUPPORT_TRIAGE_MAX_TOKENS', 200),
+
+        // Staff reply drafts (P3.5d-b). Never sent without a human pressing Send.
+        'reply_drafts_enabled' => (bool) env('SUPPORT_REPLY_DRAFTS_ENABLED', true),
+        'reply_prompt_version' => (int) env('SUPPORT_REPLY_PROMPT_VERSION', 1),
+        'reply_max_tokens' => (int) env('SUPPORT_REPLY_MAX_TOKENS', 400),
     ],
 
     /*

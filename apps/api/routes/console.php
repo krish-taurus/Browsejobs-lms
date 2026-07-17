@@ -33,3 +33,6 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:30');
 
 // Counselor daily risk digest (PRD §6.10): after the nightly rescore.
 Schedule::command('digest:counselor-daily')->dailyAt('06:30');
+
+// Weekly support themes to admin (PRD §6.13): Monday, covering the week just closed.
+Schedule::command('digest:support-themes')->weeklyOn(1, '08:00');

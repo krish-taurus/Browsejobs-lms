@@ -307,6 +307,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('tickets/{ticket}/status', [TicketController::class, 'status']);
         Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign']);
         Route::post('tickets/{ticket}/escalate', [TicketController::class, 'escalate']);
+        // AI reply draft (PRD §6.13) — throttled as an AI endpoint; drafts, never sends.
+        Route::post('tickets/{ticket}/draft-reply', [TicketController::class, 'draftReply'])->middleware('throttle:ai');
+        Route::post('tickets/{ticket}/clear-ai-priority', [TicketController::class, 'clearAiPriority']);
 
         Route::get('canned-responses', [CannedResponseController::class, 'index']);
         Route::post('canned-responses', [CannedResponseController::class, 'store']);
