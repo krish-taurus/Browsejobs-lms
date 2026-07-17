@@ -42,7 +42,7 @@ class Lead extends Model
     use BelongsToTenant;
     use HasFactory;
 
-    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist'];
+    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist', 'syllabus'];
 
     /** @var list<string> */
     protected $fillable = [

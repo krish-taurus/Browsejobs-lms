@@ -28,6 +28,8 @@ use App\Support\Razorpay\HttpRazorpayClient;
 use App\Support\Razorpay\RazorpayClient;
 use App\Support\Receipts\HtmlReceiptRenderer;
 use App\Support\Receipts\ReceiptRenderer;
+use App\Support\Syllabus\HtmlSyllabusRenderer;
+use App\Support\Syllabus\SyllabusRenderer;
 use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\HttpWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
@@ -82,6 +84,10 @@ class AppServiceProvider extends ServiceProvider
         // GST receipts render to branded HTML now; WeasyPrint PDF swaps in later.
         $this->app->bind(ReceiptRenderer::class, HtmlReceiptRenderer::class);
         $this->app->bind(CertificateRenderer::class, HtmlCertificateRenderer::class);
+
+        // AI syllabus (P3.5c) renders to branded HTML now; WeasyPrint PDF swaps in
+        // later behind the same interface, exactly like certificates/receipts.
+        $this->app->bind(SyllabusRenderer::class, HtmlSyllabusRenderer::class);
 
         // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.
         $this->app->bind(WhatsAppClient::class, function (): HttpWhatsAppClient {

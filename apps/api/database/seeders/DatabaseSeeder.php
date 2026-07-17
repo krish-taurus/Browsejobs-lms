@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             TutorSeeder::class,
             QuizSeeder::class,
             ContentSeeder::class,
+            SyllabusSeeder::class,
             AssignmentSeeder::class,
             CertificateSeeder::class,
             ReportsSeeder::class,
