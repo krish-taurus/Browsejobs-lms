@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ContentHubController;
 use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
+use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FunnelController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
+use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
@@ -86,6 +88,11 @@ use Illuminate\Support\Facades\Route;
 | API routes. The `api` group (throttle:api + Sanctum stateful) is applied
 | automatically. Auth uses the Sanctum SPA cookie flow (ADR 0004).
 */
+
+// Public shared CV (PRD §6.7). NO tenant.domain — the share token is the key.
+Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
+    ->middleware('throttle:30,1')
+    ->name('cv.shared');
 
 // Public certificate verification (PRD §6.5). NO tenant.domain — a printed QR must
 // verify from any host, so the lookup is by the globally-unique code (withoutGlobalScopes).
@@ -173,6 +180,14 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    // AI CV suite (PRD §6.7).
+    Route::get('me/cv', [CvController::class, 'index']);
+    Route::post('me/cv', [CvController::class, 'store'])->middleware('throttle:ai');
+    Route::get('me/cv/{cv}', [CvController::class, 'show']);
+    Route::patch('me/cv/{cv}', [CvController::class, 'update']);
+    Route::post('me/cv/{cv}/ats', [CvController::class, 'atsCheck'])->middleware('throttle:30,1');
+    Route::post('me/cv/{cv}/share', [CvController::class, 'share']);
+    Route::delete('me/cv/{cv}/share', [CvController::class, 'unshare']);
     // Mentor scheduling (PRD §6.11).
     Route::get('me/mentors', [MentorBookingController::class, 'index']);
     Route::get('me/mentor-sessions', [MentorBookingController::class, 'sessions']);
@@ -258,6 +273,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Real Interview Intelligence (PRD §6.6) — placement team only.
     Route::middleware('can:manage-placements')->group(function () {
+        Route::get('cvs', [CvApprovalController::class, 'index']);
+        Route::post('cvs/{cv}/approve', [CvApprovalController::class, 'approve']);
         Route::get('mentors', [MentorAdminController::class, 'index']);
         Route::post('mentors', [MentorAdminController::class, 'store']);
         Route::patch('mentors/{mentor}', [MentorAdminController::class, 'update']);
