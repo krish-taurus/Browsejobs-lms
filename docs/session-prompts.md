@@ -14,16 +14,18 @@ batches, Zoom, reminders, public site, portals). P2.1 CRM · P2.2 payments ·
 P2.3 fee ladder · P2.4 messaging · P2.5 conversion · P2.6 review/voucher ·
 P2.7 support desk · P2.8 entitlement engine.
 
-**Phase 3 — in progress.** P3.1 AI gateway/telemetry/labs · P3.2 coach panel ·
+**Phase 3 — COMPLETE.** P3.1 AI gateway/telemetry/labs · P3.2 coach panel ·
 P3.3 AI tutor (RAG) · P3.4 MCQ automation · P3.4b assignment grading · P3.4c
 certificates · P3.5a reports/digests · P3.5b content AI · P3.5c syllabus
 generator · P3.5d-a support corpus + deflection · P3.5d-b triage/reply
 drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merged.
-**PHASE 3 COMPLETE. Next: P4.1 — AI mock interviewer core (Phase 4 begins).**
+
+**Phase 4 — in progress.** P4.1 AI mock interviewer core (text mode) — merged
+(ADR 0029). **Next: P4.2 — real-interview question bank.**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 538 passing
-  as of P3.7.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 552 passing
+  as of P4.1.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -37,31 +39,31 @@ drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merg
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0028 in `docs/adr/`.
+  before building. ADRs 0001–0029 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.1 — AI mock interviewer core
+## NEXT → P4.2 — Real-interview question bank
 
-Read `CLAUDE.md` and `docs/browsejobs-lms-requirements.md` fully (PRD §6.6).
-This is **P4.1** from `docs/BUILD-PLAYBOOK.md` — Phase 4 begins. Draft the
-detailed prompt from the playbook bullet before starting.
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.6/§6.7) and
+**ADR 0029** before building. This is **P4.2** from `docs/BUILD-PLAYBOOK.md`.
+Draft the detailed prompt from the playbook bullet before starting.
 
-Headline requirements (transport-agnostic core; voice via Vapi/Retell is
-P4.3): role-specific interview blueprints per course; adaptive follow-up
-logic; scorecard generation (competency scores, strong/weak moments, model
-answers, 3 actions) feeding PRI; TopicCompleted → mock prompt card +
-magic-link nudge (per-topic toggle); progression gate to human mock. Include
-the optional text-practice mode behind the existing admin feature flag
-(monetization settings `text_practice_enabled`, off by default).
+Headline requirements: a curated bank of real interview questions
+(role/company/competency-tagged, staff CRUD + bulk import) that the mock
+interviewer draws from instead of free-generating; per-question source
+attribution (never fabricate "asked at X" claims); admin review/approve flow
+before a question enters rotation.
 
-Reuse notes: the AI gateway is multi-provider (config/ai.php) with budget +
-ai_events; `AiPurpose` needs a Mock case; `points_settings.mock_points` and
-the `first-mock-done` badge are already reserved and wire up via
-`PointsService::award(PointsSource::Mock, ...)` + `grantBadge`; scorecards
-should feed `ScoreCalculator`/PRI like quiz/lab telemetry does (add an
-ActivityType if needed); magic-link nudges follow the P3.4 MCQ dispatch
-pattern (listener on TopicCompleted + Messenger utility template).
+Reuse notes from P4.1 (all merged): blueprints live in `mock_blueprints`
+(one per course; admin at /admin/mocks under `can:manage-curriculum`);
+sessions are `mock_interviews`/`mock_turns`; the adaptive prompt is
+`resources/prompts/mock_interview.v1.md` (bump to v2 when the bank feeds it
+— versioned prompts, never edit v1); `AnswerMockInterview` is where the next
+question is chosen (transaction-wrapped); `config/mocks.php` holds the caps.
+The whole feature gates on monetization `text_practice_enabled`. Tests:
+`tests/Feature/Mocks/` shows the FakeAiClient `$replies` FIFO pattern.
+Voice transport + quotas remain P4.3.
 
 
 ---
