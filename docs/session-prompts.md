@@ -21,12 +21,13 @@ generator · P3.5d-a support corpus + deflection · P3.5d-b triage/reply
 drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merged.
 
 **Phase 4 — in progress.** P4.1 AI mock interviewer core (ADR 0029) · P4.2
-Real Interview Intelligence + transcript ingestion (ADR 0030) — merged.
-**Next: P4.3 — voice mocks + quota enforcement.**
+Real Interview Intelligence + transcript ingestion (ADR 0030) · P4.3 voice
+mocks + quotas incl. AI_PROVIDER voice brain (ADR 0031) — merged.
+**Next: P4.4 — mentor scheduling (native).**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 568 passing
-  as of P4.2.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 582 passing
+  as of P4.3.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -40,33 +41,35 @@ Real Interview Intelligence + transcript ingestion (ADR 0030) — merged.
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0030 in `docs/adr/`.
+  before building. ADRs 0001–0031 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.3 — Voice mocks + quota enforcement
+## NEXT → P4.4 — Mentor scheduling (native)
 
-Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.6/§6.17) and
-**ADRs 0029–0030** before building. This is **P4.3** from
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.11) and
+**ADRs 0029–0031** before building. This is **P4.4** from
 `docs/BUILD-PLAYBOOK.md`. Draft the detailed prompt from the playbook bullet
 before starting.
 
-Headline requirements: voice mode via Vapi\Retell (webhook session
-lifecycle, transcript → the P4.1 scorecard pipeline; mocked in tests);
-quotas via the Entitlement Service — included per enrolment type (5/course
-live, 2 self-paced; 1 unlocks per module completed), 10-min session cap with
-graceful wrap-up, out-of-credits → one-tap top-up (₹249/1, ₹599/3 from
-monetization settings); per-session cost logging into ai_events.
+Headline requirements (fully native, no Calendly): mentor profiles +
+expertise tags; recurring availability + exceptions (IST) + optional Google
+Calendar busy-sync; student combined-availability calendar with expertise
+filter; booking → Zoom auto-create → instant both-side notifications + .ics
+→ T-24h/T-1h reminders; 4h reschedule/cancel rule; no-show tracking;
+post-session mentor feedback → PRI; ratings. Coach recommends bookings on
+persistent weakness. Placement interviews reuse this engine.
 
-Reuse notes from P4.1/P4.2 (all merged): `mock_interviews` already has
-`mode` ('text'|'voice') — voice reuses the same record, turns, scorecard
-pipeline (`FinishMockInterview`) and PRI blend; quota fields
-`voice_included_live`/`voice_included_self_paced` already exist on
-monetization settings, and `EntitlementService` has credit wallets +
-consume/grant plumbing (see the CV-credit flows for the pattern);
-webhook-signature + fake-client patterns to copy: Zoom/Razorpay webhooks and
-`FakeTranscriptionClient`/`FakeAiClient`. Bank-fed questioning arrives free —
-voice uses the same `mock_interview.v2` prompt.
+Reuse notes (all merged): Zoom meeting creation lives in the P1.5 live-class
+flow (`ZoomClient` + `HttpZoomClient`; tests bind a fake) — reuse it for
+mentor sessions; reminders follow the class-reminder pattern (Messenger
+templates + queued delayed jobs, see `CheckQuizCompletion` for the
+delay-arming idiom); the `mentor` credit wallet + `mentor-extra` (₹499)
+product already exist in the entitlement engine (extra 1:1s consume a
+credit, first ones per policy are included); post-session feedback should
+feed `ScoreCalculator` the way mock scorecards do (ADR 0029's PRI-blend
+pattern); `.ics` generation is plain text — no package needed. Notification
+templates go in `MessagingSeeder` (utility category).
 
 
 ---
