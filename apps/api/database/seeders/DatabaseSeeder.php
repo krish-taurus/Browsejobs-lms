@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             PaymentsSeeder::class,
             MessagingSeeder::class,
             ConversionSeeder::class,
+            LiveClassSeeder::class,
             VoucherSeeder::class,
             SupportSeeder::class,
             MonetizationSeeder::class,

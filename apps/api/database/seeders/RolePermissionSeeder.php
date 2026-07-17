@@ -44,8 +44,8 @@ class RolePermissionSeeder extends Seeder
         'super-admin' => ['name' => 'Super Admin', 'is_staff' => true, 'permissions' => '*'],
         'admin' => ['name' => 'Admin (Institute)', 'is_staff' => true, 'permissions' => [
             'manage-users', 'manage-roles', 'manage-curriculum', 'manage-batches',
-            'manage-rosters', 'manage-leads', 'manage-fees', 'manage-messaging', 'manage-vouchers',
-            'manage-monetization', 'manage-placements', 'handle-tickets',
+            'manage-rosters', 'teach-classes', 'manage-leads', 'manage-fees', 'manage-messaging',
+            'manage-vouchers', 'manage-monetization', 'manage-placements', 'handle-tickets',
         ]],
         'trainer' => ['name' => 'Trainer', 'is_staff' => true, 'permissions' => [
             'teach-classes', 'manage-curriculum', 'manage-rosters',

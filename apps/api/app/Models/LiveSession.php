@@ -52,6 +52,25 @@ class LiveSession extends Model
     }
 
     /**
+     * Recordings land here via the Zoom `recording.completed` webhook, so an extra
+     * ad-hoc session's recording shows up in its batch's library automatically.
+     *
+     * @return HasMany<Recording, $this>
+     */
+    public function recordings(): HasMany
+    {
+        return $this->hasMany(Recording::class);
+    }
+
+    /**
+     * @return BelongsTo<Topic, $this>
+     */
+    public function topic(): BelongsTo
+    {
+        return $this->belongsTo(Topic::class);
+    }
+
+    /**
      * Planned duration in seconds; defaults to 60 minutes when no end is set.
      */
     public function plannedSeconds(): int
