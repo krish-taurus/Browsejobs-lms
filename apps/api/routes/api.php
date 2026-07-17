@@ -47,6 +47,7 @@ use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyQuizController;
+use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
@@ -136,6 +137,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/assignments/{lesson}/submit', [MyAssignmentController::class, 'submit'])->middleware('throttle:20,1');
     Route::get('me/grades', [MyAssignmentController::class, 'grades']);
     Route::get('me/certificates', [MyCertificateController::class, 'index']);
+    Route::get('me/reports', [MyReportController::class, 'index']);
+    Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');

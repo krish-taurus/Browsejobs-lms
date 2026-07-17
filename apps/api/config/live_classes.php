@@ -13,4 +13,8 @@ return [
         ['minutes' => 120, 'label' => '2h'],
         ['minutes' => 5, 'label' => '5min'],
     ],
+
+    // Minutes before a session that the trainer's AI pre-class brief fires (PRD §6.10).
+    // Rides the same reminder rail + token as the student reminders.
+    'brief_offset_minutes' => 30,
 ];

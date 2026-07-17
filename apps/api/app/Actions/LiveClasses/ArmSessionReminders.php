@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\LiveClasses;
 
 use App\Jobs\SendSessionReminder;
+use App\Jobs\SendTrainerBrief;
 use App\Models\LiveSession;
 use Illuminate\Support\Str;
 
@@ -35,6 +36,13 @@ final readonly class ArmSessionReminders
             }
 
             SendSessionReminder::dispatch($session->id, $token, $offset['label'])->delay($fireAt);
+        }
+
+        // Trainer pre-class brief rides the same token (PRD §6.10): a reschedule/cancel
+        // rotates the token and this stale brief becomes a no-op.
+        $briefAt = $session->scheduled_start->copy()->subMinutes((int) config('live_classes.brief_offset_minutes', 30));
+        if (! $briefAt->isPast()) {
+            SendTrainerBrief::dispatch($session->id, $token)->delay($briefAt);
         }
 
         return $token;

@@ -51,6 +51,10 @@ class MessagingSeeder extends Seeder
         ['key' => 'grade_ready', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your grade for {{assignment}}', 'body' => 'Hi {{name}}, your grade for "{{assignment}}" is {{score}}/{{max}}. View the feedback: {{link}}'],
         ['key' => 'certificate_ready', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Congratulations {{name}}! Your {{course}} certificate is ready. View and verify it here: {{link}}'],
         ['key' => 'certificate_ready', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your {{course}} certificate', 'body' => 'Congratulations {{name}}! You completed {{course}}. View and verify your certificate: {{link}}'],
+        ['key' => 'weekly_report', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your weekly progress report is ready. Read it in one tap: {{link}}'],
+        ['key' => 'weekly_report', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your weekly progress report', 'body' => 'Hi {{name}}, your weekly progress report is ready. Read it here: {{link}}'],
+        ['key' => 'trainer_brief', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, pre-class brief for {{batch}}: {{body}}'],
+        ['key' => 'counselor_digest', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your daily risk digest: {{body}}'],
     ];
 
     public function run(): void
