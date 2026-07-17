@@ -50,17 +50,34 @@ final class KnowledgeRetriever
      * Top-K chunks for the given terms, ranked by length-normalized term overlap.
      * Runs inside the caller's tenant context (BelongsToTenant scopes the query).
      *
+     * `$sourceTypes`/`$category` narrow the corpus — support deflection (PRD §6.13)
+     * passes `['support']` so a payments question retrieves fee policy instead of
+     * course material. Both default to null, which is the tutor's whole-corpus
+     * behaviour; the filters are applied in SQL, ahead of the candidate cap, so a
+     * scoped search cannot be crowded out by unrelated documents.
+     *
      * @param  list<string>  $terms
+     * @param  list<string>|null  $sourceTypes
      * @return Collection<int, KnowledgeChunk>
      */
-    public function retrieve(array $terms, int $k, ?int $lessonId = null): Collection
+    public function retrieve(array $terms, int $k, ?int $lessonId = null, ?array $sourceTypes = null, ?string $category = null): Collection
     {
         if ($terms === []) {
             return collect();
         }
 
         $candidates = KnowledgeChunk::query()
-            ->whereHas('document', fn ($q) => $q->where('is_active', true))
+            ->whereHas('document', function ($q) use ($sourceTypes, $category): void {
+                $q->where('is_active', true);
+
+                if ($sourceTypes !== null && $sourceTypes !== []) {
+                    $q->whereIn('source_type', $sourceTypes);
+                }
+
+                if ($category !== null) {
+                    $q->where('category', $category);
+                }
+            })
             ->where(function ($q) use ($terms): void {
                 foreach ($terms as $term) {
                     $q->orWhere('content', 'like', '%'.$term.'%');

@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Support;
 
 use App\Actions\Support\CreateTicket;
+use App\Actions\Support\DeflectTicket;
 use App\Actions\Support\PostTicketReply;
 use App\Actions\Support\ReopenTicket;
+use App\Actions\Support\ResolveDeflection;
 use App\Actions\Support\SubmitCsat;
 use App\Enums\TicketCategory;
 use App\Enums\TicketPriority;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Support\CsatRequest;
+use App\Http\Requests\Support\DeflectTicketRequest;
 use App\Http\Requests\Support\ReplyTicketRequest;
 use App\Http\Requests\Support\StoreTicketRequest;
+use App\Http\Resources\TicketDeflectionResource;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
+use App\Models\TicketDeflection;
+use App\Support\Tutor\CitationResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -37,7 +43,43 @@ final class StudentTicketController extends Controller
         return TicketResource::collection($tickets)->response();
     }
 
-    public function store(StoreTicketRequest $request, CreateTicket $create): JsonResponse
+    /**
+     * The AI first-response layer (PRD §6.13) — offered before the ticket exists.
+     *
+     * Always 200. A null `deflection` means "no answer" (feature off, nothing to ground
+     * on, low confidence, budget exhausted, or the model is down) and the client simply
+     * raises the ticket. Deflection is assistive; it must never be able to block or
+     * error a student out of reaching a human.
+     */
+    public function deflect(DeflectTicketRequest $request, DeflectTicket $deflect, CitationResolver $citations): JsonResponse
+    {
+        $deflection = $deflect->handle(
+            $request->user(),
+            TicketCategory::from($request->string('category')->toString()),
+            $request->string('body')->toString(),
+        );
+
+        if ($deflection === null) {
+            return response()->json(['data' => null]);
+        }
+
+        $deflection->setAttribute('citations', $citations->resolve($deflection->cited_chunk_ids ?? []));
+
+        // Pinned to 200: the resource wraps a row that was just written, and Laravel
+        // would infer 201 from `wasRecentlyCreated`. Nothing the student owns was
+        // created — the audit row is ours, and the ticket is what a 201 would imply.
+        return (new TicketDeflectionResource($deflection))->response()->setStatusCode(200);
+    }
+
+    /** The answer resolved it — no ticket. */
+    public function acceptDeflection(Request $request, int $deflection, ResolveDeflection $resolve): JsonResponse
+    {
+        $resolve->accepted($this->ownedDeflection($request, $deflection));
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function store(StoreTicketRequest $request, CreateTicket $create, ResolveDeflection $resolve): JsonResponse
     {
         $ticket = $create->handle(
             $request->user(),
@@ -49,6 +91,20 @@ final class StudentTicketController extends Controller
                 : TicketPriority::Normal,
             array_values($request->file('attachments', [])),
         );
+
+        // The student saw an answer and raised the ticket anyway — record what the
+        // deflection failed to prevent. Never blocks ticket creation.
+        if ($request->filled('deflection_id')) {
+            $offered = TicketDeflection::query()
+                ->withoutGlobalScopes()
+                ->where('id', (int) $request->integer('deflection_id'))
+                ->where('student_id', $request->user()->id)
+                ->first();
+
+            if ($offered !== null) {
+                $resolve->proceeded($offered, $ticket);
+            }
+        }
 
         $ticket->load('assignee:id,name', 'messages');
 
@@ -96,6 +152,16 @@ final class StudentTicketController extends Controller
         return Ticket::query()
             ->withoutGlobalScopes()
             ->where('id', $ticketId)
+            ->where('student_id', $request->user()->id)
+            ->firstOrFail();
+    }
+
+    /** Same ownership boundary as `owned()` — `student_id` is the tenant guard here. */
+    private function ownedDeflection(Request $request, int $deflectionId): TicketDeflection
+    {
+        return TicketDeflection::query()
+            ->withoutGlobalScopes()
+            ->where('id', $deflectionId)
             ->where('student_id', $request->user()->id)
             ->firstOrFail();
     }

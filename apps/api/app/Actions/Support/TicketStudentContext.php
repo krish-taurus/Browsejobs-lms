@@ -39,6 +39,14 @@ final readonly class TicketStudentContext
             ->where('status', '!=', 'paid')
             ->sum('amount_paise');
 
+        // The next unpaid instalment — what a student asking "when is my EMI due?"
+        // actually wants, and the one figure AI deflection may state (PRD §6.13).
+        $nextDue = Instalment::query()
+            ->whereHas('feePlan', fn ($q) => $q->where('user_id', $student->id))
+            ->where('status', '!=', 'paid')
+            ->orderBy('due_on')
+            ->first(['amount_paise', 'due_on']);
+
         $blocked = AccessBlock::query()
             ->where('user_id', $student->id)
             ->whereNull('lifted_at')
@@ -68,7 +76,14 @@ final readonly class TicketStudentContext
                 'course' => $membership->batch->course?->name,
                 'status' => $membership->status,
             ],
-            'fee' => ['outstanding_paise' => $outstanding, 'blocked' => $blocked],
+            'fee' => [
+                'outstanding_paise' => $outstanding,
+                'blocked' => $blocked,
+                'next_due' => $nextDue === null ? null : [
+                    'amount_paise' => (int) $nextDue->amount_paise,
+                    'due_on' => $nextDue->due_on->toDateString(),
+                ],
+            ],
             'attendance_pct' => $attendancePct,
             'risk_score' => $riskScore === null ? null : (int) $riskScore,
             'recent_tickets' => $recent->map(fn (Ticket $t) => [
