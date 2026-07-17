@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\LiveClasses;
 
+use App\Enums\PointsSource;
 use App\Models\Attendance;
 use App\Models\LiveSession;
 use App\Models\User;
+use App\Support\Points\PointsService;
 use Carbon\CarbonInterface;
 
 /**
@@ -16,6 +18,8 @@ use Carbon\CarbonInterface;
  */
 final readonly class RecordAttendance
 {
+    public function __construct(private PointsService $points) {}
+
     public function participantJoined(LiveSession $session, User $user, CarbonInterface $at): Attendance
     {
         $attendance = Attendance::query()->firstOrNew([
@@ -52,5 +56,46 @@ final readonly class RecordAttendance
         $attendance->last_left_at = $at;
         $attendance->attended_pct = (int) min(100, round($attendance->total_seconds / $session->plannedSeconds() * 100));
         $attendance->save();
+
+        $this->awardPoints($session, $user, $attendance);
+    }
+
+    /**
+     * Attendance + punctuality points (P3.6). Keyed per session, so repeated
+     * join/leave cycles and replayed webhooks can never double-award; the award
+     * lands once attended_pct first crosses the configured threshold.
+     */
+    private function awardPoints(LiveSession $session, User $user, Attendance $attendance): void
+    {
+        $tenantId = $session->tenant_id;
+        if ($tenantId === null) {
+            return;
+        }
+
+        $settings = $this->points->settingsFor($tenantId);
+
+        if ($attendance->attended_pct < $settings->attendance_min_pct) {
+            return;
+        }
+
+        $this->points->award(
+            $user,
+            PointsSource::Attendance,
+            "session:{$session->id}",
+            $settings->attendance_points,
+            $tenantId,
+            $session->batch_id,
+        );
+
+        if (! $attendance->is_late) {
+            $this->points->award(
+                $user,
+                PointsSource::Punctuality,
+                "session:{$session->id}",
+                $settings->punctuality_points,
+                $tenantId,
+                $session->batch_id,
+            );
+        }
     }
 }

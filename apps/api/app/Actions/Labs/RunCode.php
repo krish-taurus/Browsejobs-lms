@@ -6,11 +6,13 @@ namespace App\Actions\Labs;
 
 use App\Actions\Telemetry\RecordActivity;
 use App\Enums\ActivityType;
+use App\Enums\PointsSource;
 use App\Enums\SubmissionKind;
 use App\Models\CodeSubmission;
 use App\Models\CodingLab;
 use App\Models\User;
 use App\Support\Judge0\Judge0Client;
+use App\Support\Points\PointsService;
 use App\Support\Tenancy\TenantContext;
 
 /**
@@ -23,6 +25,7 @@ final readonly class RunCode
     public function __construct(
         private Judge0Client $judge0,
         private RecordActivity $activity,
+        private PointsService $points,
     ) {}
 
     public function handle(User $user, CodingLab $lab, string $source, SubmissionKind $kind): CodeSubmission
@@ -62,6 +65,23 @@ final readonly class RunCode
                     'error' => $outcome['stderr'] !== '' ? substr($outcome['stderr'], 0, 120) : null,
                 ],
             );
+
+            // Lab points (P3.6): a fully passing SUBMIT, keyed per LAB so
+            // re-submitting a solved lab can't farm points.
+            if ($kind === SubmissionKind::Submit
+                && $outcome['total'] > 0
+                && $outcome['passed'] === $outcome['total']
+                && $user->tenant_id !== null) {
+                $this->points->award(
+                    $user,
+                    PointsSource::Lab,
+                    "lab:{$lab->id}",
+                    $this->points->settingsFor($user->tenant_id)->lab_points,
+                    $user->tenant_id,
+                );
+
+                $this->points->grantBadge($user, 'first-lab-pass', $user->tenant_id);
+            }
 
             return $submission;
         });

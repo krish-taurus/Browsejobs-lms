@@ -175,6 +175,16 @@ final class ScoreCalculator
         return (int) round($recency * (float) $w['recency'] + $consistency * (float) $w['consistency'] + $volume * (float) $w['volume']);
     }
 
+    /**
+     * Current consecutive-day activity streak. Public so the P3.6 points
+     * engine awards streak points/badges from the same definition the coach
+     * panel displays — one source of truth for "streak".
+     */
+    public function streakDays(User $student): int
+    {
+        return $this->streak($student);
+    }
+
     private function streak(User $student): int
     {
         $dates = $this->activeDates($student)->values();
