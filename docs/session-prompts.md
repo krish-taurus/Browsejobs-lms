@@ -20,12 +20,13 @@ certificates · P3.5a reports/digests · P3.5b content AI · P3.5c syllabus
 generator · P3.5d-a support corpus + deflection · P3.5d-b triage/reply
 drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merged.
 
-**Phase 4 — in progress.** P4.1 AI mock interviewer core (text mode) — merged
-(ADR 0029). **Next: P4.2 — real-interview question bank.**
+**Phase 4 — in progress.** P4.1 AI mock interviewer core (ADR 0029) · P4.2
+Real Interview Intelligence + transcript ingestion (ADR 0030) — merged.
+**Next: P4.3 — voice mocks + quota enforcement.**
 
 **Environment facts for a fresh session:**
-- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 552 passing
-  as of P4.1.
+- API tests: SQLite in-memory (`php artisan test` in `apps/api`) — 568 passing
+  as of P4.2.
   Pint: `./vendor/bin/pint`. Web: `npm run typecheck && npm run lint && npm run
   build` in `apps/web`. E2E: `npx playwright test` (chromium installed; needs
   both dev servers; visit the app on **localhost**, not 127.0.0.1 — cookie
@@ -39,31 +40,33 @@ drafts/themes · P3.6 leaderboards · P3.7 motivation/pulse/content — all merg
 - Local admin: `test@example.com` / `password` (staff, 2FA off). Dev servers:
   `php artisan serve --port=8000` + `npm run dev` (:3000).
 - Read `CLAUDE.md` + `docs/browsejobs-lms-requirements.md` (incl. §14 addendum)
-  before building. ADRs 0001–0029 in `docs/adr/`.
+  before building. ADRs 0001–0030 in `docs/adr/`.
 
 ---
 
-## NEXT → P4.2 — Real-interview question bank
+## NEXT → P4.3 — Voice mocks + quota enforcement
 
-Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.6/§6.7) and
-**ADR 0029** before building. This is **P4.2** from `docs/BUILD-PLAYBOOK.md`.
-Draft the detailed prompt from the playbook bullet before starting.
+Read `CLAUDE.md`, `docs/browsejobs-lms-requirements.md` (PRD §6.6/§6.17) and
+**ADRs 0029–0030** before building. This is **P4.3** from
+`docs/BUILD-PLAYBOOK.md`. Draft the detailed prompt from the playbook bullet
+before starting.
 
-Headline requirements: a curated bank of real interview questions
-(role/company/competency-tagged, staff CRUD + bulk import) that the mock
-interviewer draws from instead of free-generating; per-question source
-attribution (never fabricate "asked at X" claims); admin review/approve flow
-before a question enters rotation.
+Headline requirements: voice mode via Vapi\Retell (webhook session
+lifecycle, transcript → the P4.1 scorecard pipeline; mocked in tests);
+quotas via the Entitlement Service — included per enrolment type (5/course
+live, 2 self-paced; 1 unlocks per module completed), 10-min session cap with
+graceful wrap-up, out-of-credits → one-tap top-up (₹249/1, ₹599/3 from
+monetization settings); per-session cost logging into ai_events.
 
-Reuse notes from P4.1 (all merged): blueprints live in `mock_blueprints`
-(one per course; admin at /admin/mocks under `can:manage-curriculum`);
-sessions are `mock_interviews`/`mock_turns`; the adaptive prompt is
-`resources/prompts/mock_interview.v1.md` (bump to v2 when the bank feeds it
-— versioned prompts, never edit v1); `AnswerMockInterview` is where the next
-question is chosen (transaction-wrapped); `config/mocks.php` holds the caps.
-The whole feature gates on monetization `text_practice_enabled`. Tests:
-`tests/Feature/Mocks/` shows the FakeAiClient `$replies` FIFO pattern.
-Voice transport + quotas remain P4.3.
+Reuse notes from P4.1/P4.2 (all merged): `mock_interviews` already has
+`mode` ('text'|'voice') — voice reuses the same record, turns, scorecard
+pipeline (`FinishMockInterview`) and PRI blend; quota fields
+`voice_included_live`/`voice_included_self_paced` already exist on
+monetization settings, and `EntitlementService` has credit wallets +
+consume/grant plumbing (see the CV-credit flows for the pattern);
+webhook-signature + fake-client patterns to copy: Zoom/Razorpay webhooks and
+`FakeTranscriptionClient`/`FakeAiClient`. Bank-fed questioning arrives free —
+voice uses the same `mock_interview.v2` prompt.
 
 
 ---
