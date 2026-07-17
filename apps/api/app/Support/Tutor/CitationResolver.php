@@ -62,7 +62,8 @@ final class CitationResolver
 
             $href = null;
             if ($document->lesson_id !== null) {
-                $href = '/labs/'.$document->lesson_id;
+                // A transcript deep-links to the lesson's study notes; a lab to the lab.
+                $href = ($document->source_type === 'transcript' ? '/notes/' : '/labs/').$document->lesson_id;
             } elseif ($document->course?->slug !== null) {
                 $href = '/courses/'.$document->course->slug;
             }
