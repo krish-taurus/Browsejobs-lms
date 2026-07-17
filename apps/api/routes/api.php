@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
@@ -336,6 +337,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('members/{member}/transfer', [RosterController::class, 'transfer']);
         Route::post('members/{member}/remove', [RosterController::class, 'remove']);
         Route::post('members/{member}/convert', [RosterController::class, 'convert']);
+
+        // Candidates directory + reallocation (student-first view).
+        Route::get('students', [StudentController::class, 'index']);
+        Route::post('students/{student}/enrollments', [StudentController::class, 'enroll']);
     });
 
     // Built-in CRM (PRD §6.12).

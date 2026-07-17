@@ -24,6 +24,7 @@ const nav = [
   { href: "/admin/certificates", label: "Certificates" },
   { href: "/admin/knowledge", label: "Tutor KB" },
   { href: "/admin/batches", label: "Batches" },
+  { href: "/admin/students", label: "Candidates" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/tasks", label: "Tasks" },
   { href: "/admin/payments", label: "Payments" },
