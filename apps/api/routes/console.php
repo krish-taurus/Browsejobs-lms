@@ -53,3 +53,6 @@ Schedule::command('alumni:checkins')->dailyAt('07:15');
 
 // P4.7d Advice Graph (PRD §6.21): monthly PRI weight calibration from outcomes.
 Schedule::command('pri:calibrate')->monthlyOn(1, '05:30');
+
+// P4.8 Live Job Feed (PRD §6.22): sync sources + expire stale items, twice daily.
+Schedule::command('feed:sync')->twiceDaily(6, 18);

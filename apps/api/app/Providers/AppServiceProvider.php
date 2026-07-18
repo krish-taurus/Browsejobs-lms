@@ -16,6 +16,8 @@ use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
 use App\Support\Interviews\TranscriptionClient;
+use App\Support\JobFeed\JobApiTransport;
+use App\Support\JobFeed\NullJobApiTransport;
 use App\Support\Judge0\HttpJudge0Client;
 use App\Support\Judge0\Judge0Client;
 use App\Support\Messaging\NullPushSender;
@@ -95,6 +97,10 @@ class AppServiceProvider extends ServiceProvider
         // AI syllabus (P3.5c) renders to branded HTML now; WeasyPrint PDF swaps in
         // later behind the same interface, exactly like certificates/receipts.
         $this->app->bind(SyllabusRenderer::class, HtmlSyllabusRenderer::class);
+
+        // Live job feed (P4.8). No licensed key yet → Null transport (safe no-op);
+        // tests bind a fake, and the real JSearch transport (ADR 0045) slots in here.
+        $this->app->bind(JobApiTransport::class, NullJobApiTransport::class);
 
         // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.
         $this->app->bind(WhatsAppClient::class, function (): HttpWhatsAppClient {
