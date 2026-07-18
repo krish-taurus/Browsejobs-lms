@@ -47,3 +47,6 @@ Schedule::command('care:signals')->dailyAt('06:15');
 
 // P4.7 Curriculum Intelligence (PRD §6.21): quarterly syllabus recommendations.
 Schedule::command('curriculum:recommend')->quarterly();
+
+// P4.7c Advice Graph (PRD §6.21): daily alumni 6/12-month check-in scheduling.
+Schedule::command('alumni:checkins')->dailyAt('07:15');

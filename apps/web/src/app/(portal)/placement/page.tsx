@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
+import { AlumniCheckins } from "@/components/portal/AlumniCheckins";
 
 type Check = { ok: boolean; value: number | null; required: number | null; label: string };
 type Pool = { eligible: boolean; checks: Record<string, Check> };
@@ -275,6 +276,8 @@ export default function PlacementPage() {
           ))}
         </div>
       )}
+
+      <AlumniCheckins />
     </div>
   );
 }
