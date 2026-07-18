@@ -30,6 +30,8 @@ export type Coach = {
   needs_work: string[];
   next_action: NextAction;
   trajectory: { on: string; pri: number }[];
+  /** Evidence-backed claims from anonymised cohort aggregates (PRD §6.21). */
+  insights: string[];
 };
 
 export function useCoach() {

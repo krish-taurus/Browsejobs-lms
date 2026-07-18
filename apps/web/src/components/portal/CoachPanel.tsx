@@ -207,6 +207,21 @@ export function CoachPanel() {
           <MasteryBars rows={coach.mastery} />
         </div>
       </div>
+
+      {/* Evidence-backed insights from anonymised cohort data (PRD §6.21) */}
+      {coach.insights.length > 0 && (
+        <div className="rounded-2xl border border-trust/25 bg-sky/40 p-6">
+          <p className="kicker text-trust">What the data says</p>
+          <ul className="mt-3 space-y-2">
+            {coach.insights.map((insight, i) => (
+              <li key={i} className="flex gap-2 text-sm text-ink">
+                <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-trust" />
+                {insight}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
