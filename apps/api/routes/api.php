@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\SyllabusRecommendationController;
+use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
@@ -406,6 +407,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index']);
         Route::put('settings', [SettingsController::class, 'update']);
+
+        // Whitelabel + provisioning (PRD §6.24) — super-admin manages any tenant.
+        Route::get('tenants', [TenantController::class, 'index']);
+        Route::post('tenants', [TenantController::class, 'store']);
+        Route::put('tenants/{tenant}/branding', [TenantController::class, 'updateBranding']);
+        Route::put('tenants/{tenant}/flags', [TenantController::class, 'updateFlags']);
     });
 
     // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.
