@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
+use App\Http\Controllers\Admin\SyllabusRecommendationController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
@@ -301,6 +302,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('courses/{course}/syllabus/generate', [SyllabusController::class, 'generate']);
         Route::patch('courses/{course}/syllabus', [SyllabusController::class, 'update']);
         Route::post('syllabuses/{syllabus}/approve', [SyllabusController::class, 'approve']);
+
+        // Curriculum Intelligence — syllabus recommendation reports (PRD §6.21).
+        Route::get('syllabus-recommendations', [SyllabusRecommendationController::class, 'index']);
+        Route::post('courses/{course}/syllabus-recommendations', [SyllabusRecommendationController::class, 'generate'])->middleware('throttle:ai');
+        Route::post('syllabus-recommendations/{recommendation}/approve', [SyllabusRecommendationController::class, 'approve']);
+        Route::post('syllabus-recommendations/{recommendation}/reject', [SyllabusRecommendationController::class, 'reject']);
         Route::get('assignment-lessons', [AssignmentController::class, 'index']);
         Route::get('lessons/{lesson}/assignment', [AssignmentController::class, 'show']);
         Route::put('lessons/{lesson}/assignment', [AssignmentController::class, 'upsert']);
