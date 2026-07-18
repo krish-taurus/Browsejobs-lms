@@ -16,6 +16,7 @@ use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
 use App\Support\Interviews\TranscriptionClient;
+use App\Support\JobFeed\HttpJSearchTransport;
 use App\Support\JobFeed\JobApiTransport;
 use App\Support\JobFeed\NullJobApiTransport;
 use App\Support\Judge0\HttpJudge0Client;
@@ -98,9 +99,15 @@ class AppServiceProvider extends ServiceProvider
         // later behind the same interface, exactly like certificates/receipts.
         $this->app->bind(SyllabusRenderer::class, HtmlSyllabusRenderer::class);
 
-        // Live job feed (P4.8). No licensed key yet → Null transport (safe no-op);
-        // tests bind a fake, and the real JSearch transport (ADR 0045) slots in here.
-        $this->app->bind(JobApiTransport::class, NullJobApiTransport::class);
+        // Live job feed (P4.8, ADR 0045). JSearch when a RapidAPI key is set (legally
+        // aggregates LinkedIn/Indeed/Naukri via Google-for-Jobs — no scraping), else
+        // the Null transport (safe no-op). Tests bind a fake.
+        $this->app->bind(JobApiTransport::class, function (): JobApiTransport {
+            /** @var array{api_key: string, host: string} $config */
+            $config = config('services.jsearch');
+
+            return $config['api_key'] !== '' ? new HttpJSearchTransport($config) : new NullJobApiTransport;
+        });
 
         // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.
         $this->app->bind(WhatsAppClient::class, function (): HttpWhatsAppClient {
