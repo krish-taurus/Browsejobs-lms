@@ -1,0 +1,25 @@
+; BrowseJobs LMS Next.js web app (public site + portals). Runs `next start` on
+; :3000 behind Nginx. Rebuild (`npm ci && npm run build`) before restarting on a
+; deploy.
+;
+; Install:
+;   sudo cp deploy/systemd/browsejobs-web.service /etc/systemd/system/
+;   sudo systemctl daemon-reload && sudo systemctl enable --now browsejobs-web
+
+[Unit]
+Description=BrowseJobs LMS Next.js web app
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/browsejobs/apps/web
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
