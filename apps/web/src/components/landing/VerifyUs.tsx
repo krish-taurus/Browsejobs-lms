@@ -1,5 +1,5 @@
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { PromiseCards } from "@/components/landing/PromiseCards";
+import { Kicker } from "@/components/brand/Kicker";
 import { verifyChecks } from "@/content/landing";
 
 /**
@@ -11,8 +11,8 @@ export function VerifyUs() {
   return (
     <section id="verify" className="mx-auto max-w-6xl px-5 py-20">
       <ScrollReveal>
-        <p className="kicker text-verify">The honesty doctrine</p>
-        <h2 className="display mt-3 max-w-2xl text-3xl text-ink md:text-4xl">
+        <Kicker tone="verify">The honesty doctrine</Kicker>
+        <h2 className="display mt-3 max-w-2xl text-3xl text-ink md:text-5xl">
           Don&apos;t trust us. Verify us.
         </h2>
         <p className="mt-3 max-w-2xl text-muted">
@@ -38,10 +38,6 @@ export function VerifyUs() {
             </div>
           </ScrollReveal>
         ))}
-      </div>
-
-      <div className="mt-12">
-        <PromiseCards />
       </div>
     </section>
   );

@@ -3,10 +3,28 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Disclaimer } from "@/components/brand/Disclaimer";
+import { Kicker } from "@/components/brand/Kicker";
 import { BookCta } from "@/components/landing/BookCta";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { durations, ease } from "@/lib/motion";
 import { fees } from "@/content/landing";
+
+const INCLUDED = [
+  "Live instructor-led classes",
+  "All class recordings, one year",
+  "AI tutor, unlimited",
+  "MCQ tests & mastery tracking",
+  "Your first comprehensive CV",
+  "Base mock-interview quota",
+  "Student support desk",
+];
+
+const EXTRAS = [
+  { label: "Extra CV credits", price: "₹99 / 3" },
+  { label: "Voice mock interview", price: "₹249 · ₹599 / 3" },
+  { label: "Extra 1:1 mentor session", price: "₹499" },
+  { label: "Career+ (post-placement)", price: "₹499 / mo" },
+];
 
 const rupee = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 
@@ -37,8 +55,8 @@ export function Fees() {
     <section id="fees" className="bg-white">
       <div className="mx-auto max-w-6xl px-5 py-20">
         <ScrollReveal>
-          <p className="kicker text-trust">The fee structure</p>
-          <h2 className="display mt-3 max-w-2xl text-3xl text-ink md:text-4xl">
+          <Kicker>The fee structure</Kicker>
+          <h2 className="display mt-3 max-w-3xl text-3xl text-ink md:text-5xl">
             Two fees. Both in writing. One only after you&apos;re hired.
           </h2>
         </ScrollReveal>
@@ -165,6 +183,40 @@ export function Fees() {
             </div>
           </ScrollReveal>
         </div>
+
+        {/* Included vs paid — the freemium guardrail, in the open. */}
+        <ScrollReveal delay={0.05}>
+          <div className="mt-6 grid gap-6 rounded-[22px] border border-line bg-paper p-8 md:grid-cols-2 md:p-10">
+            <div>
+              <Kicker tone="verify">Included, forever</Kicker>
+              <ul className="mt-5 space-y-3">
+                {INCLUDED.map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-ink">
+                    <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-verify-bg">
+                      <span className="h-1.5 w-1.5 rounded-full bg-verify" />
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="md:border-l md:border-line md:pl-10">
+              <Kicker tone="muted">Optional extras</Kicker>
+              <ul className="mt-5 divide-y divide-line">
+                {EXTRAS.map((e) => (
+                  <li key={e.label} className="flex items-center justify-between py-2.5 text-sm">
+                    <span className="text-ink">{e.label}</span>
+                    <span className="mono text-muted">{e.price}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-muted">
+                Everything needed for the placement promise is included. Charges apply only to
+                extras beyond generous quotas.
+              </p>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BookCta } from "@/components/landing/BookCta";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 const links = [
   { href: "/courses", label: "Programs" },
@@ -13,11 +14,8 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-line/70 bg-paper/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-white display text-lg">
-            B
-          </span>
-          <span className="display text-lg text-ink">BrowseJobs</span>
+        <Link href="/" aria-label="BrowseJobs home">
+          <Wordmark />
         </Link>
 
         <div className="hidden items-center gap-7 md:flex">

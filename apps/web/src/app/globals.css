@@ -81,6 +81,20 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Ambient hero gradient drift — transform only, very slow, calm (paused under reduced motion). */
+.hero-drift {
+  animation: hero-drift 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes hero-drift {
+  from {
+    transform: translate3d(-1.5%, 0, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(2%, 1%, 0) scale(1.06);
+  }
+}
+
 /* Skeleton shimmer (paused under reduced motion below). */
 .shimmer {
   background: linear-gradient(
@@ -104,6 +118,9 @@ body {
     scroll-behavior: auto;
   }
   .shimmer {
+    animation: none;
+  }
+  .hero-drift {
     animation: none;
   }
 }
