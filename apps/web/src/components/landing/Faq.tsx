@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
+import { Kicker } from "@/components/brand/Kicker";
 import { faqs } from "@/content/landing";
 
 export function Faq() {
@@ -10,9 +11,9 @@ export function Faq() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="faq" className="mx-auto max-w-3xl px-5 py-20">
-      <p className="kicker text-trust">Questions</p>
-      <h2 className="display mt-3 text-3xl text-ink md:text-4xl">
+    <section id="faq" className="mx-auto max-w-3xl px-5 py-20 md:py-28">
+      <Kicker>Questions</Kicker>
+      <h2 className="display mt-3 text-3xl text-ink md:text-5xl">
         Straight answers
       </h2>
 

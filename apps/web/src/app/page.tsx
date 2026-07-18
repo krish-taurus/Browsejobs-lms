@@ -4,8 +4,10 @@ import { ProofEngine } from "@/components/landing/ProofEngine";
 import { Journey } from "@/components/landing/Journey";
 import { Courses } from "@/components/landing/Courses";
 import { AiShowcase } from "@/components/landing/AiShowcase";
-import { VerifyUs } from "@/components/landing/VerifyUs";
 import { Fees } from "@/components/landing/Fees";
+import { VerifyUs } from "@/components/landing/VerifyUs";
+import { PromiseCards } from "@/components/landing/PromiseCards";
+import { SuccessWall } from "@/components/landing/SuccessWall";
 import { Faq } from "@/components/landing/Faq";
 import { Footer } from "@/components/landing/Footer";
 import { JsonLd } from "@/components/landing/JsonLd";
@@ -16,9 +18,9 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { BookCta } from "@/components/landing/BookCta";
 
 /**
- * Home, in the spec §6.1 order: hook → Proof Engine + stats → courses →
- * free ladder → verify-us → fees → FAQ → CTA. (Testimonials slot pending the
- * six real testimonials — requirements §14.7.)
+ * Home — Apple-grade redesign (S1–S9): hero engine → proof engine → journey →
+ * programs → AI showcase → pricing → verify → promise cards → success wall → FAQ →
+ * CTA. Success wall renders only real seeded reviews.
  */
 export default function Home() {
   return (
@@ -32,8 +34,10 @@ export default function Home() {
         <Journey />
         <Courses />
         <AiShowcase />
-        <VerifyUs />
         <Fees />
+        <VerifyUs />
+        <PromiseCards />
+        <SuccessWall />
         <Faq />
 
         {/* Closing CTA band */}
