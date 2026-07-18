@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\CrmAssignmentRuleController;
 use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\CvApprovalController;
+use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FunnelController;
@@ -73,6 +74,7 @@ use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
+use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
@@ -236,6 +238,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/jobs/{item}/copilot', [MeJobFeedController::class, 'copilot']);
     Route::post('me/jobs/{item}/save', [MeJobFeedController::class, 'save']);
     Route::post('me/jobs/{item}/dismiss', [MeJobFeedController::class, 'dismiss']);
+
+    // DPDP data-subject requests (PRD §8): student raises access/deletion.
+    Route::get('me/data-requests', [MeDataRequestController::class, 'index']);
+    Route::post('me/data-requests', [MeDataRequestController::class, 'store'])->middleware('throttle:6,1');
+    Route::get('me/data-requests/{dataRequest}', [MeDataRequestController::class, 'show']);
 
     // Advice Graph — student surfaces (PRD §6.21): salary benchmarks + alumni check-ins.
     Route::get('me/salary-benchmarks', [MeSalaryBenchmarkController::class, 'index']);
@@ -413,6 +420,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('tenants', [TenantController::class, 'store']);
         Route::put('tenants/{tenant}/branding', [TenantController::class, 'updateBranding']);
         Route::put('tenants/{tenant}/flags', [TenantController::class, 'updateFlags']);
+
+        // DPDP data-subject requests (PRD §8) — grievance-officer processing.
+        Route::get('data-requests', [AdminDataRequestController::class, 'index']);
+        Route::post('data-requests/{dataRequest}/process', [AdminDataRequestController::class, 'process']);
+        Route::post('data-requests/{dataRequest}/reject', [AdminDataRequestController::class, 'reject']);
     });
 
     // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.
