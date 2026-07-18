@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 /**
  * Shared shell for legal pages. Content is DPDP-aligned structure with
@@ -19,11 +20,8 @@ export function LegalPage({
     <div className="min-h-screen bg-paper">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-white display">
-              B
-            </span>
-            <span className="display text-ink">BrowseJobs</span>
+          <Link href="/" aria-label="BrowseJobs home">
+            <Wordmark />
           </Link>
           <Link href="/" className="text-sm text-trust hover:underline">
             ← Back to site

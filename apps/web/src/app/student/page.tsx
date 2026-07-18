@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 export default function StudentLogin() {
   const router = useRouter();
@@ -51,11 +52,8 @@ export default function StudentLogin() {
   return (
     <div className="grid min-h-screen place-items-center px-5">
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex items-center justify-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink text-white display text-lg">
-            B
-          </span>
-          <span className="display text-lg text-ink">BrowseJobs</span>
+        <Link href="/" className="flex justify-center" aria-label="BrowseJobs home">
+          <Wordmark />
         </Link>
 
         <div className="mt-8 rounded-2xl border border-line bg-white p-7 shadow-sm">
