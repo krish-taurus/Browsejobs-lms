@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Nav } from "@/components/landing/Nav";
-import { Footer } from "@/components/landing/Footer";
-import { LeadModal } from "@/components/landing/LeadModal";
-import { StickyCta } from "@/components/landing/StickyCta";
-import { BookCta } from "@/components/landing/BookCta";
+import { MarketingShell } from "@/components/landing/MarketingShell";
+import { Kicker } from "@/components/brand/Kicker";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
@@ -21,63 +18,59 @@ export default function CoursesPage() {
   const soon = courses.filter((c) => !c.live);
 
   return (
-    <>
-      <Nav />
-      <main className="mx-auto max-w-6xl px-5 py-16">
+    <MarketingShell>
+      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <ScrollReveal>
-          <p className="kicker text-trust">Programs</p>
-          <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-5xl">
+          <Kicker>Programs</Kicker>
+          <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-6xl">
             Every program, rebuilt monthly from real interviews
           </h1>
         </ScrollReveal>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2">
+        <div className="mt-12 grid gap-5 md:grid-cols-2">
           {live.map((c, i) => {
             const detail = courseDetails.find((d) => d.slug === c.slug);
+            const hasDetail = detailSlugs.has(c.slug);
+            const Card = (
+              <article className="group flex h-full flex-col rounded-[22px] border border-line bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-trust/40 hover:shadow-soft md:p-10">
+                <div className="flex items-center justify-between">
+                  <span className="mono rounded-full bg-sky px-3 py-1 text-xs font-semibold text-deep">{c.code}</span>
+                  {detail && <span className="mono text-xs text-muted">{detail.duration}</span>}
+                </div>
+                <h2 className="display mt-6 text-3xl text-ink md:text-4xl">{c.name}</h2>
+                <p className="mt-3 flex-1 text-ink2/70">{c.tagline}</p>
+                <div className="mt-7 flex items-center justify-between border-t border-line pt-5">
+                  <span className="mono text-xs text-muted">{detail?.projectsLabel ?? "Live program"}</span>
+                  {hasDetail && (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-trust">
+                      View syllabus
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </span>
+                  )}
+                </div>
+              </article>
+            );
             return (
-              <ScrollReveal key={c.code} delay={i * 0.05}>
-                <article className="flex h-full flex-col rounded-[14px] border border-line bg-white p-7 transition-all hover:-translate-y-1 hover:border-trust/40 hover:shadow-soft">
-                  <div className="flex items-center justify-between">
-                    <span className="mono rounded-full bg-sky px-3 py-1 text-xs font-semibold text-deep">{c.code}</span>
-                    {detail && (
-                      <span className="mono text-xs text-muted">{detail.duration}</span>
-                    )}
-                  </div>
-                  <h2 className="display mt-4 text-2xl text-ink">{c.name}</h2>
-                  <p className="mt-2 flex-1 text-muted">{c.tagline}</p>
-                  <div className="mt-6 flex flex-wrap items-center gap-3">
-                    {detailSlugs.has(c.slug) && (
-                      <Link
-                        href={`/courses/${c.slug}`}
-                        className="rounded-full border border-line bg-white px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-trust"
-                      >
-                        View full syllabus →
-                      </Link>
-                    )}
-                    <BookCta courseSlug={c.slug} className="px-5 py-2.5 text-sm" />
-                  </div>
-                </article>
+              <ScrollReveal key={c.code} delay={i * 0.06}>
+                {hasDetail ? <Link href={`/courses/${c.slug}`}>{Card}</Link> : Card}
               </ScrollReveal>
             );
           })}
         </div>
 
         <ScrollReveal delay={0.1}>
-          <div className="mt-10 rounded-[14px] border border-dashed border-line bg-white/60 p-6">
-            <p className="kicker text-muted">Opening soon — join the waitlist</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {soon.map((c) => (
-                <BookCta key={c.code} variant="waitlist" courseSlug={c.slug} ghost className="px-5 py-2.5 text-sm">
-                  {c.name} <span className="mono ml-1.5 text-xs text-muted">→ waitlist</span>
-                </BookCta>
-              ))}
-            </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {soon.map((c) => (
+              <div key={c.code} className="flex items-center justify-between rounded-[14px] border border-dashed border-line bg-white/60 px-5 py-5">
+                <span>
+                  <span className="display block text-lg text-ink">{c.name}</span>
+                  <span className="mono mt-1 block text-[10px] uppercase tracking-widest text-muted">Waitlist</span>
+                </span>
+              </div>
+            ))}
           </div>
         </ScrollReveal>
-      </main>
-      <Footer />
-      <LeadModal />
-      <StickyCta />
-    </>
+      </div>
+    </MarketingShell>
   );
 }

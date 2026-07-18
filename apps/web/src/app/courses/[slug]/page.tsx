@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/landing/Nav";
-import { Footer } from "@/components/landing/Footer";
-import { LeadModal } from "@/components/landing/LeadModal";
-import { StickyCta } from "@/components/landing/StickyCta";
+import { MarketingShell } from "@/components/landing/MarketingShell";
 import { BookCta } from "@/components/landing/BookCta";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -62,8 +59,7 @@ export default async function CoursePage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Nav />
-      <main>
+      <MarketingShell>
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div
@@ -311,10 +307,7 @@ export default async function CoursePage({
             </div>
           </ScrollReveal>
         </section>
-      </main>
-      <Footer />
-      <LeadModal />
-      <StickyCta />
+      </MarketingShell>
     </>
   );
 }

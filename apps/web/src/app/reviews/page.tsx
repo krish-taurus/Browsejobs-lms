@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { Nav } from "@/components/landing/Nav";
-import { Footer } from "@/components/landing/Footer";
-import { LeadModal } from "@/components/landing/LeadModal";
-import { StickyCta } from "@/components/landing/StickyCta";
+import { MarketingShell } from "@/components/landing/MarketingShell";
 import { BookCta } from "@/components/landing/BookCta";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { MonoCounter } from "@/components/motion/MonoCounter";
@@ -18,9 +15,8 @@ export const metadata: Metadata = {
 
 export default function ReviewsPage() {
   return (
-    <>
-      <Nav />
-      <main className="mx-auto max-w-6xl px-5 py-16">
+    <MarketingShell>
+      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <ScrollReveal>
           <p className="kicker text-trust">Reviews</p>
           <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-5xl">
@@ -71,10 +67,7 @@ export default function ReviewsPage() {
             </div>
           </div>
         </ScrollReveal>
-      </main>
-      <Footer />
-      <LeadModal />
-      <StickyCta />
-    </>
+      </div>
+    </MarketingShell>
   );
 }
