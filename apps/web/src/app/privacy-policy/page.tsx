@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
-import { contact } from "@/content/landing";
+import { contact, legal } from "@/content/landing";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
@@ -49,21 +49,21 @@ export default function PrivacyPolicy() {
 
       <h2>Retention</h2>
       <p>
-        Lead data is retained for [retention window]; enrolled-student records
-        for [retention window] after course completion, unless law requires
-        longer.
+        Lead data is retained for {legal.retention.leads}; enrolled-student
+        records for {legal.retention.students} after course completion, unless
+        law requires longer.
       </p>
 
       <h2>Your rights</h2>
       <p>
         You may request access, correction, or erasure of your data, and may
-        raise a grievance with our Grievance Officer: [Grievance Officer name],{" "}
-        {contact.email}.
+        raise a grievance with our Grievance Officer: {legal.grievanceOfficer.name},{" "}
+        {legal.grievanceOfficer.email}.
       </p>
 
       <h2>Company details</h2>
       <p>
-        {contact.entity} · CIN: [CIN] · GST: [GST] · {contact.address} ·{" "}
+        {contact.entity} · CIN: {legal.cin} · GST: {legal.gst} · {contact.address} ·{" "}
         {contact.phone}
       </p>
     </LegalPage>
