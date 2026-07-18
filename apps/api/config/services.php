@@ -92,6 +92,14 @@ return [
         'auth_token' => env('JUDGE0_AUTH_TOKEN', ''),
     ],
 
+    'jsearch' => [
+        // Licensed job-feed API (PRD §6.22, ADR 0045). Legally aggregates postings
+        // from LinkedIn/Indeed/Naukri/Glassdoor via Google-for-Jobs — NOT scraping.
+        // No key = the feed's API source stays off (Null transport). RapidAPI host.
+        'api_key' => env('JSEARCH_API_KEY', ''),
+        'host' => env('JSEARCH_API_HOST', 'jsearch.p.rapidapi.com'),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),
