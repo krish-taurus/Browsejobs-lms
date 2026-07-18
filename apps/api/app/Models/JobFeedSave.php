@@ -24,6 +24,8 @@ class JobFeedSave extends Model
 
     public const STATE_DISMISSED = 'dismissed';
 
+    public const STATE_APPLIED = 'applied';
+
     /** @var list<string> */
     protected $fillable = ['tenant_id', 'user_id', 'job_feed_item_id', 'state'];
 }

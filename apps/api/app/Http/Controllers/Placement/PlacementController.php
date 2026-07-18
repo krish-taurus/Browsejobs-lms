@@ -45,7 +45,11 @@ final class PlacementController extends Controller
 
             $applications = JobApplication::query()
                 ->where('user_id', $student->id)
-                ->with(['posting:id,title,company,location', 'rounds' => fn ($q) => $q->orderBy('round_no')])
+                ->with([
+                    'posting:id,title,company,location',
+                    'feedItem:id,title,company,location,apply_url',
+                    'rounds' => fn ($q) => $q->orderBy('round_no'),
+                ])
                 ->orderByDesc('id')
                 ->get();
 
@@ -168,10 +172,11 @@ final class PlacementController extends Controller
         return [
             'id' => $a->id,
             'posting' => [
-                'title' => $a->posting?->title,
-                'company' => $a->posting?->company,
-                'location' => $a->posting?->location,
+                'title' => $a->posting?->title ?? $a->feedItem?->title,
+                'company' => $a->posting?->company ?? $a->feedItem?->company,
+                'location' => $a->posting?->location ?? $a->feedItem?->location,
             ],
+            'via_feed' => $a->job_feed_item_id !== null,
             'status' => $a->status,
             'placed_at' => $a->placed_at?->toIso8601String(),
             'rounds' => $a->rounds->map(fn ($r) => [

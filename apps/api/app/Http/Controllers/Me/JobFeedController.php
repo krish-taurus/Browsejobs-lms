@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Me;
 
+use App\Actions\JobFeed\ApplyToFeedItem;
 use App\Http\Controllers\Controller;
+use App\Models\CvDocument;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSave;
 use App\Support\JobFeed\JobsForYou;
@@ -38,6 +40,37 @@ final class JobFeedController extends Controller
                 'saved' => $row['saved'],
             ], $rows),
         ]);
+    }
+
+    public function apply(Request $request, JobFeedItem $item, ApplyToFeedItem $apply): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($item->tenant_id === $user->tenant_id && $item->status === JobFeedItem::STATUS_ACTIVE, 404);
+
+        $application = $apply->handle($user, $item);
+        $cv = CvDocument::query()->find($application->cv_document_id);
+
+        return response()->json(['data' => [
+            'application_id' => $application->id,
+            'cv_document_id' => $application->cv_document_id,
+            'ats_score' => $cv?->ats['score'] ?? null,
+            'apply_url' => $item->apply_url,
+        ]], 201);
+    }
+
+    /**
+     * Apply Copilot (PRD §6.22) — human-in-the-loop ATS pre-fill. Feature-flagged
+     * Phase 5 extension point; off by default and never auto-submits.
+     */
+    public function copilot(Request $request, JobFeedItem $item): JsonResponse
+    {
+        abort_unless($item->tenant_id === $request->user()->tenant_id, 404);
+        abort_unless((bool) config('features.apply_copilot', false), 403, 'Apply Copilot is not enabled yet.');
+
+        // Extension point: an agent pre-fills the external ATS form from the
+        // student's profile + tailored CV; the student reviews and confirms.
+        // Never submits autonomously.
+        return response()->json(['data' => ['status' => 'not_implemented']], 501);
     }
 
     public function save(Request $request, JobFeedItem $item): JsonResponse
