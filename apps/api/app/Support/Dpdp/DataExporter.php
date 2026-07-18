@@ -32,6 +32,10 @@ final class DataExporter
                 'phone' => $student->phone,
                 'user_type' => $student->user_type,
                 'joined_at' => $student->created_at?->toIso8601String(),
+                'consent' => [
+                    'telemetry_consent_at' => $student->telemetry_consent_at?->toIso8601String(),
+                    'policy_version' => $student->consent_version,
+                ],
             ],
             'cv_profile' => CvProfile::query()->where('user_id', $student->id)->value('data'),
             'enrolments' => BatchMember::query()

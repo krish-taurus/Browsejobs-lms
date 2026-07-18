@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -22,6 +23,7 @@ export default function RegisterPage() {
     phone,
     email: email || null,
     channel: email ? "email" : "sms",
+    consent,
   });
 
   async function requestOtp(e: React.FormEvent) {
@@ -89,8 +91,17 @@ export default function RegisterPage() {
                 <input autoFocus required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inputCls} />
                 <input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="WhatsApp number" inputMode="tel" className={inputCls} />
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email (optional — code goes here if given)" className={inputCls} />
+                <label className="flex items-start gap-2 text-xs text-muted">
+                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-trust" />
+                  <span>
+                    I agree to the{" "}
+                    <Link href="/privacy-policy" className="text-trust hover:underline">privacy policy</Link> and{" "}
+                    <Link href="/terms" className="text-trust hover:underline">terms</Link>, including that my learning
+                    activity is monitored to personalise coaching.
+                  </span>
+                </label>
                 <button
-                  disabled={busy || !name || !phone}
+                  disabled={busy || !name || !phone || !consent}
                   className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
                 >
                   {busy ? "Sending…" : "Send code"}
