@@ -87,17 +87,6 @@ export function HeroEngine() {
             </div>
           </Column>
         </div>
-
-        {/* Traveling connector — the flow L→R */}
-        <div className="relative mt-4 h-px bg-line">
-          {!reduce && (
-            <motion.div
-              className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-trust shadow-[0_0_10px_rgba(27,109,240,0.7)]"
-              animate={{ left: ["6%", "50%", "88%"] }}
-              transition={{ duration: 6, ease, repeat: Infinity, times: [0, 0.5, 1] }}
-            />
-          )}
-        </div>
       </div>
     </div>
   );
