@@ -9,6 +9,7 @@ use App\Enums\SubmissionKind;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A student's code run/submission (PRD §6.4/§6.5) — the code-telemetry source.
@@ -38,6 +39,14 @@ class CodeSubmission extends Model
         'tenant_id', 'user_id', 'lesson_id', 'language', 'source', 'stdin', 'stdout', 'stderr',
         'status', 'passed_tests', 'total_tests', 'run_time_ms', 'memory_kb', 'kind',
     ];
+
+    /**
+     * @return BelongsTo<Lesson, $this>
+     */
+    public function lesson(): BelongsTo
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 
     /**
      * @return array<string, string>

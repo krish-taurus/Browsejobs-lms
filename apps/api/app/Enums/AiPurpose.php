@@ -24,6 +24,9 @@ enum AiPurpose: string
     case Mock = 'mock';
     case TranscriptParse = 'transcript_parse';
     case Cv = 'cv';
+    case LinkedinOptimize = 'linkedin_optimize';
+    case GithubPortfolio = 'github_portfolio';
+    case InterviewPrep = 'interview_prep';
     case Coach = 'coach';
     case General = 'general';
 }

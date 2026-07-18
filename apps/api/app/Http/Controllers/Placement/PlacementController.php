@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Placement;
 
+use App\Actions\Cv\GenerateCv;
 use App\Actions\Placement\ApplyToJob;
 use App\Actions\Placement\RecordInterviewRound;
 use App\Http\Controllers\Controller;
+use App\Models\CvDocument;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\MentorProfile;
@@ -111,6 +113,30 @@ final class PlacementController extends Controller
             ]);
 
             return response()->json(['data' => $this->row($model->refresh()->load(['posting:id,title,company,location', 'rounds']))], 201);
+        });
+    }
+
+    /**
+     * Career+ AI CV tailoring for one application (PRD §6.20): generate a JD-tailored CV
+     * from the posting's description and attach it. Gated by the `career-plus` middleware;
+     * spends no CV credit — CV refresh is part of the subscription.
+     */
+    public function tailor(Request $request, int $application, GenerateCv $cv): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $application, $cv): JsonResponse {
+            $model = $this->owned($request, $application);
+            $posting = $model->posting()->first();
+
+            abort_if($posting === null || trim((string) $posting->description) === '', 422, 'This job has no description to tailor against.');
+
+            $document = $cv->handle($request->user(), CvDocument::SOURCE_TAILORED, $posting->description, $posting->course_id);
+            $model->update(['cv_document_id' => $document->id]);
+
+            return response()->json(['data' => [
+                'cv_document_id' => $document->id,
+                'title' => $document->title,
+                'ats_score' => $document->ats['score'] ?? null,
+            ]]);
         });
     }
 

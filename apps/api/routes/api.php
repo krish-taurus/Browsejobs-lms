@@ -65,6 +65,7 @@ use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
@@ -211,6 +212,17 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/applications', [PlacementController::class, 'store'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/rounds', [PlacementController::class, 'storeRound'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/withdraw', [PlacementController::class, 'withdraw']);
+
+    // Career+ job-probability boosters (PRD §6.20, P4.6b). Status is open (upsell);
+    // generation is gated by an active Career+ subscription.
+    Route::get('me/boosters', [BoosterController::class, 'index']);
+    Route::middleware('career-plus')->group(function () {
+        Route::post('me/boosters/linkedin', [BoosterController::class, 'linkedin'])->middleware('throttle:ai');
+        Route::post('me/boosters/github', [BoosterController::class, 'github'])->middleware('throttle:ai');
+        Route::post('me/boosters/prep-pack', [BoosterController::class, 'prepPack'])->middleware('throttle:ai');
+        Route::post('me/applications/{application}/tailor', [PlacementController::class, 'tailor'])->middleware('throttle:ai');
+    });
+
     // AI CV suite (PRD §6.7).
     Route::get('me/cv', [CvController::class, 'index']);
     Route::post('me/cv', [CvController::class, 'store'])->middleware('throttle:ai');

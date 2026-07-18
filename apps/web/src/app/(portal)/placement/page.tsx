@@ -95,6 +95,22 @@ export default function PlacementPage() {
     }
   }
 
+  async function tailor(applicationId: number) {
+    setError(null);
+    setNotice(null);
+    setBusy(applicationId);
+    try {
+      const r = await apiJson<{ data: { ats_score: number | null } }>(`/api/v1/me/applications/${applicationId}/tailor`, { method: "POST" });
+      setNotice(`Tailored CV attached${r.data.ats_score != null ? ` — ATS score ${r.data.ats_score}` : ""}. Find it under My CV.`);
+    } catch (err) {
+      setError(err instanceof ApiError
+        ? (err.status === 403 ? "CV tailoring is a Career+ feature — unlock it in the Store." : (err.firstError ?? err.message))
+        : "Could not tailor the CV.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (loading) return <div className="mx-auto max-w-3xl"><div className="shimmer h-64 rounded-[14px]" /></div>;
   if (!data) return <div className="mx-auto max-w-3xl text-sm text-muted">Placement isn&apos;t available right now.</div>;
 
@@ -206,10 +222,16 @@ export default function PlacementPage() {
                   <p className="mono text-[11px] uppercase tracking-widest text-muted">{a.status.replace("_", " ")}</p>
                 </div>
                 {["applied", "shortlisted", "interviewing", "offer"].includes(a.status) && (
-                  <button onClick={() => setDebriefFor(debriefFor === a.id ? null : a.id)}
-                    className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-ink hover:border-trust">
-                    + Record interview round
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => tailor(a.id)} disabled={busy === a.id}
+                      className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-trust hover:border-trust disabled:opacity-50">
+                      {busy === a.id ? "Tailoring…" : "Tailor CV (Career+)"}
+                    </button>
+                    <button onClick={() => setDebriefFor(debriefFor === a.id ? null : a.id)}
+                      className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-ink hover:border-trust">
+                      + Record interview round
+                    </button>
+                  </div>
                 )}
               </div>
 
