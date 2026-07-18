@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             InterviewBankSeeder::class,
             MarketJdSeeder::class,
             SalaryBenchmarkSeeder::class,
+            JobFeedSeeder::class,
         ]);
 
         $browsejobs = Tenant::query()->where('slug', 'browsejobs')->firstOrFail();

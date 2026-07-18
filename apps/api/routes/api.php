@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
 use App\Http\Controllers\Admin\InterviewBankController;
+use App\Http\Controllers\Admin\JobFeedController;
 use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
@@ -365,6 +366,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('market-jds', [MarketJdController::class, 'index']);
         Route::post('market-jds', [MarketJdController::class, 'store']);
         Route::post('market-jds/import', [MarketJdController::class, 'import'])->middleware('throttle:30,1');
+
+        // Live Job Feed sources + ingestion (PRD §6.22).
+        Route::get('job-feed', [JobFeedController::class, 'index']);
+        Route::post('job-feed/sources', [JobFeedController::class, 'store']);
+        Route::post('job-feed/sources/{source}/sync', [JobFeedController::class, 'sync'])->middleware('throttle:30,1');
+        Route::post('job-feed/sources/{source}/import', [JobFeedController::class, 'import'])->middleware('throttle:30,1');
 
         // Advice Graph inputs (PRD §6.21) — hiring-partner feedback + salary benchmarks.
         Route::get('partner-feedback', [HiringPartnerFeedbackController::class, 'index']);
