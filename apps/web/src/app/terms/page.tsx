@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
-import { contact } from "@/content/landing";
+import { contact, legal } from "@/content/landing";
 
 export const metadata: Metadata = { title: "Terms of Service" };
 
@@ -50,7 +50,7 @@ export default function Terms() {
 
       <h2>Company details</h2>
       <p>
-        {contact.entity} · CIN: [CIN] · GST: [GST] · {contact.address} ·{" "}
+        {contact.entity} · CIN: {legal.cin} · GST: {legal.gst} · {contact.address} ·{" "}
         {contact.phone}
       </p>
     </LegalPage>

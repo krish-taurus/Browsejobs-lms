@@ -22,6 +22,25 @@ export const contact = {
   entity: "IBrowseJobs Technologies Pvt Ltd",
 } as const;
 
+/**
+ * Legal registration + DPDP details, in ONE place for the privacy / terms /
+ * refund pages. Bracketed values are placeholders the founder replaces before
+ * launch (legal review required); update them here and all three pages follow.
+ */
+export const legal = {
+  cin: "[CIN]",
+  gst: "[GST]",
+  grievanceOfficer: {
+    name: "[Grievance Officer name]",
+    email: contact.email,
+  },
+  retention: {
+    leads: "[retention window]",
+    students: "[retention window]",
+  },
+  refundWindow: "[refund processing window]",
+} as const;
+
 /** Stat band — labels per the 2026 brochures. */
 export const stats = [
   { value: 50, suffix: "/day", label: "Real interviews monitored by our AI" },

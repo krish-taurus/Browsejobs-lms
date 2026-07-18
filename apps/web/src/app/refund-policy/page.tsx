@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
-import { contact } from "@/content/landing";
+import { contact, legal } from "@/content/landing";
 
 export const metadata: Metadata = { title: "Refund Policy" };
 
@@ -20,7 +20,7 @@ export default function RefundPolicy() {
         Email {contact.email} or WhatsApp {contact.phone} from your registered
         contact with the subject “Refund”. We confirm receipt within 2 working
         days and process the refund to your original payment method within
-        [refund processing window].
+        {" "}{legal.refundWindow}.
       </p>
 
       <h2>After 30 days</h2>
@@ -32,7 +32,7 @@ export default function RefundPolicy() {
 
       <h2>Company details</h2>
       <p>
-        {contact.entity} · CIN: [CIN] · GST: [GST] · {contact.address} ·{" "}
+        {contact.entity} · CIN: {legal.cin} · GST: {legal.gst} · {contact.address} ·{" "}
         {contact.phone}
       </p>
     </LegalPage>
