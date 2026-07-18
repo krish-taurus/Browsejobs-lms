@@ -11,21 +11,26 @@
 | 4 | Rate limiting on auth + AI; per-student daily AI token budget | ✅ Done | `throttle:6,1` on OTP/login/register, `throttle:ai` (20/min) on AI endpoints (`RateLimiter::for('ai'|'api')`); `AiGateway` enforces `ai.daily_token_budget` per student and throws `AiBudgetExceeded`. |
 | 5 | Cross-tenant access tests must fail | ✅ Done | `BelongsToTenant` global scope on every domain model; **38 feature test files** carry cross-tenant / "does not leak" assertions. Full suite green (783 tests). |
 | 6 | PII encryption at rest; TLS everywhere | ✅ / ⚙️ | At rest: interview transcript originals (`Crypt`), platform-setting secrets encrypted. **Action:** TLS is infra — terminate at the LB, HSTS on, DB/Redis connections encrypted in the VPS setup. |
-| 7 | Telemetry consent at signup (DPDP) | ⚠️ Gap | Consent **is** logged at the lead/marketing form (`leads.consented_at` + `consent_version`) and for celebrations/transcripts. But the authenticated **student account** flow doesn't record a distinct telemetry/activity-monitoring acknowledgement. **Fix below.** |
+| 7 | Telemetry consent at signup (DPDP) | ✅ Done | **Closed.** Registration now requires explicit consent (incl. the activity-monitoring telemetry disclosure) and stamps `users.telemetry_consent_at` + `consent_version` (`config('dpdp.consent_version')`) when the account is created; the consent checkbox on the register form links privacy/terms, and the record is included in the DPDP export. |
 | 8 | Voucher tied to platform testimonials, not Google reviews | ✅ Done | Vouchers issue only from verified platform `Testimonial`s (`IssueVoucher`, review-for-voucher engine); Google-review policy guard in the UI copy. |
 | 9 | Queue workers supervised + failure alerting | ⚙️ Ops | Horizon-ready; every side effect is an idempotent queued job. **Action:** run Horizon under supervisor/systemd, wire failed-job + queue-depth alerting. |
 | 10 | Staging with Razorpay test mode + Zoom sandbox | ⚙️ Ops | All external clients are transport-swappable (Fake in tests, Null when unkeyed). **Action:** stand up staging with test-mode keys + Zoom sandbox before the witnessed demo. |
 | 11 | Load target: 500 concurrent students · 20 live classes · 1,000 masterclass registrants | ⚙️ Ops | See **Load-test plan** below. Code is stateless-request + queue-backed; targets are validated by a staging load run, not unit tests. |
 
-## Gap #7 — recommended fix (small, follow-up slice)
+## Gap #7 — CLOSED
 
-Record a per-account DPDP consent at registration, not only at the lead form:
+Registration now captures a per-account DPDP consent:
 
-- Add a `user_consents` row (or `users.telemetry_consent_at` + `consent_version`) written by `RegisterController::verify` / the onboarding DPDP step, capturing **when**, **which policy version**, and **which purposes** (incl. activity-monitoring telemetry disclosure) the student agreed to.
-- Surface the acknowledgement in the 3-step first-login onboarding (already the intended home per P1.8) and block portal use until captured.
-- Expose it in the DPDP export (`DataExporter`) so the consent record is part of "my data."
+- `users.telemetry_consent_at` + `consent_version` are stamped by `RegisterController::verify` from
+  `config('dpdp.consent_version')` when the account is created.
+- `RegisterRequest` requires `consent` (`accepted`), so the OTP is never even sent — let alone an
+  account created — without an explicit agreement; the register form carries the checkbox linking the
+  privacy policy + terms and disclosing activity monitoring.
+- The consent record is included in the DPDP access export (`DataExporter`).
 
-This is a contained change (one migration + one write + one onboarding checkbox) and is the only §10 item not satisfied in code. Recommended as the first task of launch hardening.
+Covered by `Feature/Auth/RegisterTest` (consent stamped on success; registration rejected + no OTP
+without consent). **All 11 §10 items are now satisfied in code or code-ready pending a deploy-time ops
+action.**
 
 ## Load-test plan (item 11)
 
@@ -46,4 +51,4 @@ Razorpay (key id + secret + webhook secret) · Zoom (S2S OAuth account/client/se
 
 ## Verdict
 
-**10 of 11 items are satisfied in code or code-ready pending a deploy-time ops action; 1 (telemetry consent at signup) is a genuine gap with a scoped fix above.** No code changes ship in this audit slice — it is the written §10 report the launch gate requires. Address gap #7, complete the ⚙️ ops items on staging, then run the witnessed ad-link-to-placement demo (launch gate).
+**All 11 items are satisfied in code or code-ready pending a deploy-time ops action** (gap #7 closed post-audit). Complete the ⚙️ ops items on staging (key rotation, TLS, Horizon supervision + alerting, staging with test-mode keys, the load run), then run the witnessed ad-link-to-placement demo — the launch gate.

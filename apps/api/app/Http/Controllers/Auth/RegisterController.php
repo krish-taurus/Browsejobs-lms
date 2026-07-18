@@ -61,6 +61,9 @@ final class RegisterController extends Controller
             'phone' => $request->string('phone')->toString(),
             'email' => $request->input('email') ?: null,
             'user_type' => 'student',
+            // DPDP telemetry consent, captured + versioned at signup (PRD §10).
+            'telemetry_consent_at' => now(),
+            'consent_version' => (string) config('dpdp.consent_version', 'v1'),
         ]);
 
         $assignRole->handle($user, 'student', actor: $user);

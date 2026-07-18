@@ -25,6 +25,9 @@ final class RegisterRequest extends FormRequest
             'phone' => ['required', 'string', 'min:8', 'max:20'],
             'email' => ['nullable', 'email', 'max:191'],
             'channel' => ['nullable', Rule::enum(OtpChannel::class)],
+            // DPDP: explicit consent (incl. activity-monitoring telemetry disclosure)
+            // is a prerequisite to creating the account (PRD §10 / audit gap #7).
+            'consent' => ['accepted'],
         ];
     }
 

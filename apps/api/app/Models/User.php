@@ -33,6 +33,8 @@ class User extends Authenticatable
         'two_factor_enabled',
         'leaderboard_opt_out',
         'password',
+        'telemetry_consent_at',
+        'consent_version',
     ];
 
     /**
@@ -57,6 +59,7 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'leaderboard_opt_out' => 'boolean',
+            'telemetry_consent_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
