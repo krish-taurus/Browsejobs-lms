@@ -72,6 +72,7 @@ use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
+use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
@@ -227,6 +228,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/applications', [PlacementController::class, 'store'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/rounds', [PlacementController::class, 'storeRound'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/withdraw', [PlacementController::class, 'withdraw']);
+
+    // Jobs for You — relevance-ranked live feed (PRD §6.22).
+    Route::get('me/jobs', [MeJobFeedController::class, 'index']);
+    Route::post('me/jobs/{item}/save', [MeJobFeedController::class, 'save']);
+    Route::post('me/jobs/{item}/dismiss', [MeJobFeedController::class, 'dismiss']);
 
     // Advice Graph — student surfaces (PRD §6.21): salary benchmarks + alumni check-ins.
     Route::get('me/salary-benchmarks', [MeSalaryBenchmarkController::class, 'index']);

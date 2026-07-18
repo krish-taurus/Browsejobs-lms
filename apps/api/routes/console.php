@@ -56,3 +56,6 @@ Schedule::command('pri:calibrate')->monthlyOn(1, '05:30');
 
 // P4.8 Live Job Feed (PRD §6.22): sync sources + expire stale items, twice daily.
 Schedule::command('feed:sync')->twiceDaily(6, 18);
+
+// P4.8b "Jobs for You": daily nudge about new well-matched roles.
+Schedule::command('jobs:nudge')->dailyAt('09:30');
