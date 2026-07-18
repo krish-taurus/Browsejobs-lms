@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { PrivacyRequests } from "@/components/portal/PrivacyRequests";
 
 type Pref = { preferred_channel: string; marketing_opt_in: boolean };
 
@@ -70,6 +71,8 @@ export default function ProfilePage() {
           {saved && <p className="mt-3 text-xs text-verify">Saved.</p>}
         </div>
       )}
+
+      <PrivacyRequests />
     </div>
   );
 }
