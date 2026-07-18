@@ -82,6 +82,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/messages", label: "Messaging" },
       { href: "/admin/ai-usage", label: "AI usage" },
+      { href: "/admin/tenants", label: "Tenants", role: "super-admin" },
       { href: "/admin/settings", label: "Settings", role: "super-admin" },
     ],
   },

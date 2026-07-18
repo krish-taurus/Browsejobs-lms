@@ -52,6 +52,14 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    /** Whether a feature flag is on for this tenant (default when unset). */
+    public function feature(string $key, bool $default = true): bool
+    {
+        $flags = $this->feature_flags ?? [];
+
+        return array_key_exists($key, $flags) ? (bool) $flags[$key] : $default;
+    }
+
     /**
      * @return array<string, string>
      */
