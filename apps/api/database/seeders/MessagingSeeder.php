@@ -65,6 +65,15 @@ class MessagingSeeder extends Seeder
         // P3.7 weekly Market Pulse — MARKETING category: opt-in only, quiet hours + caps enforced.
         ['key' => 'market_pulse_weekly', 'channel' => 'whatsapp', 'category' => 'marketing', 'subject' => null, 'body' => "Hi {{name}}, this week's Market Pulse from BrowseJobs:\n{{body}}"],
         ['key' => 'market_pulse_weekly', 'channel' => 'email', 'category' => 'marketing', 'subject' => 'Your weekly Market Pulse', 'body' => "Hi {{name}},\n\nThis week's IT job-market pulse:\n\n{{body}}"],
+        // P4.7c alumni 6/12-month check-in — service touch about the student's own placement.
+        ['key' => 'alumni.checkin', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, it has been {{months}} months since you were placed — how is it going? A 2-minute update in your dashboard (under Placement) helps us support the next batch and opens referral rewards.'],
+        ['key' => 'alumni.checkin', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your {{months}}-month check-in', 'body' => 'Hi {{name}}, it has been {{months}} months since you were placed. A quick update in your dashboard (under Placement) helps us support the next batch and opens referral rewards.'],
+        // P4.8b "Jobs for You" — daily match nudge, a core placement-service notification.
+        ['key' => 'jobs.nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, {{count}} new {{role}} role(s) match your profile today. See them under Jobs for You in your dashboard.'],
+        ['key' => 'jobs.nudge', 'channel' => 'email', 'category' => 'utility', 'subject' => '{{count}} new roles match you today', 'body' => 'Hi {{name}}, {{count}} new {{role}} role(s) match your profile today. Open Jobs for You in your dashboard to review and apply.'],
+        // P4.8c application follow-up — service reminder about the student's own application.
+        ['key' => 'application.followup', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, you applied for {{role}} about 5 days ago. A short follow-up to the recruiter can make a real difference — worth a nudge today?'],
+        ['key' => 'application.followup', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Following up on your {{role}} application', 'body' => 'Hi {{name}}, you applied for {{role}} about 5 days ago. A short, polite follow-up to the recruiter often helps — it might be worth sending one today.'],
     ];
 
     public function run(): void
