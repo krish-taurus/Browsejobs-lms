@@ -16,6 +16,7 @@ const TUTOR: NavItem = { href: "/tutor", label: "AI Tutor", icon: "M12 3a7 7 0 0
 const MOCK: NavItem = { href: "/mock", label: "Mock Interviews", icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8", primary: true, short: "Mock" };
 const MENTORS: NavItem = { href: "/mentors", label: "Mentors", icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M17 14.5a7 7 0 0 1 5 6.5" };
 const PLACEMENT: NavItem = { href: "/placement", label: "Placement", icon: "M4 8h16v12H4zM9 8V5a3 3 0 0 1 6 0v3M4 13h16" };
+const JOBS: NavItem = { href: "/jobs", label: "Jobs for You", icon: "M4 8h16v12H4zM9 8V5a3 3 0 0 1 6 0v3M8 13h3", short: "Jobs" };
 const CV: NavItem = { href: "/cv", label: "My CV", icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h6M9 20h3" };
 const GRADES: NavItem = { href: "/grades", label: "Grades", icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4" };
 const REPORTS: NavItem = { href: "/reports", label: "Reports", icon: "M4 5h16v14H4zM8 9v6M12 7v8M16 11v4" };
@@ -31,7 +32,7 @@ const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4
 export const navGroups: NavGroup[] = [
   { label: "Learn", items: [DASHBOARD, CLASSES, RECORDINGS, PRACTICE, TUTOR] },
   { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
-  { label: "Career", items: [MOCK, MENTORS, PLACEMENT, CV] },
+  { label: "Career", items: [MOCK, MENTORS, PLACEMENT, JOBS, CV] },
   { label: "You", items: [PULSE, ALERTS, CHECKIN, STORE, SUPPORT, PROFILE] },
 ];
 
