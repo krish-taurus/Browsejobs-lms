@@ -42,6 +42,7 @@ export default function AdminPlacementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState({ title: "", company: "", description: "", location: "", salary_range: "" });
   const [offer, setOffer] = useState<{ id: number; ctc: string; role: string } | null>(null);
+  const [feedbackLink, setFeedbackLink] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "placements"],
@@ -76,6 +77,20 @@ export default function AdminPlacementsPage() {
         }),
       }),
     onSuccess: () => { setOffer(null); setError(null); refresh(); },
+    onError,
+  });
+
+  const requestFeedback = useMutation({
+    mutationFn: (id: number) =>
+      apiJson<{ data: { link: string } }>("/api/v1/admin/partner-feedback", {
+        method: "POST",
+        body: JSON.stringify({ job_application_id: id }),
+      }),
+    onSuccess: (r, id) => {
+      setError(null);
+      setFeedbackLink(id);
+      navigator.clipboard?.writeText(r.data.link);
+    },
     onError,
   });
 
@@ -133,6 +148,15 @@ export default function AdminPlacementsPage() {
                       <p className="mono mt-1 text-[10px] uppercase tracking-widest text-muted">
                         {a.rounds.length} round{a.rounds.length === 1 ? "" : "s"}
                       </p>
+                    )}
+                    {a.rounds.length > 0 && (
+                      <button
+                        onClick={() => requestFeedback.mutate(a.id)}
+                        disabled={requestFeedback.isPending}
+                        className="mono mt-1 text-[10px] uppercase tracking-widest text-trust hover:underline disabled:opacity-50"
+                      >
+                        {feedbackLink === a.id ? "link copied ✓" : "+ partner feedback"}
+                      </button>
                     )}
                     {a.status === "placed" ? (
                       <p className="mono mt-1 text-[10px] uppercase tracking-widest text-verify">

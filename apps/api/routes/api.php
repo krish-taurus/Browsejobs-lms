@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
+use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
 use App\Http\Controllers\Admin\InterviewBankController;
 use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
+use App\Http\Controllers\Admin\SalaryBenchmarkController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
@@ -67,6 +69,7 @@ use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
@@ -78,12 +81,14 @@ use App\Http\Controllers\Me\MyRecordingController;
 use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
+use App\Http\Controllers\Me\SalaryBenchmarkController as MeSalaryBenchmarkController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Reviews\ReviewController;
@@ -114,6 +119,13 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('certificates.verify');
+
+// Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
+// companies aren't platform users; the unguessable token is the key.
+Route::get('v1/partner-feedback/{token}', [PartnerFeedbackController::class, 'show'])
+    ->middleware('throttle:30,1')->name('partner-feedback.show');
+Route::post('v1/partner-feedback/{token}', [PartnerFeedbackController::class, 'submit'])
+    ->middleware('throttle:10,1')->name('partner-feedback.submit');
 
 // Public + auth endpoints, tenant resolved by request host.
 Route::prefix('v1')->middleware('tenant.domain')->group(function () {
@@ -214,6 +226,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/applications', [PlacementController::class, 'store'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/rounds', [PlacementController::class, 'storeRound'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/withdraw', [PlacementController::class, 'withdraw']);
+
+    // Advice Graph — student surfaces (PRD §6.21): salary benchmarks + alumni check-ins.
+    Route::get('me/salary-benchmarks', [MeSalaryBenchmarkController::class, 'index']);
+    Route::get('me/alumni-checkins', [AlumniCheckinController::class, 'index']);
+    Route::post('me/alumni-checkins/{checkin}/respond', [AlumniCheckinController::class, 'respond'])->middleware('throttle:20,1');
 
     // Career+ job-probability boosters (PRD §6.20, P4.6b). Status is open (upsell);
     // generation is gated by an active Career+ subscription.
@@ -348,6 +365,14 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('market-jds', [MarketJdController::class, 'index']);
         Route::post('market-jds', [MarketJdController::class, 'store']);
         Route::post('market-jds/import', [MarketJdController::class, 'import'])->middleware('throttle:30,1');
+
+        // Advice Graph inputs (PRD §6.21) — hiring-partner feedback + salary benchmarks.
+        Route::get('partner-feedback', [HiringPartnerFeedbackController::class, 'index']);
+        Route::post('partner-feedback', [HiringPartnerFeedbackController::class, 'request']);
+        Route::get('salary-benchmarks', [SalaryBenchmarkController::class, 'index']);
+        Route::post('salary-benchmarks', [SalaryBenchmarkController::class, 'store']);
+        Route::put('salary-benchmarks/{benchmark}', [SalaryBenchmarkController::class, 'update']);
+        Route::delete('salary-benchmarks/{benchmark}', [SalaryBenchmarkController::class, 'destroy']);
     });
 
     Route::middleware('can:manage-batches')->group(function () {
