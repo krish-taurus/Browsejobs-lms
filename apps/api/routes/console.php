@@ -44,3 +44,6 @@ Schedule::command('pulse:weekly-send')->weeklyOn(1, '10:00');
 // P4.6a review protection & retention (PRD §6.20).
 Schedule::command('care:dispatch')->dailyAt('09:00');
 Schedule::command('care:signals')->dailyAt('06:15');
+
+// P4.7 Curriculum Intelligence (PRD §6.21): quarterly syllabus recommendations.
+Schedule::command('curriculum:recommend')->quarterly();
