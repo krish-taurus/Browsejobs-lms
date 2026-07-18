@@ -50,3 +50,6 @@ Schedule::command('curriculum:recommend')->quarterly();
 
 // P4.7c Advice Graph (PRD §6.21): daily alumni 6/12-month check-in scheduling.
 Schedule::command('alumni:checkins')->dailyAt('07:15');
+
+// P4.7d Advice Graph (PRD §6.21): monthly PRI weight calibration from outcomes.
+Schedule::command('pri:calibrate')->monthlyOn(1, '05:30');

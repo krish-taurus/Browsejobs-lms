@@ -16,6 +16,7 @@ use App\Models\Instalment;
 use App\Models\MentorSession;
 use App\Models\MockInterview;
 use App\Models\Module;
+use App\Models\PriCalibration;
 use App\Models\QuizAttempt;
 use App\Models\TopicCompletion;
 use App\Models\User;
@@ -51,7 +52,9 @@ final class ScoreCalculator
 
             $avgMastery = $mastery === [] ? 0 : (int) round(array_sum(array_column($mastery, 'pct')) / count($mastery));
 
-            $priWeights = (array) config('scoring.pri.weights');
+            // Prefer the tenant's placement-outcome calibration (PRD §6.21); fall
+            // back to config defaults when no calibration exists (small cohort).
+            $priWeights = PriCalibration::activeWeights() ?? (array) config('scoring.pri.weights');
             $pri = (int) round(
                 $avgMastery * (float) $priWeights['mastery']
                 + $engagement * (float) $priWeights['engagement']

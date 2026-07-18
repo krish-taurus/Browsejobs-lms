@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\Scoring\ComputeStudentScores;
 use App\Enums\RiskBand;
 use App\Models\ScoreSnapshot;
+use App\Support\Advice\AdviceGraph;
 use App\Support\Scoring\ScoreCalculator;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,7 @@ final class CoachController extends Controller
     public function __construct(
         private readonly ScoreCalculator $calculator,
         private readonly ComputeStudentScores $compute,
+        private readonly AdviceGraph $advice,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -55,6 +57,8 @@ final class CoachController extends Controller
                 'needs_work' => $data['needs_work'],
                 'next_action' => $data['next_action'],
                 'trajectory' => $trajectory,
+                // Evidence-backed claims from anonymised cohort aggregates (PRD §6.21).
+                'insights' => $this->advice->insightsFor($student),
             ]]);
         });
     }
