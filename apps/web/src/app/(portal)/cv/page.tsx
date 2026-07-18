@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
+import { CareerBoosters } from "@/components/portal/CareerBoosters";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -543,6 +544,8 @@ export default function CvPage() {
           )}
         </>
       )}
+
+      <CareerBoosters />
     </div>
   );
 }

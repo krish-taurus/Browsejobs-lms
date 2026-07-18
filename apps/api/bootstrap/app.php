@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnsureCareerPlus;
 use App\Http\Middleware\ResolveTenantByDomain;
 use App\Http\Middleware\ResolveTenantByUser;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'razorpay.signed' => VerifyRazorpayWebhookSignature::class,
             'whatsapp.signed' => VerifyWhatsAppWebhookSignature::class,
             'voice.signed' => VerifyVoiceWebhookSignature::class,
+            'career-plus' => EnsureCareerPlus::class,
         ]);
 
         // Tenant resolution MUST run before route-model binding so the global
