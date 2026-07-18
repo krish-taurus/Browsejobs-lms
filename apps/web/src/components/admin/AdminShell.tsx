@@ -38,6 +38,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/mocks", label: "Mocks" },
       { href: "/admin/interviews", label: "Interview bank" },
+      { href: "/admin/market", label: "Market intel" },
       { href: "/admin/placements", label: "Placements" },
       { href: "/admin/cvs", label: "CV approvals" },
       { href: "/admin/mentors", label: "Mentors" },

@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonNoteController;
 use App\Http\Controllers\Admin\LiveSessionController;
+use App\Http\Controllers\Admin\MarketJdController;
 use App\Http\Controllers\Admin\MentorAdminController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\MessageTemplateController;
@@ -335,6 +336,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('interview-bank/approve-batch', [InterviewBankController::class, 'approveBatch']);
         Route::post('interview-bank/{question}/approve', [InterviewBankController::class, 'approve']);
         Route::post('interview-bank/{question}/reject', [InterviewBankController::class, 'reject']);
+
+        // Curriculum Intelligence — job-market JD ingestion + demand trends (PRD §6.21).
+        Route::get('market-jds', [MarketJdController::class, 'index']);
+        Route::post('market-jds', [MarketJdController::class, 'store']);
+        Route::post('market-jds/import', [MarketJdController::class, 'import'])->middleware('throttle:30,1');
     });
 
     Route::middleware('can:manage-batches')->group(function () {
