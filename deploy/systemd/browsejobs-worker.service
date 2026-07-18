@@ -1,0 +1,25 @@
+; BrowseJobs LMS queue worker (Redis). Every side effect — AI calls, message
+; sends, PDF renders, Zoom/webhook actions — runs here. Jobs are idempotent and
+; retry-safe. Scale by enabling multiple instances (@1..@4) or raising --workers
+; with a process manager. RESTART THIS ON EVERY DEPLOY so new code is picked up.
+;
+; Install:
+;   sudo cp deploy/systemd/browsejobs-worker.service /etc/systemd/system/
+;   sudo systemctl daemon-reload && sudo systemctl enable --now browsejobs-worker
+
+[Unit]
+Description=BrowseJobs LMS queue worker
+After=network.target redis-server.service mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/browsejobs/apps/api
+ExecStart=/usr/bin/php artisan queue:work redis --tries=3 --max-time=3600 --backoff=10 --sleep=1
+Restart=always
+RestartSec=5
+; Recycle the process hourly (--max-time) to release memory; systemd restarts it.
+
+[Install]
+WantedBy=multi-user.target
