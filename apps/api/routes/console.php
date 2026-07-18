@@ -59,3 +59,6 @@ Schedule::command('feed:sync')->twiceDaily(6, 18);
 
 // P4.8b "Jobs for You": daily nudge about new well-matched roles.
 Schedule::command('jobs:nudge')->dailyAt('09:30');
+
+// P4.8c Apply Assist: daily follow-up nudges on stalled applications.
+Schedule::command('applications:follow-ups')->dailyAt('10:00');

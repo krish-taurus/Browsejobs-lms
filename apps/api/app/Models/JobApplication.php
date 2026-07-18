@@ -57,7 +57,7 @@ class JobApplication extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'job_posting_id', 'user_id', 'cv_document_id', 'status', 'note',
+        'tenant_id', 'job_posting_id', 'job_feed_item_id', 'user_id', 'cv_document_id', 'status', 'note',
         'offer_ctc_paise', 'offer_role', 'offer_accepted_at', 'placed_at',
         'celebrate_consent_at', 'celebrate_anonymous',
     ];
@@ -68,6 +68,14 @@ class JobApplication extends Model
     public function posting(): BelongsTo
     {
         return $this->belongsTo(JobPosting::class, 'job_posting_id');
+    }
+
+    /**
+     * @return BelongsTo<JobFeedItem, $this>
+     */
+    public function feedItem(): BelongsTo
+    {
+        return $this->belongsTo(JobFeedItem::class, 'job_feed_item_id');
     }
 
     /**

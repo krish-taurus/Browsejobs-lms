@@ -229,8 +229,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/applications/{application}/rounds', [PlacementController::class, 'storeRound'])->middleware('throttle:20,1');
     Route::post('me/applications/{application}/withdraw', [PlacementController::class, 'withdraw']);
 
-    // Jobs for You — relevance-ranked live feed (PRD §6.22).
+    // Jobs for You — relevance-ranked live feed + Apply Assist (PRD §6.22).
     Route::get('me/jobs', [MeJobFeedController::class, 'index']);
+    Route::post('me/jobs/{item}/apply', [MeJobFeedController::class, 'apply'])->middleware('throttle:ai');
+    Route::post('me/jobs/{item}/copilot', [MeJobFeedController::class, 'copilot']);
     Route::post('me/jobs/{item}/save', [MeJobFeedController::class, 'save']);
     Route::post('me/jobs/{item}/dismiss', [MeJobFeedController::class, 'dismiss']);
 
