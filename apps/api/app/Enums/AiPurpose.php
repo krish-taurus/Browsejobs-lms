@@ -23,6 +23,7 @@ enum AiPurpose: string
     case MarketPulse = 'market_pulse';
     case Mock = 'mock';
     case TranscriptParse = 'transcript_parse';
+    case JdExtract = 'jd_extract';
     case Cv = 'cv';
     case LinkedinOptimize = 'linkedin_optimize';
     case GithubPortfolio = 'github_portfolio';
