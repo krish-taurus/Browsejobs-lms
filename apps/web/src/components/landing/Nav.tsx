@@ -12,13 +12,19 @@ const links = [
 
 export function Nav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-line/70 bg-paper/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3.5">
+    <header className="sticky top-3 z-50 px-3 md:top-4">
+      {/* Soft fade above the island so content dissolves as it passes behind. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-4 -z-10 h-24 bg-gradient-to-b from-paper via-paper/80 to-transparent"
+      />
+      {/* Floating glass island — detached from the top, blur only on this sticky element. */}
+      <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-full border border-line/70 bg-white/70 py-2 pl-4 pr-2 shadow-soft backdrop-blur-xl">
         <Link href="/" aria-label="BrowseJobs home" className="shrink-0">
           <Wordmark />
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           {links.map((l) => (
             <a
               key={l.href}

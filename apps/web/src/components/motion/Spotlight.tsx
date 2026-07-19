@@ -10,7 +10,16 @@ import { durations, ease } from "@/lib/motion";
  * single translated element (transform/opacity only) so it costs nothing to
  * paint. Invisible on touch and under reduced motion.
  */
-export function Spotlight({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Spotlight({
+  children,
+  className = "",
+  backdrop,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** Optional full-bleed art layer rendered behind the content (e.g. panel artwork). */
+  backdrop?: ReactNode;
+}) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -36,6 +45,7 @@ export function Spotlight({ children, className = "" }: { children: ReactNode; c
       onPointerMove={onMove}
       onPointerLeave={() => setVisible(false)}
     >
+      {backdrop}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute left-0 top-0 -z-0 h-[600px] w-[600px]"

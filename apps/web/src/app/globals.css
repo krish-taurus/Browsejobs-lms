@@ -113,6 +113,19 @@ body {
   }
 }
 
+/* Headline mask reveal — lines rise out of an invisible box on load. */
+.mask-rise {
+  animation: mask-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mask-rise {
+  from {
+    transform: translate3d(0, 110%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 /* Extract ticker — seamless conveyor (two copies, translate to -50%). */
 .ticker-track {
   animation: ticker 38s linear infinite;
@@ -156,6 +169,9 @@ body {
     animation: none;
   }
   .ticker-track {
+    animation: none;
+  }
+  .mask-rise {
     animation: none;
   }
 }

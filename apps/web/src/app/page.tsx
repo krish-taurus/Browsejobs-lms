@@ -40,7 +40,16 @@ export default function Home() {
         {/* Closing CTA band */}
         <section id="masterclass" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
           <ScrollReveal>
-            <Spotlight className="grain rounded-[22px] bg-ink px-8 py-16 text-center text-white shadow-soft">
+            <Spotlight
+              className="grain rounded-[22px] bg-ink px-8 py-16 text-center text-white shadow-soft"
+              backdrop={
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-cover bg-center opacity-60"
+                  style={{ backgroundImage: "url(/art/engine-aurora.svg)" }}
+                />
+              }
+            >
               <p className="kicker text-sky/70">Step 01 of 3 free steps</p>
               <h2 className="display mx-auto mt-4 max-w-2xl text-3xl md:text-5xl">
                 See the method live before you spend a rupee
