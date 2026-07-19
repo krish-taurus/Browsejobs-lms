@@ -27,5 +27,5 @@ test("admin reviews monetization + revenue", async ({ page }) => {
   await page.getByRole("link", { name: "Revenue" }).first().click();
   await expect(page.getByRole("heading", { name: "Revenue by product" })).toBeVisible();
   await expect(page.getByText("Gross")).toBeVisible();
-  await expect(page.getByText("Net")).toBeVisible();
+  await expect(page.getByText("Net", { exact: true })).toBeVisible();
 });

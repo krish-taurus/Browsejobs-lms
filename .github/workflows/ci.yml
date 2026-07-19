@@ -106,9 +106,11 @@ jobs:
           {
             echo "DB_CONNECTION=sqlite"
             echo "DB_DATABASE=$PWD/database/database.sqlite"
-            echo "QUEUE_CONNECTION=sync"
+            echo "QUEUE_CONNECTION=database"
             echo "CACHE_STORE=file"
             echo "APP_ENV=local"
+            echo "SESSION_DRIVER=file"
+            echo "STAFF_LOGIN_PER_MINUTE=1000"
           } >> .env
           php artisan migrate --seed --force
           php artisan serve --host 127.0.0.1 --port 8000 &

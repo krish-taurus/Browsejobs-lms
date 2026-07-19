@@ -189,7 +189,7 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         Route::post('otp/verify', [StudentAuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
         Route::post('register/request', [RegisterController::class, 'request'])->middleware('throttle:6,1');
         Route::post('register/verify', [RegisterController::class, 'verify'])->middleware('throttle:10,1');
-        Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:6,1');
+        Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/2fa', [StaffAuthController::class, 'verify'])->middleware('throttle:10,1');
     });
 });
