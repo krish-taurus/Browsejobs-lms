@@ -6,7 +6,8 @@ import { Kicker } from "@/components/brand/Kicker";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { TiltCard } from "@/components/motion/TiltCard";
-import { DEMAND_OUTLOOK, FUNDING_SIGNALS, LOOP, type OutlookSeries } from "@/content/intel-board";
+import { LOOP, type OutlookSeries } from "@/content/intel-board";
+import { useMarketIntel } from "@/lib/market-intel";
 
 /**
  * Intelligence Board — the instrument panel under Market Pulse: funding →
@@ -57,6 +58,8 @@ function Sparkline({ series }: { series: OutlookSeries }) {
 }
 
 export function IntelBoard() {
+  const { funding, outlook, live, effectiveOn } = useMarketIntel();
+
   return (
     <section id="intel" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <ScrollReveal>
@@ -81,10 +84,10 @@ export function IntelBoard() {
                 <span className="mono text-[10px] font-semibold uppercase tracking-[0.18em] text-trust">
                   Funding → hiring signal
                 </span>
-                <span className="mono text-[10px] text-muted">sector-level · public news</span>
+                <span className="mono text-[10px] text-muted">{live && effectiveOn ? `updated ${effectiveOn}` : "sector-level · public news"}</span>
               </div>
               <ul className="mt-5 flex-1 space-y-4">
-                {FUNDING_SIGNALS.map((f) => (
+                {funding.map((f) => (
                   <li key={f.sector} className="border-t border-line pt-4 first:border-t-0 first:pt-0">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="font-semibold text-ink">{f.sector}</span>
@@ -128,7 +131,7 @@ export function IntelBoard() {
                 <span className="mono text-[10px] text-muted">dashed = projection</span>
               </div>
               <ul className="mt-5 flex-1 space-y-5">
-                {DEMAND_OUTLOOK.map((s) => (
+                {outlook.map((s) => (
                   <li key={s.track} className="border-t border-line pt-4 first:border-t-0 first:pt-0">
                     <div className="flex items-baseline justify-between">
                       <span className="font-semibold text-ink">{s.track}</span>

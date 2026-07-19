@@ -5,6 +5,7 @@ import { useReducedMotion } from "framer-motion";
 import { Kicker } from "@/components/brand/Kicker";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { CITIES, EDGES, type CityPulse } from "@/content/market-pulse";
+import { useMarketIntel } from "@/lib/market-intel";
 
 /**
  * Market Pulse — the signature "command center" moment. A custom-canvas
@@ -24,8 +25,11 @@ export function MarketPulse() {
   const reduce = useReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { cities } = useMarketIntel();
   const [selected, setSelected] = useState<CityPulse>(CITIES[0]);
   const selectedRef = useRef(selected.key);
+  const citiesRef = useRef(cities);
+  citiesRef.current = cities;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,12 +70,12 @@ export function MarketPulse() {
       const w = wide ? width * 0.5 : width * 0.88;
       const y0 = height * 0.08;
       const h = height * 0.84;
-      nodes = CITIES.map((c, i) => ({
+      nodes = citiesRef.current.map((c, i) => ({
         ...c,
         px: x0 + c.x * w,
         py: y0 + c.y * h,
         r: 4 + c.weight * 2.5,
-        phase: (i * Math.PI * 2) / CITIES.length,
+        phase: (i * Math.PI * 2) / citiesRef.current.length,
       }));
     };
 
@@ -246,7 +250,7 @@ export function MarketPulse() {
         canvas.style.cursor = hit ? "pointer" : "default";
         if (hit) {
           selectedRef.current = hit.key;
-          setSelected(CITIES.find((c) => c.key === hit.key)!);
+          setSelected(citiesRef.current.find((c) => c.key === hit.key)!);
         }
         if (reduce) draw(0);
       }
@@ -260,7 +264,7 @@ export function MarketPulse() {
       document.removeEventListener("visibilitychange", onVis);
       canvas.removeEventListener("pointermove", onMove);
     };
-  }, [reduce]);
+  }, [reduce, cities]);
 
   return (
     <section aria-label="Live market signal across India's hiring hubs" className="relative overflow-hidden bg-ink text-white">

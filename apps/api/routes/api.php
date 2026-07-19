@@ -96,6 +96,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
+use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
@@ -124,6 +125,11 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('certificates.verify');
+
+// Public market-intelligence snapshot (landing boards). NO tenant.domain —
+// platform-global, sector-level public-news aggregates only.
+Route::get('v1/market-intel', MarketIntelController::class)
+    ->middleware('throttle:30,1');
 
 // Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
 // companies aren't platform users; the unguessable token is the key.

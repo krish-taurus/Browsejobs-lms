@@ -21,6 +21,8 @@ use App\Support\JobFeed\JobApiTransport;
 use App\Support\JobFeed\NullJobApiTransport;
 use App\Support\Judge0\HttpJudge0Client;
 use App\Support\Judge0\Judge0Client;
+use App\Support\Market\MarketIntelSource;
+use App\Support\Market\SeedMarketIntelSource;
 use App\Support\Messaging\NullPushSender;
 use App\Support\Messaging\PushSender;
 use App\Support\Mocks\HttpVapiClient;
@@ -58,6 +60,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(
+            MarketIntelSource::class,
+            SeedMarketIntelSource::class,
+        );
+
         $this->app->singleton(TenantContext::class);
         $this->app->singleton(PlatformSettings::class);
 

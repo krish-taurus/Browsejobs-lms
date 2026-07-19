@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             MarketJdSeeder::class,
             SalaryBenchmarkSeeder::class,
             JobFeedSeeder::class,
+            MarketSignalSeeder::class,
             // Last: a login-ready demo persona spanning the whole journey.
             DemoSeeder::class,
         ]);
