@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { apiJson } from "@/lib/api";
 import { Kicker } from "@/components/brand/Kicker";
 import { Disclaimer } from "@/components/brand/Disclaimer";
@@ -109,7 +110,12 @@ export function SalaryExplorer() {
             </div>
           )}
 
-          <Disclaimer className="mt-6" />
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <Disclaimer />
+            <Link href="/salaries" className="shrink-0 text-sm font-semibold text-trust hover:underline">
+              City-by-city deep dives →
+            </Link>
+          </div>
         </div>
       </ScrollReveal>
     </section>
