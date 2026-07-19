@@ -13,8 +13,8 @@ const links = [
 export function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-line/70 bg-paper/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-        <Link href="/" aria-label="BrowseJobs home">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3.5">
+        <Link href="/" aria-label="BrowseJobs home" className="shrink-0">
           <Wordmark />
         </Link>
 
@@ -30,7 +30,9 @@ export function Nav() {
           ))}
         </div>
 
-        <BookCta className="px-4 py-2 text-sm">Book Free Masterclass</BookCta>
+        <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
+          Book Free<span className="hidden sm:inline"> Masterclass</span>
+        </BookCta>
       </nav>
     </header>
   );

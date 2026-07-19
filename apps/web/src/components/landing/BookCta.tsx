@@ -5,6 +5,7 @@ import {
   openLeadModal,
   type LeadVariant,
 } from "@/components/landing/leadModalBus";
+import { Magnetic } from "@/components/motion/Magnetic";
 
 /**
  * The one blue primary CTA (spec: one primary per view; everything funnels to
@@ -25,9 +26,9 @@ export function BookCta({
 }) {
   const base = ghost
     ? "rounded-full border border-line bg-white px-6 py-3 font-semibold text-ink transition-colors hover:border-trust"
-    : "rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-all hover:-translate-y-0.5 hover:bg-deep";
+    : "rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-all hover:bg-deep hover:shadow-[0_8px_32px_rgba(27,109,240,0.45)]";
 
-  return (
+  const button = (
     <button
       type="button"
       onClick={() => openLeadModal({ variant, courseSlug })}
@@ -36,4 +37,7 @@ export function BookCta({
       {children}
     </button>
   );
+
+  // The one blue CTA gets the magnetic pull; the ghost stays quiet.
+  return ghost ? button : <Magnetic>{button}</Magnetic>;
 }
