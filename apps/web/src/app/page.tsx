@@ -14,6 +14,8 @@ import { ExtractTicker } from "@/components/landing/ExtractTicker";
 import { MarketPulse } from "@/components/landing/MarketPulse";
 import { IntelBoard } from "@/components/landing/IntelBoard";
 import { FundingRadar } from "@/components/landing/FundingRadar";
+import { SalaryExplorer } from "@/components/landing/SalaryExplorer";
+import { AtsChecker } from "@/components/landing/AtsChecker";
 import { Spotlight } from "@/components/motion/Spotlight";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { BookCta } from "@/components/landing/BookCta";
@@ -36,7 +38,9 @@ export default function Home() {
         <ProofEngine />
         <Journey />
         <Courses />
+        <SalaryExplorer />
         <AiShowcase />
+        <AtsChecker />
         <Fees />
         <VerifyUs />
         <PromiseCards />

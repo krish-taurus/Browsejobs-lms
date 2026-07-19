@@ -97,7 +97,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
+use App\Http\Controllers\Public\AtsCheckController;
 use App\Http\Controllers\Public\MarketIntelController;
+use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
@@ -131,6 +133,13 @@ Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
 // platform-global, sector-level public-news aggregates only.
 Route::get('v1/market-intel', MarketIntelController::class)
     ->middleware('throttle:30,1');
+
+// Public salary explorer (PRD §6.21) + free ATS quick-check. NO tenant.domain —
+// platform-global; the ATS check stores nothing and uses no AI.
+Route::get('v1/salaries', SalaryController::class)
+    ->middleware('throttle:30,1');
+Route::post('v1/ats-check', AtsCheckController::class)
+    ->middleware('throttle:6,1');
 
 // Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
 // companies aren't platform users; the unguessable token is the key.
