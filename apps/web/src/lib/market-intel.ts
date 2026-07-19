@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
 import { CITIES, type CityPulse, type Trend } from "@/content/market-pulse";
-import { DEMAND_OUTLOOK, FUNDING_SIGNALS, type FundingSignal, type OutlookSeries } from "@/content/intel-board";
+import { DEMAND_OUTLOOK, DOMAIN_RANK, FUNDING_RADAR, FUNDING_SIGNALS, type DomainRank, type FundingSignal, type OutlookSeries, type RadarItem } from "@/content/intel-board";
 
 /**
  * Live market-intelligence snapshot with graceful fallback: fetches
@@ -16,6 +16,8 @@ type ApiSnapshot = {
   city_pulse: { key: string; name: string; trend: Trend; skills: { name: string; trend: Trend }[] }[] | null;
   funding: { sector: string; stage: string; hub: string; hiring_lag_months: number; roles: string[] }[] | null;
   outlook: { track: string; points: number[]; direction: "rising" | "steady" }[] | null;
+  domain_rank: DomainRank[] | null;
+  funding_radar: { company: string | null; sector: string; round: string; hub: string; hiring_lag_months: number; roles: string[]; skills: string[]; source_name: string; source_url: string | null; published_on: string | null }[] | null;
   effective_on?: string | null;
 };
 
@@ -23,6 +25,8 @@ export type MarketIntel = {
   cities: CityPulse[];
   funding: FundingSignal[];
   outlook: OutlookSeries[];
+  domainRank: DomainRank[];
+  radar: RadarItem[];
   effectiveOn: string | null;
   live: boolean;
 };
@@ -31,6 +35,8 @@ const FALLBACK: MarketIntel = {
   cities: CITIES,
   funding: FUNDING_SIGNALS,
   outlook: DEMAND_OUTLOOK,
+  domainRank: DOMAIN_RANK,
+  radar: FUNDING_RADAR,
   effectiveOn: null,
   live: false,
 };
@@ -58,6 +64,19 @@ export function useMarketIntel(): MarketIntel {
             roles: f.roles,
           })) ?? FALLBACK.funding,
           outlook: data.outlook ?? FALLBACK.outlook,
+          domainRank: data.domain_rank ?? FALLBACK.domainRank,
+          radar: data.funding_radar?.map((r) => ({
+            company: r.company,
+            sector: r.sector,
+            round: r.round,
+            hub: r.hub,
+            hiringLagMonths: r.hiring_lag_months,
+            roles: r.roles,
+            skills: r.skills,
+            sourceName: r.source_name,
+            sourceUrl: r.source_url,
+            publishedOn: r.published_on,
+          })) ?? FALLBACK.radar,
           effectiveOn: data.effective_on ?? null,
           live: Boolean(data.city_pulse || data.funding || data.outlook),
         });

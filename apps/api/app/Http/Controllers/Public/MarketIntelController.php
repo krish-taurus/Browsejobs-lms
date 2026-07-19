@@ -21,7 +21,7 @@ final class MarketIntelController extends Controller
     {
         $data = Cache::remember('market-intel:latest', 3600, function (): array {
             $out = [];
-            foreach ([MarketSignal::KIND_CITY_PULSE, MarketSignal::KIND_FUNDING, MarketSignal::KIND_OUTLOOK] as $kind) {
+            foreach ([MarketSignal::KIND_CITY_PULSE, MarketSignal::KIND_FUNDING, MarketSignal::KIND_OUTLOOK, MarketSignal::KIND_DOMAIN_RANK, MarketSignal::KIND_FUNDING_RADAR] as $kind) {
                 $row = MarketSignal::latest_($kind);
                 $out[$kind] = $row?->payload;
                 $out['effective_on'] ??= $row?->effective_on?->toDateString();

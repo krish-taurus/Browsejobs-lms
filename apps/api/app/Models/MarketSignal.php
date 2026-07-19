@@ -27,6 +27,10 @@ final class MarketSignal extends Model
 
     public const KIND_OUTLOOK = 'outlook';
 
+    public const KIND_DOMAIN_RANK = 'domain_rank';
+
+    public const KIND_FUNDING_RADAR = 'funding_radar';
+
     protected function casts(): array
     {
         return [

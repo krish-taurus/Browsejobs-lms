@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
+use App\Http\Controllers\Admin\FundingNewsController;
 use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
@@ -420,6 +421,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index']);
         Route::put('settings', [SettingsController::class, 'update']);
+
+        // Funding Radar curation ("our research") — sourced public news items.
+        Route::get('funding-news', [FundingNewsController::class, 'index']);
+        Route::post('funding-news', [FundingNewsController::class, 'store']);
+        Route::delete('funding-news/{fundingNews}', [FundingNewsController::class, 'destroy']);
 
         // Whitelabel + provisioning (PRD §6.24) — super-admin manages any tenant.
         Route::get('tenants', [TenantController::class, 'index']);

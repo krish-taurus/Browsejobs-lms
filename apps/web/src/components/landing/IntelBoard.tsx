@@ -58,7 +58,7 @@ function Sparkline({ series }: { series: OutlookSeries }) {
 }
 
 export function IntelBoard() {
-  const { funding, outlook, live, effectiveOn } = useMarketIntel();
+  const { funding, outlook, domainRank, live, effectiveOn } = useMarketIntel();
 
   return (
     <section id="intel" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
@@ -75,7 +75,47 @@ export function IntelBoard() {
         </p>
       </ScrollReveal>
 
-      <div className="mt-12 grid gap-5 lg:grid-cols-2">
+      {/* Hot domains, ranked — impartial across the whole market. */}
+      <ScrollReveal>
+        <div className="mt-12 rounded-[22px] border border-line bg-white p-7 shadow-soft">
+          <div className="flex items-center justify-between">
+            <span className="mono text-[10px] font-semibold uppercase tracking-[0.18em] text-trust">
+              Hot domains · ranked by hiring momentum
+            </span>
+            <span className="mono text-[10px] text-muted">relative index, not counts</span>
+          </div>
+          <ul className="mt-5 grid gap-x-8 gap-y-4 md:grid-cols-2">
+            {domainRank.map((d) => (
+              <li key={d.rank} className="flex items-start gap-4 border-t border-line pt-4 first:border-t-0 first:pt-0 md:[&:nth-child(2)]:border-t-0 md:[&:nth-child(2)]:pt-0">
+                <span className="mono w-8 shrink-0 text-lg font-semibold text-trust">
+                  {String(d.rank).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-semibold text-ink">{d.domain}</span>
+                    <span className={`mono shrink-0 text-xs ${d.direction === "rising" ? "text-trust" : "text-muted"}`}>
+                      {d.direction === "rising" ? "rising ↑" : "steady →"}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-sky">
+                    <motion.div
+                      className="h-full rounded-full bg-trust"
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: d.momentum / 100 }}
+                      viewport={{ once: true, margin: "-60px" }}
+                      style={{ transformOrigin: "left" }}
+                      transition={{ duration: durations.slower, ease }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-ink2/60">{d.driver}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </ScrollReveal>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
         {/* Funding → hiring signal */}
         <ScrollReveal className="h-full">
           <TiltCard className="h-full">

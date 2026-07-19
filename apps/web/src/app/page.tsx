@@ -13,6 +13,7 @@ import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ExtractTicker } from "@/components/landing/ExtractTicker";
 import { MarketPulse } from "@/components/landing/MarketPulse";
 import { IntelBoard } from "@/components/landing/IntelBoard";
+import { FundingRadar } from "@/components/landing/FundingRadar";
 import { Spotlight } from "@/components/motion/Spotlight";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { BookCta } from "@/components/landing/BookCta";
@@ -29,6 +30,7 @@ export default function Home() {
       <MarketingShell>
         <Hero />
         <MarketPulse />
+        <FundingRadar />
         <ExtractTicker />
         <IntelBoard />
         <ProofEngine />
