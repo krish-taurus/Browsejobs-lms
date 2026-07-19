@@ -193,6 +193,12 @@ class AppServiceProvider extends ServiceProvider
             $request->user()?->getAuthIdentifier() ?? $request->ip(),
         ));
 
+        // Staff login: 6/min in production; env-raisable so the parallel e2e
+        // suite (18 sign-ins in seconds) doesn't trip it in CI.
+        RateLimiter::for('staff-login', fn (Request $request) => Limit::perMinute(
+            (int) config('auth.staff_login_per_minute', 6),
+        )->by($request->ip()));
+
         // Tight limit for AI-backed endpoints (CLAUDE.md: rate limit AI endpoints).
         RateLimiter::for('ai', fn (Request $request) => Limit::perMinute(20)->by(
             $request->user()?->getAuthIdentifier() ?? $request->ip(),

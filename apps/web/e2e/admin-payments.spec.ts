@@ -26,12 +26,12 @@ test("admin creates an EMI fee plan and generates a payment link", async ({ page
   await page.getByLabel("Batch").selectOption({ index: 1 });
   // If a Reserved candidate exists, the student select becomes populated.
   await page.getByLabel("Plan").selectOption("emi");
-  await expect(page.getByText("Schedule preview")).toBeVisible();
+  await expect(page.getByText("Schedule preview", { exact: true })).toBeVisible();
   // The EMI schedule shows three instalments.
   await expect(page.getByText("Instalment 3")).toBeVisible();
 
   // Open the seeded demo plan and confirm the schedule + ledger render.
-  await page.getByRole("link", { name: "Fee plans" }).first().click();
+  await page.getByRole("link", { name: "Payments" }).first().click();
   const firstPlan = page.locator('a[href^="/admin/payments/"]').first();
   await firstPlan.click();
   await expect(page.getByText("Instalment schedule")).toBeVisible();

@@ -116,4 +116,10 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    | Staff-login rate limit per minute (named limiter 'staff-login'). Raised
+    | via env only for CI e2e runs; production keeps the strict default.
+    */
+    'staff_login_per_minute' => (int) env('STAFF_LOGIN_PER_MINUTE', 6),
+
 ];

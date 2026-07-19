@@ -22,7 +22,7 @@ test("staff see AI triage on a ticket and can undo the priority raise", async ({
   await expect(page).toHaveURL(/\/admin\/curriculum/);
 
   await page.getByRole("link", { name: "Support" }).first().click();
-  await expect(page.getByRole("heading", { name: "Tickets" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tickets", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "All" }).click();
 
   // The queue explains itself rather than silently reordering.

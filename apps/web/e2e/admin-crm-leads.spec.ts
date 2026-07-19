@@ -28,10 +28,10 @@ test("admin works a lead through the CRM", async ({ page }) => {
   await page.getByLabel("Name").fill(name);
   await page.getByLabel("Phone").fill(`+9190${String(Date.now()).slice(-8)}`);
   await page.getByRole("button", { name: "Create" }).click();
-  await expect(page.getByText(name)).toBeVisible();
+  await expect(page.getByText(name).first()).toBeVisible();
 
   // Open it and move it to a new stage
-  await page.getByText(name).click();
+  await page.getByRole("link", { name: new RegExp(name) }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await page.getByRole("combobox").first().selectOption({ label: "Attended" });
 

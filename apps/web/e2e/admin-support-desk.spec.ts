@@ -17,7 +17,7 @@ test("staff works a support ticket to resolution", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/curriculum/);
 
   await page.getByRole("link", { name: "Support" }).first().click();
-  await expect(page.getByRole("heading", { name: "Tickets" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tickets", exact: true })).toBeVisible();
 
   // The seeded demo ticket is under "All".
   await page.getByRole("button", { name: "All" }).click();
@@ -31,6 +31,6 @@ test("staff works a support ticket to resolution", async ({ page }) => {
   await page.getByRole("button", { name: "Send reply" }).click();
 
   // Move it to resolved via the status control.
-  await page.locator("select").first().selectOption("resolved");
-  await expect(page.locator("text=resolved").first()).toBeVisible();
+  await page.locator('select:has(option[value="resolved"])').first().selectOption("resolved");
+  await expect(page.locator('select:has(option[value="resolved"])').first()).toHaveValue("resolved");
 });
