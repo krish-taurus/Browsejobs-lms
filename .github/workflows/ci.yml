@@ -84,6 +84,36 @@ jobs:
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
+      # The admin e2e specs need the real API on :8000 with the local seed.
+      - name: Setup PHP 8.3 (for the e2e API)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_sqlite, sqlite3, openssl, curl, zip, bcmath, intl, fileinfo, gd
+          coverage: none
+          tools: composer:v2
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Boot seeded API on :8000
+        working-directory: apps/api
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          {
+            echo "DB_CONNECTION=sqlite"
+            echo "DB_DATABASE=$PWD/database/database.sqlite"
+            echo "QUEUE_CONNECTION=sync"
+            echo "CACHE_STORE=file"
+            echo "APP_ENV=local"
+          } >> .env
+          php artisan migrate --seed --force
+          php artisan serve --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/up && break; sleep 1; done
+
       - name: E2E (Playwright)
         working-directory: apps/web
         run: npm run test:e2e
