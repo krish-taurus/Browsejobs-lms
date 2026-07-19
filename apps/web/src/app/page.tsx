@@ -11,6 +11,7 @@ import { Faq } from "@/components/landing/Faq";
 import { JsonLd } from "@/components/landing/JsonLd";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ExtractTicker } from "@/components/landing/ExtractTicker";
+import { MarketPulse } from "@/components/landing/MarketPulse";
 import { Spotlight } from "@/components/motion/Spotlight";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { BookCta } from "@/components/landing/BookCta";
@@ -26,6 +27,7 @@ export default function Home() {
       <JsonLd />
       <MarketingShell>
         <Hero />
+        <MarketPulse />
         <ExtractTicker />
         <ProofEngine />
         <Journey />
