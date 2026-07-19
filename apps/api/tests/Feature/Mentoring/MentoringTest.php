@@ -27,6 +27,7 @@ use App\Support\Entitlements\EntitlementService;
 use App\Support\Mentoring\SlotFinder;
 use App\Support\Messaging\Messenger;
 use App\Support\Scoring\ScoreCalculator;
+use App\Support\Time\AppTime;
 use App\Support\Zoom\FakeZoomClient;
 use App\Support\Zoom\ZoomClient;
 use Database\Seeders\RolePermissionSeeder;
@@ -39,7 +40,7 @@ use function Pest\Laravel\putJson;
 
 beforeEach(function () {
     // Monday 09:00 IST (03:30 UTC) — all slot math in these tests hangs off this.
-    Carbon::setTestNow('2026-07-20 03:30:00');
+    Carbon::setTestNow(Carbon::parse('2026-07-20T03:30:00Z'));
 
     $this->zoom = new FakeZoomClient;
     app()->instance(ZoomClient::class, $this->zoom);
@@ -97,7 +98,7 @@ it('cuts IST slots from weekly windows minus exceptions, booked sessions, and th
     ]);
     // 11:00 IST Tue is already booked.
     MentorSession::factory()->for($this->tenant)->create([
-        'mentor_profile_id' => $mentor->id, 'starts_at' => '2026-07-21 05:30:00',
+        'mentor_profile_id' => $mentor->id, 'starts_at' => AppTime::parse('2026-07-21T05:30:00Z'),
     ]);
 
     $slots = withinTenant($this->tenant, fn () => app(SlotFinder::class)->slotsFor($mentor, days: 3));
@@ -273,7 +274,7 @@ it('refuses a student cancel inside the 4-hour window', function () {
     $id = postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $mentor->id, 'starts_at' => tueTenIst()])
         ->json('data.id');
 
-    Carbon::setTestNow('2026-07-21 02:00:00'); // 2.5h before start
+    Carbon::setTestNow(Carbon::parse('2026-07-21T02:00:00Z')); // 2.5h before start
     postJson("/api/v1/me/mentor-sessions/{$id}/cancel")->assertUnprocessable();
     expect(MentorSession::withoutGlobalScopes()->sole()->status)->toBe('booked');
 });
@@ -304,7 +305,7 @@ it('sends each reminder phase exactly once, inside its window', function () {
         ->json('data.id');
     $ts = MentorSession::withoutGlobalScopes()->sole()->starts_at->timestamp;
 
-    Carbon::setTestNow('2026-07-20 05:00:00'); // ~23.5h before start
+    Carbon::setTestNow(Carbon::parse('2026-07-20T05:00:00Z')); // ~23.5h before start
     (new SendMentorReminder($id, '24h', $ts))->handle(app(Messenger::class));
     (new SendMentorReminder($id, '24h', $ts))->handle(app(Messenger::class));
 
@@ -317,13 +318,13 @@ it('sends each reminder phase exactly once, inside its window', function () {
 it('keeps the credit on a student no-show and refunds it on a mentor no-show', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant, credits: 2);
 
-    $sessions = collect(['2026-07-21 04:30:00', '2026-07-21 05:00:00'])->map(
+    $sessions = collect(['2026-07-21T04:30:00Z', '2026-07-21T05:00:00Z'])->map(
         fn ($at) => MentorSession::factory()->for($this->tenant)->create([
-            'mentor_profile_id' => $mentor->id, 'student_id' => $student->id, 'starts_at' => $at,
+            'mentor_profile_id' => $mentor->id, 'student_id' => $student->id, 'starts_at' => AppTime::parse($at),
         ]),
     );
 
-    Carbon::setTestNow('2026-07-21 06:00:00'); // both sessions past
+    Carbon::setTestNow(Carbon::parse('2026-07-21T06:00:00Z')); // both sessions past
     withinTenant($this->tenant, function () use ($sessions) {
         app(MarkMentorNoShow::class)->handle($sessions[0], 'student');
         app(MarkMentorNoShow::class)->handle($sessions[1], 'mentor');
@@ -337,7 +338,7 @@ it('turns mentor feedback into a completed session, telemetry, and a PRI blend',
     config(['scoring.pri.mentor_blend' => 0.2]);
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     $session = MentorSession::factory()->for($this->tenant)->create([
-        'mentor_profile_id' => $mentor->id, 'student_id' => $student->id, 'starts_at' => '2026-07-19 10:00:00',
+        'mentor_profile_id' => $mentor->id, 'student_id' => $student->id, 'starts_at' => AppTime::parse('2026-07-19T10:00:00Z'),
     ]);
 
     withinTenant($this->tenant, fn () => app(SubmitMentorFeedback::class)->handle($session, [
@@ -360,7 +361,7 @@ it('records a student rating and surfaces the mentor average', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     $session = MentorSession::factory()->for($this->tenant)->create([
         'mentor_profile_id' => $mentor->id, 'student_id' => $student->id,
-        'starts_at' => '2026-07-19 10:00:00', 'status' => 'completed',
+        'starts_at' => AppTime::parse('2026-07-19T10:00:00Z'), 'status' => 'completed',
     ]);
     Sanctum::actingAs($student);
 
@@ -374,7 +375,7 @@ it('serves a valid ics invite', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     $session = MentorSession::factory()->for($this->tenant)->create([
         'mentor_profile_id' => $mentor->id, 'student_id' => $student->id,
-        'starts_at' => '2026-07-21 04:30:00', 'join_url' => 'https://zoom.test/j/1',
+        'starts_at' => AppTime::parse('2026-07-21T04:30:00Z'), 'join_url' => 'https://zoom.test/j/1',
     ]);
     Sanctum::actingAs($student);
 
@@ -412,7 +413,7 @@ it('lets the mentor submit feedback only for their own sessions', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     $foreign = MentorProfile::factory()->for($this->tenant)->create();
     $foreignSession = MentorSession::factory()->for($this->tenant)->create([
-        'mentor_profile_id' => $foreign->id, 'student_id' => $student->id, 'starts_at' => '2026-07-19 10:00:00',
+        'mentor_profile_id' => $foreign->id, 'student_id' => $student->id, 'starts_at' => AppTime::parse('2026-07-19T10:00:00Z'),
     ]);
 
     Sanctum::actingAs($mentor->user);

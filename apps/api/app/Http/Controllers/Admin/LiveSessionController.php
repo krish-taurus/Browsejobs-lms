@@ -16,7 +16,7 @@ use App\Http\Resources\LiveSessionResource;
 use App\Models\Batch;
 use App\Models\LiveSession;
 use App\Models\Topic;
-use Carbon\CarbonImmutable;
+use App\Support\Time\AppTime;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -54,8 +54,8 @@ final class LiveSessionController extends Controller
         $session = $schedule->handle(
             $batch,
             $request->string('title')->toString(),
-            CarbonImmutable::parse($request->string('scheduled_start')->toString()),
-            $request->filled('scheduled_end') ? CarbonImmutable::parse($request->string('scheduled_end')->toString()) : null,
+            AppTime::parse($request->string('scheduled_start')->toString()),
+            $request->filled('scheduled_end') ? AppTime::parse($request->string('scheduled_end')->toString()) : null,
             $topic,
             $request->boolean('record', true),
         );
@@ -69,8 +69,8 @@ final class LiveSessionController extends Controller
 
         $reschedule->handle(
             $session,
-            CarbonImmutable::parse($request->string('scheduled_start')->toString()),
-            $request->filled('scheduled_end') ? CarbonImmutable::parse($request->string('scheduled_end')->toString()) : null,
+            AppTime::parse($request->string('scheduled_start')->toString()),
+            $request->filled('scheduled_end') ? AppTime::parse($request->string('scheduled_end')->toString()) : null,
             $request->string('reason')->toString(),
             $request->user(),
         );

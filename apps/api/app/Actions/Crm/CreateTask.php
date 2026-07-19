@@ -8,7 +8,7 @@ use App\Models\ContactTimelineEvent;
 use App\Models\CrmTask;
 use App\Models\Lead;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
 
 /**
  * Creates a counselor follow-up task against a lead (PRD §6.12 task queue).
@@ -17,7 +17,7 @@ final readonly class CreateTask
 {
     public function __construct(private RecordTimelineEvent $timeline) {}
 
-    public function handle(Lead $lead, User $assignee, string $title, ?Carbon $dueAt = null, ?User $actor = null, string $source = CrmTask::SOURCE_MANUAL): CrmTask
+    public function handle(Lead $lead, User $assignee, string $title, ?CarbonInterface $dueAt = null, ?User $actor = null, string $source = CrmTask::SOURCE_MANUAL): CrmTask
     {
         $task = CrmTask::query()->create([
             'tenant_id' => $lead->tenant_id,

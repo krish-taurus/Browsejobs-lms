@@ -10,9 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Models\LiveSession;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
+use App\Support\Time\AppTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 /**
  * Receives verified Zoom webhooks (signature checked by middleware). Handles the
@@ -75,7 +75,7 @@ final class ZoomWebhookController extends Controller
             return;
         }
 
-        $at = Carbon::parse($participant['join_time'] ?? $participant['leave_time'] ?? now());
+        $at = AppTime::parse($participant['join_time'] ?? $participant['leave_time'] ?? now());
 
         $joined
             ? $attendance->participantJoined($session, $user, $at)
