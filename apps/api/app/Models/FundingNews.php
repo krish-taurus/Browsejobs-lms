@@ -13,6 +13,8 @@ use Illuminate\Support\Carbon;
  * ever shown alongside their public source.
  *
  * @property int $id
+ * @property string $kind
+ * @property string|null $headline
  * @property string|null $company
  * @property string $sector
  * @property string $round
@@ -28,7 +30,7 @@ use Illuminate\Support\Carbon;
 final class FundingNews extends Model
 {
     protected $fillable = [
-        'company', 'sector', 'round', 'hub', 'hiring_lag_months',
+        'kind', 'headline', 'company', 'sector', 'round', 'hub', 'hiring_lag_months',
         'roles', 'skills', 'source_name', 'source_url', 'published_on', 'active',
     ];
 

@@ -73,6 +73,9 @@ class MessagingSeeder extends Seeder
         ['key' => 'jobs.nudge', 'channel' => 'email', 'category' => 'utility', 'subject' => '{{count}} new roles match you today', 'body' => 'Hi {{name}}, {{count}} new {{role}} role(s) match your profile today. Open Jobs for You in your dashboard to review and apply.'],
         // P4.8c application follow-up — service reminder about the student's own application.
         ['key' => 'application.followup', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, you applied for {{role}} about 5 days ago. A short follow-up to the recruiter can make a real difference — worth a nudge today?'],
+        // Daily Market Brief teaser — MARKETING: the headline is the hook, /brief is the destination.
+        ['key' => 'daily_brief', 'channel' => 'whatsapp', 'category' => 'marketing', 'subject' => null, 'body' => "{{headline}}\n\nHi {{name}} — today's market brief is live: who announced hiring, who cut, and what it means for your prep. Read it here: {{link}}"],
+        ['key' => 'daily_brief', 'channel' => 'email', 'category' => 'marketing', 'subject' => '{{headline}}', 'body' => "Hi {{name}},\n\nToday's market brief is live: who announced hiring, who cut, and what it means for your preparation.\n\nRead it: {{link}}"],
         ['key' => 'application.followup', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Following up on your {{role}} application', 'body' => 'Hi {{name}}, you applied for {{role}} about 5 days ago. A short, polite follow-up to the recruiter often helps — it might be worth sending one today.'],
     ];
 

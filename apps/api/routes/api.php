@@ -98,6 +98,7 @@ use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
+use App\Http\Controllers\Public\DailyBriefController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
@@ -140,6 +141,10 @@ Route::get('v1/salaries', SalaryController::class)
     ->middleware('throttle:30,1');
 Route::post('v1/ats-check', AtsCheckController::class)
     ->middleware('throttle:6,1');
+
+// Daily Market Brief (public; the register-to-read gate lives client-side).
+Route::get('v1/brief', DailyBriefController::class)
+    ->middleware('throttle:30,1');
 
 // Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
 // companies aren't platform users; the unguessable token is the key.

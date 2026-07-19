@@ -26,6 +26,8 @@ final class FundingNewsController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'kind' => ['sometimes', 'string', 'in:funding,hiring,layoff'],
+            'headline' => ['nullable', 'string', 'max:200'],
             'company' => ['nullable', 'string', 'max:120'],
             'sector' => ['required', 'string', 'max:80'],
             'round' => ['required', 'string', 'max:80'],
