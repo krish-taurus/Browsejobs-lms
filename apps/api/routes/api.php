@@ -98,6 +98,7 @@ use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
+use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\SalaryController;
@@ -168,6 +169,11 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 
     Route::post('leads', [LeadController::class, 'store'])
         ->middleware('throttle:10,1');
+
+    // Free Career Direction Report — server-gated: registering as a lead IS
+    // the price of the analysis (name+phone+consent validated before it runs).
+    Route::post('career-report', CareerReportController::class)
+        ->middleware('throttle:6,1');
 
     // Lead-gated syllabus download (PRD §6.2 lead magnet). Public, host tenant.
     Route::post('courses/{slug}/syllabus/download', [SyllabusDownloadController::class, 'store'])

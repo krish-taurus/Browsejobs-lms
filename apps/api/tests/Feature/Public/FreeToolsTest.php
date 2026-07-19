@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Lead;
 use App\Models\Tenant;
 use Database\Seeders\SalaryBenchmarkSeeder;
 
@@ -54,4 +55,25 @@ it('flags a weak resume with failing checks and hints', function () {
 it('rejects an empty or oversized paste', function () {
     postJson('/api/v1/ats-check', ['text' => 'too short'])->assertStatus(422);
     postJson('/api/v1/ats-check', ['text' => str_repeat('a', 20001)])->assertStatus(422);
+});
+
+it('gates the career report behind lead registration and returns an unbiased analysis', function () {
+    $tenant = Tenant::factory()->create(['domain' => 'acme.test']);
+
+    $resume = "Experience\n- Built ETL pipelines in Spark and Python processing 2M rows\n- Airflow DAGs with SQL warehouse models\nSkills: Python, SQL, Spark, Airflow, AWS\nEducation: BE";
+
+    // Without registration fields the analysis is refused.
+    \Pest\Laravel\postJson('http://acme.test/api/v1/career-report', ['text' => $resume])->assertStatus(422);
+
+    $data = \Pest\Laravel\postJson('http://acme.test/api/v1/career-report', [
+        'name' => 'Asha', 'phone' => '+919876543210', 'consent' => true, 'text' => $resume,
+    ])->assertOk()->json('data');
+
+    expect(Lead::withoutGlobalScopes()->where('page', '/career-report')->count())->toBe(1)
+        ->and($data['summary']['best_path'])->toBe('Data Engineering')
+        ->and($data['paths'][0]['fit_pct'])->toBeGreaterThan(60)
+        ->and(collect($data['paths'])->pluck('path'))->toContain('ML / AI Engineering') // paths we don't teach are scored too
+        ->and(collect($data['paths'])->firstWhere('taught_here', false))->not->toBeNull()
+        ->and($data['focus'])->not->toBeEmpty()
+        ->and($data['ats']['score'])->toBeInt();
 });
