@@ -30,7 +30,9 @@ export function HeroEngine() {
 
   return (
     <div className="relative mx-auto w-full max-w-[440px] select-none" aria-hidden>
-      <div className="rounded-[22px] border border-line bg-white/70 p-5 shadow-soft backdrop-blur-sm">
+      {/* Double-bezel: outer machined shell, inner glass core (concentric radii). */}
+      <div className="rounded-[26px] bg-ink/[0.04] p-1.5 ring-1 ring-ink/5">
+        <div className="rounded-[22px] border border-line bg-white/70 p-5 shadow-soft backdrop-blur-sm">
         <div className="grid grid-cols-[1.1fr_1fr_1.2fr] gap-3">
           {/* LISTEN — transcript lines */}
           <Column label="LISTEN" active={on(0)}>
@@ -86,6 +88,7 @@ export function HeroEngine() {
               ))}
             </div>
           </Column>
+        </div>
         </div>
       </div>
     </div>

@@ -57,7 +57,7 @@ final class MentorAdminController extends Controller
                 'purpose' => $s->purpose,
                 'status' => $s->status,
                 'no_show_side' => $s->no_show_side,
-                'starts_at' => $s->starts_at->toIso8601String(),
+                'starts_at' => $s->starts_at->clone()->utc()->toIso8601String(),
                 'feedback_score' => $s->feedback_score,
                 'student_rating' => $s->student_rating,
             ]);

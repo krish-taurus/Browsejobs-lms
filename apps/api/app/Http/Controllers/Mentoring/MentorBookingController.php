@@ -15,7 +15,7 @@ use App\Models\Product;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Mentoring\SlotFinder;
 use App\Support\Tenancy\TenantContext;
-use Carbon\CarbonImmutable;
+use App\Support\Time\AppTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -96,7 +96,7 @@ final class MentorBookingController extends Controller
                 $session = $this->book->handle(
                     $request->user(),
                     (int) $validated['mentor_profile_id'],
-                    CarbonImmutable::parse($validated['starts_at'])->utc(),
+                    AppTime::parse($validated['starts_at']),
                     $validated['purpose'] ?? MentorSession::PURPOSE_MENTORING,
                 );
             } catch (ValidationException $e) {
@@ -133,7 +133,7 @@ final class MentorBookingController extends Controller
 
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $session, $validated): JsonResponse {
             $model = $this->owned($request, $session);
-            $this->reschedule->handle($model, CarbonImmutable::parse($validated['starts_at'])->utc());
+            $this->reschedule->handle($model, AppTime::parse($validated['starts_at']));
 
             return response()->json(['data' => $this->row($model->refresh())]);
         });
@@ -212,7 +212,7 @@ final class MentorBookingController extends Controller
             'mentor' => $s->mentor?->user?->name,
             'purpose' => $s->purpose,
             'status' => $s->status,
-            'starts_at' => $s->starts_at->toIso8601String(),
+            'starts_at' => $s->starts_at->clone()->utc()->toIso8601String(),
             'duration_minutes' => $s->duration_minutes,
             'join_url' => $s->status === MentorSession::STATUS_BOOKED ? $s->join_url : null,
             'feedback' => $s->feedback,

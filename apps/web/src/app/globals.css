@@ -113,6 +113,51 @@ body {
   }
 }
 
+/* Headline mask reveal — lines rise out of an invisible box on load. */
+.mask-rise {
+  animation: mask-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mask-rise {
+  from {
+    transform: translate3d(0, 110%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Extract ticker — seamless conveyor (two copies, translate to -50%). */
+.ticker-track {
+  animation: ticker 38s linear infinite;
+  will-change: transform;
+}
+@keyframes ticker {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.ticker-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 6%,
+    black 94%,
+    transparent
+  );
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+/* Film grain for ink panels — one inline SVG, no request, sits above the fill. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -121,6 +166,12 @@ body {
     animation: none;
   }
   .hero-drift {
+    animation: none;
+  }
+  .ticker-track {
+    animation: none;
+  }
+  .mask-rise {
     animation: none;
   }
 }

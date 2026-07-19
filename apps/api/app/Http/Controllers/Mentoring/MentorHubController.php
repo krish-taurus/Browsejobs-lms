@@ -186,7 +186,7 @@ final class MentorHubController extends Controller
             'purpose' => $s->purpose,
             'status' => $s->status,
             'no_show_side' => $s->no_show_side,
-            'starts_at' => $s->starts_at->toIso8601String(),
+            'starts_at' => $s->starts_at->clone()->utc()->toIso8601String(),
             'join_url' => $s->status === MentorSession::STATUS_BOOKED ? $s->start_url ?? $s->join_url : null,
             'feedback' => $s->feedback,
             'student_rating' => $s->student_rating,

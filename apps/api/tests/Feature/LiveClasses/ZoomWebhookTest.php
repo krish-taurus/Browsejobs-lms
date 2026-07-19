@@ -11,6 +11,7 @@ use App\Models\LiveSession;
 use App\Models\Recording;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Time\AppTime;
 use App\Support\Zoom\FakeZoomClient;
 use App\Support\Zoom\ZoomClient;
 use Illuminate\Support\Facades\Storage;
@@ -34,7 +35,7 @@ beforeEach(function () {
 
         return LiveSession::query()->create([
             'batch_id' => $batch->id, 'title' => 'Class',
-            'scheduled_start' => '2026-08-20 18:00:00', 'scheduled_end' => '2026-08-20 19:30:00',
+            'scheduled_start' => AppTime::parse('2026-08-20T18:00:00Z'), 'scheduled_end' => AppTime::parse('2026-08-20T19:30:00Z'),
             'zoom_meeting_id' => '900000001',
         ]);
     });

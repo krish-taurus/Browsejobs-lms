@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
+use App\Http\Controllers\Admin\FundingNewsController;
 use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
@@ -96,6 +97,10 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFeedbackController;
 use App\Http\Controllers\Placement\PlacementController;
 use App\Http\Controllers\Placement\ProofController;
+use App\Http\Controllers\Public\AtsCheckController;
+use App\Http\Controllers\Public\DailyBriefController;
+use App\Http\Controllers\Public\MarketIntelController;
+use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
@@ -124,6 +129,22 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('certificates.verify');
+
+// Public market-intelligence snapshot (landing boards). NO tenant.domain —
+// platform-global, sector-level public-news aggregates only.
+Route::get('v1/market-intel', MarketIntelController::class)
+    ->middleware('throttle:30,1');
+
+// Public salary explorer (PRD §6.21) + free ATS quick-check. NO tenant.domain —
+// platform-global; the ATS check stores nothing and uses no AI.
+Route::get('v1/salaries', SalaryController::class)
+    ->middleware('throttle:30,1');
+Route::post('v1/ats-check', AtsCheckController::class)
+    ->middleware('throttle:6,1');
+
+// Daily Market Brief (public; the register-to-read gate lives client-side).
+Route::get('v1/brief', DailyBriefController::class)
+    ->middleware('throttle:30,1');
 
 // Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
 // companies aren't platform users; the unguessable token is the key.
@@ -414,6 +435,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index']);
         Route::put('settings', [SettingsController::class, 'update']);
+
+        // Funding Radar curation ("our research") — sourced public news items.
+        Route::get('funding-news', [FundingNewsController::class, 'index']);
+        Route::post('funding-news', [FundingNewsController::class, 'store']);
+        Route::delete('funding-news/{fundingNews}', [FundingNewsController::class, 'destroy']);
 
         // Whitelabel + provisioning (PRD §6.24) — super-admin manages any tenant.
         Route::get('tenants', [TenantController::class, 'index']);

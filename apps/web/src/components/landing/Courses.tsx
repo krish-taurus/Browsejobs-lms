@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { TiltCard } from "@/components/motion/TiltCard";
 import { Kicker } from "@/components/brand/Kicker";
 import { courses } from "@/content/landing";
 
@@ -33,11 +34,12 @@ export function Courses() {
         {live.map((c, i) => {
           const x = EXTRAS[c.slug];
           return (
-            <ScrollReveal key={c.code} delay={i * 0.06}>
-              <Link
-                href={`/courses/${c.slug}`}
-                className="group flex h-full flex-col rounded-[22px] border border-line bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-trust/40 hover:shadow-soft md:p-10"
-              >
+            <ScrollReveal key={c.code} delay={i * 0.06} className="h-full">
+              <TiltCard className="h-full">
+                <Link
+                  href={`/courses/${c.slug}`}
+                  className="group flex h-full flex-col rounded-[22px] border border-line bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-trust/40 hover:shadow-soft md:p-10"
+                >
                 <div className="flex items-center justify-between">
                   <span className="mono rounded-full bg-sky px-3 py-1 text-xs font-semibold text-deep">{c.code}</span>
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-verify">
@@ -69,7 +71,8 @@ export function Courses() {
                     <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                   </span>
                 </div>
-              </Link>
+                </Link>
+              </TiltCard>
             </ScrollReveal>
           );
         })}

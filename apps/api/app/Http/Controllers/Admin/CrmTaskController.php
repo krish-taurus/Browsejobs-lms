@@ -12,9 +12,9 @@ use App\Http\Resources\CrmTaskResource;
 use App\Models\CrmTask;
 use App\Models\Lead;
 use App\Models\User;
+use App\Support\Time\AppTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 /**
  * Counselor task queue (PRD §6.12). Defaults to the signed-in counselor's own
@@ -49,7 +49,7 @@ final class CrmTaskController extends Controller
             $lead,
             $assignee,
             (string) $request->string('title'),
-            $request->filled('due_at') ? Carbon::parse($request->string('due_at')->toString()) : null,
+            $request->filled('due_at') ? AppTime::parse($request->string('due_at')->toString()) : null,
             $request->user(),
         );
 
