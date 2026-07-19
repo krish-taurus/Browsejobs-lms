@@ -9,7 +9,6 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { MaskReveal } from "@/components/motion/MaskReveal";
 import { Spotlight } from "@/components/motion/Spotlight";
 import { BookCta } from "@/components/landing/BookCta";
-import { openLeadModal } from "@/components/landing/leadModalBus";
 
 /**
  * The Daily Market Brief funnel page: the emailed headline lands here.
@@ -226,13 +225,12 @@ export function BriefView() {
               </p>
               <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <BookCta className="px-7 py-3" />
-                <button
-                  type="button"
-                  onClick={() => openLeadModal({ variant: "counselling" })}
+                <a
+                  href="/masterclass"
                   className="rounded-full border border-white/20 px-7 py-3 text-sm font-semibold text-white transition-colors hover:border-white/60"
                 >
                   Watch the recording
-                </button>
+                </a>
               </div>
             </Spotlight>
           </ScrollReveal>

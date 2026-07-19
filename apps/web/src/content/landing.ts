@@ -14,6 +14,13 @@ export const DISCLAIMER =
 export const FOOTER_LINE =
   "Every promise in writing · Every call recorded & AI-monitored.";
 
+/**
+ * Masterclass recording embed URL (YouTube/Vimeo embed link). null until the
+ * founder publishes one — the /masterclass page then sells the live session
+ * only, never a placeholder video.
+ */
+export const MASTERCLASS_RECORDING_URL: string | null = null;
+
 export const contact = {
   phone: "+91 86185 19825",
   email: "hello@browsejobs.ai",

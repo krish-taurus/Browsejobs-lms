@@ -14,6 +14,7 @@ import { Spotlight } from "@/components/motion/Spotlight";
 import { TiltCard } from "@/components/motion/TiltCard";
 import { BookCta } from "@/components/landing/BookCta";
 import { sameRolePages, type SalaryBand, type SalaryPage } from "@/content/salaries";
+import { skillHref } from "@/content/skills";
 
 /**
  * The cinematic body of a /salaries page: aurora ink hero with a decoded
@@ -145,18 +146,26 @@ export function SalaryDetail({ page }: { page: SalaryPage }) {
         </ScrollReveal>
         <ScrollReveal delay={0.08}>
           <div className="mt-6 flex flex-wrap gap-2">
-            {page.skills.map((sk, i) => (
-              <motion.span
-                key={sk}
-                className="mono rounded-full border border-line bg-white px-4 py-2 text-sm text-ink shadow-soft"
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: durations.slow, ease, delay: i * stagger }}
-              >
-                {sk}
-              </motion.span>
-            ))}
+            {page.skills.map((sk, i) => {
+              const href = skillHref(sk);
+              return (
+                <motion.span
+                  key={sk}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: durations.slow, ease, delay: i * stagger }}
+                >
+                  {href ? (
+                    <Link href={href} className="mono inline-block rounded-full border border-line bg-white px-4 py-2 text-sm text-ink shadow-soft transition-colors hover:border-trust">
+                      {sk}
+                    </Link>
+                  ) : (
+                    <span className="mono inline-block rounded-full border border-line bg-white px-4 py-2 text-sm text-ink shadow-soft">{sk}</span>
+                  )}
+                </motion.span>
+              );
+            })}
           </div>
           {page.track && (
             <p className="mt-5 text-ink2/70">
