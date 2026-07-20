@@ -86,7 +86,7 @@ SQL
   say "Writing apps/web/.env…"
   if [ ! -f "${WEB_DIR}/.env" ]; then cp "${WEB_DIR}/.env.example" "${WEB_DIR}/.env"; fi
   web_set(){ grep -q "^$1=" "${WEB_DIR}/.env" && sed -i "s|^$1=.*|$1=$2|" "${WEB_DIR}/.env" || echo "$1=$2" >> "${WEB_DIR}/.env"; }
-  web_set NEXT_PUBLIC_API_URL "https://${API_HOST}/api/v1"
+  web_set NEXT_PUBLIC_API_URL "https://${API_HOST}"
   web_set NEXT_PUBLIC_SITE_URL "https://${DOMAIN}"
   web_set NEXT_PUBLIC_DEFAULT_TENANT browsejobs
   web_set REVALIDATE_SECRET "$(openssl rand -hex 16)"
