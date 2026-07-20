@@ -47,6 +47,20 @@ export const legacyRedirects: Redirect[] = [
 ];
 
 /**
+ * Intuitive aliases: the URLs people naturally type or guess, mapped to the
+ * real routes so none of them 404.
+ */
+export const aliasRedirects: Redirect[] = [
+  { source: "/login", destination: "/student", permanent: false },
+  { source: "/signin", destination: "/student", permanent: false },
+  { source: "/signup", destination: "/register", permanent: false },
+  { source: "/privacy", destination: "/privacy-policy", permanent: true },
+  { source: "/terms-and-conditions", destination: "/terms", permanent: true },
+  { source: "/refunds", destination: "/refund-policy", permanent: true },
+  { source: "/refund", destination: "/refund-policy", permanent: true },
+];
+
+/**
  * Host canonicalisation: browsejobs.in and any www host 301 to the apex .ai
  * domain (PRD §14.1 — browsejobs.in 301s to browsejobs.ai). Path is preserved.
  */
@@ -71,4 +85,8 @@ export const hostRedirects: Redirect[] = [
   },
 ];
 
-export const cutoverRedirects: Redirect[] = [...hostRedirects, ...legacyRedirects];
+export const cutoverRedirects: Redirect[] = [
+  ...hostRedirects,
+  ...legacyRedirects,
+  ...aliasRedirects,
+];
