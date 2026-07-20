@@ -40,6 +40,12 @@ export function Nav() {
           >
             Login
           </Link>
+          <Link
+            href="/register"
+            className="text-sm font-semibold text-trust transition-colors hover:text-deep"
+          >
+            Sign up
+          </Link>
         </div>
 
         {/* Mobile: quiet login link beside the CTA */}

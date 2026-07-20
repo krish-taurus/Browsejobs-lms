@@ -81,6 +81,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Platform",
     items: [
+      { href: "/admin/team", label: "Team", role: "admin" },
       { href: "/admin/messages", label: "Messaging" },
       { href: "/admin/ai-usage", label: "AI usage" },
       { href: "/admin/tenants", label: "Tenants", role: "super-admin" },
@@ -116,8 +117,10 @@ function Guarded({ children }: { children: ReactNode }) {
   // Role-gated items (e.g. super-admin-only Settings) are hidden from the menu for
   // anyone who can't use them — the API enforces it too, this just avoids a dead link.
   const roles = user?.roles ?? [];
+  // super-admin sees every role-gated destination; otherwise the item's role must match.
+  const canSee = (r?: string) => !r || roles.includes(r) || roles.includes("super-admin");
   const visibleGroups = navGroups
-    .map((g) => ({ ...g, items: g.items.filter((i) => !i.role || roles.includes(i.role)) }))
+    .map((g) => ({ ...g, items: g.items.filter((i) => canSee(i.role)) }))
     .filter((g) => g.items.length > 0);
 
   useEffect(() => {

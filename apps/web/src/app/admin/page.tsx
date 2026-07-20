@@ -16,6 +16,7 @@ export default function StaffLoginPage() {
   const [step, setStep] = useState<"credentials" | "code">("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -86,7 +87,24 @@ export default function StaffLoginPage() {
           {step === "credentials" ? (
             <form onSubmit={login} className="mt-6 space-y-3">
               <input autoFocus required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email" className={inputCls} />
-              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className={inputCls} />
+              <div className="relative">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  className={`${inputCls} pr-16`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-3 my-auto h-fit text-xs font-semibold text-muted transition-colors hover:text-trust"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
               <button
                 disabled={busy || !email || !password}
                 className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"

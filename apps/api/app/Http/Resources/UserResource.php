@@ -24,6 +24,7 @@ final class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'user_type' => $this->user_type,
+            'is_active' => (bool) $this->is_active,
             'roles' => $this->roles->pluck('slug'),
         ];
     }
