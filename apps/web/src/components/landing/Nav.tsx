@@ -34,7 +34,21 @@ export function Nav() {
               {l.label}
             </a>
           ))}
+          <Link
+            href="/student"
+            className="text-sm font-medium text-muted transition-colors hover:text-ink"
+          >
+            Login
+          </Link>
         </div>
+
+        {/* Mobile: quiet login link beside the CTA */}
+        <Link
+          href="/student"
+          className="text-sm font-medium text-muted transition-colors hover:text-ink md:hidden"
+        >
+          Login
+        </Link>
 
         <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
           Book Free<span className="hidden sm:inline"> Masterclass</span>
