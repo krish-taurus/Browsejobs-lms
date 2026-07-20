@@ -130,8 +130,11 @@ cmd_install(){
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
   systemctl daemon-reload
   systemctl enable --now browsejobs-worker browsejobs-web
-  ( crontab -l 2>/dev/null | grep -v 'schedule:run' ; \
-    echo "* * * * * cd ${API_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | crontab -
+  # `crontab -l` exits 1 when root has no crontab yet (fresh server) — the
+  # `|| true` keeps set -e/pipefail from silently killing the script here.
+  CRON_KEEP="$(crontab -l 2>/dev/null | grep -v 'schedule:run' || true)"
+  printf '%s\n%s\n' "${CRON_KEEP}" "* * * * * cd ${API_DIR} && php artisan schedule:run >> /dev/null 2>&1" \
+    | sed '/^$/d' | crontab -
   ok "Worker + web running; scheduler cron installed."
 
   say "Configuring Nginx…"
