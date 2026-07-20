@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
 import { useFeeStatus } from "@/lib/fee-status";
+import { Mark } from "@/components/brand/Wordmark";
 import { navGroups, primaryTabs } from "@/components/portal/nav";
 import { CommandPalette } from "@/components/portal/CommandPalette";
 import { FeeBlockedScreen } from "@/components/portal/FeeBlockedScreen";
@@ -63,9 +64,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden border-r border-line bg-white md:flex md:flex-col">
         <div className="flex items-center gap-2 px-6 py-5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-white display">
-            B
-          </span>
+          <Mark />
           <span className="display text-ink">BrowseJobs</span>
         </div>
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
