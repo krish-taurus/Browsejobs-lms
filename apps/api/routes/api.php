@@ -54,6 +54,7 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\SyllabusRecommendationController;
+use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\TicketController;
@@ -438,6 +439,14 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     });
 
     // Platform integration settings (PRD §6.14) — super-admin only.
+    // Team management (institute admin): staff accounts + role assignment.
+    Route::middleware('can:manage-users')->group(function () {
+        Route::get('team', [TeamController::class, 'index']);
+        Route::post('team', [TeamController::class, 'store']);
+        Route::patch('team/{user}', [TeamController::class, 'update']);
+        Route::post('team/{user}/active', [TeamController::class, 'setActive']);
+    });
+
     Route::middleware('can:manage-settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index']);
         Route::put('settings', [SettingsController::class, 'update']);

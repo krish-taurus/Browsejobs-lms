@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'user_type',
+        'is_active',
         'two_factor_enabled',
         'leaderboard_opt_out',
         'password',
@@ -59,6 +60,7 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'leaderboard_opt_out' => 'boolean',
+            'is_active' => 'boolean',
             'telemetry_consent_at' => 'datetime',
             'password' => 'hashed',
         ];

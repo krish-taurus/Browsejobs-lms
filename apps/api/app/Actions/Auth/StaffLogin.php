@@ -44,6 +44,12 @@ final readonly class StaffLogin
             ]);
         }
 
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => 'This account has been deactivated. Contact your administrator.',
+            ]);
+        }
+
         if ($user->two_factor_enabled) {
             $this->requestOtp->handle($tenant, $user->email, OtpChannel::Email, OtpPurpose::StaffTwoFactor);
 
