@@ -1,9 +1,10 @@
 /**
- * Interim BrowseJobs wordmark (design-system SVG, swappable for the final asset).
+ * BrowseJobs wordmark — "The Upward Lens" mark + Sora display type.
  *
- * The mark reads as the engine itself: three rising strokes (LISTEN) resolving into
- * a solid block (REBUILD) — the reverse-engineering story in one glyph. Crisp at any
- * size; `tone="dark"` inverts it for ink surfaces (footer/panels).
+ * The mark is a magnifier whose lens holds a rising arrow, its handle on the
+ * same 45° axis: browse = the lens, jobs = the trajectory. Brand colours only
+ * (Trust blue → Deep navy tile, white strokes) so it sits on light and ink
+ * surfaces unchanged. Master asset: /public/logo.svg.
  */
 export function Wordmark({
   tone = "light",
@@ -15,18 +16,27 @@ export function Wordmark({
   showAi?: boolean;
 }) {
   const ink = tone === "dark" ? "#FFFFFF" : "var(--bj-ink)";
-  const tile = tone === "dark" ? "#1B2A44" : "var(--bj-ink)";
+  const gradId = tone === "dark" ? "bj-mark-dark" : "bj-mark-light";
 
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden className="shrink-0">
-        <rect width="32" height="32" rx="8" fill={tile} />
-        {/* LISTEN: three rising strokes */}
-        <rect x="8" y="18" width="2.6" height="6" rx="1.3" fill="#1B6DF0" />
-        <rect x="12.4" y="14" width="2.6" height="10" rx="1.3" fill="#1B6DF0" opacity="0.85" />
-        <rect x="16.8" y="10" width="2.6" height="14" rx="1.3" fill="#1B6DF0" opacity="0.7" />
-        {/* REBUILD: the block it resolves into */}
-        <rect x="21.4" y="8" width="3.4" height="16" rx="1.4" fill="#FFFFFF" opacity={tone === "dark" ? "0.9" : "0.92"} />
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" aria-hidden className="shrink-0">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#1B6DF0" />
+            <stop offset="1" stopColor="#0E3FA9" />
+          </linearGradient>
+        </defs>
+        <rect width="64" height="64" rx="14" fill={`url(#${gradId})`} />
+        <circle cx="28.5" cy="28.5" r="13.5" stroke="#FFFFFF" strokeWidth="5.5" />
+        <path d="M39.5 39.5 L49.5 49.5" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+        <path
+          d="M22.5 34.5 L33 24 M25.5 22.9 H34.1 V31.5"
+          stroke="#FFFFFF"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
       <span className="display text-lg leading-none" style={{ color: ink }}>
         BrowseJobs

@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Favicon build of the BrowseJobs mark: slightly heavier strokes so the
+       lens + rising arrow survive 16px. -->
+  <defs>
+    <linearGradient id="bj-tile" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B6DF0"/>
+      <stop offset="1" stop-color="#0E3FA9"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bj-tile)"/>
+  <circle cx="28.5" cy="28.5" r="13.5" stroke="#FFFFFF" stroke-width="6"/>
+  <path d="M39.5 39.5 L49.5 49.5" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M23 34 L32.5 24.5 M26 23.4 H33.6 V31" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
