@@ -1,10 +1,10 @@
 /**
- * BrowseJobs wordmark — "The Upward Lens" mark + Sora display type.
+ * BrowseJobs wordmark — "The Breakout Bar" mark + Sora display type.
  *
- * The mark is a magnifier whose lens holds a rising arrow, its handle on the
- * same 45° axis: browse = the lens, jobs = the trajectory. Brand colours only
- * (Trust blue → Deep navy tile, white strokes) so it sits on light and ink
- * surfaces unchanged. Master asset: /public/logo.svg.
+ * Three blue strokes rising (interviews being listened to) and a fourth that
+ * breaks out as an arrow — the trajectory the rebuilt syllabus creates.
+ * Brand colours only; `tone="dark"` lightens the tile so it reads on ink
+ * surfaces (footer/panels). Master asset: /public/logo.svg.
  */
 export function Wordmark({
   tone = "light",
@@ -16,24 +16,20 @@ export function Wordmark({
   showAi?: boolean;
 }) {
   const ink = tone === "dark" ? "#FFFFFF" : "var(--bj-ink)";
-  const gradId = tone === "dark" ? "bj-mark-dark" : "bj-mark-light";
+  const tile = tone === "dark" ? "#1B2A44" : "#0A1220";
 
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <svg width="32" height="32" viewBox="0 0 64 64" fill="none" aria-hidden className="shrink-0">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#1B6DF0" />
-            <stop offset="1" stopColor="#0E3FA9" />
-          </linearGradient>
-        </defs>
-        <rect width="64" height="64" rx="14" fill={`url(#${gradId})`} />
-        <circle cx="28.5" cy="28.5" r="13.5" stroke="#FFFFFF" strokeWidth="5.5" />
-        <path d="M39.5 39.5 L49.5 49.5" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+        <rect width="64" height="64" rx="14" fill={tile} />
+        <rect x="13.5" y="36" width="5.5" height="13" rx="2.75" fill="#1B6DF0" opacity="0.55" />
+        <rect x="22.5" y="30" width="5.5" height="19" rx="2.75" fill="#1B6DF0" opacity="0.75" />
+        <rect x="31.5" y="24" width="5.5" height="25" rx="2.75" fill="#1B6DF0" />
+        <rect x="41.75" y="20" width="5.5" height="29" rx="2.75" fill="#FFFFFF" />
         <path
-          d="M22.5 34.5 L33 24 M25.5 22.9 H34.1 V31.5"
+          d="M38.5 20.5 L44.5 13.5 L50.5 20.5"
           stroke="#FFFFFF"
-          strokeWidth="5"
+          strokeWidth="5.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
