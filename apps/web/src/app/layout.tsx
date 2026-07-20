@@ -102,12 +102,12 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "EducationalOrganization",
-              "@id": "https://browsejobs.in/#organization",
+              "@id": "https://browsejobs.ai/#organization",
               name: "Browsejobs",
               alternateName: "BrowseJobs",
-              url: "https://browsejobs.in",
-              logo: "https://browsejobs.in/logo.png",
-              image: "https://browsejobs.in/logo.png",
+              url: "https://browsejobs.ai",
+              logo: "https://browsejobs.ai/logo.png",
+              image: "https://browsejobs.ai/logo.png",
               description:
                 "Browsejobs is a career development platform focused on Data Engineering. We empower aspiring data engineers with industry-aligned training, real-world projects, interview preparation, resume building, LinkedIn optimization, and placement support to help them build successful careers in data engineering.",
               knowsAbout: [
