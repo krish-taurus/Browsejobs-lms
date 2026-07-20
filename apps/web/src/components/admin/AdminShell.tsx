@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { Mark } from "@/components/brand/Wordmark";
 
 type NavItem = { href: string; label: string; role?: string };
 
@@ -135,7 +136,7 @@ function Guarded({ children }: { children: ReactNode }) {
     <div className="min-h-screen md:grid md:grid-cols-[230px_1fr]">
       <aside className="hidden border-r border-line bg-ink text-white md:flex md:flex-col">
         <div className="flex items-center gap-2 px-6 py-5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white text-ink display">B</span>
+          <Mark tone="dark" />
           <div>
             <span className="display block leading-none">BrowseJobs</span>
             <span className="mono text-[10px] uppercase tracking-widest text-sky/60">Admin</span>

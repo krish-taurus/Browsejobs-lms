@@ -1,10 +1,47 @@
 /**
- * Interim BrowseJobs wordmark (design-system SVG, swappable for the final asset).
+ * BrowseJobs wordmark — "The Breakout Bar" mark + Sora display type.
  *
- * The mark reads as the engine itself: three rising strokes (LISTEN) resolving into
- * a solid block (REBUILD) — the reverse-engineering story in one glyph. Crisp at any
- * size; `tone="dark"` inverts it for ink surfaces (footer/panels).
+ * Three blue strokes rising (interviews being listened to) and a fourth that
+ * breaks out as an arrow — the trajectory the rebuilt syllabus creates.
+ * Brand colours only; `tone="dark"` lightens the tile so it reads on ink
+ * surfaces (footer/panels). Master asset: /public/logo.svg.
  */
+export function Mark({
+  size = 32,
+  tone = "light",
+  className = "",
+}: {
+  size?: number;
+  tone?: "light" | "dark";
+  className?: string;
+}) {
+  const tile = tone === "dark" ? "#1B2A44" : "#0A1220";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden
+      className={`shrink-0 ${className}`}
+    >
+      <rect width="64" height="64" rx="14" fill={tile} />
+      <rect x="13.5" y="36" width="5.5" height="13" rx="2.75" fill="#1B6DF0" opacity="0.55" />
+      <rect x="22.5" y="30" width="5.5" height="19" rx="2.75" fill="#1B6DF0" opacity="0.75" />
+      <rect x="31.5" y="24" width="5.5" height="25" rx="2.75" fill="#1B6DF0" />
+      <rect x="41.75" y="20" width="5.5" height="29" rx="2.75" fill="#FFFFFF" />
+      <path
+        d="M38.5 20.5 L44.5 13.5 L50.5 20.5"
+        stroke="#FFFFFF"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Wordmark({
   tone = "light",
   className = "",
@@ -15,19 +52,10 @@ export function Wordmark({
   showAi?: boolean;
 }) {
   const ink = tone === "dark" ? "#FFFFFF" : "var(--bj-ink)";
-  const tile = tone === "dark" ? "#1B2A44" : "var(--bj-ink)";
 
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden className="shrink-0">
-        <rect width="32" height="32" rx="8" fill={tile} />
-        {/* LISTEN: three rising strokes */}
-        <rect x="8" y="18" width="2.6" height="6" rx="1.3" fill="#1B6DF0" />
-        <rect x="12.4" y="14" width="2.6" height="10" rx="1.3" fill="#1B6DF0" opacity="0.85" />
-        <rect x="16.8" y="10" width="2.6" height="14" rx="1.3" fill="#1B6DF0" opacity="0.7" />
-        {/* REBUILD: the block it resolves into */}
-        <rect x="21.4" y="8" width="3.4" height="16" rx="1.4" fill="#FFFFFF" opacity={tone === "dark" ? "0.9" : "0.92"} />
-      </svg>
+      <Mark tone={tone} />
       <span className="display text-lg leading-none" style={{ color: ink }}>
         BrowseJobs
         {showAi && <span style={{ color: "var(--bj-trust)" }}>.ai</span>}
