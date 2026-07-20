@@ -51,11 +51,20 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: siteUrl,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "BrowseJobs.ai — This syllabus was not written. It was reverse-engineered.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ["/og.png"],
   },
   robots: { index: true, follow: true },
   verification: {
