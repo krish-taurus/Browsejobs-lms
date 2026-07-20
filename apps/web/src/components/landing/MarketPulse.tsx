@@ -284,8 +284,29 @@ export function MarketPulse() {
             </p>
           </ScrollReveal>
 
+          {/* Tappable hub picker — the reliable way to select a city on touch,
+              where the canvas has no hover. */}
+          <ScrollReveal delay={0.05}>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(cities.length ? cities : CITIES).map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => setSelected(c)}
+                  className={`mono rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    selected.key === c.key
+                      ? "bg-trust text-white"
+                      : "border border-white/15 text-sky/70 hover:border-white/40 hover:text-white"
+                  }`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </ScrollReveal>
+
           <ScrollReveal delay={0.08}>
-            <div className="mt-8 rounded-[14px] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <div className="mt-6 rounded-[14px] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
               <div className="flex items-baseline justify-between">
                 <span className="display text-xl">{selected.name}</span>
                 <span className="mono text-[10px] uppercase tracking-[0.18em] text-sky/60">
@@ -303,8 +324,8 @@ export function MarketPulse() {
                 ))}
               </ul>
               <p className="mono mt-4 text-[10px] leading-relaxed text-sky/40">
-                Hover a hub to inspect it. Illustrative signal map — directions
-                drawn from roles the engine tracks, not live counts.
+                Tap a hub above to inspect it. Illustrative signal map —
+                directions drawn from roles the engine tracks, not live counts.
               </p>
             </div>
           </ScrollReveal>
