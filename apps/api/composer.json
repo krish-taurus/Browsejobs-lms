@@ -11,7 +11,8 @@
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.28",
-        "laravel/tinker": "^2.9"
+        "laravel/tinker": "^2.9",
+        "league/flysystem-aws-s3-v3": "^3.35"
     },
     "require-dev": {
         "laravel/pint": "^1.13",
@@ -78,6 +79,9 @@
             "advisories": {
                 "block": false
             }
+        },
+        "platform": {
+            "php": "8.3.0"
         }
     },
     "minimum-stability": "stable",
