@@ -110,8 +110,10 @@ function editorHref(type: string, lessonId: number): string | null {
     case "assignment":
     case "project":
       return `/admin/assignments/${lessonId}`;
+    case "coding_lab":
+      return `/admin/coding-lab/${lessonId}`;
     default:
-      return null; // video, coding_lab, mock_milestone, live_class — not yet
+      return null; // video, mock_milestone, live_class — not yet
   }
 }
 
