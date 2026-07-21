@@ -10,6 +10,7 @@ use App\Services\AI\AnthropicClient;
 use App\Services\AI\OpenAiCompatibleClient;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
+use App\Support\AI\ProviderResolver;
 use App\Support\Certificates\CertificateRenderer;
 use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Fees\DuesFeeGate;
@@ -128,11 +129,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PushSender::class, NullPushSender::class);
 
         // AI Service Layer (P3.1). The transport is provider-switchable via
-        // AI_PROVIDER (anthropic | openai | kimi | deepseek | grok | custom —
-        // see config/ai.php); tests bind FakeAiClient. The AiGateway (budget +
-        // ai_events) composes this, so switching vendors changes nothing else.
+        // AI_PROVIDER (auto | anthropic | openai | kimi | deepseek | grok |
+        // custom — see config/ai.php); tests bind FakeAiClient. The AiGateway
+        // (budget + ai_events) composes this, so switching vendors changes
+        // nothing else. ProviderResolver picks the effective provider: the
+        // chosen one when it has a key, else the first provider that does — so
+        // `auto` (or a keyless choice) transparently uses whatever is set up.
         $this->app->bind(AiClient::class, function (): AiClient {
-            $provider = (string) config('ai.provider', 'anthropic');
+            $provider = app(ProviderResolver::class)->resolve();
             $config = config("ai.providers.{$provider}");
 
             if (! is_array($config)) {

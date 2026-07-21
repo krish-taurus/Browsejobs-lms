@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
+use App\Support\AI\ProviderResolver;
 use App\Support\Settings\PlatformSettings;
 use Illuminate\Http\JsonResponse;
 
@@ -19,18 +20,18 @@ use Illuminate\Http\JsonResponse;
  */
 final class SettingsController extends Controller
 {
-    public function index(PlatformSettings $settings): JsonResponse
+    public function index(PlatformSettings $settings, ProviderResolver $ai): JsonResponse
     {
-        return response()->json(['data' => $settings->schema()]);
+        return response()->json(['data' => $settings->schema(), 'ai' => $ai->status()]);
     }
 
-    public function update(UpdateSettingsRequest $request, PlatformSettings $settings): JsonResponse
+    public function update(UpdateSettingsRequest $request, PlatformSettings $settings, ProviderResolver $ai): JsonResponse
     {
         /** @var array<string, array<string, mixed>> $input */
         $input = $request->input('settings', []);
 
         $settings->save($input, $request->user());
 
-        return response()->json(['data' => $settings->schema()]);
+        return response()->json(['data' => $settings->schema(), 'ai' => $ai->status()]);
     }
 }
