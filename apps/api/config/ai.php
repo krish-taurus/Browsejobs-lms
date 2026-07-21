@@ -63,7 +63,9 @@ return [
 
     // Seconds to wait for a provider response. Generation calls (syllabus, reports)
     // can take well over the 30s HTTP default on slower models, so allow more.
-    'http_timeout' => (int) env('AI_HTTP_TIMEOUT', 120),
+    // Keep this below the queue job timeout (see the AI jobs' $timeout) so the
+    // HTTP layer, not the worker, is what bounds a slow call.
+    'http_timeout' => (int) env('AI_HTTP_TIMEOUT', 150),
 
     // Per-student daily token budget, enforced in the gateway (CLAUDE.md).
     'daily_token_budget' => (int) env('AI_DAILY_TOKEN_BUDGET_PER_STUDENT', 200_000),

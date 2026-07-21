@@ -123,7 +123,10 @@ cmd_install(){
   ok "API ready."
 
   say "Web: install & build…"
-  cd "${WEB_DIR}"; npm ci; npm run build; ok "Web built."
+  # Install from the repo ROOT — the lockfile + npm workspaces live there, so
+  # `next` and other binaries are hoisted correctly (a per-package `npm ci`
+  # inside apps/web has no lockfile and leaves `next` unlinked → "next: not found").
+  cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web; ok "Web built."
 
   say "Installing services (worker + web) + scheduler cron…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
@@ -167,7 +170,11 @@ cmd_update(){
   git -C "${APP_DIR}" pull --ff-only
   cd "${API_DIR}"; sudo -u www-data composer install --no-dev --optimize-autoloader
   php artisan migrate --force; php artisan optimize
-  cd "${WEB_DIR}"; npm ci; npm run build
+  cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
+  say "Refreshing systemd units (picks up worker timeout/flag changes)…"
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
+  systemctl daemon-reload
   say "Restarting services (worker MUST restart to run new code)…"
   systemctl restart browsejobs-worker browsejobs-web
   systemctl reload php8.3-fpm || true

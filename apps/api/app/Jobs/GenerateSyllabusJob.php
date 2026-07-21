@@ -31,6 +31,13 @@ final class GenerateSyllabusJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /**
+     * A full syllabus can take a couple of minutes on a slower model. Override
+     * the worker's 60s default so the job isn't killed mid-generation (kept
+     * under the redis retry_after so it is never re-dispatched while running).
+     */
+    public int $timeout = 180;
+
     public function __construct(
         public readonly int $syllabusId,
         public readonly int $actorUserId,
