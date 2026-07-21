@@ -333,9 +333,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-curriculum')->group(function () {
         Route::get('courses', [CurriculumController::class, 'index']);
         Route::get('courses/{course}', [CurriculumController::class, 'show']);
+        Route::get('modules/search', [ModuleController::class, 'search']);
         Route::post('modules', [ModuleController::class, 'store']);
         Route::patch('modules/{module}', [ModuleController::class, 'update']);
         Route::delete('modules/{module}', [ModuleController::class, 'destroy']);
+        Route::post('modules/{module}/clone', [ModuleController::class, 'clone']);
         Route::post('topics', [TopicController::class, 'store']);
         Route::patch('topics/{topic}', [TopicController::class, 'update']);
         Route::delete('topics/{topic}', [TopicController::class, 'destroy']);
