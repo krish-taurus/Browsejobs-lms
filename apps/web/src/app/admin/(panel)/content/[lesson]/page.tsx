@@ -13,6 +13,8 @@ type LessonNote = {
   source: "paste" | "upload";
   status: "draft" | "approved";
   has_notes: boolean;
+  has_pdf: boolean;
+  pdf_uploaded: boolean;
   is_citable: boolean;
 } | null;
 
@@ -25,6 +27,7 @@ export default function ContentEditorPage({ params }: { params: Promise<{ lesson
   const [transcript, setTranscript] = useState("");
   const [notes, setNotes] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
 
   const query = useQuery({
     queryKey: ["admin", "note", lesson],
@@ -70,6 +73,26 @@ export default function ContentEditorPage({ params }: { params: Promise<{ lesson
     onError,
   });
 
+  const openPdf = (res: { data: { url: string | null } }) => {
+    if (res.data.url) window.open(res.data.url, "_blank");
+  };
+  const makePdf = useMutation({
+    mutationFn: () => apiJson<{ data: { url: string | null } }>(`/api/v1/admin/lessons/${lesson}/notes/pdf`, { method: "POST", body: JSON.stringify({}) }),
+    onSuccess: (res) => { setError(null); openPdf(res); },
+    onError,
+  });
+  const uploadPdf = useMutation({
+    mutationFn: () => {
+      const f = pdfRef.current?.files?.[0];
+      if (!f) throw new ApiError(422, { message: "Choose a PDF first." });
+      const fd = new FormData();
+      fd.append("file", f);
+      return apiJson<{ data: { url: string | null } }>(`/api/v1/admin/lessons/${lesson}/notes/pdf/upload`, { method: "POST", body: fd });
+    },
+    onSuccess: (res) => { setError(null); openPdf(res); },
+    onError,
+  });
+
   return (
     <div className="mx-auto max-w-2xl">
       <Link href="/admin/content" className="text-sm text-trust hover:underline">← Class notes</Link>
@@ -109,6 +132,29 @@ export default function ContentEditorPage({ params }: { params: Promise<{ lesson
             </button>
           </div>
           <p className="mt-2 text-xs text-muted">Approving publishes the notes to students and feeds this transcript to the AI Tutor. Editing reverts to draft.</p>
+        </div>
+      )}
+
+      {/* Downloadable PDF */}
+      {note && (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-5">
+          <p className="text-sm font-semibold text-ink">3. Downloadable PDF</p>
+          <p className="mt-1 text-xs text-muted">
+            Turn the notes into a branded PDF students can download — or upload your own.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button onClick={() => makePdf.mutate()} disabled={makePdf.isPending || !note.has_notes}
+              className="rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50">
+              {makePdf.isPending ? "Building…" : "Generate PDF"}
+            </button>
+            <span className="text-xs text-muted">or</span>
+            <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="text-sm text-muted" />
+            <button onClick={() => uploadPdf.mutate()} disabled={uploadPdf.isPending}
+              className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-paper disabled:opacity-50">
+              {uploadPdf.isPending ? "Uploading…" : "Upload PDF"}
+            </button>
+          </div>
+          {note.pdf_uploaded && <p className="mono mt-2 text-[10px] uppercase tracking-widest text-verify">Uploaded PDF attached</p>}
         </div>
       )}
     </div>

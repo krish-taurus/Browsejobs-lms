@@ -364,6 +364,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::put('lessons/{lesson}/notes', [LessonNoteController::class, 'upsert']);
         Route::post('lessons/{lesson}/notes/upload', [LessonNoteController::class, 'upload']);
         Route::post('lessons/{lesson}/notes/generate', [LessonNoteController::class, 'generate']);
+        Route::post('lessons/{lesson}/notes/pdf', [LessonNoteController::class, 'generatePdf']);
+        Route::post('lessons/{lesson}/notes/pdf/upload', [LessonNoteController::class, 'uploadPdf']);
+        Route::get('lessons/{lesson}/notes/pdf', [LessonNoteController::class, 'downloadPdf']);
         Route::patch('lessons/{lesson}/notes', [LessonNoteController::class, 'updateNotes']);
         Route::post('lesson-notes/{note}/approve', [LessonNoteController::class, 'approve']);
         Route::get('course-syllabuses', [SyllabusController::class, 'index']);

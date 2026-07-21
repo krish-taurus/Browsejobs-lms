@@ -11,6 +11,7 @@ use App\Models\LessonNote;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * The student's study notes for a lesson (PRD §6.10). Under auth:sanctum without
@@ -32,6 +33,9 @@ final class MyLessonNotesController extends Controller
                 'lesson_id' => $note->lesson_id,
                 'title' => $note->lesson?->title,
                 'notes' => $note->notes,
+                'pdf_url' => $note->pdf_path !== null
+                    ? Storage::disk('s3')->temporaryUrl($note->pdf_path, now()->addMinutes(15))
+                    : null,
                 'approved_at' => $note->approved_at?->toIso8601String(),
             ]]);
         });

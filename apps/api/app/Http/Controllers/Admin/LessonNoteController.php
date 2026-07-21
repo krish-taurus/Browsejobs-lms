@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Content\ApproveNotes;
+use App\Actions\Content\RenderNotesPdf;
 use App\Actions\Content\SaveTranscript;
 use App\Enums\LessonType;
 use App\Enums\NoteSource;
@@ -20,6 +21,7 @@ use App\Models\Lesson;
 use App\Models\LessonNote;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Admin/trainer class-notes builder (PRD §6.10). Gated by `can:manage-curriculum`.
@@ -115,6 +117,53 @@ final class LessonNoteController extends Controller
         $approve->handle($note, $request->user());
 
         return (new LessonNoteResource($note->refresh()))->response();
+    }
+
+    /** Render the notes markdown into a branded downloadable PDF. */
+    public function generatePdf(Lesson $lesson, RenderNotesPdf $render): JsonResponse
+    {
+        $note = LessonNote::query()->where('lesson_id', $lesson->id)->firstOrFail();
+
+        abort_if(blank($note->notes), 422, 'Add or generate notes before making a PDF.');
+
+        $render->handle($note);
+
+        return response()->json(['data' => ['url' => $this->pdfUrl($note->refresh())]]);
+    }
+
+    /** Attach a manually-prepared PDF instead of generating one. */
+    public function uploadPdf(Request $request, Lesson $lesson): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:pdf', 'max:20480']]);
+
+        $note = LessonNote::query()->firstOrCreate(
+            ['lesson_id' => $lesson->id],
+            ['tenant_id' => $lesson->tenant_id, 'transcript' => '', 'source' => NoteSource::Upload->value, 'status' => NoteStatus::Draft->value],
+        );
+
+        $path = "notes/{$lesson->tenant_id}/lesson-{$lesson->id}.pdf";
+        Storage::disk(RenderNotesPdf::DISK)->put($path, $request->file('file')->getContent(), 'private');
+        $note->update(['pdf_path' => $path, 'pdf_uploaded' => true]);
+
+        return response()->json(['data' => ['url' => $this->pdfUrl($note->refresh())]]);
+    }
+
+    /** A short-lived download URL for the note's PDF (admin preview). */
+    public function downloadPdf(Lesson $lesson): JsonResponse
+    {
+        $note = LessonNote::query()->where('lesson_id', $lesson->id)->firstOrFail();
+        abort_if($note->pdf_path === null, 404, 'No PDF yet.');
+
+        return response()->json(['data' => ['url' => $this->pdfUrl($note)]]);
+    }
+
+    private function pdfUrl(LessonNote $note): ?string
+    {
+        if ($note->pdf_path === null) {
+            return null;
+        }
+
+        return Storage::disk(RenderNotesPdf::DISK)->temporaryUrl($note->pdf_path, now()->addMinutes(15));
     }
 
     /** Editing an approved note un-approves it and retracts its transcript from the tutor KB. */

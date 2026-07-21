@@ -37,8 +37,8 @@ class LessonNote extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'lesson_id', 'recording_id', 'transcript', 'notes', 'source', 'status',
-        'generated_by', 'approved_by', 'approved_at', 'knowledge_document_id',
+        'tenant_id', 'lesson_id', 'recording_id', 'transcript', 'notes', 'pdf_path', 'pdf_uploaded',
+        'source', 'status', 'generated_by', 'approved_by', 'approved_at', 'knowledge_document_id',
     ];
 
     /**
@@ -50,6 +50,7 @@ class LessonNote extends Model
             'source' => NoteSource::class,
             'status' => NoteStatus::class,
             'approved_at' => 'datetime',
+            'pdf_uploaded' => 'boolean',
         ];
     }
 
