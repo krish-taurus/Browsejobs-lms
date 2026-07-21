@@ -50,10 +50,12 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
       return;
     }
     gen.current.polls += 1;
-    if (gen.current.polls > 20) {
+    // Generation can take a couple of minutes on a slower model, so keep
+    // watching for ~4 min (80 × 3s) before giving up.
+    if (gen.current.polls > 80) {
       setGenerating(false);
       setGenNote(
-        "Still empty after a minute. The background worker may be down or the AI provider isn't configured on the server — see the fix below.",
+        "Still empty after a few minutes. The background worker may be down or the AI provider isn't configured on the server — see the fix below.",
       );
     }
   }, [syllabus?.content, query.dataUpdatedAt, generating]);
@@ -95,7 +97,7 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
           <h1 className="display text-2xl text-ink">No syllabus yet</h1>
           <p className="mt-1 text-sm text-muted">Generate a syllabus for this course from its curriculum with AI, then edit and approve.</p>
           {error && <p className="mt-3 text-sm text-warn">{error}</p>}
-          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take up to a minute. Keep this page open.</p>}
+          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take a couple of minutes. Keep this page open.</p>}
           {genNote && <p className="mt-3 text-sm text-warn">{genNote}</p>}
           <button onClick={() => generate.mutate()} disabled={isGenerating} className="mt-4 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {isGenerating ? "Generating…" : "Generate with AI"}
@@ -128,7 +130,7 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
           )}
 
           {error && <p className="mt-3 text-sm text-warn">{error}</p>}
-          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take up to a minute. The content will appear here automatically; keep this page open.</p>}
+          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take a couple of minutes. The content will appear here automatically; keep this page open.</p>}
           {genNote && <p className="mt-3 text-sm text-warn">{genNote}</p>}
 
           <div className="mt-5 rounded-2xl border border-line bg-white p-5">
