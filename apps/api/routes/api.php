@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LeadStageController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonNoteController;
+use App\Http\Controllers\Admin\LessonVideoController;
 use App\Http\Controllers\Admin\LiveSessionController;
 use App\Http\Controllers\Admin\MarketJdController;
 use App\Http\Controllers\Admin\MentorAdminController;
@@ -84,6 +85,7 @@ use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyClassController;
 use App\Http\Controllers\Me\MyLessonNotesController;
+use App\Http\Controllers\Me\MyLessonVideoController;
 use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\Me\MyRecordingController;
 use App\Http\Controllers\Me\MyReportController;
@@ -250,6 +252,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports', [MyReportController::class, 'index']);
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
+    Route::get('me/lessons/{lesson}/video', [MyLessonVideoController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     // Review protection & retention (PRD §6.20).
     Route::get('me/checkin', [CareController::class, 'index']);
@@ -367,6 +370,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('lessons/{lesson}/notes/pdf', [LessonNoteController::class, 'generatePdf']);
         Route::post('lessons/{lesson}/notes/pdf/upload', [LessonNoteController::class, 'uploadPdf']);
         Route::get('lessons/{lesson}/notes/pdf', [LessonNoteController::class, 'downloadPdf']);
+        Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show']);
+        Route::put('lessons/{lesson}/video', [LessonVideoController::class, 'upsert']);
+        Route::get('recordings-library', [LessonVideoController::class, 'recordings']);
         Route::patch('lessons/{lesson}/notes', [LessonNoteController::class, 'updateNotes']);
         Route::post('lesson-notes/{note}/approve', [LessonNoteController::class, 'approve']);
         Route::get('course-syllabuses', [SyllabusController::class, 'index']);
