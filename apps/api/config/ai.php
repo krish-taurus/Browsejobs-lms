@@ -61,6 +61,10 @@ return [
     'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
     'max_tokens' => (int) env('AI_MAX_TOKENS', 1024),
 
+    // Seconds to wait for a provider response. Generation calls (syllabus, reports)
+    // can take well over the 30s HTTP default on slower models, so allow more.
+    'http_timeout' => (int) env('AI_HTTP_TIMEOUT', 120),
+
     // Per-student daily token budget, enforced in the gateway (CLAUDE.md).
     'daily_token_budget' => (int) env('AI_DAILY_TOKEN_BUDGET_PER_STUDENT', 200_000),
 

@@ -30,6 +30,7 @@ final class OpenAiCompatibleClient implements AiClient
         $messages[] = ['role' => 'user', 'content' => $message->user];
 
         $response = Http::withToken($this->config['api_key'])
+            ->timeout((int) config('ai.http_timeout', 120))
             ->acceptJson()
             ->post(rtrim($this->config['base_url'], '/').'/chat/completions', [
                 'model' => $model,
