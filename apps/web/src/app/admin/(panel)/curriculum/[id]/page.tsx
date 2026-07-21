@@ -100,6 +100,21 @@ const LESSON_TYPES = [
   "live_class", "video", "notes", "quiz", "coding_lab", "assignment", "project", "mock_milestone",
 ];
 
+/** Where a lesson of each type is authored. null = editor not built yet. */
+function editorHref(type: string, lessonId: number): string | null {
+  switch (type) {
+    case "notes":
+      return `/admin/content/${lessonId}`;
+    case "quiz":
+      return `/admin/quizzes/${lessonId}`;
+    case "assignment":
+    case "project":
+      return `/admin/assignments/${lessonId}`;
+    default:
+      return null; // video, coding_lab, mock_milestone, live_class — not yet
+  }
+}
+
 function AddInline({
   placeholder,
   onAdd,
@@ -248,23 +263,37 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
                       </div>
                     </div>
                     <ul className="mt-2 space-y-1">
-                      {t.lessons.map((l) => (
-                        <li key={l.id} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-ink2/85">
-                            {l.title}{" "}
-                            <span className="mono text-[10px] uppercase tracking-widest text-muted">
-                              {l.type.replace("_", " ")}
+                      {t.lessons.map((l) => {
+                        const href = editorHref(l.type, l.id);
+                        return (
+                          <li key={l.id} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-ink2/85">
+                              {l.title}{" "}
+                              <span className="mono text-[10px] uppercase tracking-widest text-muted">
+                                {l.type.replace("_", " ")}
+                              </span>
                             </span>
-                          </span>
-                          <button
-                            onClick={() => mutate.mutate({ path: `/api/v1/admin/lessons/${l.id}`, method: "DELETE" })}
-                            className="text-xs text-muted hover:text-warn"
-                            aria-label={`Delete lesson ${l.title}`}
-                          >
-                            ✕
-                          </button>
-                        </li>
-                      ))}
+                            <span className="flex items-center gap-3">
+                              {href ? (
+                                <Link href={href} className="text-xs font-semibold text-trust hover:underline">
+                                  Set up →
+                                </Link>
+                              ) : (
+                                <span className="mono text-[10px] uppercase tracking-widest text-muted/50" title="Editor coming soon">
+                                  soon
+                                </span>
+                              )}
+                              <button
+                                onClick={() => mutate.mutate({ path: `/api/v1/admin/lessons/${l.id}`, method: "DELETE" })}
+                                className="text-xs text-muted hover:text-warn"
+                                aria-label={`Delete lesson ${l.title}`}
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                     <div className="mt-2.5">
                       <AddInline
