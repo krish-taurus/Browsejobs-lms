@@ -45,12 +45,40 @@ export default function AssignmentBuilderPage({ params }: { params: Promise<{ le
     onError: (err) => setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Save failed."),
   });
 
+  const generate = useMutation({
+    mutationFn: () =>
+      apiJson<{ data: { title: string; instructions: string; rubric: Criterion[] } }>(
+        `/api/v1/admin/lessons/${lesson}/assignment/generate`,
+        { method: "POST" },
+      ),
+    onSuccess: (res) => {
+      setError(null);
+      setTitle(res.data.title);
+      setInstructions(res.data.instructions);
+      setRubric(res.data.rubric.length ? res.data.rubric : [{ criterion: "", max_points: 50 }]);
+    },
+    onError: (err) =>
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not generate. Try again."),
+  });
+
   const total = rubric.reduce((s, r) => s + (Number(r.max_points) || 0), 0);
 
   return (
     <div className="mx-auto max-w-2xl">
       <Link href="/admin/assignments" className="text-sm text-trust hover:underline">← Assignments</Link>
-      <h1 className="display mt-3 text-2xl text-ink">Assignment rubric</h1>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="display text-2xl text-ink">Assignment rubric</h1>
+        <button
+          onClick={() => generate.mutate()}
+          disabled={generate.isPending}
+          className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-trust disabled:opacity-50"
+        >
+          {generate.isPending ? "Generating…" : "✨ Generate with AI"}
+        </button>
+      </div>
+      <p className="mt-1 text-sm text-ink2/70">
+        Generate a draft from this lesson&apos;s topics, then edit and save — or write it by hand.
+      </p>
 
       <div className="mt-4 rounded-2xl border border-line bg-white p-5">
         <label className="text-xs font-semibold text-muted">Title</label>
