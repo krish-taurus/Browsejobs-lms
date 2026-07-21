@@ -57,6 +57,10 @@ beforeEach(function () {
         {
             $this->sink->push(['event' => 'rescheduled', 'student' => $s->id, 'reason' => $r]);
         }
+
+        public function trainerCancelled(User $t, LiveSession $ls, string $r): void {}
+
+        public function trainerRescheduled(User $t, LiveSession $ls, CarbonInterface $p, string $r): void {}
     });
 });
 

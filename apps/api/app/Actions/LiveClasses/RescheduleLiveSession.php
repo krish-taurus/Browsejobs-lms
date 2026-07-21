@@ -57,6 +57,11 @@ final readonly class RescheduleLiveSession
         $session->batch->members()->whereIn('status', $occupying)->with('student')->get()
             ->each(fn ($member) => $this->notifier->rescheduled($member->student, $session, $previousStart, $reason));
 
+        // Keep the trainer in the loop too — not just the students.
+        if (($trainer = $session->batch->trainer) !== null) {
+            $this->notifier->trainerRescheduled($trainer, $session, $previousStart, $reason);
+        }
+
         // Re-arm for the new time; issues a new token so the old ladder no-ops.
         $this->armReminders->handle($session);
     }

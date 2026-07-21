@@ -48,5 +48,10 @@ final readonly class CancelLiveSession
 
         $session->batch->members()->whereIn('status', $occupying)->with('student')->get()
             ->each(fn ($member) => $this->notifier->cancelled($member->student, $session, $reason));
+
+        // Keep the trainer in the loop too — not just the students.
+        if (($trainer = $session->batch->trainer) !== null) {
+            $this->notifier->trainerCancelled($trainer, $session, $reason);
+        }
     }
 }

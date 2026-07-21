@@ -20,4 +20,10 @@ interface SessionNotifier
     public function cancelled(User $student, LiveSession $session, string $reason): void;
 
     public function rescheduled(User $student, LiveSession $session, CarbonInterface $previousStart, string $reason): void;
+
+    /** Keep the trainer in the loop when their class is cancelled. */
+    public function trainerCancelled(User $trainer, LiveSession $session, string $reason): void;
+
+    /** Keep the trainer in the loop when their class is rescheduled. */
+    public function trainerRescheduled(User $trainer, LiveSession $session, CarbonInterface $previousStart, string $reason): void;
 }
