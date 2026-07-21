@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Assignments\GenerateAssignmentBrief;
 use App\Enums\LessonType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Assignments\UpsertAssignmentRequest;
 use App\Models\Assignment;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Admin/trainer assignment builder (PRD §6.5). Gated by `can:manage-curriculum`. The
@@ -46,6 +48,31 @@ final class AssignmentController extends Controller
         $assignment = Assignment::query()->where('lesson_id', $lesson->id)->first();
 
         return response()->json(['data' => $assignment === null ? null : $this->payload($assignment)]);
+    }
+
+    /**
+     * AI-draft an assignment brief + rubric from the lesson's module. Returns
+     * the draft only — the trainer reviews and saves it via upsert.
+     */
+    public function generate(Request $request, Lesson $lesson, GenerateAssignmentBrief $generate): JsonResponse
+    {
+        abort_unless(
+            in_array($lesson->type, [LessonType::Assignment, LessonType::Project], true),
+            422,
+            'Lesson is not an assignment.',
+        );
+
+        $draft = $generate->handle($lesson, $request->user());
+
+        if ($draft === null) {
+            return response()->json(['error' => [
+                'code' => 'generation_failed',
+                'message' => 'The assignment could not be generated. Try again.',
+                'details' => null,
+            ]], 422);
+        }
+
+        return response()->json(['data' => $draft]);
     }
 
     public function upsert(UpsertAssignmentRequest $request, Lesson $lesson): JsonResponse

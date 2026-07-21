@@ -380,6 +380,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('assignment-lessons', [AssignmentController::class, 'index']);
         Route::get('lessons/{lesson}/assignment', [AssignmentController::class, 'show']);
         Route::put('lessons/{lesson}/assignment', [AssignmentController::class, 'upsert']);
+        Route::post('lessons/{lesson}/assignment/generate', [AssignmentController::class, 'generate']);
         Route::get('assignment-submissions', [GradingController::class, 'index']);
         Route::get('submissions/{submission}', [GradingController::class, 'show']);
         Route::patch('grades/{grade}', [GradingController::class, 'updateGrade']);
