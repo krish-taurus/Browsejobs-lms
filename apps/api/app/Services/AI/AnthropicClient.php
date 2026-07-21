@@ -31,7 +31,8 @@ final class AnthropicClient implements AiClient
         $response = Http::withHeaders([
             'x-api-key' => $this->config['api_key'],
             'anthropic-version' => $this->config['version'],
-        ])->acceptJson()->post($this->config['base_url'].'/messages', $payload)->throw()->json();
+        ])->timeout((int) config('ai.http_timeout', 120))
+            ->acceptJson()->post($this->config['base_url'].'/messages', $payload)->throw()->json();
 
         $text = collect($response['content'] ?? [])
             ->where('type', 'text')
