@@ -28,7 +28,8 @@ class MessagingSeeder extends Seeder
     private const TEMPLATES = [
         ['key' => 'otp', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Your BrowseJobs code is {{code}}. It expires in 10 minutes.'],
         ['key' => 'otp', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your BrowseJobs code', 'body' => 'Your BrowseJobs code is {{code}}. It expires in 10 minutes.'],
-        ['key' => 'lead_welcome', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, thanks for your interest in BrowseJobs. We will be in touch about your free masterclass.'],
+        ['key' => 'lead_welcome', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, thanks for your interest in BrowseJobs! Your free masterclass link is ready — join here: {{link}}'],
+        ['key' => 'lead_welcome', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your free BrowseJobs masterclass', 'body' => 'Hi {{name}}, thanks for your interest in BrowseJobs. Join your free masterclass here: {{link}}. We look forward to seeing you there.'],
         ['key' => 'class_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" starts in {{window}}. Join here: {{link}}'],
         ['key' => 'class_cancelled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" is cancelled. {{reason}}'],
         ['key' => 'class_rescheduled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" was rescheduled. {{reason}}'],
