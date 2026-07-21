@@ -8,6 +8,7 @@ use App\Enums\AiEventStatus;
 use App\Enums\AiPurpose;
 use App\Models\AiEvent;
 use App\Models\User;
+use App\Support\AI\ProviderResolver;
 use App\Support\Tenancy\TenantContext;
 use Throwable;
 
@@ -34,7 +35,9 @@ final class AiGateway
             $this->assertWithinBudget($user, $purpose);
 
             $prompt = $this->prompts->render($promptName, $version, $vars);
-            $model = $opts['model'] ?? (string) config('ai.model');
+            // Default to the ACTIVE provider's model, not the global Anthropic
+            // default — otherwise e.g. Kimi is sent "claude-sonnet-5" and rejects it.
+            $model = $opts['model'] ?? $this->defaultModel();
 
             $message = new AiMessage(
                 user: $prompt,
@@ -59,6 +62,17 @@ final class AiGateway
 
             return $result;
         });
+    }
+
+    /** The model of the provider actually in use, so each vendor gets a name it knows. */
+    private function defaultModel(): string
+    {
+        $provider = app(ProviderResolver::class)->active();
+        if ($provider !== null) {
+            return (string) config("ai.providers.{$provider}.model", config('ai.model'));
+        }
+
+        return (string) config('ai.model');
     }
 
     /** Tokens a student has spent so far today across all AI calls. */

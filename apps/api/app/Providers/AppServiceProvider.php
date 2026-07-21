@@ -50,6 +50,7 @@ use App\Support\Zoom\ZoomClient;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
@@ -181,6 +182,13 @@ class AppServiceProvider extends ServiceProvider
         // Admin-entered integration keys (LLM/WhatsApp/Vapi/Zoom) override config here,
         // before any client binding resolves; blank/missing settings fall back to .env.
         $this->app->make(PlatformSettings::class)->apply();
+
+        // A queue worker boots once and stays up, so a key saved in the admin panel
+        // afterwards would never reach it. Re-apply the stored settings before each
+        // job so workers pick up new keys without a manual restart.
+        Queue::before(function (): void {
+            $this->app->make(PlatformSettings::class)->refresh();
+        });
 
         // Super admins bypass every gate; any other ability resolves to a
         // permission slug the user's roles may grant. Returning null lets a

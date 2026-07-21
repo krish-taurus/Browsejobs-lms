@@ -70,3 +70,26 @@ it('logs a failed event and rethrows when the transport errors', function () {
 
     expect(AiEvent::withoutGlobalScopes()->where('status', 'failed')->count())->toBe(1);
 });
+
+it('sends the active provider model, not the global anthropic default', function () {
+    // Kimi is the only configured provider; the gateway must use its model so
+    // Kimi is never handed "claude-sonnet-5" (which it would reject).
+    config([
+        'ai.provider' => 'auto',
+        'ai.providers.kimi.api_key' => 'sk-kimi',
+        'ai.providers.kimi.model' => 'kimi-k2-turbo-preview',
+    ]);
+
+    withinTenant($this->tenant, fn () => app(AiGateway::class)->complete($this->student, AiPurpose::Syllabus, 'ping', 1, ['message' => 'hi']));
+
+    expect($this->fake->calls[0]->model)->toBe('kimi-k2-turbo-preview');
+    expect(AiEvent::withoutGlobalScopes()->first()->model)->toBe('kimi-k2-turbo-preview');
+});
+
+it('still honours an explicit per-call model override', function () {
+    config(['ai.provider' => 'auto', 'ai.providers.kimi.api_key' => 'sk-kimi']);
+
+    withinTenant($this->tenant, fn () => app(AiGateway::class)->complete($this->student, AiPurpose::Syllabus, 'ping', 1, ['message' => 'hi'], ['model' => 'kimi-thinking']));
+
+    expect($this->fake->calls[0]->model)->toBe('kimi-thinking');
+});
