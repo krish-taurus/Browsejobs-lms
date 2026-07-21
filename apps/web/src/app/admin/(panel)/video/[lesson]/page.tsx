@@ -127,7 +127,7 @@ export default function VideoEditor({ params }: { params: Promise<{ lesson: stri
               <div className="shimmer mt-2 h-24 rounded-[10px]" />
             ) : recordings.length === 0 ? (
               <p className="mt-2 rounded-[10px] border border-dashed border-line px-3 py-4 text-sm text-muted">
-                No stored recordings yet. Recorded classes appear here once a live session's recording is saved.
+                No stored recordings yet. Recorded classes appear here once a live session recording is saved.
               </p>
             ) : (
               <div className="mt-2 space-y-1.5">

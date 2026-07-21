@@ -40,7 +40,6 @@ export default function LessonVideoPage({ params }: { params: Promise<{ lesson: 
             <iframe src={data.url} className="h-full w-full" allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
           ) : (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
             <video src={data.url} controls className="h-full w-full" preload="metadata" />
           )}
         </div>
