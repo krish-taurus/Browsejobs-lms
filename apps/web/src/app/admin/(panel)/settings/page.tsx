@@ -14,6 +14,12 @@ type Field = {
   preview: string | null;
 };
 type Group = { key: string; label: string; help: string | null; fields: Field[] };
+type AiStatus = {
+  mode: "auto" | "fixed";
+  requested: string;
+  active: string | null;
+  providers: { id: string; configured: boolean }[];
+};
 
 const inputCls =
   "w-full rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
@@ -27,8 +33,9 @@ export default function AdminSettingsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "settings"],
-    queryFn: () => apiJson<{ data: Group[] }>("/api/v1/admin/settings"),
+    queryFn: () => apiJson<{ data: Group[]; ai: AiStatus }>("/api/v1/admin/settings"),
   });
+  const ai = data?.ai;
 
   useEffect(() => { setSaved(false); }, [edits]);
 
@@ -70,6 +77,31 @@ export default function AdminSettingsPage() {
             <section key={group.key} className="rounded-[14px] border border-line bg-white p-5">
               <h2 className="display text-lg text-ink">{group.label}</h2>
               {group.help && <p className="mt-1 text-xs text-muted">{group.help}</p>}
+
+              {group.key === "ai" && ai && (
+                <div className="mt-3 rounded-[10px] border border-line bg-paper p-3">
+                  {ai.active ? (
+                    <p className="text-sm text-ink">
+                      AI is <span className="font-semibold text-verify">live</span> — using{" "}
+                      <span className="mono font-semibold">{ai.active}</span>
+                      {ai.mode === "auto" ? " (auto-selected)" : ""}.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-warn">
+                      No AI provider is configured yet — add a key to any provider below, then save.
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {ai.providers.map((p) => (
+                      <span key={p.id}
+                        className={`mono rounded-full px-2.5 py-1 text-[11px] ${p.configured ? "bg-verify-bg text-verify" : "border border-line text-muted"}`}>
+                        {p.id} {p.configured ? "· key set" : "· no key"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 space-y-3">
                 {group.fields.map((f) => {
                   const edited = edits[group.key]?.[f.key];

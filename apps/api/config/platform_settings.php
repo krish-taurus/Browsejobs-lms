@@ -26,13 +26,13 @@ return [
     'groups' => [
         'ai' => [
             'label' => 'AI / LLM',
-            'help' => 'The active provider is used for every AI feature. Keys for all providers can be stored so you can switch instantly.',
+            'help' => 'Keys for all providers can be stored so you can switch instantly. Leave the active provider on "auto" to use whichever provider has a key — or pick one to force it.',
             'fields' => array_merge(
                 [[
                     'key' => 'provider',
                     'label' => 'Active provider',
                     'type' => 'select',
-                    'options' => ['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'],
+                    'options' => ['auto', 'anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'],
                     'config' => 'ai.provider',
                 ]],
                 $provider('anthropic', 'Anthropic'),
