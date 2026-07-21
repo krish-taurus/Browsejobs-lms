@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 
@@ -23,10 +23,15 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  // Generation runs as a background AI job — poll until the content lands.
+  const [generating, setGenerating] = useState(false);
+  const [genNote, setGenNote] = useState<string | null>(null);
+  const gen = useRef({ startLen: 0, polls: 0 });
 
   const query = useQuery({
     queryKey: ["admin", "syllabus", course],
     queryFn: () => apiJson<{ data: Syllabus | null }>(`/api/v1/admin/courses/${course}/syllabus`),
+    refetchInterval: generating ? 3000 : false,
   });
   const syllabus = query.data?.data ?? null;
 
@@ -34,14 +39,40 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
     if (syllabus?.content != null) setDraft(syllabus.content);
   }, [syllabus?.content]);
 
+  // While a generation is in flight, watch each refetch: stop once fresh
+  // content arrives, or give up with a hint after ~20 tries (~60s).
+  useEffect(() => {
+    if (!generating) return;
+    const len = (syllabus?.content ?? "").trim().length;
+    if (len > gen.current.startLen) {
+      setGenerating(false);
+      setGenNote(null);
+      return;
+    }
+    gen.current.polls += 1;
+    if (gen.current.polls > 20) {
+      setGenerating(false);
+      setGenNote(
+        "Still empty after a minute. The background worker may be down or the AI provider isn't configured on the server — see the fix below.",
+      );
+    }
+  }, [syllabus?.content, query.dataUpdatedAt, generating]);
+
   const refresh = () => void qc.invalidateQueries({ queryKey: ["admin", "syllabus", course] });
   const onError = (err: unknown) => setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Request failed.");
 
   const generate = useMutation({
     mutationFn: () => apiJson(`/api/v1/admin/courses/${course}/syllabus/generate`, { method: "POST", body: JSON.stringify({}) }),
-    onSuccess: () => { setError(null); setTimeout(refresh, 1500); },
+    onSuccess: () => {
+      setError(null);
+      setGenNote(null);
+      gen.current = { startLen: (syllabus?.content ?? "").trim().length, polls: 0 };
+      setGenerating(true);
+      refresh();
+    },
     onError,
   });
+  const isGenerating = generating || generate.isPending;
   const save = useMutation({
     mutationFn: () => apiJson(`/api/v1/admin/courses/${course}/syllabus`, { method: "PATCH", body: JSON.stringify({ content: draft }) }),
     onSuccess: () => { setError(null); refresh(); },
@@ -64,8 +95,10 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
           <h1 className="display text-2xl text-ink">No syllabus yet</h1>
           <p className="mt-1 text-sm text-muted">Generate a syllabus for this course from its curriculum with AI, then edit and approve.</p>
           {error && <p className="mt-3 text-sm text-warn">{error}</p>}
-          <button onClick={() => generate.mutate()} disabled={generate.isPending} className="mt-4 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
-            {generate.isPending ? "Generating…" : "Generate with AI"}
+          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take up to a minute. Keep this page open.</p>}
+          {genNote && <p className="mt-3 text-sm text-warn">{genNote}</p>}
+          <button onClick={() => generate.mutate()} disabled={isGenerating} className="mt-4 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {isGenerating ? "Generating…" : "Generate with AI"}
           </button>
         </div>
       ) : (
@@ -79,8 +112,8 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
               </p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => generate.mutate()} disabled={generate.isPending} className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50">
-                {generate.isPending ? "Generating…" : "Regenerate"}
+              <button onClick={() => generate.mutate()} disabled={isGenerating} className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50">
+                {isGenerating ? "Generating…" : "Regenerate"}
               </button>
               <button onClick={() => approve.mutate()} disabled={approve.isPending || (syllabus.status === "approved" && !syllabus.is_stale) || !draft.trim()} className="rounded-full bg-verify px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
                 {syllabus.status === "approved" && !syllabus.is_stale ? "Approved ✓" : "Approve"}
@@ -95,6 +128,8 @@ export default function SyllabusBuilderPage({ params }: { params: Promise<{ cour
           )}
 
           {error && <p className="mt-3 text-sm text-warn">{error}</p>}
+          {isGenerating && <p className="mt-3 text-sm text-trust">Generating with AI — this can take up to a minute. The content will appear here automatically; keep this page open.</p>}
+          {genNote && <p className="mt-3 text-sm text-warn">{genNote}</p>}
 
           <div className="mt-5 rounded-2xl border border-line bg-white p-5">
             <p className="text-sm font-semibold text-ink">Syllabus content (markdown)</p>
