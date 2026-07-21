@@ -112,8 +112,10 @@ function editorHref(type: string, lessonId: number): string | null {
       return `/admin/assignments/${lessonId}`;
     case "coding_lab":
       return `/admin/coding-lab/${lessonId}`;
+    case "video":
+      return `/admin/video/${lessonId}`;
     default:
-      return null; // video, mock_milestone, live_class — not yet
+      return null; // mock_milestone, live_class — not yet
   }
 }
 
