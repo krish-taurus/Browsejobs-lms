@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
 
-type Notes = { lesson_id: number; title: string | null; notes: string | null; approved_at: string | null } | null;
+type Notes = { lesson_id: number; title: string | null; notes: string | null; pdf_url: string | null; approved_at: string | null } | null;
 
 /** Minimal markdown-light renderer: headings (##) + bullets (- ) + paragraphs. */
 function renderNotes(md: string) {
@@ -43,8 +43,18 @@ export default function LessonNotesPage({ params }: { params: Promise<{ lesson: 
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="kicker text-trust">Study notes</p>
-      <h1 className="display mt-2 text-2xl text-ink">{data.title ?? "Class notes"}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="kicker text-trust">Study notes</p>
+          <h1 className="display mt-2 text-2xl text-ink">{data.title ?? "Class notes"}</h1>
+        </div>
+        {data.pdf_url && (
+          <a href={data.pdf_url} target="_blank" rel="noopener noreferrer"
+            className="rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep">
+            Download PDF
+          </a>
+        )}
+      </div>
       <div className="mt-6 rounded-2xl border border-line bg-white p-6">
         {data.notes ? renderNotes(data.notes) : <p className="text-sm text-muted">No notes yet.</p>}
       </div>

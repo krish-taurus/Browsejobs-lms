@@ -31,6 +31,8 @@ final class LessonNoteResource extends JsonResource
             'source' => $this->source->value,
             'status' => $this->status->value,
             'has_notes' => $this->hasNotes(),
+            'has_pdf' => $this->pdf_path !== null,
+            'pdf_uploaded' => (bool) $this->pdf_uploaded,
             'is_citable' => $this->status === NoteStatus::Approved && $this->knowledge_document_id !== null,
             'approved_at' => $this->approved_at?->toIso8601String(),
         ];
