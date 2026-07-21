@@ -44,4 +44,33 @@ final class MessengerSessionNotifier implements SessionNotifier
             'reason' => $reason,
         ]);
     }
+
+    public function trainerCancelled(User $trainer, LiveSession $session, string $reason): void
+    {
+        $this->messenger->send($trainer, 'class_cancelled_trainer', [
+            'name' => $trainer->name,
+            'title' => $session->title,
+            'batch' => $this->batchLabel($session),
+            'reason' => $reason,
+        ]);
+    }
+
+    public function trainerRescheduled(User $trainer, LiveSession $session, CarbonInterface $previousStart, string $reason): void
+    {
+        $this->messenger->send($trainer, 'class_rescheduled_trainer', [
+            'name' => $trainer->name,
+            'title' => $session->title,
+            'batch' => $this->batchLabel($session),
+            'starts' => $session->scheduled_start->format('j M, g:i A'),
+            'reason' => $reason,
+        ]);
+    }
+
+    private function batchLabel(LiveSession $session): string
+    {
+        $batch = $session->batch;
+        $course = $batch?->course?->name;
+
+        return $course !== null ? "{$course} · Batch {$batch->number}" : 'your batch';
+    }
 }

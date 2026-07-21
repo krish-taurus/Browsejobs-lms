@@ -44,4 +44,14 @@ final class LogSessionNotifier implements SessionNotifier
             'reason' => $reason,
         ]);
     }
+
+    public function trainerCancelled(User $trainer, LiveSession $session, string $reason): void
+    {
+        Log::info('Class cancelled (trainer)', ['trainer_id' => $trainer->id, 'session_id' => $session->id, 'reason' => $reason]);
+    }
+
+    public function trainerRescheduled(User $trainer, LiveSession $session, CarbonInterface $previousStart, string $reason): void
+    {
+        Log::info('Class rescheduled (trainer)', ['trainer_id' => $trainer->id, 'session_id' => $session->id, 'reason' => $reason]);
+    }
 }

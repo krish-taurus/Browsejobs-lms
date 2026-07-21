@@ -61,6 +61,10 @@ it('sends each active member a magic dashboard link when the reminder fires', fu
         public function cancelled(User $s, LiveSession $ls, string $r): void {}
 
         public function rescheduled(User $s, LiveSession $ls, CarbonInterface $p, string $r): void {}
+
+        public function trainerCancelled(User $t, LiveSession $ls, string $r): void {}
+
+        public function trainerRescheduled(User $t, LiveSession $ls, CarbonInterface $p, string $r): void {}
     };
 
     $active = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
@@ -120,5 +124,9 @@ function fakeNotifier(): SessionNotifier
         public function cancelled(User $s, LiveSession $ls, string $r): void {}
 
         public function rescheduled(User $s, LiveSession $ls, CarbonInterface $p, string $r): void {}
+
+        public function trainerCancelled(User $t, LiveSession $ls, string $r): void {}
+
+        public function trainerRescheduled(User $t, LiveSession $ls, CarbonInterface $p, string $r): void {}
     };
 }

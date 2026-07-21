@@ -88,6 +88,10 @@ it('proves re-arming: the old ladder no-ops while the new one fires', function (
         public function cancelled(User $s, LiveSession $ls, string $r): void {}
 
         public function rescheduled(User $s, LiveSession $ls, CarbonInterface $p, string $r): void {}
+
+        public function trainerCancelled(User $t, LiveSession $ls, string $r): void {}
+
+        public function trainerRescheduled(User $t, LiveSession $ls, CarbonInterface $p, string $r): void {}
     };
 
     // A reminder from the OLD ladder (token "original") must not send.

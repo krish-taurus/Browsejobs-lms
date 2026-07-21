@@ -33,6 +33,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'class_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" starts in {{window}}. Join here: {{link}}'],
         ['key' => 'class_cancelled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" is cancelled. {{reason}}'],
         ['key' => 'class_rescheduled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" was rescheduled. {{reason}}'],
+        ['key' => 'class_cancelled_trainer', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" for {{batch}} is cancelled and the batch has been notified. {{reason}}'],
+        ['key' => 'class_rescheduled_trainer', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" for {{batch}} moved to {{starts}} and the batch has been notified. {{reason}}'],
         ['key' => 'fee_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, INR {{amount}} is due. Pay in one tap: {{link}}'],
         ['key' => 'fee_blocked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your access is paused ({{level}}) until your fees are cleared.'],
         ['key' => 'fee_unblocked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your access is restored. Welcome back!'],
