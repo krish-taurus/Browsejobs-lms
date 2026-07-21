@@ -31,7 +31,6 @@ final class StoreStaffRequest extends FormRequest
             'email' => [
                 'required', 'email', 'max:191',
                 Rule::unique(User::class, 'email')
-                    ->withoutTrashed()
                     ->where(fn ($q) => $q->where('tenant_id', $tenantId)),
             ],
             'phone' => ['nullable', 'string', 'max:20'],
