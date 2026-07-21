@@ -73,3 +73,10 @@ export async function apiJson<T = unknown>(
 
   return body as T;
 }
+
+/** Fetch a file (e.g. a CSV template) as a Blob, credentials included. */
+export async function apiBlob(path: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE}${path}`, { credentials: "include" });
+  if (!res.ok) throw new ApiError(res.status, {});
+  return res.blob();
+}

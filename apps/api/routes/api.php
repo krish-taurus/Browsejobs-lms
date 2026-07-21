@@ -53,6 +53,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
+use App\Http\Controllers\Admin\SyllabusImportController;
 use App\Http\Controllers\Admin\SyllabusRecommendationController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\TenantController;
@@ -333,6 +334,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-curriculum')->group(function () {
         Route::get('courses', [CurriculumController::class, 'index']);
         Route::get('courses/{course}', [CurriculumController::class, 'show']);
+        // Bulk syllabus import (CSV template → full tree).
+        Route::get('syllabus/template', [SyllabusImportController::class, 'template']);
+        Route::post('syllabus/import', [SyllabusImportController::class, 'import']);
+
         Route::get('modules/search', [ModuleController::class, 'search']);
         Route::post('modules', [ModuleController::class, 'store']);
         Route::patch('modules/{module}', [ModuleController::class, 'update']);
