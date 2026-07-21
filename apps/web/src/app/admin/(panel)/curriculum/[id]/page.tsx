@@ -10,6 +10,92 @@ type Topic = { id: number; name: string; mock_enabled: boolean; lessons: Lesson[
 type Module = { id: number; name: string; topics: Topic[] };
 type CourseTree = { id: number; code: string; name: string; modules: Module[] };
 
+type ModuleHit = {
+  id: number;
+  name: string;
+  topics_count: number;
+  course: { id: number; name: string; program: { id: number; name: string } | null } | null;
+};
+
+/** Search existing modules and clone one (with its topics + lessons) into this course. */
+function ReuseModule({
+  courseId,
+  onCloned,
+  onError,
+}: {
+  courseId: number;
+  onCloned: () => void;
+  onError: (m: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const { data, isFetching } = useQuery({
+    queryKey: ["admin", "module-search", q],
+    queryFn: () =>
+      apiJson<{ data: ModuleHit[] }>(`/api/v1/admin/modules/search?q=${encodeURIComponent(q)}`),
+    enabled: q.trim().length >= 2,
+  });
+
+  const clone = async (moduleId: number) => {
+    setBusyId(moduleId);
+    try {
+      await apiJson(`/api/v1/admin/modules/${moduleId}/clone`, {
+        method: "POST",
+        body: JSON.stringify({ course_id: courseId }),
+      });
+      setQ("");
+      onCloned();
+    } catch (err) {
+      onError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not copy the module.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const hits = (data?.data ?? []).filter((m) => m.course?.id !== courseId);
+
+  return (
+    <div className="mt-3">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search modules by name…"
+        className="w-full rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
+      />
+      {q.trim().length >= 2 && (
+        <div className="mt-3 space-y-2">
+          {isFetching && <div className="shimmer h-12 rounded-[10px]" />}
+          {!isFetching && hits.length === 0 && (
+            <p className="text-sm text-muted">No other modules match “{q}”.</p>
+          )}
+          {hits.map((m) => (
+            <div
+              key={m.id}
+              className="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-paper px-3 py-2"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-ink">{m.name}</span>
+                <span className="mono block truncate text-xs text-muted">
+                  {m.course?.program?.name ? `${m.course.program.name} · ` : ""}
+                  {m.course?.name ?? "—"} · {m.topics_count} topics
+                </span>
+              </span>
+              <button
+                onClick={() => clone(m.id)}
+                disabled={busyId === m.id}
+                className="shrink-0 rounded-full bg-trust px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
+              >
+                {busyId === m.id ? "Copying…" : "Copy here"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LESSON_TYPES = [
   "live_class", "video", "notes", "quiz", "coding_lab", "assignment", "project", "mock_milestone",
 ];
@@ -221,6 +307,22 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
                     body: { course_id: Number(id), name },
                   })
                 }
+              />
+            </div>
+
+            <div className="mt-5 border-t border-line pt-5">
+              <p className="kicker text-muted">Or reuse an existing module</p>
+              <p className="mt-1 text-sm text-ink2/70">
+                Search a module you already built in another program — it copies
+                here with all its topics and lessons. Edits stay independent.
+              </p>
+              <ReuseModule
+                courseId={Number(id)}
+                onCloned={() => {
+                  setError(null);
+                  void refresh();
+                }}
+                onError={(m) => setError(m)}
               />
             </div>
           </section>
