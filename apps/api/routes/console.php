@@ -17,6 +17,9 @@ Schedule::command('fees:run-ladder')->dailyAt('07:00');
 // Bootcamp-conversion nudge ladder (PRD §5 Stage 3): daily non-payer nudges.
 Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 
+// Masterclass → free bootcamp auto-invite (funnel Stage 2→3): daily.
+Schedule::command('bootcamp:invite')->dailyAt('09:00');
+
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
 
