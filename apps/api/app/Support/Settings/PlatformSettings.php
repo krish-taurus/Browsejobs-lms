@@ -54,6 +54,18 @@ final class PlatformSettings
     }
 
     /**
+     * Drop the per-process cache and re-apply. A queue worker is long-lived and
+     * reads settings once at boot, so a key saved in the admin panel afterwards
+     * wouldn't reach it — calling this before each job keeps workers current
+     * without a manual restart.
+     */
+    public function refresh(): void
+    {
+        $this->cache = null;
+        $this->apply();
+    }
+
+    /**
      * The admin form schema with current values. Secret values are never included — only
      * whether one is set, plus a masked hint. Non-secret values are returned in full.
      *
