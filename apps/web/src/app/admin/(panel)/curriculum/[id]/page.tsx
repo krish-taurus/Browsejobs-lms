@@ -108,8 +108,9 @@ function editorHref(type: string, lessonId: number): string | null {
     case "quiz":
       return `/admin/quizzes/${lessonId}`;
     case "assignment":
-    case "project":
       return `/admin/assignments/${lessonId}`;
+    case "project":
+      return `/admin/project/${lessonId}`;
     case "coding_lab":
       return `/admin/coding-lab/${lessonId}`;
     case "video":

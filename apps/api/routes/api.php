@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\MonetizationController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\PlacementAdminController;
 use App\Http\Controllers\Admin\PointsSettingController;
+use App\Http\Controllers\Admin\ProjectSpecController;
 use App\Http\Controllers\Admin\PulseAdminController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\ReceiptController;
@@ -86,6 +87,7 @@ use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyClassController;
 use App\Http\Controllers\Me\MyLessonNotesController;
 use App\Http\Controllers\Me\MyLessonVideoController;
+use App\Http\Controllers\Me\MyProjectController;
 use App\Http\Controllers\Me\MyQuizController;
 use App\Http\Controllers\Me\MyRecordingController;
 use App\Http\Controllers\Me\MyReportController;
@@ -253,6 +255,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/lessons/{lesson}/video', [MyLessonVideoController::class, 'show']);
+    Route::get('me/lessons/{lesson}/project', [MyProjectController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     // Review protection & retention (PRD §6.20).
     Route::get('me/checkin', [CareController::class, 'index']);
@@ -373,6 +376,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show']);
         Route::put('lessons/{lesson}/video', [LessonVideoController::class, 'upsert']);
         Route::get('recordings-library', [LessonVideoController::class, 'recordings']);
+        Route::get('lessons/{lesson}/project', [ProjectSpecController::class, 'show']);
+        Route::put('lessons/{lesson}/project', [ProjectSpecController::class, 'upsert']);
+        Route::post('lessons/{lesson}/project/architecture', [ProjectSpecController::class, 'generate']);
+        Route::post('lessons/{lesson}/project/pdf', [ProjectSpecController::class, 'pdf']);
+        Route::post('lessons/{lesson}/project/upload', [ProjectSpecController::class, 'upload']);
         Route::patch('lessons/{lesson}/notes', [LessonNoteController::class, 'updateNotes']);
         Route::post('lesson-notes/{note}/approve', [LessonNoteController::class, 'approve']);
         Route::get('course-syllabuses', [SyllabusController::class, 'index']);
