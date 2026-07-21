@@ -171,6 +171,10 @@ cmd_update(){
   cd "${API_DIR}"; sudo -u www-data composer install --no-dev --optimize-autoloader
   php artisan migrate --force; php artisan optimize
   cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
+  say "Refreshing systemd units (picks up worker timeout/flag changes)…"
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
+  systemctl daemon-reload
   say "Restarting services (worker MUST restart to run new code)…"
   systemctl restart browsejobs-worker browsejobs-web
   systemctl reload php8.3-fpm || true

@@ -16,7 +16,7 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/browsejobs/apps/api
-ExecStart=/usr/bin/php artisan queue:work redis --tries=3 --max-time=3600 --backoff=10 --sleep=1
+ExecStart=/usr/bin/php artisan queue:work redis --tries=3 --timeout=180 --max-time=3600 --backoff=10 --sleep=1
 Restart=always
 RestartSec=5
 ; Recycle the process hourly (--max-time) to release memory; systemd restarts it.
