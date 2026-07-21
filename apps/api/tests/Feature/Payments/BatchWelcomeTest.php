@@ -12,7 +12,6 @@ use App\Models\MessageTemplate;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\Messaging\Messenger;
 use App\Support\WhatsApp\FakeWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
 
