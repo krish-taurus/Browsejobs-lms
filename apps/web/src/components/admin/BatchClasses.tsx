@@ -12,6 +12,7 @@ type Session = {
   scheduled_end: string | null;
   status: string;
   has_meeting: boolean;
+  can_start: boolean;
   recordings?: Recording[];
 };
 
@@ -95,6 +96,14 @@ export function BatchClasses({ batchId }: { batchId: string }) {
       apiJson(`/api/v1/admin/sessions/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
     onSuccess: () => { setError(null); void refresh(); },
     onError,
+  });
+
+  // Go live as host: opens the Zoom host link. Gated + time-windowed server-side.
+  const start = useMutation({
+    mutationFn: (id: number) =>
+      apiJson<{ data: { start_url: string } }>(`/api/v1/admin/sessions/${id}/start`, { method: "POST" }),
+    onSuccess: (r) => { setError(null); window.open(r.data.start_url, "_blank", "noopener"); },
+    onError: (err) => { onError(err); void refresh(); },
   });
 
   const createSeries = useMutation({
@@ -321,6 +330,15 @@ export function BatchClasses({ batchId }: { batchId: string }) {
                 <span className={`mono rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${STATUS_STYLES[s.status] ?? "bg-paper text-muted"}`}>
                   {s.status}
                 </span>
+                {s.can_start && (
+                  <button
+                    onClick={() => start.mutate(s.id)}
+                    disabled={start.isPending}
+                    className="rounded-full bg-trust px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
+                  >
+                    {start.isPending ? "Opening…" : "Start class"}
+                  </button>
+                )}
                 {s.status === "scheduled" && (
                   <span className="flex gap-3 text-xs font-semibold">
                     <button

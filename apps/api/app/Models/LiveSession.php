@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\LiveSessionStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,6 +29,12 @@ use Illuminate\Support\Carbon;
 class LiveSession extends Model
 {
     use BelongsToTenant;
+
+    /** Minutes before the scheduled start a host may open the meeting. */
+    public const HOST_LEAD_MINUTES = 15;
+
+    /** Minutes after the scheduled end the host link stays valid. */
+    public const HOST_TRAIL_MINUTES = 60;
 
     /** @var list<string> */
     protected $fillable = [
@@ -80,6 +87,51 @@ class LiveSession extends Model
         }
 
         return max(1, (int) $this->scheduled_start->diffInSeconds($this->scheduled_end));
+    }
+
+    /**
+     * True when a host may open the meeting now: from HOST_LEAD_MINUTES before the
+     * start until HOST_TRAIL_MINUTES after the (planned) end.
+     */
+    public function hostWindowOpen(?CarbonInterface $now = null): bool
+    {
+        $now ??= now();
+        $start = $this->scheduled_start;
+        $end = $this->scheduled_end ?? $start->copy()->addMinutes(intdiv($this->plannedSeconds(), 60));
+
+        return $now->gte($start->copy()->subMinutes(self::HOST_LEAD_MINUTES))
+            && $now->lte($end->copy()->addMinutes(self::HOST_TRAIL_MINUTES));
+    }
+
+    /**
+     * The class can be started at all: it is live/scheduled, its Zoom meeting exists,
+     * and now is within the host window. (Says nothing about *who* may host.)
+     */
+    public function isHostable(): bool
+    {
+        return ! in_array($this->status, [LiveSessionStatus::Cancelled, LiveSessionStatus::Ended], true)
+            && $this->zoom_start_url !== null
+            && $this->hostWindowOpen();
+    }
+
+    /**
+     * Whether this staff member may host now: the class is hostable and they are its
+     * assigned trainer (module trainer, falling back to the lead) or an admin.
+     */
+    public function hostableBy(User $user): bool
+    {
+        if (! $this->isHostable()) {
+            return false;
+        }
+
+        if ($user->hasRole('admin', 'super-admin')) {
+            return true;
+        }
+
+        $this->batch->loadMissing(['trainer', 'moduleTrainers.trainer']);
+        $teacher = $this->batch->trainerForModule($this->topic?->module_id);
+
+        return $teacher !== null && (int) $teacher->id === (int) $user->id;
     }
 
     /**

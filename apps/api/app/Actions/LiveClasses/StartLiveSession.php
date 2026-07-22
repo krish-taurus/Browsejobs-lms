@@ -17,12 +17,6 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class StartLiveSession
 {
-    /** Minutes before the scheduled start a host may open the meeting. */
-    private const OPEN_LEAD_MINUTES = 15;
-
-    /** Minutes after the scheduled end the host link stays valid. */
-    private const OPEN_TRAIL_MINUTES = 60;
-
     public function handle(LiveSession $session, User $staff): string
     {
         if (! $this->mayHost($session, $staff)) {
@@ -39,20 +33,20 @@ final readonly class StartLiveSession
 
         if ($session->zoom_start_url === null) {
             throw ValidationException::withMessages([
-                'session' => 'The Zoom meeting for this class is not ready yet.',
+                'session' => 'The Zoom meeting for this class is not ready yet — make sure a Zoom license is connected.',
             ]);
         }
 
         $start = $session->scheduled_start;
-        $end = $session->scheduled_end ?? $start->copy()->addMinutes($session->plannedSeconds() / 60);
+        $end = $session->scheduled_end ?? $start->copy()->addMinutes(intdiv($session->plannedSeconds(), 60));
 
-        if (now()->lt($start->copy()->subMinutes(self::OPEN_LEAD_MINUTES))) {
+        if (now()->lt($start->copy()->subMinutes(LiveSession::HOST_LEAD_MINUTES))) {
             throw ValidationException::withMessages([
-                'timing' => 'You can start this class from '.self::OPEN_LEAD_MINUTES.' minutes before it begins.',
+                'timing' => 'You can start this class from '.LiveSession::HOST_LEAD_MINUTES.' minutes before it begins.',
             ]);
         }
 
-        if (now()->gt($end->copy()->addMinutes(self::OPEN_TRAIL_MINUTES))) {
+        if (now()->gt($end->copy()->addMinutes(LiveSession::HOST_TRAIL_MINUTES))) {
             throw ValidationException::withMessages([
                 'timing' => 'This class time has already passed.',
             ]);
