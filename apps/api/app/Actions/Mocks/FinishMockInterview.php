@@ -8,6 +8,7 @@ use App\Actions\Telemetry\RecordActivity;
 use App\Enums\ActivityType;
 use App\Enums\AiPurpose;
 use App\Enums\PointsSource;
+use App\Events\MockCompleted;
 use App\Models\MockInterview;
 use App\Services\AI\AiGateway;
 use App\Support\Points\PointsService;
@@ -66,6 +67,10 @@ final readonly class FinishMockInterview
             $tenantId,
         );
         $this->points->grantBadge($student, 'first-mock-done', $tenantId);
+
+        // Fires once per interview (this method is idempotent above), so
+        // module-mock progress can never be double-counted.
+        MockCompleted::dispatch($student, $interview);
 
         return $interview->refresh();
     }

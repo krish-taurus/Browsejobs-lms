@@ -33,6 +33,7 @@ final class CurriculumNodeRequest extends FormRequest
             'topic_id' => ['sometimes', 'integer'],
             'type' => ['sometimes', Rule::enum(LessonType::class)],
             'mock_enabled' => ['sometimes', 'boolean'],
+            'required_mocks' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:20'],
         ];
     }
 }

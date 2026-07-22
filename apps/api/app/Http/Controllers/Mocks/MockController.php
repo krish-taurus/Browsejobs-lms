@@ -12,6 +12,7 @@ use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
+use App\Models\ModuleMockRequirement;
 use App\Models\Product;
 use App\Services\AI\AiBudgetExceeded;
 use App\Support\Entitlements\EntitlementService;
@@ -53,6 +54,20 @@ final class MockController extends Controller
                     'in_progress_id' => $mocks->firstWhere('status', MockInterview::STATUS_IN_PROGRESS)?->id,
                     'best_score' => $best,
                     'human_mock_unlocked' => $best >= (int) config('mocks.human_gate_score', 70),
+                    // Per-module mock quotas the student has unlocked (PRD §6.6).
+                    'module_mocks' => ModuleMockRequirement::query()
+                        ->where('user_id', $request->user()->id)
+                        ->with('module:id,name')
+                        ->orderBy('unlocked_at')
+                        ->get()
+                        ->map(fn (ModuleMockRequirement $r) => [
+                            'module' => $r->module?->name,
+                            'required' => $r->required,
+                            'completed' => $r->completed,
+                            'remaining' => $r->remaining(),
+                            'cleared' => $r->cleared_at !== null,
+                        ])
+                        ->values(),
                     // Skill choices the student can practise (Python, SQL, …).
                     'blueprints' => MockBlueprint::availableFor($request->user())
                         ->map(fn ($b) => ['id' => $b->id, 'skill' => $b->skill, 'role_title' => $b->role_title])

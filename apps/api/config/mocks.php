@@ -21,6 +21,10 @@ return [
     // Minimum candidate answers before a scorecard can be generated.
     'min_answers' => (int) env('MOCKS_MIN_ANSWERS', 2),
 
+    // Default number of mocks a module requires, when the module sets no override
+    // (PRD §6.6 "N mocks per module"). Opened when the student completes the module.
+    'per_module' => (int) env('MOCKS_PER_MODULE', 3),
+
     // Best AI-mock overall score that unlocks the human mock (PRD progression
     // gate: AI mock threshold → human mock → placement pool).
     'human_gate_score' => (int) env('MOCKS_HUMAN_GATE_SCORE', 70),

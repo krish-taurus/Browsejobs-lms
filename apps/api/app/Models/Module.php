@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $tenant_id
  * @property int $course_id
  * @property string $name
+ * @property int|null $required_mocks
  */
 class Module extends Model
 {
@@ -22,7 +23,15 @@ class Module extends Model
     use HasFactory;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'course_id', 'name', 'position'];
+    protected $fillable = ['tenant_id', 'course_id', 'name', 'position', 'required_mocks'];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['required_mocks' => 'integer'];
+    }
 
     /**
      * @return BelongsTo<Course, $this>
