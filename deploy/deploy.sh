@@ -72,6 +72,10 @@ SQL
   api_set SESSION_DOMAIN ".${DOMAIN}"
   api_set SANCTUM_STATEFUL_DOMAINS "${DOMAIN},www.${DOMAIN}"
   api_set FRONTEND_ORIGINS "https://${DOMAIN},https://www.${DOMAIN}"
+  # Single-tenant deploy: resolve the tenant by slug when the request host doesn't
+  # match a tenant domain, so public endpoints (reviews, salary, social proof)
+  # never 404 for an unmapped host. Explicit so a pre-existing .env can't drift.
+  api_set DEFAULT_TENANT_SLUG browsejobs
   api_set DB_CONNECTION mysql
   api_set DB_HOST 127.0.0.1
   api_set DB_PORT 3306
@@ -173,6 +177,10 @@ cmd_update(){
   # Sync canonical message templates (idempotent: templates upsert, demo rows are
   # guarded off once real messages exist) so notification changes ship automatically.
   php artisan db:seed --class=MessagingSeeder --force
+  # Sync course social proof — real reviews, per-course interview banks, and demo
+  # placement drafts (idempotent updateOrCreate) so the review wall + course pages
+  # populate on every deploy, not just a fresh install.
+  php artisan db:seed --class=SocialProofSeeder --force
   cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
   say "Refreshing systemd units (picks up worker timeout/flag changes)…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service

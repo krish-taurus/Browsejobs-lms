@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BookCta } from "@/components/landing/BookCta";
+import { MobileMenu } from "@/components/landing/MobileMenu";
 import { Wordmark } from "@/components/brand/Wordmark";
 
 const links = [
@@ -48,17 +49,17 @@ export function Nav() {
           </Link>
         </div>
 
-        {/* Mobile: quiet login link beside the CTA */}
-        <Link
-          href="/student"
-          className="text-sm font-medium text-muted transition-colors hover:text-ink md:hidden"
-        >
-          Login
-        </Link>
-
-        <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
-          Book Free<span className="hidden sm:inline"> Masterclass</span>
-        </BookCta>
+        <div className="flex items-center gap-2">
+          {/* Desktop keeps the primary CTA; on mobile the hero + sticky bottom bar
+              carry it, so the header gives the menu room to breathe. */}
+          <div className="hidden md:block">
+            <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
+              Book Free Masterclass
+            </BookCta>
+          </div>
+          {/* Mobile only: labelled menu button opens every destination + Login/Sign up */}
+          <MobileMenu links={links} />
+        </div>
       </nav>
     </header>
   );
