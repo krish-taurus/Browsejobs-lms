@@ -72,6 +72,10 @@ SQL
   api_set SESSION_DOMAIN ".${DOMAIN}"
   api_set SANCTUM_STATEFUL_DOMAINS "${DOMAIN},www.${DOMAIN}"
   api_set FRONTEND_ORIGINS "https://${DOMAIN},https://www.${DOMAIN}"
+  # Single-tenant deploy: resolve the tenant by slug when the request host doesn't
+  # match a tenant domain, so public endpoints (reviews, salary, social proof)
+  # never 404 for an unmapped host. Explicit so a pre-existing .env can't drift.
+  api_set DEFAULT_TENANT_SLUG browsejobs
   api_set DB_CONNECTION mysql
   api_set DB_HOST 127.0.0.1
   api_set DB_PORT 3306
