@@ -44,6 +44,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { href: "/admin/advice-graph", label: "Advice graph" },
       { href: "/admin/job-feed", label: "Job feed" },
       { href: "/admin/placements", label: "Placements" },
+      { href: "/admin/social-proof", label: "Social proof" },
       { href: "/admin/cvs", label: "CV approvals" },
       { href: "/admin/mentors", label: "Mentors" },
       { href: "/admin/mentoring", label: "My mentoring" },
