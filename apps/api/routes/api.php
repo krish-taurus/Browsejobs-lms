@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
+use App\Http\Controllers\Admin\FlashcardController;
 use App\Http\Controllers\Admin\FundingNewsController;
 use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
@@ -85,6 +86,7 @@ use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
 use App\Http\Controllers\Me\MyClassController;
+use App\Http\Controllers\Me\MyFlashcardController;
 use App\Http\Controllers\Me\MyLessonNotesController;
 use App\Http\Controllers\Me\MyLessonVideoController;
 use App\Http\Controllers\Me\MyProjectController;
@@ -255,6 +257,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
     Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
     Route::get('me/lessons/{lesson}/video', [MyLessonVideoController::class, 'show']);
+    Route::get('me/lessons/{lesson}/flashcards', [MyFlashcardController::class, 'deck']);
+    Route::post('me/flashcards/{flashcard}/review', [MyFlashcardController::class, 'review']);
     Route::get('me/lessons/{lesson}/project', [MyProjectController::class, 'show']);
     Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     // Review protection & retention (PRD §6.20).
@@ -376,6 +380,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show']);
         Route::put('lessons/{lesson}/video', [LessonVideoController::class, 'upsert']);
         Route::get('recordings-library', [LessonVideoController::class, 'recordings']);
+        Route::get('lessons/{lesson}/flashcards', [FlashcardController::class, 'show']);
+        Route::put('lessons/{lesson}/flashcards', [FlashcardController::class, 'upsert']);
+        Route::post('lessons/{lesson}/flashcards/generate', [FlashcardController::class, 'generate']);
         Route::get('lessons/{lesson}/project', [ProjectSpecController::class, 'show']);
         Route::put('lessons/{lesson}/project', [ProjectSpecController::class, 'upsert']);
         Route::post('lessons/{lesson}/project/architecture', [ProjectSpecController::class, 'generate']);
