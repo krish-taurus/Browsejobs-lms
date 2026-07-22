@@ -50,10 +50,14 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2">
-          <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
-            Book Free<span className="hidden sm:inline"> Masterclass</span>
-          </BookCta>
-          {/* Mobile only: hamburger opens every destination + Login/Sign up */}
+          {/* Desktop keeps the primary CTA; on mobile the hero + sticky bottom bar
+              carry it, so the header gives the menu room to breathe. */}
+          <div className="hidden md:block">
+            <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
+              Book Free Masterclass
+            </BookCta>
+          </div>
+          {/* Mobile only: labelled menu button opens every destination + Login/Sign up */}
           <MobileMenu links={links} />
         </div>
       </nav>
