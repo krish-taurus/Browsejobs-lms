@@ -6,21 +6,25 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Curriculum\ImportSyllabusCsv;
 use App\Http\Controllers\Controller;
+use App\Support\Import\XlsxReader;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
- * Bulk syllabus authoring: download a CSV template, fill it in a spreadsheet,
- * upload it, and the whole Program → Course → Module → Topic → Lesson tree is
- * built in one shot (every topic scaffolded with Quiz + Assignment + Mock).
- * Behind can:manage-curriculum.
+ * Bulk syllabus authoring: download the template, fill it in a spreadsheet,
+ * upload it (CSV or Excel .xlsx), and the whole Program → Course → Module →
+ * Topic → Lesson tree is built in one shot (every topic scaffolded with Quiz +
+ * Assignment + Mock). Behind can:manage-curriculum.
  */
 final class SyllabusImportController extends Controller
 {
     private const HEADERS = ['program', 'course', 'module', 'topic', 'lesson_title', 'lesson_type'];
+
+    private const REQUIRED = ['program', 'course', 'module', 'topic'];
 
     /** A ready-to-fill CSV with a couple of example rows. */
     public function template(): Response
@@ -49,11 +53,19 @@ final class SyllabusImportController extends Controller
 
     public function import(Request $request, ImportSyllabusCsv $import): JsonResponse
     {
+        // Excel .xlsx is a zip, so finfo reports it as application/zip — the `mimes`
+        // rule is unreliable for it. We validate it's an uploaded file, then choose
+        // the parser by extension and let a bad file surface a friendly parse error.
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'file' => ['required', 'file', 'max:4096'],
         ]);
 
-        $rows = $this->parse($request->file('file')->getRealPath());
+        $file = $request->file('file');
+        $isXlsx = strtolower((string) $file->getClientOriginalExtension()) === 'xlsx';
+
+        $grid = $isXlsx ? $this->readXlsx($file->getRealPath()) : $this->readCsv($file->getRealPath());
+        $rows = $this->gridToRows($grid);
+
         $tenant = app(TenantContext::class)->get();
         $summary = $import->handle($tenant, $rows);
 
@@ -61,36 +73,66 @@ final class SyllabusImportController extends Controller
     }
 
     /**
-     * Parse the CSV into header-keyed rows. Header names are lower-cased and
-     * trimmed so column order and casing don't matter; unknown columns ignored.
+     * Read a CSV into a raw grid of string cells (header row first).
      *
-     * @return list<array<string, string>>
+     * @return list<list<string>>
      */
-    private function parse(string $path): array
+    private function readCsv(string $path): array
     {
         $handle = fopen($path, 'r');
         if ($handle === false) {
             throw ValidationException::withMessages(['file' => 'Could not read the file.']);
         }
 
-        $header = fgetcsv($handle);
-        if ($header === false || $header === null) {
-            fclose($handle);
+        $grid = [];
+        while (($data = fgetcsv($handle)) !== false) {
+            $grid[] = array_map(fn ($v) => (string) $v, $data);
+        }
+        fclose($handle);
+
+        return $grid;
+    }
+
+    /**
+     * Read the first worksheet of an .xlsx into a raw grid of string cells.
+     *
+     * @return list<list<string>>
+     */
+    private function readXlsx(string $path): array
+    {
+        try {
+            return XlsxReader::rows($path);
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages(['file' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Turn a raw grid (header row + data rows) into header-keyed rows. Header
+     * names are lower-cased and trimmed so column order and casing don't matter;
+     * unknown columns are ignored and blank lines skipped.
+     *
+     * @param  list<list<string>>  $grid
+     * @return list<array<string, string>>
+     */
+    private function gridToRows(array $grid): array
+    {
+        if ($grid === []) {
             throw ValidationException::withMessages(['file' => 'The file is empty.']);
         }
-        $header = array_map(fn ($h) => strtolower(trim((string) $h)), $header);
 
-        $missing = array_diff(['program', 'course', 'module', 'topic'], $header);
+        $header = array_map(fn ($h) => strtolower(trim((string) $h)), array_shift($grid));
+
+        $missing = array_diff(self::REQUIRED, $header);
         if ($missing !== []) {
-            fclose($handle);
             throw ValidationException::withMessages([
                 'file' => 'Missing required columns: '.implode(', ', $missing).'. Download the template.',
             ]);
         }
 
         $rows = [];
-        while (($data = fgetcsv($handle)) !== false) {
-            if ($data === [null] || implode('', array_map('strval', $data)) === '') {
+        foreach ($grid as $data) {
+            if (implode('', array_map('strval', $data)) === '') {
                 continue; // skip blank lines
             }
             $row = [];
@@ -99,7 +141,6 @@ final class SyllabusImportController extends Controller
             }
             $rows[] = $row;
         }
-        fclose($handle);
 
         return $rows;
     }
