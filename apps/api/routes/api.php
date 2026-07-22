@@ -545,6 +545,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('batches/{batch}/members', [RosterController::class, 'store']);
         Route::post('batches/{batch}/import', [RosterController::class, 'import']);
         Route::post('batches/{batch}/complete', [RosterController::class, 'completeBootcamp']);
+        Route::post('batches/{batch}/complete-masterclass', [RosterController::class, 'completeMasterclass']);
         Route::post('members/{member}/transfer', [RosterController::class, 'transfer']);
         Route::post('members/{member}/remove', [RosterController::class, 'remove']);
         Route::post('members/{member}/convert', [RosterController::class, 'convert']);
