@@ -65,8 +65,10 @@ class SocialProofSeeder extends Seeder
                 ->where('tenant_id', $tenantId)->where('course_id', $courseId)
                 ->where('student_name', $s['student_name'])->first();
 
-            // Don't clobber a real, consented story an admin has since published.
-            if ($existing !== null && ! $existing->is_sample) {
+            // Don't clobber a real story a human has PUBLISHED (is_published + not a
+            // sample). An old draft (is_published=false) is fair game — it becomes a
+            // published sample so the card actually shows.
+            if ($existing !== null && $existing->is_published && ! $existing->is_sample) {
                 continue;
             }
 
