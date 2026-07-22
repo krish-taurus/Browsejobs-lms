@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\ProjectSpecController;
 use App\Http\Controllers\Admin\PulseAdminController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\ReceiptController;
+use App\Http\Controllers\Admin\RecordingController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\ReviewRequestController;
 use App\Http\Controllers\Admin\RiskController;
@@ -554,6 +555,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         // Repair: create the Zoom meeting for a class that has none (e.g. scheduled
         // before Zoom was connected).
         Route::post('sessions/{session}/create-meeting', [LiveSessionController::class, 'createMeeting']);
+
+        // Recordings library grouped by batch (with class + trainer + date/time).
+        Route::get('recordings', [RecordingController::class, 'index']);
 
         // Send a specific mock / assignment to a batch (PRD §6.5/§6.6).
         Route::get('batches/{batch}/dispatch-options', [BatchDispatchController::class, 'options']);
