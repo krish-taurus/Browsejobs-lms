@@ -9,7 +9,6 @@ use App\Models\MessageTemplate;
 use App\Models\Tenant;
 use App\Models\Testimonial;
 use App\Models\User;
-use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\FakeWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
 
