@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\SocialProof\ImportPlacementStories;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseInterviewQuestion;
 use App\Models\PlacementStory;
 use App\Models\Review;
+use App\Support\Import\XlsxReader;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Admin authoring for course-page social proof (Platform Spec §3), gated by
@@ -41,6 +47,105 @@ final class SocialProofController extends Controller
         $story = PlacementStory::query()->create([...$data, 'course_id' => $course->id, 'is_sample' => false]);
 
         return response()->json(['data' => $this->storyPayload($story)], 201);
+    }
+
+    /** Header columns for the bulk placement-story spreadsheet. */
+    private const STORY_HEADERS = [
+        'course_slug', 'student_name', 'before_label', 'after_role',
+        'package_label', 'company_name', 'company_color', 'rounds', 'quote', 'consent',
+    ];
+
+    /** A ready-to-fill CSV (opens in Excel) with example rows. */
+    public function storiesTemplate(): Response
+    {
+        $rows = [
+            self::STORY_HEADERS,
+            ['data-engineering', 'Aarti Sharma', 'Support engineer, 3 yrs', 'Data Engineer', '₹12 LPA', 'Acme Data', '#12408f', '4', 'Cleared it — the SQL round was exactly what we practised!', 'yes'],
+            ['devops-cloud', 'Rahul Verma', 'Fresher, non-CS', 'DevOps Engineer', '₹9 LPA', 'Cloudspire', '', '3', 'Got the offer today 🎉', 'no'],
+        ];
+
+        $out = fopen('php://temp', 'r+');
+        foreach ($rows as $r) {
+            fputcsv($out, $r);
+        }
+        rewind($out);
+        $csv = (string) stream_get_contents($out);
+        fclose($out);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="browsejobs-placement-stories-template.csv"',
+        ]);
+    }
+
+    /** Bulk-import placement stories from a CSV or .xlsx upload. */
+    public function importStories(Request $request, ImportPlacementStories $import): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'max:4096']]);
+
+        $file = $request->file('file');
+        $isXlsx = strtolower((string) $file->getClientOriginalExtension()) === 'xlsx';
+
+        try {
+            $grid = $isXlsx ? XlsxReader::rows($file->getRealPath()) : $this->readCsv($file->getRealPath());
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages(['file' => $e->getMessage()]);
+        }
+
+        $summary = $import->handle(app(TenantContext::class)->get(), $this->gridToRows($grid));
+
+        return response()->json(['data' => $summary], 201);
+    }
+
+    /** @return list<list<string>> */
+    private function readCsv(string $path): array
+    {
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            throw ValidationException::withMessages(['file' => 'Could not read the file.']);
+        }
+        $grid = [];
+        while (($data = fgetcsv($handle)) !== false) {
+            $grid[] = array_map(fn ($v) => (string) $v, $data);
+        }
+        fclose($handle);
+
+        return $grid;
+    }
+
+    /**
+     * Header-keyed rows from a raw grid; column order/casing don't matter.
+     *
+     * @param  list<list<string>>  $grid
+     * @return list<array<string, string>>
+     */
+    private function gridToRows(array $grid): array
+    {
+        if ($grid === []) {
+            throw ValidationException::withMessages(['file' => 'The file is empty.']);
+        }
+        $header = array_map(fn ($h) => strtolower(trim((string) $h)), array_shift($grid));
+
+        $missing = array_diff(['course_slug', 'student_name', 'before_label', 'after_role'], $header);
+        if ($missing !== []) {
+            throw ValidationException::withMessages([
+                'file' => 'Missing required columns: '.implode(', ', $missing).'. Download the template.',
+            ]);
+        }
+
+        $rows = [];
+        foreach ($grid as $data) {
+            if (implode('', array_map('strval', $data)) === '') {
+                continue;
+            }
+            $row = [];
+            foreach ($header as $i => $col) {
+                $row[$col] = isset($data[$i]) ? (string) $data[$i] : '';
+            }
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
     public function updateStory(Request $request, PlacementStory $story): JsonResponse

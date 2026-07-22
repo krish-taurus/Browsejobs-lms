@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError, apiJson } from "@/lib/api";
+import { ApiError, apiBlob, apiJson } from "@/lib/api";
 
 /**
  * Per-course social-proof authoring: placement stories (+ WhatsApp screenshot
@@ -42,7 +42,9 @@ export default function SocialProofAdminPage() {
         Placement stories, interview questions, and reviews shown on each course page. Real, consented content only.
       </p>
 
-      <div className="mt-4">
+      <BulkStoryImport />
+
+      <div className="mt-6">
         <label className={label}>Course</label>
         <select className={`${input} mt-1`} value={courseId ?? ""} onChange={(e) => setCourseId(Number(e.target.value))}>
           {(courses?.data ?? []).map((c) => (
@@ -58,6 +60,91 @@ export default function SocialProofAdminPage() {
           <ReviewsSection courseId={courseId} />
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------------- Bulk story upload ---------------- */
+
+function BulkStoryImport() {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function downloadTemplate() {
+    setErr(null);
+    try {
+      const blob = await apiBlob("/api/v1/admin/placement-stories/template");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "browsejobs-placement-stories-template.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setErr("Could not download the template.");
+    }
+  }
+
+  async function upload(file: File) {
+    setBusy(true);
+    setMsg(null);
+    setErr(null);
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await apiJson<{ data: { created: number; updated: number; published: number; skipped: { row: number; reason: string }[] } }>(
+        "/api/v1/admin/placement-stories/import",
+        { method: "POST", body: fd },
+      );
+      const d = res.data;
+      setMsg(
+        `Imported ${d.created} new · ${d.updated} updated · ${d.published} published` +
+          (d.skipped.length ? ` · ${d.skipped.length} skipped (${d.skipped.slice(0, 3).map((s) => `row ${s.row}`).join(", ")}${d.skipped.length > 3 ? "…" : ""})` : ""),
+      );
+      void qc.invalidateQueries({ queryKey: ["admin"] });
+    } catch (e) {
+      setErr(e instanceof ApiError ? (e.firstError ?? e.message) : "Upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-[14px] border border-line bg-white p-5">
+      <h2 className="display text-lg text-ink">Bulk upload stories</h2>
+      <p className="mt-1 text-sm text-muted">
+        Capture every card in a spreadsheet and upload them at once. Set <span className="mono">course_slug</span> per row;
+        rows with <span className="mono">consent = yes</span> publish, others land as drafts. CSV or Excel (.xlsx).
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={downloadTemplate}
+          className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-trust hover:text-trust"
+        >
+          ↓ Download template
+        </button>
+        <label className={`cursor-pointer rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep ${busy ? "opacity-50" : ""}`}>
+          {busy ? "Uploading…" : "↑ Upload filled sheet"}
+          <input
+            type="file"
+            accept=".csv,.xlsx"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void upload(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+      {msg && <p className="mono mt-3 text-xs text-verify">{msg}</p>}
+      {err && <p className="mt-3 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{err}</p>}
     </div>
   );
 }

@@ -403,6 +403,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         // interview-question bank, and course-tagged reviews.
         Route::get('courses/{course}/placement-stories', [AdminSocialProofController::class, 'stories']);
         Route::post('courses/{course}/placement-stories', [AdminSocialProofController::class, 'storeStory']);
+        // Bulk import: download the Excel/CSV template, fill it, upload all at once.
+        Route::get('placement-stories/template', [AdminSocialProofController::class, 'storiesTemplate']);
+        Route::post('placement-stories/import', [AdminSocialProofController::class, 'importStories']);
         Route::put('placement-stories/{story}', [AdminSocialProofController::class, 'updateStory']);
         Route::delete('placement-stories/{story}', [AdminSocialProofController::class, 'destroyStory']);
         Route::post('placement-stories/{story}/screenshot', [AdminSocialProofController::class, 'uploadScreenshot']);
