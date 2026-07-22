@@ -7,6 +7,7 @@ import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SyllabusAccordion } from "@/components/courses/SyllabusAccordion";
 import { SyllabusDownload } from "@/components/courses/SyllabusDownload";
+import { CourseSocialProof } from "@/components/courses/CourseSocialProof";
 import {
   careerServices,
   courseDetails,
@@ -291,6 +292,9 @@ export default async function CoursePage({
             </ScrollReveal>
           </section>
         )}
+
+        {/* Social proof — placement stories, interview-questions popup, reviews */}
+        <CourseSocialProof slug={course.slug} />
 
         {/* CTA band */}
         <section className="mx-auto max-w-6xl px-5 pb-16">
