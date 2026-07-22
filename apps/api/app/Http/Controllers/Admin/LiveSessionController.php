@@ -6,11 +6,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\LiveClasses\CancelLiveSession;
 use App\Actions\LiveClasses\RescheduleLiveSession;
+use App\Actions\LiveClasses\ScheduleBatchSeries;
 use App\Actions\LiveClasses\ScheduleLiveSession;
 use App\Enums\LiveSessionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CancelSessionRequest;
 use App\Http\Requests\Admin\RescheduleSessionRequest;
+use App\Http\Requests\Admin\ScheduleSeriesRequest;
 use App\Http\Requests\Admin\ScheduleSessionRequest;
 use App\Http\Resources\LiveSessionResource;
 use App\Models\Batch;
@@ -61,6 +63,30 @@ final class LiveSessionController extends Controller
         );
 
         return (new LiveSessionResource($session->load('topic:id,name')))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Generate a batch's whole class calendar in one pass (daily/alt-day cohorts).
+     * Delegates each class to the same scheduling engine, so every generated class
+     * gets its own Zoom meeting + reminder ladder. Idempotent per slot.
+     */
+    public function storeSeries(ScheduleSeriesRequest $request, Batch $batch, ScheduleBatchSeries $series): JsonResponse
+    {
+        $created = $series->handle(
+            $batch,
+            array_map('intval', $request->array('weekdays')),
+            $request->string('time')->toString(),
+            (int) $request->integer('duration_minutes'),
+            (int) $request->integer('count'),
+            AppTime::parse($request->string('start_date')->toString()),
+            $request->filled('title_prefix') ? $request->string('title_prefix')->toString() : null,
+            $request->boolean('map_topics'),
+            $request->boolean('record', true),
+        );
+
+        return LiveSessionResource::collection(
+            collect($created)->each->load('topic:id,name')
+        )->response()->setStatusCode(201);
     }
 
     public function reschedule(RescheduleSessionRequest $request, LiveSession $session, RescheduleLiveSession $reschedule): JsonResponse
