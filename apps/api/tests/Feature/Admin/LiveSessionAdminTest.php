@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\BatchType;
 use App\Enums\LiveSessionStatus;
-use App\Jobs\CreateZoomMeeting;
 use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
@@ -13,10 +12,14 @@ use App\Models\SessionChange;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Notifications\SessionNotifier;
+use App\Support\Zoom\FakeZoomClient;
+use App\Support\Zoom\ZoomClient;
+use App\Support\Zoom\ZoomMeeting;
 use Carbon\CarbonInterface;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+use RuntimeException;
 
 beforeEach(function () {
     Queue::fake(); // don't dispatch real Zoom jobs
@@ -84,25 +87,56 @@ it('lists a batch classes newest first', function () {
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.title', 'Window functions');
 });
 
-it('repairs a class with no meeting by dispatching meeting creation', function () {
+it('repairs a class with no meeting by creating it synchronously', function () {
+    $fake = new FakeZoomClient;
+    app()->instance(ZoomClient::class, $fake);
     Sanctum::actingAs($this->admin);
 
     // The seeded class already has a zoom_meeting_id — clear it so it needs repair.
     withinTenant($this->tenant, fn () => $this->session->update(['zoom_meeting_id' => null]));
 
     $this->postJson("/api/v1/admin/sessions/{$this->session->id}/create-meeting")
-        ->assertStatus(202)->assertJsonPath('data.status', 'creating');
+        ->assertOk()->assertJsonPath('data.has_meeting', true);
 
-    Queue::assertPushed(CreateZoomMeeting::class, fn ($job) => $job->liveSessionId === $this->session->id);
+    expect($fake->created)->toHaveCount(1)
+        ->and($this->session->fresh()->zoom_start_url)->not->toBeNull();
+});
+
+it('surfaces the Zoom error when meeting creation fails', function () {
+    // A client that always fails, to prove the admin sees the reason (not a silent no-op).
+    app()->instance(ZoomClient::class, new class implements ZoomClient
+    {
+        public function createMeeting(string $t, CarbonInterface $s, int $d, ?string $h = null, ?bool $r = null): ZoomMeeting
+        {
+            throw new RuntimeException('Invalid access token, does not contain scopes: [meeting:write]');
+        }
+
+        public function updateMeeting(string $id, CarbonInterface $s, int $d): void {}
+
+        public function deleteMeeting(string $id): void {}
+
+        public function downloadRecording(string $url): string
+        {
+            return '';
+        }
+    });
+    Sanctum::actingAs($this->admin);
+    withinTenant($this->tenant, fn () => $this->session->update(['zoom_meeting_id' => null]));
+
+    $this->postJson("/api/v1/admin/sessions/{$this->session->id}/create-meeting")
+        ->assertStatus(422)
+        ->assertJsonFragment(['zoom' => ['Zoom could not create the meeting: Invalid access token, does not contain scopes: [meeting:write] Check that a Zoom license is connected, the app has meeting:write scope, and ZOOM_DEFAULT_HOST_ID is set to your account owner\'s email.']]);
 });
 
 it('does not recreate a meeting that already exists', function () {
+    $fake = new FakeZoomClient;
+    app()->instance(ZoomClient::class, $fake);
     Sanctum::actingAs($this->admin);
 
     $this->postJson("/api/v1/admin/sessions/{$this->session->id}/create-meeting")
-        ->assertOk()->assertJsonPath('data.status', 'exists');
+        ->assertOk()->assertJsonPath('data.has_meeting', true);
 
-    Queue::assertNotPushed(CreateZoomMeeting::class);
+    expect($fake->created)->toHaveCount(0); // already had a meeting
 });
 
 it('flags a class as startable for an admin only inside the host window with a meeting', function () {

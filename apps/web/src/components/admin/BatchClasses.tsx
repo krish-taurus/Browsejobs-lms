@@ -46,6 +46,7 @@ const WEEKDAYS: { iso: number; label: string }[] = [
 export function BatchClasses({ batchId }: { batchId: string }) {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [schedule, setSchedule] = useState({ title: "", start: "", end: "", record: true });
   const [reschedulingId, setReschedulingId] = useState<number | null>(null);
   const [reschedule, setReschedule] = useState({ start: "", reason: "" });
@@ -107,12 +108,12 @@ export function BatchClasses({ batchId }: { batchId: string }) {
   });
 
   // Repair: create the Zoom meeting for a class scheduled before Zoom was connected.
-  // The meeting is made on the queue, so refresh shortly after to pick up the link.
+  // Runs synchronously, so we get immediate success/failure feedback.
   const createMeeting = useMutation({
     mutationFn: (id: number) =>
       apiJson(`/api/v1/admin/sessions/${id}/create-meeting`, { method: "POST" }),
-    onSuccess: () => { setError(null); setTimeout(() => void refresh(), 3000); },
-    onError,
+    onSuccess: () => { setError(null); setNotice("Zoom meeting created — the Start class button appears near class time."); void refresh(); },
+    onError: (err) => { setNotice(null); onError(err); },
   });
 
   const createSeries = useMutation({
@@ -165,6 +166,11 @@ export function BatchClasses({ batchId }: { batchId: string }) {
       {error && (
         <p className="mt-3 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">
           {error} <button onClick={() => setError(null)} className="mono underline">dismiss</button>
+        </p>
+      )}
+      {notice && (
+        <p className="mt-3 rounded-[10px] bg-verify/10 px-3 py-2 text-sm text-verify">
+          {notice} <button onClick={() => setNotice(null)} className="mono underline">dismiss</button>
         </p>
       )}
 

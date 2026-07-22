@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\LiveClasses\CancelLiveSession;
+use App\Actions\LiveClasses\EnsureZoomMeeting;
 use App\Actions\LiveClasses\RescheduleLiveSession;
 use App\Actions\LiveClasses\ScheduleBatchSeries;
 use App\Actions\LiveClasses\ScheduleLiveSession;
@@ -16,13 +17,15 @@ use App\Http\Requests\Admin\RescheduleSessionRequest;
 use App\Http\Requests\Admin\ScheduleSeriesRequest;
 use App\Http\Requests\Admin\ScheduleSessionRequest;
 use App\Http\Resources\LiveSessionResource;
-use App\Jobs\CreateZoomMeeting;
 use App\Models\Batch;
 use App\Models\LiveSession;
 use App\Models\Topic;
 use App\Support\Time\AppTime;
+use App\Support\Zoom\ZoomClient;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Throwable;
 
 /**
  * Admin live-class scheduling (PRD §6.3). Gated by `can:teach-classes`.
@@ -154,21 +157,36 @@ final class LiveSessionController extends Controller
 
     /**
      * Repair: create the Zoom meeting for a class that doesn't have one yet — e.g.
-     * classes scheduled before Zoom was connected. Idempotent (CreateZoomMeeting
-     * no-ops if a meeting already exists); the meeting is created on the queue, so
-     * the join/host links appear a moment later.
+     * classes scheduled before Zoom was connected. Runs synchronously so the admin
+     * gets immediate feedback (and the underlying Zoom error, if any), rather than a
+     * silent queued job. Idempotent: a class that already has a meeting is unchanged.
      */
-    public function createMeeting(LiveSession $session): JsonResponse
+    public function createMeeting(LiveSession $session, EnsureZoomMeeting $ensure, ZoomClient $zoom): JsonResponse
     {
         $this->assertChangeable($session);
 
         if ($session->zoom_meeting_id !== null) {
-            return response()->json(['data' => ['status' => 'exists']]);
+            return (new LiveSessionResource($session->fresh(['topic:id,name'])))->response();
         }
 
-        CreateZoomMeeting::dispatch($session->id);
+        try {
+            $ensure->handle($session, $zoom);
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages([
+                'zoom' => 'Zoom could not create the meeting: '.$this->zoomError($e)
+                    .' Check that a Zoom license is connected, the app has meeting:write scope, and ZOOM_DEFAULT_HOST_ID is set to your account owner\'s email.',
+            ]);
+        }
 
-        return response()->json(['data' => ['status' => 'creating']], 202);
+        return (new LiveSessionResource($session->fresh(['topic:id,name'])))->response();
+    }
+
+    /** A short, human-readable slice of a Zoom API/client error for the admin UI. */
+    private function zoomError(Throwable $e): string
+    {
+        $message = trim($e->getMessage());
+
+        return $message === '' ? class_basename($e) : mb_strimwidth($message, 0, 300, '…');
     }
 
     /**
