@@ -65,8 +65,9 @@ function BulkImport() {
       <h2 className="mt-1 font-semibold text-ink">Build a whole syllabus from a spreadsheet</h2>
       <p className="mt-1 text-sm text-ink2/70">
         Download the template, fill it in Excel or Google Sheets (one row per lesson),
-        and upload it. Programs, courses, modules and topics are created in one go —
-        and every topic gets a Quiz, Assignment and Mock ready to fill. Re-uploading is safe.
+        and upload it back as CSV or Excel (.xlsx). Programs, courses, modules and topics
+        are created in one go — and every topic gets a Quiz, Assignment and Mock ready to
+        fill. Re-uploading is safe.
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
@@ -76,10 +77,10 @@ function BulkImport() {
           Download CSV template
         </button>
         <label className="cursor-pointer rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep">
-          {busy ? "Importing…" : "Upload filled CSV"}
+          {busy ? "Importing…" : "Upload CSV or Excel"}
           <input
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="hidden"
             disabled={busy}
             onChange={(e) => {
