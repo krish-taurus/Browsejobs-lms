@@ -58,13 +58,40 @@ class Batch extends Model
     }
 
     /**
-     * The trainer assigned to this batch (PRD §6.13 Training ticket routing).
+     * The batch's lead / default trainer (PRD §6.13 Training ticket routing). Used
+     * for any module without a specific per-module trainer.
      *
      * @return BelongsTo<User, $this>
      */
     public function trainer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trainer_id');
+    }
+
+    /**
+     * Per-module trainer allocations for this batch (PRD §6.3).
+     *
+     * @return HasMany<BatchModuleTrainer, $this>
+     */
+    public function moduleTrainers(): HasMany
+    {
+        return $this->hasMany(BatchModuleTrainer::class);
+    }
+
+    /**
+     * The trainer responsible for a given module's classes: the module's assigned
+     * trainer if there is one, otherwise the batch's lead trainer.
+     */
+    public function trainerForModule(?int $moduleId): ?User
+    {
+        if ($moduleId !== null) {
+            $assigned = $this->moduleTrainers->firstWhere('module_id', $moduleId);
+            if ($assigned?->trainer !== null) {
+                return $assigned->trainer;
+            }
+        }
+
+        return $this->trainer;
     }
 
     /**

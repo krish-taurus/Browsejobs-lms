@@ -494,6 +494,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('batches', [BatchController::class, 'index']);
         Route::post('batches', [BatchController::class, 'store']);
         Route::get('batches/{batch}', [BatchController::class, 'show']);
+        // Per-module trainer allocation (multiple trainers per batch).
+        Route::get('batches/{batch}/module-trainers', [BatchController::class, 'moduleTrainers']);
+        Route::put('batches/{batch}/module-trainers', [BatchController::class, 'setModuleTrainers']);
 
         // Zoom host-license pool (PRD §6.3) — allocate a license per mentor.
         Route::get('zoom-licenses', [ZoomLicenseController::class, 'index']);
