@@ -173,6 +173,10 @@ cmd_update(){
   # Sync canonical message templates (idempotent: templates upsert, demo rows are
   # guarded off once real messages exist) so notification changes ship automatically.
   php artisan db:seed --class=MessagingSeeder --force
+  # Sync course social proof — real reviews, per-course interview banks, and demo
+  # placement drafts (idempotent updateOrCreate) so the review wall + course pages
+  # populate on every deploy, not just a fresh install.
+  php artisan db:seed --class=SocialProofSeeder --force
   cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
   say "Refreshing systemd units (picks up worker timeout/flag changes)…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
