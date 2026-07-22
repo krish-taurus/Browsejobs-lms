@@ -111,4 +111,12 @@ return [
         'late_grace_minutes' => (int) env('ZOOM_LATE_GRACE_MINUTES', 10),
     ],
 
+    // Google Drive review intake (Platform Spec §3). The folder link is editable in
+    // Admin → Settings so it can change without a deploy; the service-account JSON is
+    // the credential the scheduled sync reads the folder with.
+    'google_drive' => [
+        'reviews_folder' => env('GOOGLE_DRIVE_REVIEWS_FOLDER', ''),
+        'service_account_json' => env('GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON', ''),
+    ],
+
 ];

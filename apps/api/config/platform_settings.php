@@ -77,5 +77,14 @@ return [
                 ['key' => 'webhook_secret', 'label' => 'Webhook secret token', 'type' => 'secret', 'config' => 'services.zoom.webhook_secret'],
             ],
         ],
+
+        'google_drive' => [
+            'label' => 'Google Drive reviews',
+            'help' => 'Paste the shared Drive folder link your team drops reviews into — you can change it here anytime. The service-account JSON lets the scheduled sync read that folder (share the folder to the service account as Viewer).',
+            'fields' => [
+                ['key' => 'reviews_folder', 'label' => 'Reviews folder link', 'type' => 'text', 'config' => 'services.google_drive.reviews_folder'],
+                ['key' => 'service_account_json', 'label' => 'Service account JSON', 'type' => 'secret', 'config' => 'services.google_drive.service_account_json'],
+            ],
+        ],
     ],
 ];
