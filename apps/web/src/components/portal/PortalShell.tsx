@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
@@ -30,7 +31,7 @@ function NavIcon({ path, active }: { path: string; active: boolean }) {
   );
 }
 
-export function PortalShell({ children }: { children: ReactNode }) {
+function PortalShellInner({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const { status: fee } = useFeeStatus();
   const pathname = usePathname();
@@ -171,5 +172,21 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </button>
       </nav>
     </div>
+  );
+}
+
+/**
+ * Portal shell wrapped in a React Query provider, so portal pages and dashboard
+ * widgets (e.g. the class schedule + next-class card) share one query cache.
+ */
+export function PortalShell({ children }: { children: ReactNode }) {
+  const [client] = useState(() => new QueryClient({
+    defaultOptions: { queries: { retry: 1, staleTime: 15_000 } },
+  }));
+
+  return (
+    <QueryClientProvider client={client}>
+      <PortalShellInner>{children}</PortalShellInner>
+    </QueryClientProvider>
   );
 }
