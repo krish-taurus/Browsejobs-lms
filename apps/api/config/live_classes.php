@@ -11,6 +11,7 @@ return [
     'reminder_offsets' => [
         ['minutes' => 720, 'label' => '12h'],
         ['minutes' => 120, 'label' => '2h'],
+        ['minutes' => 60, 'label' => '1h'],
         ['minutes' => 5, 'label' => '5min'],
     ],
 
