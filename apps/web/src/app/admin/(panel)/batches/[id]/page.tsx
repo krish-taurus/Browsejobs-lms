@@ -114,6 +114,20 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
     onError,
   });
 
+  const completeMasterclass = useMutation({
+    mutationFn: () =>
+      apiJson<{ data: { attendees: number } }>(`/api/v1/admin/batches/${id}/complete-masterclass`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    onSuccess: (res) => {
+      setError(null);
+      setImportSummary(`Masterclass completed — a review request went to ${res.data.attendees} attendee(s).`);
+      void refresh();
+    },
+    onError,
+  });
+
   const publishSelfPaced = useMutation({
     mutationFn: () =>
       apiJson<{ data: { price_paise: number } }>(`/api/v1/admin/batches/${id}/publish-self-paced`, {
@@ -167,6 +181,17 @@ export default function AdminBatchDetailPage({ params }: { params: Promise<{ id:
             className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
           >
             {complete.isPending ? "Converting…" : "Complete bootcamp & convert"}
+          </button>
+        )}
+        {batch?.type === "masterclass" && (
+          <button
+            onClick={() => {
+              if (window.confirm("Complete this masterclass and send a review request to every attendee?")) completeMasterclass.mutate();
+            }}
+            disabled={completeMasterclass.isPending}
+            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
+          >
+            {completeMasterclass.isPending ? "Sending…" : "Complete masterclass & request reviews"}
           </button>
         )}
         {batch?.type === "paid" && (

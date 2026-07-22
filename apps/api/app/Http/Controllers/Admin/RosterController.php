@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Conversion\CompleteBootcamp;
+use App\Actions\Conversion\CompleteMasterclass;
 use App\Actions\Conversion\ConvertBootcampAttendee;
 use App\Actions\Roster\AddStudentToBatch;
 use App\Actions\Roster\FindOrCreateStudent;
@@ -79,6 +80,14 @@ final class RosterController extends Controller
         $summary = $complete->handle($batch, $request->user());
 
         return response()->json(['data' => $summary]);
+    }
+
+    /** Complete a masterclass and request a review from each attendee (review ladder, stage 1). */
+    public function completeMasterclass(Request $request, Batch $batch, CompleteMasterclass $complete): JsonResponse
+    {
+        $attendees = $complete->handle($batch, $request->user());
+
+        return response()->json(['data' => ['attendees' => $attendees]]);
     }
 
     /** Convert a single bootcamp attendee to the linked paid batch. */
