@@ -17,6 +17,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Teaching",
     items: [
       { href: "/admin/teaching", label: "My teaching" },
+      { href: "/admin/recordings", label: "Recordings" },
       { href: "/admin/curriculum", label: "Curriculum" },
       { href: "/admin/syllabus", label: "Syllabus" },
       { href: "/admin/syllabus-advisor", label: "Syllabus advisor" },
