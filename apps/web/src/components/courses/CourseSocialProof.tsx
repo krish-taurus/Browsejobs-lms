@@ -215,7 +215,9 @@ export function CourseSocialProof({ slug }: { slug: string }) {
 
   if (!data) return null;
   const { stories, question_rounds, reviews } = data;
-  if (stories.length === 0 && reviews.length === 0) return null;
+  if (stories.length === 0 && reviews.length === 0 && question_rounds.length === 0) return null;
+
+  const questionCount = question_rounds.reduce((n, r) => n + r.questions.length, 0);
 
   return (
     <section className="bg-paper">
@@ -239,8 +241,31 @@ export function CourseSocialProof({ slug }: { slug: string }) {
           </>
         )}
 
+        {/* Standalone question-bank entry — shows even when no live story card does. */}
+        {question_rounds.length > 0 && (
+          <div className={stories.length > 0 ? "mt-14" : ""}>
+            <div className="flex flex-col items-start gap-4 rounded-[18px] border border-line bg-white p-6 shadow-soft md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="kicker text-trust">Real interview questions</p>
+                <h3 className="display mt-2 text-2xl text-ink">The exact rounds our alumni faced</h3>
+                <p className="mt-1.5 max-w-xl text-sm text-muted">
+                  <span className="mono text-ink">{question_rounds.length}</span> rounds ·{" "}
+                  <span className="mono text-ink">{questionCount}</span> questions reverse-engineered from real{" "}
+                  {data.course.name} interviews. Study them before yours.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowQuestions(true)}
+                className="shrink-0 rounded-full bg-trust px-6 py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(27,109,240,0.35)] transition-transform hover:-translate-y-0.5"
+              >
+                See the questions →
+              </button>
+            </div>
+          </div>
+        )}
+
         {reviews.length > 0 && (
-          <div className={stories.length > 0 ? "mt-16" : ""}>
+          <div className={stories.length > 0 || question_rounds.length > 0 ? "mt-16" : ""}>
             <p className="kicker text-verify">Real · unedited reviews</p>
             <h2 className="display mt-3 max-w-2xl text-3xl text-ink md:text-4xl">What learners actually say</h2>
             <div className="mt-8 columns-1 gap-5 md:columns-2 lg:columns-3 [&>*]:mb-5">
