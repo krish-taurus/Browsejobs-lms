@@ -119,4 +119,14 @@ return [
         'service_account_json' => env('GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON', ''),
     ],
 
+    /*
+    | Social + review-gate links (Platform Spec §3). Shown to a 4★+ candidate so
+    | they can post on Google and follow us. Tenant-owned via platform settings.
+    */
+    'social' => [
+        'google_review_url' => env('SOCIAL_GOOGLE_REVIEW_URL', ''),
+        'instagram_url' => env('SOCIAL_INSTAGRAM_URL', ''),
+        'youtube_url' => env('SOCIAL_YOUTUBE_URL', ''),
+    ],
+
 ];

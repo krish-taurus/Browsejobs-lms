@@ -24,5 +24,12 @@ return [
     */
     'review_request' => [
         'enabled' => true,
+
+        /*
+        | The review gate (Platform Spec §3). A rating at or above this lands
+        | `pending` and the candidate is handed off to Google; below it, the
+        | review is kept as private feedback — never published, never rewarded.
+        */
+        'min_public_rating' => 4,
     ],
 ];

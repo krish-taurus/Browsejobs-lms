@@ -23,9 +23,13 @@ final class TestimonialController extends Controller
             [
                 'batch_id' => $request->integer('batch_id') ?: null,
                 'course_slug' => $request->input('course_slug'),
+                'stage' => $request->input('stage'),
                 'rating' => $request->integer('rating'),
                 'body' => $request->string('body')->toString(),
                 'consent_publish' => $request->boolean('consent_publish'),
+                'followed_instagram' => $request->boolean('followed_instagram'),
+                'subscribed_youtube' => $request->boolean('subscribed_youtube'),
+                'posted_google_review' => $request->boolean('posted_google_review'),
             ],
             $request->file('video'),
         );

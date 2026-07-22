@@ -21,10 +21,14 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int|null $batch_id
  * @property string|null $course_slug
+ * @property string|null $stage
  * @property int $rating
  * @property string $body
  * @property string|null $video_path
  * @property bool $consent_publish
+ * @property bool $followed_instagram
+ * @property bool $subscribed_youtube
+ * @property bool $posted_google_review
  * @property TestimonialStatus $status
  * @property int|null $review_id
  * @property int|null $voucher_issue_id
@@ -39,8 +43,9 @@ class Testimonial extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'user_id', 'batch_id', 'course_slug', 'rating', 'body',
-        'video_path', 'consent_publish', 'status', 'review_id', 'voucher_issue_id',
+        'tenant_id', 'user_id', 'batch_id', 'course_slug', 'stage', 'rating', 'body',
+        'video_path', 'consent_publish', 'followed_instagram', 'subscribed_youtube',
+        'posted_google_review', 'status', 'review_id', 'voucher_issue_id',
         'reviewed_by', 'reviewed_at', 'reject_reason',
     ];
 
@@ -52,6 +57,9 @@ class Testimonial extends Model
         return [
             'rating' => 'integer',
             'consent_publish' => 'boolean',
+            'followed_instagram' => 'boolean',
+            'subscribed_youtube' => 'boolean',
+            'posted_google_review' => 'boolean',
             'status' => TestimonialStatus::class,
             'reviewed_at' => 'datetime',
         ];

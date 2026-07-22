@@ -31,7 +31,9 @@ it('requests a testimonial from each attendee when the bootcamp completes', func
 
 it('does not re-request when a testimonial already exists', function () {
     ['bootcamp' => $bootcamp, 'student' => $student] = bootcampConversionSetup($this->tenant);
-    Testimonial::factory()->for($this->tenant)->create(['user_id' => $student->id, 'batch_id' => $bootcamp->id]);
+    Testimonial::factory()->for($this->tenant)->create([
+        'user_id' => $student->id, 'batch_id' => $bootcamp->id, 'stage' => 'bootcamp',
+    ]);
 
     withinTenant($this->tenant, fn () => app(CompleteBootcamp::class)->handle($bootcamp));
 
