@@ -9,8 +9,10 @@ use App\Enums\RecordingStatus;
 use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\LiveSession;
+use App\Models\Module;
 use App\Models\Recording;
 use App\Models\Tenant;
+use App\Models\Topic;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -45,6 +47,23 @@ it('lists the student classes', function () {
 
     $this->getJson('/api/v1/me/classes')->assertOk()->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.title', 'SQL joins'); // newest first
+});
+
+it('includes the class topic for the schedule view', function () {
+    withinTenant($this->tenant, function () {
+        $module = Module::query()->create([
+            'tenant_id' => $this->tenant->id, 'course_id' => $this->batch->course_id, 'name' => 'SQL', 'position' => 1,
+        ]);
+        $topic = Topic::query()->create([
+            'tenant_id' => $this->tenant->id, 'module_id' => $module->id, 'name' => 'Window functions', 'position' => 1,
+        ]);
+        $this->session->update(['topic_id' => $topic->id]);
+    });
+
+    Sanctum::actingAs($this->student);
+
+    $this->getJson('/api/v1/me/classes')->assertOk()
+        ->assertJsonPath('data.0.topic', 'Window functions');
 });
 
 it('does not leak the raw join url in the list', function () {

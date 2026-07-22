@@ -27,7 +27,7 @@ final class MyClassController extends Controller
 
             $sessions = LiveSession::query()
                 ->whereIn('batch_id', $batchIds)
-                ->with(['batch:id,number', 'recordings' => fn ($q) => $q->where('status', 'stored')])
+                ->with(['batch:id,number', 'topic:id,name', 'recordings' => fn ($q) => $q->where('status', 'stored')])
                 ->orderByDesc('scheduled_start')
                 ->get();
 
@@ -36,6 +36,7 @@ final class MyClassController extends Controller
                     'id' => $s->id,
                     'title' => $s->title,
                     'batch' => $s->batch?->number,
+                    'topic' => $s->topic?->name,
                     'scheduled_start' => $s->scheduled_start?->toIso8601String(),
                     'scheduled_end' => $s->scheduled_end?->toIso8601String(),
                     'status' => $s->status->value,
