@@ -504,6 +504,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:teach-classes')->group(function () {
         Route::get('batches/{batch}/sessions', [LiveSessionController::class, 'index']);
         Route::post('batches/{batch}/sessions', [LiveSessionController::class, 'store']);
+        Route::post('batches/{batch}/sessions/series', [LiveSessionController::class, 'storeSeries']);
         Route::post('sessions/{session}/reschedule', [LiveSessionController::class, 'reschedule']);
         Route::post('sessions/{session}/cancel', [LiveSessionController::class, 'cancel']);
 

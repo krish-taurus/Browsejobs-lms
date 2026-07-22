@@ -37,12 +37,23 @@ function toIso(local: string): string {
   return new Date(local).toISOString();
 }
 
+const WEEKDAYS: { iso: number; label: string }[] = [
+  { iso: 1, label: "Mon" }, { iso: 2, label: "Tue" }, { iso: 3, label: "Wed" },
+  { iso: 4, label: "Thu" }, { iso: 5, label: "Fri" }, { iso: 6, label: "Sat" }, { iso: 7, label: "Sun" },
+];
+
 export function BatchClasses({ batchId }: { batchId: string }) {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [schedule, setSchedule] = useState({ title: "", start: "", end: "", record: true });
   const [reschedulingId, setReschedulingId] = useState<number | null>(null);
   const [reschedule, setReschedule] = useState({ start: "", reason: "" });
+  const [showSeries, setShowSeries] = useState(false);
+  const [series, setSeries] = useState({
+    startDate: "", time: "18:00", duration: 90, count: 10,
+    weekdays: [1, 2, 3, 4, 5], mapTopics: true, record: true,
+  });
+  const [seriesMsg, setSeriesMsg] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "batch-sessions", batchId],
@@ -84,6 +95,31 @@ export function BatchClasses({ batchId }: { batchId: string }) {
     onSuccess: () => { setError(null); void refresh(); },
     onError,
   });
+
+  const createSeries = useMutation({
+    mutationFn: () =>
+      apiJson<{ data: Session[] }>(`/api/v1/admin/batches/${batchId}/sessions/series`, {
+        method: "POST",
+        body: JSON.stringify({
+          weekdays: series.weekdays,
+          time: series.time,
+          duration_minutes: series.duration,
+          count: series.count,
+          start_date: series.startDate,
+          map_topics: series.mapTopics,
+          record: series.record,
+        }),
+      }),
+    onSuccess: (res) => {
+      setError(null);
+      setSeriesMsg(`Scheduled ${res.data.length} class${res.data.length === 1 ? "" : "es"}.`);
+      void refresh();
+    },
+    onError: (err) => { setSeriesMsg(null); onError(err); },
+  });
+
+  const toggleWeekday = (iso: number) =>
+    setSeries((s) => ({ ...s, weekdays: s.weekdays.includes(iso) ? s.weekdays.filter((d) => d !== iso) : [...s.weekdays, iso].sort() }));
 
   const sessions = data?.data ?? [];
 
@@ -137,6 +173,78 @@ export function BatchClasses({ batchId }: { batchId: string }) {
           {create.isPending ? "Scheduling…" : "Schedule class"}
         </button>
       </form>
+
+      {/* Schedule a whole series */}
+      <div className="mt-3 rounded-[14px] border border-line bg-white p-5">
+        <button
+          type="button"
+          onClick={() => { setShowSeries((v) => !v); setSeriesMsg(null); }}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <span>
+            <span className="kicker text-muted">Schedule a recurring series</span>
+            <span className="mt-0.5 block text-xs text-muted">Generate the whole calendar in one go — daily or on set days.</span>
+          </span>
+          <span className="mono text-lg text-muted">{showSeries ? "−" : "+"}</span>
+        </button>
+
+        {showSeries && (
+          <form onSubmit={(e) => { e.preventDefault(); createSeries.mutate(); }} className="mt-4 space-y-3">
+            <div>
+              <span className="text-xs text-muted">Class days</span>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {WEEKDAYS.map((d) => (
+                  <button
+                    key={d.iso} type="button" onClick={() => toggleWeekday(d.iso)}
+                    className={`mono rounded-full px-3 py-1 text-[12px] transition-colors ${series.weekdays.includes(d.iso) ? "bg-trust text-white" : "border border-line text-ink hover:bg-paper"}`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">First class date
+                <input required type="date" value={series.startDate}
+                  onChange={(e) => setSeries({ ...series, startDate: e.target.value })} className={inputCls} />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-muted">Time
+                <input required type="time" value={series.time}
+                  onChange={(e) => setSeries({ ...series, time: e.target.value })} className={inputCls} />
+              </label>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Duration (min)
+                <input required type="number" min={15} max={480} value={series.duration}
+                  onChange={(e) => setSeries({ ...series, duration: Number(e.target.value) })} className={inputCls} />
+              </label>
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Number of classes
+                <input required type="number" min={1} max={120} value={series.count}
+                  onChange={(e) => setSeries({ ...series, count: Number(e.target.value) })} className={inputCls} />
+              </label>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={series.mapTopics}
+                onChange={(e) => setSeries({ ...series, mapTopics: e.target.checked })}
+                className="h-4 w-4 rounded border-line text-trust" />
+              Title classes from the syllabus (one topic per class, in order)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={series.record}
+                onChange={(e) => setSeries({ ...series, record: e.target.checked })}
+                className="h-4 w-4 rounded border-line text-trust" />
+              Record each class to the cloud
+            </label>
+            {seriesMsg && <p className="mono text-xs text-verify">{seriesMsg}</p>}
+            <button
+              disabled={createSeries.isPending || series.weekdays.length === 0 || !series.startDate || !series.time}
+              className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {createSeries.isPending ? "Scheduling…" : "Schedule series"}
+            </button>
+          </form>
+        )}
+      </div>
 
       {/* Session list */}
       {isLoading ? (
