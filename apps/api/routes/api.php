@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\PulseAdminController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\ReviewRequestController;
 use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\SalaryBenchmarkController;
@@ -638,6 +639,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('testimonials', [AdminTestimonialController::class, 'index']);
         Route::post('testimonials/{testimonial}/approve', [AdminTestimonialController::class, 'approve']);
         Route::post('testimonials/{testimonial}/reject', [AdminTestimonialController::class, 'reject']);
+
+        // Manual/forced review requests — to a batch, named students, or both.
+        Route::post('review-requests', [ReviewRequestController::class, 'store']);
     });
 
     // Student Support Desk (PRD §6.13).

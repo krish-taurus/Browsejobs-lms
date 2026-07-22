@@ -16,6 +16,7 @@ enum ReviewStage: string
     case Enrolment = 'enrolment';           // after paying for the course + counselling
     case CourseComplete = 'course_complete'; // after finishing the course
     case Placement = 'placement';           // after landing a job
+    case Manual = 'manual';                 // sent by hand from the admin (not a funnel trigger)
 
     /** @return list<string> */
     public static function values(): array

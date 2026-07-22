@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ManualReviewRequest } from "@/components/admin/ManualReviewRequest";
 
 type Testimonial = {
   id: number;
@@ -98,6 +99,10 @@ export default function AdminReviewsPage() {
         approve — that publishes their review to the wall and issues the voucher. Under-4★ reviews land in
         &ldquo;private feedback&rdquo;: never published, never rewarded.
       </p>
+
+      <div className="mt-6">
+        <ManualReviewRequest />
+      </div>
 
       <div className="mt-6 flex gap-2">
         {TABS.map((t) => (
