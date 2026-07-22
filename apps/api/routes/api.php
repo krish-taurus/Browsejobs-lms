@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\MessageTemplateController;
 use App\Http\Controllers\Admin\MockBlueprintController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\MonetizationController;
+use App\Http\Controllers\Admin\MyTeachingController;
 use App\Http\Controllers\Admin\PaymentLinkController;
 use App\Http\Controllers\Admin\PlacementAdminController;
 use App\Http\Controllers\Admin\PointsSettingController;
@@ -537,6 +538,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('data-requests/{dataRequest}/process', [AdminDataRequestController::class, 'process']);
         Route::post('data-requests/{dataRequest}/reject', [AdminDataRequestController::class, 'reject']);
     });
+
+    // "My teaching" — any staff member's own batches, modules and upcoming classes.
+    // Self-scoped (only ever your own allocations), so it needs no extra permission:
+    // a trainer, a per-module trainer and a mentor all see their side of the batch.
+    Route::get('my-teaching', [MyTeachingController::class, 'index']);
 
     // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.
     Route::middleware('can:teach-classes')->group(function () {
