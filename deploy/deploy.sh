@@ -170,6 +170,9 @@ cmd_update(){
   git -C "${APP_DIR}" pull --ff-only
   cd "${API_DIR}"; sudo -u www-data composer install --no-dev --optimize-autoloader
   php artisan migrate --force; php artisan optimize
+  # Sync canonical message templates (idempotent: templates upsert, demo rows are
+  # guarded off once real messages exist) so notification changes ship automatically.
+  php artisan db:seed --class=MessagingSeeder --force
   cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
   say "Refreshing systemd units (picks up worker timeout/flag changes)…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
