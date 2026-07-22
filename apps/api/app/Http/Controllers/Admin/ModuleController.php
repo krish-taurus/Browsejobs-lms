@@ -34,7 +34,7 @@ final class ModuleController extends Controller
 
     public function update(CurriculumNodeRequest $request, Module $module): JsonResponse
     {
-        $module->update($request->safe()->only(['name', 'position']));
+        $module->update($request->safe()->only(['name', 'position', 'required_mocks']));
 
         CurriculumChanged::dispatch($module->course_id, (int) $module->tenant_id);
 

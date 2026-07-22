@@ -25,6 +25,7 @@ type MockSummary = {
   in_progress_id: number | null;
   best_score: number;
   human_mock_unlocked: boolean;
+  module_mocks: { module: string | null; required: number; completed: number; remaining: number; cleared: boolean }[];
   blueprints: { id: number; skill: string | null; role_title: string }[];
   gap_report: { role_title: string | null; items: GapItem[] };
   voice: {
@@ -141,6 +142,36 @@ export default function MockHubPage() {
             Your best score is {summary.best_score} — you&apos;re ready for a live mock with a mentor.
             Your counselor will reach out to schedule it.
           </p>
+        </div>
+      )}
+
+      {summary.module_mocks.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Module mocks</p>
+          <p className="mt-1 text-sm text-muted">
+            Each module you finish unlocks a set of mocks to clear. Any mock you complete counts toward
+            the next one due.
+          </p>
+          <ul className="mt-3 space-y-2.5">
+            {summary.module_mocks.map((m, i) => (
+              <li key={i} className="flex items-center justify-between gap-3">
+                <span className="min-w-0 flex-1 truncate text-sm text-ink">{m.module ?? "Module"}</span>
+                <span className="flex items-center gap-2.5">
+                  <span className="h-1.5 w-24 overflow-hidden rounded-full bg-line">
+                    <span
+                      className={`block h-full rounded-full ${m.cleared ? "bg-verify" : "bg-trust"}`}
+                      style={{ width: `${Math.round((m.completed / Math.max(1, m.required)) * 100)}%` }}
+                    />
+                  </span>
+                  {m.cleared ? (
+                    <span className="mono text-[11px] font-semibold uppercase tracking-widest text-verify">Cleared ✓</span>
+                  ) : (
+                    <span className="mono text-xs text-muted">{m.completed}/{m.required}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
