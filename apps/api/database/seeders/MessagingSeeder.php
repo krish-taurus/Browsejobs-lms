@@ -33,6 +33,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'class_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" starts in {{window}}. Join here: {{link}}'],
         ['key' => 'class_cancelled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" is cancelled. {{reason}}'],
         ['key' => 'class_rescheduled', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" was rescheduled. {{reason}}'],
+        ['key' => 'class_wrapup', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your flashcards for "{{title}}" are ready. A few minutes of recall now beats an hour of re-reading later: {{link}}'],
+        ['key' => 'class_wrapup', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Review your class — {{title}}', 'body' => 'Hi {{name}}, your flashcards for "{{title}}" are ready. Spend a few minutes on recall while it is fresh: {{link}}'],
         ['key' => 'class_cancelled_trainer', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" for {{batch}} is cancelled and the batch has been notified. {{reason}}'],
         ['key' => 'class_rescheduled_trainer', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your class "{{title}}" for {{batch}} moved to {{starts}} and the batch has been notified. {{reason}}'],
         ['key' => 'fee_reminder', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, INR {{amount}} is due. Pay in one tap: {{link}}'],

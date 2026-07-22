@@ -23,6 +23,10 @@ Schedule::command('bootcamp:invite')->dailyAt('09:00');
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
 
+// Post-class study nudge (PRD §6 daily loop): nudge cohorts to review flashcards
+// for classes that have ended, once the flashcards exist. Idempotent.
+Schedule::command('class:wrapup')->hourly();
+
 // Student rescore (PRD §6.4): nightly mastery/engagement/risk/PRI + snapshots.
 Schedule::command('scores:recompute')->dailyAt('06:00');
 
