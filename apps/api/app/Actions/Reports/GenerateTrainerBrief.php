@@ -34,7 +34,9 @@ final readonly class GenerateTrainerBrief
     public function handle(LiveSession $session): ?Report
     {
         return app(TenantContext::class)->run($session->tenant, function () use ($session): ?Report {
-            $trainer = $session->batch?->trainer;
+            // Brief the trainer who teaches this class's module (falls back to the lead).
+            $session->batch?->loadMissing('moduleTrainers.trainer');
+            $trainer = $session->batch?->trainerForModule($session->topic?->module_id);
             if ($trainer === null) {
                 return null; // no trainer assigned — nothing to brief
             }

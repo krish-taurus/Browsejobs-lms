@@ -57,8 +57,9 @@ final readonly class RescheduleLiveSession
         $session->batch->members()->whereIn('status', $occupying)->with('student')->get()
             ->each(fn ($member) => $this->notifier->rescheduled($member->student, $session, $previousStart, $reason));
 
-        // Keep the trainer in the loop too — not just the students.
-        if (($trainer = $session->batch->trainer) !== null) {
+        // Keep the trainer in the loop too — the one who teaches this class's module.
+        $session->batch->loadMissing('moduleTrainers.trainer');
+        if (($trainer = $session->batch->trainerForModule($session->topic?->module_id)) !== null) {
             $this->notifier->trainerRescheduled($trainer, $session, $previousStart, $reason);
         }
 
