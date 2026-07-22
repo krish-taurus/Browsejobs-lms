@@ -6,6 +6,7 @@ import { AiShowcase } from "@/components/landing/AiShowcase";
 import { Fees } from "@/components/landing/Fees";
 import { VerifyUs } from "@/components/landing/VerifyUs";
 import { PromiseCards } from "@/components/landing/PromiseCards";
+import { SuccessStories } from "@/components/landing/SuccessStories";
 import { SuccessWall } from "@/components/landing/SuccessWall";
 import { Faq } from "@/components/landing/Faq";
 import { JsonLd } from "@/components/landing/JsonLd";
@@ -44,6 +45,7 @@ export default function Home() {
         <Fees />
         <VerifyUs />
         <PromiseCards />
+        <SuccessStories />
         <SuccessWall />
         <Faq />
 

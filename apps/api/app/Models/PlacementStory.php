@@ -29,6 +29,7 @@ use Throwable;
  * @property string|null $screenshot_path
  * @property bool $consent
  * @property bool $is_published
+ * @property bool $is_sample
  * @property int $position
  */
 final class PlacementStory extends Model
@@ -39,7 +40,7 @@ final class PlacementStory extends Model
     protected $fillable = [
         'tenant_id', 'course_id', 'student_name', 'before_label', 'after_role',
         'package_label', 'company_name', 'company_color', 'rounds', 'quote',
-        'screenshot_path', 'consent', 'is_published', 'position',
+        'screenshot_path', 'consent', 'is_published', 'is_sample', 'position',
     ];
 
     protected function casts(): array
@@ -48,6 +49,7 @@ final class PlacementStory extends Model
             'rounds' => 'integer',
             'consent' => 'boolean',
             'is_published' => 'boolean',
+            'is_sample' => 'boolean',
             'position' => 'integer',
         ];
     }

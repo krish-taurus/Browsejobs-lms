@@ -45,7 +45,8 @@ final class SocialProofController extends Controller
         return PlacementStory::query()
             ->where('course_id', $courseId)
             ->where('is_published', true)
-            ->where('consent', true)
+            // A real story needs consent; a labelled sample doesn't (it's not a real person).
+            ->where(fn ($q) => $q->where('consent', true)->orWhere('is_sample', true))
             ->orderBy('position')->orderBy('id')
             ->get()
             ->map(fn (PlacementStory $s) => [
@@ -58,6 +59,7 @@ final class SocialProofController extends Controller
                 'rounds' => $s->rounds,
                 'quote' => $s->quote,
                 'screenshot_url' => $s->screenshotUrl(),
+                'is_sample' => $s->is_sample,
             ])
             ->all();
     }
