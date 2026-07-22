@@ -62,12 +62,21 @@ final class LessonVideoController extends Controller
     public function recordings(): JsonResponse
     {
         $recordings = Recording::query()
-            ->whereNotNull('storage_path')
+            ->where(fn ($q) => $q->whereNotNull('play_url')->orWhereNotNull('storage_path'))
+            ->with('liveSession:id,title,scheduled_start')
             ->orderByDesc('id')
             ->limit(100)
-            ->get(['id', 'title', 'duration_seconds']);
+            ->get();
 
-        return response()->json(['data' => $recordings]);
+        return response()->json(['data' => $recordings->map(fn (Recording $r) => [
+            'id' => $r->id,
+            'title' => $r->title,
+            'duration_seconds' => $r->duration_seconds,
+            'class' => $r->liveSession?->title,
+            'recorded_on' => $r->liveSession?->scheduled_start?->toIso8601String(),
+            'watch_url' => $r->play_url,
+            'passcode' => $r->passcode,
+        ])->all()]);
     }
 
     /**

@@ -551,6 +551,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('batches/{batch}/sessions/series', [LiveSessionController::class, 'storeSeries']);
         // Go live as host: hands the assigned trainer/admin the Zoom host start_url.
         Route::post('sessions/{session}/start', [LiveSessionController::class, 'start']);
+        // Repair: create the Zoom meeting for a class that has none (e.g. scheduled
+        // before Zoom was connected).
+        Route::post('sessions/{session}/create-meeting', [LiveSessionController::class, 'createMeeting']);
 
         // Send a specific mock / assignment to a batch (PRD §6.5/§6.6).
         Route::get('batches/{batch}/dispatch-options', [BatchDispatchController::class, 'options']);

@@ -102,19 +102,28 @@ it('ignores a participant who is not a batch member', function () {
     expect(Attendance::withoutGlobalScopes()->count())->toBe(0);
 });
 
-it('pulls a completed recording into storage', function () {
+it('registers the Zoom Cloud recording without importing it', function () {
     postZoom(['event' => 'recording.completed', 'payload' => ['object' => [
         'id' => '900000001',
         'duration' => 90,
+        'recording_play_passcode' => 'p@ss123',
         'recording_files' => [
-            ['recording_type' => 'shared_screen_with_speaker_view', 'download_url' => 'https://zoom.test/rec/1'],
+            // Non-video files are skipped; only the MP4 is registered.
+            ['file_type' => 'M4A', 'recording_type' => 'audio_only', 'play_url' => 'https://zoom.test/audio/1'],
+            ['file_type' => 'MP4', 'recording_type' => 'shared_screen_with_speaker_view', 'play_url' => 'https://zoom.test/play/1', 'download_url' => 'https://zoom.test/dl/1'],
         ],
     ]]])->assertOk();
 
-    $recording = Recording::withoutGlobalScopes()->first();
+    $recordings = Recording::withoutGlobalScopes()->get();
+
+    expect($recordings)->toHaveCount(1);
+    $recording = $recordings->first();
 
     expect($recording->status)->toBe(RecordingStatus::Stored)
-        ->and($recording->storage_path)->not->toBeNull();
+        ->and($recording->play_url)->toBe('https://zoom.test/play/1')
+        ->and($recording->passcode)->toBe('p@ss123')
+        ->and($recording->storage_path)->toBeNull(); // never imported
 
-    Storage::disk('s3')->assertExists($recording->storage_path);
+    // No file was pulled into our storage.
+    Storage::disk('s3')->assertDirectoryEmpty('recordings');
 });

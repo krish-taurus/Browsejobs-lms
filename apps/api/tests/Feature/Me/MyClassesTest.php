@@ -34,7 +34,8 @@ beforeEach(function () {
             'status' => LiveSessionStatus::Ended->value,
         ]);
         $rec = Recording::query()->create([
-            'live_session_id' => $past->id, 'title' => 'Pandas', 'storage_path' => 'recordings/x/1/1.mp4',
+            'live_session_id' => $past->id, 'title' => 'Pandas',
+            'play_url' => 'https://zoom.test/play/pandas', 'passcode' => 'abc123',
             'duration_seconds' => 3600, 'status' => RecordingStatus::Stored->value,
         ]);
 
@@ -102,12 +103,13 @@ it('lists the student recordings', function () {
         ->assertJsonPath('data.0.class', 'Pandas');
 });
 
-it('authorises a recording download for an enrolled student', function () {
+it('hands an enrolled student the Zoom cloud watch url and passcode', function () {
     Sanctum::actingAs($this->student);
 
-    // temporaryUrl on the local test disk yields null, but a 200 means access was granted.
     $this->getJson("/api/v1/me/recordings/{$this->recording->id}/download")
-        ->assertOk()->assertJsonStructure(['data' => ['download_url']]);
+        ->assertOk()
+        ->assertJsonPath('data.watch_url', 'https://zoom.test/play/pandas')
+        ->assertJsonPath('data.passcode', 'abc123');
 });
 
 it('denies a recording download to a non-member', function () {

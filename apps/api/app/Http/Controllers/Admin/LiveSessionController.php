@@ -16,6 +16,7 @@ use App\Http\Requests\Admin\RescheduleSessionRequest;
 use App\Http\Requests\Admin\ScheduleSeriesRequest;
 use App\Http\Requests\Admin\ScheduleSessionRequest;
 use App\Http\Resources\LiveSessionResource;
+use App\Jobs\CreateZoomMeeting;
 use App\Models\Batch;
 use App\Models\LiveSession;
 use App\Models\Topic;
@@ -41,7 +42,7 @@ final class LiveSessionController extends Controller
         $sessions = $batch->liveSessions()
             ->with([
                 'topic:id,name,module_id',
-                'recordings:id,live_session_id,title,status',
+                'recordings:id,live_session_id,title,status,play_url,passcode',
                 'batch.trainer', 'batch.moduleTrainers.trainer',
             ])
             ->orderByDesc('scheduled_start')
@@ -149,6 +150,25 @@ final class LiveSessionController extends Controller
         $url = $start->handle($session, request()->user());
 
         return response()->json(['data' => ['start_url' => $url]]);
+    }
+
+    /**
+     * Repair: create the Zoom meeting for a class that doesn't have one yet — e.g.
+     * classes scheduled before Zoom was connected. Idempotent (CreateZoomMeeting
+     * no-ops if a meeting already exists); the meeting is created on the queue, so
+     * the join/host links appear a moment later.
+     */
+    public function createMeeting(LiveSession $session): JsonResponse
+    {
+        $this->assertChangeable($session);
+
+        if ($session->zoom_meeting_id !== null) {
+            return response()->json(['data' => ['status' => 'exists']]);
+        }
+
+        CreateZoomMeeting::dispatch($session->id);
+
+        return response()->json(['data' => ['status' => 'creating']], 202);
     }
 
     /**

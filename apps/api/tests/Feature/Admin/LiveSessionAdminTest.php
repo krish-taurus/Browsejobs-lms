@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\BatchType;
 use App\Enums\LiveSessionStatus;
+use App\Jobs\CreateZoomMeeting;
 use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
@@ -81,6 +82,27 @@ it('lists a batch classes newest first', function () {
 
     $this->getJson("/api/v1/admin/batches/{$this->batch->id}/sessions")
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.title', 'Window functions');
+});
+
+it('repairs a class with no meeting by dispatching meeting creation', function () {
+    Sanctum::actingAs($this->admin);
+
+    // The seeded class already has a zoom_meeting_id — clear it so it needs repair.
+    withinTenant($this->tenant, fn () => $this->session->update(['zoom_meeting_id' => null]));
+
+    $this->postJson("/api/v1/admin/sessions/{$this->session->id}/create-meeting")
+        ->assertStatus(202)->assertJsonPath('data.status', 'creating');
+
+    Queue::assertPushed(CreateZoomMeeting::class, fn ($job) => $job->liveSessionId === $this->session->id);
+});
+
+it('does not recreate a meeting that already exists', function () {
+    Sanctum::actingAs($this->admin);
+
+    $this->postJson("/api/v1/admin/sessions/{$this->session->id}/create-meeting")
+        ->assertOk()->assertJsonPath('data.status', 'exists');
+
+    Queue::assertNotPushed(CreateZoomMeeting::class);
 });
 
 it('flags a class as startable for an admin only inside the host window with a meeting', function () {

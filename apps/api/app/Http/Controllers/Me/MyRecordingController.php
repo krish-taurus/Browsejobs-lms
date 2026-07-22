@@ -50,6 +50,11 @@ final class MyRecordingController extends Controller
         });
     }
 
+    /**
+     * Hands the student the Zoom Cloud watch URL (+ passcode) for a recording, gated by
+     * active membership and the fee gate. Legacy imported recordings fall back to a
+     * short-lived signed storage URL.
+     */
     public function download(Request $request, int $recording, FeeGate $feeGate): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $recording, $feeGate): JsonResponse {
@@ -74,11 +79,16 @@ final class MyRecordingController extends Controller
             // Recordings lock with the fee soft-block, same as live access.
             abort_unless($feeGate->allowsLiveAccess($request->user(), $batch), 403, 'Access is locked until your fee dues are cleared.');
 
-            if ($model->storage_path === null) {
+            if (! $model->isWatchable()) {
                 throw new NotFoundHttpException;
             }
 
-            return response()->json(['data' => ['download_url' => $this->signedUrl($model->storage_path)]]);
+            $watchUrl = $model->play_url ?? ($model->storage_path !== null ? $this->signedUrl($model->storage_path) : null);
+
+            return response()->json(['data' => [
+                'watch_url' => $watchUrl,
+                'passcode' => $model->passcode,
+            ]]);
         });
     }
 

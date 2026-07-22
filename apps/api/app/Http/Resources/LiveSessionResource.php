@@ -36,6 +36,9 @@ final class LiveSessionResource extends JsonResource
                 'id' => $r->id,
                 'title' => $r->title,
                 'status' => $r->status->value,
+                // Staff-facing endpoint: expose the Zoom Cloud watch link + passcode.
+                'watch_url' => $r->play_url,
+                'passcode' => $r->passcode,
             ])->all()),
         ];
     }
