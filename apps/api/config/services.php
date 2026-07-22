@@ -107,6 +107,10 @@ return [
         'webhook_secret' => env('ZOOM_WEBHOOK_SECRET_TOKEN', ''),
         'base_url' => env('ZOOM_BASE_URL', 'https://api.zoom.us/v2'),
         'oauth_url' => env('ZOOM_OAUTH_URL', 'https://zoom.us/oauth/token'),
+        // Default meeting host (a Zoom user id or email). Server-to-Server OAuth has no
+        // "me" user context, so set this to your account owner's email to host meetings
+        // without allocating a per-trainer Zoom license. Empty falls back to "me".
+        'default_host_id' => env('ZOOM_DEFAULT_HOST_ID', ''),
         // Grace minutes after start before a join counts as "late".
         'late_grace_minutes' => (int) env('ZOOM_LATE_GRACE_MINUTES', 10),
     ],
