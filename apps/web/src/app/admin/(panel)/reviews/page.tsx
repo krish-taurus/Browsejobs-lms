@@ -9,16 +9,47 @@ type Testimonial = {
   id: number;
   rating: number;
   body: string;
-  status: "pending" | "approved" | "rejected";
+  stage: string | null;
+  status: "pending" | "approved" | "rejected" | "private_feedback";
   has_video: boolean;
   video_url: string | null;
+  followed_instagram: boolean;
+  subscribed_youtube: boolean;
+  posted_google_review: boolean;
   created_at: string | null;
   student: { id: number; name: string; email: string | null } | null;
   voucher_issue: { code: string; status: string } | null;
 };
 
-const TABS = ["pending", "approved", "rejected"] as const;
+const TABS = ["pending", "approved", "rejected", "private_feedback"] as const;
 type Tab = (typeof TABS)[number];
+
+const TAB_LABEL: Record<Tab, string> = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+  private_feedback: "private feedback",
+};
+
+const STAGE_LABEL: Record<string, string> = {
+  masterclass: "After masterclass",
+  bootcamp: "After bootcamp",
+  enrolment: "After enrolment",
+  course_complete: "After course",
+  placement: "After placement",
+};
+
+function Attest({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <span
+      className={`mono inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+        ok ? "bg-verify-bg text-verify" : "bg-paper text-muted border border-line"
+      }`}
+    >
+      {ok ? "✓" : "○"} {label}
+    </span>
+  );
+}
 
 function Stars({ n }: { n: number }) {
   return (
@@ -63,8 +94,9 @@ export default function AdminReviewsPage() {
       <p className="kicker text-trust">Review-for-Voucher</p>
       <h1 className="display mt-2 text-3xl text-ink">Testimonials</h1>
       <p className="mt-2 text-sm text-muted">
-        Approving publishes to the public reviews wall and issues the reward voucher. The voucher is tied to the
-        platform testimonial only — never a Google review.
+        Candidates self-attest they followed Instagram &amp; YouTube and posted on Google. Confirm the ticks, then
+        approve — that publishes their review to the wall and issues the voucher. Under-4★ reviews land in
+        &ldquo;private feedback&rdquo;: never published, never rewarded.
       </p>
 
       <div className="mt-6 flex gap-2">
@@ -76,7 +108,7 @@ export default function AdminReviewsPage() {
               tab === t ? "bg-ink text-white" : "bg-paper text-muted hover:text-ink"
             }`}
           >
-            {t}
+            {TAB_LABEL[t]}
           </button>
         ))}
       </div>
@@ -93,7 +125,7 @@ export default function AdminReviewsPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="mt-6">
-          <EmptyState title={`No ${tab} testimonials`} body="Testimonials submitted after a bootcamp land here for review." />
+          <EmptyState title={`No ${TAB_LABEL[tab]} reviews`} body="Reviews requested across the funnel land here for confirmation." />
         </div>
       ) : (
         <div className="mt-6 space-y-3">
@@ -110,6 +142,22 @@ export default function AdminReviewsPage() {
                   </span>
                 )}
               </div>
+              {(t.stage || t.status !== "private_feedback") && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {t.stage && (
+                    <span className="mono rounded-full border border-line px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted">
+                      {STAGE_LABEL[t.stage] ?? t.stage}
+                    </span>
+                  )}
+                  {t.status !== "private_feedback" && (
+                    <>
+                      <Attest ok={t.posted_google_review} label="Google" />
+                      <Attest ok={t.followed_instagram} label="Instagram" />
+                      <Attest ok={t.subscribed_youtube} label="YouTube" />
+                    </>
+                  )}
+                </div>
+              )}
               <p className="mt-3 text-sm text-ink">“{t.body}”</p>
               {t.has_video && t.video_url && (
                 <a href={t.video_url} target="_blank" rel="noreferrer" className="mono mt-2 inline-block text-xs text-trust hover:underline">

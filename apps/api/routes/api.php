@@ -74,6 +74,7 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Care\CareController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
+use App\Http\Controllers\Courses\ReviewLinksController;
 use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
@@ -190,6 +191,10 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         ->middleware('throttle:10,1');
 
     Route::get('reviews', [ReviewController::class, 'index']);
+
+    // Review-gate destinations (Platform Spec §3): Google/Instagram/YouTube links
+    // shown to a 4★+ candidate on the review page. Public, host tenant.
+    Route::get('review-links', [ReviewLinksController::class, 'show'])->middleware('throttle:60,1');
 
     // Per-course social proof (Platform Spec §3): placement stories, interview-
     // question bank, and course-tagged reviews. Public, host tenant.

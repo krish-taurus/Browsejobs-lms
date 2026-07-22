@@ -86,5 +86,14 @@ return [
                 ['key' => 'service_account_json', 'label' => 'Service account JSON', 'type' => 'secret', 'config' => 'services.google_drive.service_account_json'],
             ],
         ],
+        'social' => [
+            'label' => 'Reviews & social links',
+            'help' => 'Where a 4★+ candidate is sent to post their review and follow you. Paste your Google "write a review" link and your Instagram / YouTube URLs — they appear on the review page after a candidate rates 4 stars or more.',
+            'fields' => [
+                ['key' => 'google_review_url', 'label' => 'Google review link', 'type' => 'text', 'config' => 'services.social.google_review_url'],
+                ['key' => 'instagram_url', 'label' => 'Instagram URL', 'type' => 'text', 'config' => 'services.social.instagram_url'],
+                ['key' => 'youtube_url', 'label' => 'YouTube URL', 'type' => 'text', 'config' => 'services.social.youtube_url'],
+            ],
+        ],
     ],
 ];

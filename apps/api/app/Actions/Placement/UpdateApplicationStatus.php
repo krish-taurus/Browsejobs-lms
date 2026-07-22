@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Placement;
 
+use App\Actions\Reviews\SendReviewRequest;
+use App\Enums\ReviewStage;
 use App\Models\Celebration;
 use App\Models\InAppNotification;
 use App\Models\JobApplication;
@@ -20,7 +22,10 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class UpdateApplicationStatus
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private SendReviewRequest $sendReviewRequest,
+    ) {}
 
     /**
      * @param  array{status: string, offer_ctc_paise?: int|null, offer_role?: string|null, note?: string|null}  $input
@@ -99,5 +104,9 @@ final readonly class UpdateApplicationStatus
                 'created_by' => $actor->id,
             ]);
         }
+
+        // Final rung of the review ladder (Platform Spec §3): ask the newly-placed
+        // student for a review. Idempotent per student+stage.
+        $this->sendReviewRequest->handle($student, ReviewStage::Placement);
     }
 }

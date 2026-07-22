@@ -26,7 +26,7 @@ final class TestimonialController extends Controller
 
         $items = Testimonial::query()
             ->when(
-                in_array($status, ['pending', 'approved', 'rejected'], true),
+                in_array($status, ['pending', 'approved', 'rejected', 'private_feedback'], true),
                 fn ($q) => $q->where('status', $status),
             )
             ->with(['student:id,name,phone,email', 'batch:id,number', 'voucherIssue'])
