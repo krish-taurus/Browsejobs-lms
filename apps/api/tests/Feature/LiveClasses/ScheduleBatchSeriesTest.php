@@ -147,3 +147,41 @@ it('404s a batch in another tenant', function () {
         'weekdays' => [1], 'time' => '19:00', 'duration_minutes' => 60, 'count' => 1, 'start_date' => $this->from->toDateString(),
     ])->assertNotFound();
 });
+
+it('applies a different time per day when weekdayTimes is given', function () {
+    // Sat mornings (09:00), Sun evenings (17:30) — a weekend-only batch.
+    $created = withinTenant($this->tenant, fn () => app(ScheduleBatchSeries::class)->handle(
+        batch: $this->batch,
+        weekdays: [6, 7],
+        time: '18:00', // default, overridden per day below
+        durationMinutes: 60,
+        count: 4,
+        startDate: $this->from,
+        weekdayTimes: [6 => '09:00', 7 => '17:30'],
+    ));
+
+    expect($created)->toHaveCount(4);
+    foreach ($created as $session) {
+        $iso = $session->scheduled_start->isoWeekday();
+        expect($session->scheduled_start->format('H:i'))->toBe($iso === 6 ? '09:00' : '17:30');
+    }
+});
+
+it('schedules a per-day-time weekend series over HTTP', function () {
+    $this->seed(RolePermissionSeeder::class);
+    $trainer = withinTenant($this->tenant, fn () => User::factory()->for($this->tenant)->create(['user_type' => 'staff']));
+    $trainer->assignRole('trainer');
+    Sanctum::actingAs($trainer);
+
+    $this->postJson("/api/v1/admin/batches/{$this->batch->id}/sessions/series", [
+        'weekdays' => [6, 7],
+        'time' => '18:00',
+        'times' => [6 => '09:00', 7 => '17:30'],
+        'duration_minutes' => 60,
+        'count' => 2,
+        'start_date' => $this->from->toDateString(),
+    ])->assertCreated()->assertJsonCount(2, 'data');
+
+    $sat = LiveSession::withoutGlobalScopes()->get()->firstWhere(fn ($s) => $s->scheduled_start->isoWeekday() === 6);
+    expect($sat->scheduled_start->format('H:i'))->toBe('09:00');
+});

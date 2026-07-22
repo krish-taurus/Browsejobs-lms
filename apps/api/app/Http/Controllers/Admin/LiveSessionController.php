@@ -82,11 +82,32 @@ final class LiveSessionController extends Controller
             $request->filled('title_prefix') ? $request->string('title_prefix')->toString() : null,
             $request->boolean('map_topics'),
             $request->boolean('record', true),
+            $this->weekdayTimes($request->array('times')),
         );
 
         return LiveSessionResource::collection(
             collect($created)->each->load('topic:id,name')
         )->response()->setStatusCode(201);
+    }
+
+    /**
+     * Normalise the request's per-day times into an int-keyed weekday → "HH:MM"
+     * map (1 = Mon … 7 = Sun). Non-weekday keys and blank times are dropped.
+     *
+     * @param  array<int|string, mixed>  $times
+     * @return array<int, string>
+     */
+    private function weekdayTimes(array $times): array
+    {
+        $out = [];
+        foreach ($times as $weekday => $time) {
+            $day = (int) $weekday;
+            if ($day >= 1 && $day <= 7 && is_string($time) && $time !== '') {
+                $out[$day] = $time;
+            }
+        }
+
+        return $out;
     }
 
     public function reschedule(RescheduleSessionRequest $request, LiveSession $session, RescheduleLiveSession $reschedule): JsonResponse

@@ -52,6 +52,7 @@ export function BatchClasses({ batchId }: { batchId: string }) {
   const [series, setSeries] = useState({
     startDate: "", time: "18:00", duration: 90, count: 10,
     weekdays: [1, 2, 3, 4, 5], mapTopics: true, record: true,
+    perDayTime: false, times: {} as Record<number, string>,
   });
   const [seriesMsg, setSeriesMsg] = useState<string | null>(null);
 
@@ -103,6 +104,10 @@ export function BatchClasses({ batchId }: { batchId: string }) {
         body: JSON.stringify({
           weekdays: series.weekdays,
           time: series.time,
+          // Per-day times only for the selected days; server falls back to `time`.
+          times: series.perDayTime
+            ? Object.fromEntries(series.weekdays.map((d) => [d, series.times[d] || series.time]))
+            : undefined,
           duration_minutes: series.duration,
           count: series.count,
           start_date: series.startDate,
@@ -120,6 +125,14 @@ export function BatchClasses({ batchId }: { batchId: string }) {
 
   const toggleWeekday = (iso: number) =>
     setSeries((s) => ({ ...s, weekdays: s.weekdays.includes(iso) ? s.weekdays.filter((d) => d !== iso) : [...s.weekdays, iso].sort() }));
+
+  const applyPreset = (days: number[]) => setSeries((s) => ({ ...s, weekdays: [...days] }));
+  const PRESETS: { label: string; days: number[] }[] = [
+    { label: "Every day", days: [1, 2, 3, 4, 5, 6, 7] },
+    { label: "Weekdays", days: [1, 2, 3, 4, 5] },
+    { label: "Alternate (M/W/F)", days: [1, 3, 5] },
+    { label: "Weekends", days: [6, 7] },
+  ];
 
   const sessions = data?.data ?? [];
 
@@ -191,6 +204,19 @@ export function BatchClasses({ batchId }: { batchId: string }) {
         {showSeries && (
           <form onSubmit={(e) => { e.preventDefault(); createSeries.mutate(); }} className="mt-4 space-y-3">
             <div>
+              <span className="text-xs text-muted">Quick pick</span>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {PRESETS.map((p) => (
+                  <button
+                    key={p.label} type="button" onClick={() => applyPreset(p.days)}
+                    className="rounded-full border border-line px-3 py-1 text-[12px] text-ink transition-colors hover:border-trust hover:text-trust"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
               <span className="text-xs text-muted">Class days</span>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {WEEKDAYS.map((d) => (
@@ -208,11 +234,41 @@ export function BatchClasses({ batchId }: { batchId: string }) {
                 <input required type="date" value={series.startDate}
                   onChange={(e) => setSeries({ ...series, startDate: e.target.value })} className={inputCls} />
               </label>
-              <label className="flex flex-col gap-1 text-xs text-muted">Time
-                <input required type="time" value={series.time}
-                  onChange={(e) => setSeries({ ...series, time: e.target.value })} className={inputCls} />
-              </label>
+              {!series.perDayTime && (
+                <label className="flex flex-col gap-1 text-xs text-muted">Time (all days)
+                  <input required type="time" value={series.time}
+                    onChange={(e) => setSeries({ ...series, time: e.target.value })} className={inputCls} />
+                </label>
+              )}
             </div>
+
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={series.perDayTime}
+                onChange={(e) => setSeries({ ...series, perDayTime: e.target.checked })}
+                className="h-4 w-4 rounded border-line text-trust" />
+              Set a different time per day
+            </label>
+            {series.perDayTime && (
+              <div className="rounded-[12px] border border-line bg-paper p-3">
+                {series.weekdays.length === 0 ? (
+                  <p className="text-xs text-muted">Pick class days above to set their times.</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {series.weekdays.map((iso) => (
+                      <label key={iso} className="flex items-center justify-between gap-2 text-sm text-ink">
+                        <span className="mono text-xs">{WEEKDAYS.find((w) => w.iso === iso)?.label}</span>
+                        <input
+                          type="time"
+                          value={series.times[iso] ?? series.time}
+                          onChange={(e) => setSeries((s) => ({ ...s, times: { ...s.times, [iso]: e.target.value } }))}
+                          className={`${inputCls} w-28`}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap gap-2.5">
               <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Duration (min)
                 <input required type="number" min={15} max={480} value={series.duration}
