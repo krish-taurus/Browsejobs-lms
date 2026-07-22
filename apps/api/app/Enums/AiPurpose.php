@@ -19,6 +19,7 @@ enum AiPurpose: string
     case SupportTriage = 'support_triage';
     case QuizGen = 'quiz_gen';
     case AssignmentGen = 'assignment_gen';
+    case FlashcardGen = 'flashcard_gen';
     case Content = 'content';
     case Report = 'report';
     case MarketPulse = 'market_pulse';
