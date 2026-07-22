@@ -34,7 +34,8 @@ return new class extends Migration
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
 
-            $table->index(['tenant_id', 'course_id', 'is_published', 'position']);
+            // Explicit short name: the auto-generated one exceeds MySQL's 64-char limit.
+            $table->index(['tenant_id', 'course_id', 'is_published', 'position'], 'placement_stories_lookup');
         });
     }
 
