@@ -88,17 +88,30 @@ final class MyTeachingController extends Controller
         $batchModels = Batch::query()->whereIn('id', $batchIds->all())
             ->with(['trainer', 'moduleTrainers'])->get()->keyBy('id');
 
+        // Include classes that have just started (still hostable) as well as future
+        // ones, so the "Start class" button is available right around class time.
+        $now = Carbon::now();
         $upcoming = LiveSession::query()
             ->whereIn('batch_id', $batchIds->all())
-            ->where('status', LiveSessionStatus::Scheduled->value)
-            ->where('scheduled_start', '>=', Carbon::now())
+            ->whereIn('status', [LiveSessionStatus::Scheduled->value, LiveSessionStatus::Live->value])
+            ->where('scheduled_start', '>=', $now->copy()->subHours(2))
             ->with(['batch:id,number,course_id', 'batch.course:id,code', 'topic:id,name,module_id'])
             ->orderBy('scheduled_start')
             ->limit(50)
             ->get()
-            ->map(function (LiveSession $session) use ($userId, $batchModels): array {
+            ->map(function (LiveSession $session) use ($userId, $batchModels, $now): array {
                 $batch = $batchModels->get($session->batch_id);
                 $teacher = $batch?->trainerForModule($session->topic?->module_id);
+                $youTeach = $teacher !== null && (int) $teacher->id === $userId;
+
+                // A teacher may go live as host from 15 min before start until 60 min
+                // after end — mirrors StartLiveSession, which enforces it server-side.
+                $start = $session->scheduled_start;
+                $end = $session->scheduled_end ?? $start->copy()->addMinutes(intdiv($session->plannedSeconds(), 60));
+                $canStart = $youTeach
+                    && $session->zoom_start_url !== null
+                    && $now->gte($start->copy()->subMinutes(15))
+                    && $now->lte($end->copy()->addMinutes(60));
 
                 return [
                     'id' => $session->id,
@@ -108,7 +121,9 @@ final class MyTeachingController extends Controller
                     'topic' => $session->topic?->name,
                     'scheduled_start' => $session->scheduled_start->toIso8601String(),
                     'scheduled_end' => $session->scheduled_end?->toIso8601String(),
-                    'you_teach' => $teacher !== null && (int) $teacher->id === $userId,
+                    'status' => $session->status->value,
+                    'you_teach' => $youTeach,
+                    'can_start' => $canStart,
                     'join_url' => $session->zoom_join_url,
                 ];
             });

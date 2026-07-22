@@ -8,6 +8,7 @@ use App\Actions\LiveClasses\CancelLiveSession;
 use App\Actions\LiveClasses\RescheduleLiveSession;
 use App\Actions\LiveClasses\ScheduleBatchSeries;
 use App\Actions\LiveClasses\ScheduleLiveSession;
+use App\Actions\LiveClasses\StartLiveSession;
 use App\Enums\LiveSessionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CancelSessionRequest;
@@ -132,6 +133,18 @@ final class LiveSessionController extends Controller
         $cancel->handle($session, $request->string('reason')->toString(), $request->user());
 
         return (new LiveSessionResource($session->fresh(['topic:id,name'])))->response();
+    }
+
+    /**
+     * Hand the assigned trainer (or an admin) the Zoom host `start_url` so they can go
+     * live as host in one tap. Gated + time-windowed by {@see StartLiveSession}; returns
+     * a 422 with the reason (not your class / too early / not ready) when not allowed.
+     */
+    public function start(LiveSession $session, StartLiveSession $start): JsonResponse
+    {
+        $url = $start->handle($session, request()->user());
+
+        return response()->json(['data' => ['start_url' => $url]]);
     }
 
     /**
