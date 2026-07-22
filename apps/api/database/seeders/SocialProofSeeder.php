@@ -50,17 +50,29 @@ class SocialProofSeeder extends Seeder
     }
 
     /**
-     * Demo placement cards, seeded as DRAFTS (never public). A few per course so
-     * the admin has a layout to edit into a real, consented story.
+     * Demo placement cards, seeded as published SAMPLES (is_sample=true). They
+     * render publicly but the UI labels them "Sample" — no visitor is misled and
+     * no consent is implied for a real person. Real, consented stories replace
+     * them as they come in. A story only loses its sample label once a human
+     * marks it real (is_sample=false) with the student's consent.
      *
      * @param  list<array<string, mixed>>  $stories
      */
     private function stories(int $tenantId, int $courseId, array $stories): void
     {
         foreach (array_values($stories) as $position => $s) {
+            $existing = PlacementStory::query()
+                ->where('tenant_id', $tenantId)->where('course_id', $courseId)
+                ->where('student_name', $s['student_name'])->first();
+
+            // Don't clobber a real, consented story an admin has since published.
+            if ($existing !== null && ! $existing->is_sample) {
+                continue;
+            }
+
             PlacementStory::query()->updateOrCreate(
                 ['tenant_id' => $tenantId, 'course_id' => $courseId, 'student_name' => $s['student_name']],
-                array_merge($s, ['position' => $position, 'consent' => false, 'is_published' => false]),
+                array_merge($s, ['position' => $position, 'consent' => false, 'is_published' => true, 'is_sample' => true]),
             );
         }
     }

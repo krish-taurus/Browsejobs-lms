@@ -37,14 +37,16 @@ final class SocialProofController extends Controller
     public function storeStory(Request $request, Course $course): JsonResponse
     {
         $data = $this->validateStory($request);
-        $story = PlacementStory::query()->create([...$data, 'course_id' => $course->id]);
+        // A human-curated story is real, never a seeded sample.
+        $story = PlacementStory::query()->create([...$data, 'course_id' => $course->id, 'is_sample' => false]);
 
         return response()->json(['data' => $this->storyPayload($story)], 201);
     }
 
     public function updateStory(Request $request, PlacementStory $story): JsonResponse
     {
-        $story->update($this->validateStory($request));
+        // Editing a story promotes it from a seeded sample to a real story.
+        $story->update([...$this->validateStory($request), 'is_sample' => false]);
 
         return response()->json(['data' => $this->storyPayload($story->refresh())]);
     }
@@ -194,6 +196,7 @@ final class SocialProofController extends Controller
             'has_screenshot' => $s->screenshot_path !== null,
             'consent' => $s->consent,
             'is_published' => $s->is_published,
+            'is_sample' => $s->is_sample,
             'position' => $s->position,
         ];
     }
