@@ -39,7 +39,11 @@ final class LiveSessionController extends Controller
     public function index(Batch $batch): JsonResponse
     {
         $sessions = $batch->liveSessions()
-            ->with(['topic:id,name', 'recordings:id,live_session_id,title,status'])
+            ->with([
+                'topic:id,name,module_id',
+                'recordings:id,live_session_id,title,status',
+                'batch.trainer', 'batch.moduleTrainers.trainer',
+            ])
             ->orderByDesc('scheduled_start')
             ->get();
 

@@ -83,6 +83,23 @@ it('lists a batch classes newest first', function () {
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.title', 'Window functions');
 });
 
+it('flags a class as startable for an admin only inside the host window with a meeting', function () {
+    Sanctum::actingAs($this->admin);
+
+    // The seeded class is 2 days out with no host URL — not startable.
+    $this->getJson("/api/v1/admin/batches/{$this->batch->id}/sessions")
+        ->assertOk()->assertJsonPath('data.0.can_start', false);
+
+    // A class starting now, with a host URL, is startable for the admin.
+    withinTenant($this->tenant, fn () => $this->session->update([
+        'scheduled_start' => now(), 'scheduled_end' => now()->addHour(),
+        'zoom_start_url' => 'https://zoom.test/s/HOST',
+    ]));
+
+    $this->getJson("/api/v1/admin/batches/{$this->batch->id}/sessions")
+        ->assertOk()->assertJsonPath('data.0.can_start', true);
+});
+
 it('reschedules a class and notifies the whole batch', function () {
     Sanctum::actingAs($this->admin);
 

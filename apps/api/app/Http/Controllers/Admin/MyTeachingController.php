@@ -27,6 +27,7 @@ final class MyTeachingController extends Controller
     {
         $user = $request->user();
         $userId = (int) $user->id;
+        $isAdmin = $user->hasRole('admin', 'super-admin');
 
         // Every batch this person touches, and how.
         $leadBatchIds = Batch::query()->where('trainer_id', $userId)->pluck('id')->all();
@@ -99,19 +100,14 @@ final class MyTeachingController extends Controller
             ->orderBy('scheduled_start')
             ->limit(50)
             ->get()
-            ->map(function (LiveSession $session) use ($userId, $batchModels, $now): array {
+            ->map(function (LiveSession $session) use ($userId, $isAdmin, $batchModels, $now): array {
                 $batch = $batchModels->get($session->batch_id);
                 $teacher = $batch?->trainerForModule($session->topic?->module_id);
                 $youTeach = $teacher !== null && (int) $teacher->id === $userId;
 
-                // A teacher may go live as host from 15 min before start until 60 min
-                // after end — mirrors StartLiveSession, which enforces it server-side.
-                $start = $session->scheduled_start;
-                $end = $session->scheduled_end ?? $start->copy()->addMinutes(intdiv($session->plannedSeconds(), 60));
-                $canStart = $youTeach
-                    && $session->zoom_start_url !== null
-                    && $now->gte($start->copy()->subMinutes(15))
-                    && $now->lte($end->copy()->addMinutes(60));
+                // The assigned teacher (or any admin) may go live as host within the
+                // host window — mirrors StartLiveSession, which enforces it server-side.
+                $canStart = ($youTeach || $isAdmin) && $session->hostWindowOpen($now) && $session->zoom_start_url !== null;
 
                 return [
                     'id' => $session->id,

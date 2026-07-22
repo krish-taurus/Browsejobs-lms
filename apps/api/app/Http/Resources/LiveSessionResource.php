@@ -30,6 +30,8 @@ final class LiveSessionResource extends JsonResource
             'auto_record' => (bool) $this->auto_record,
             'topic' => $this->whenLoaded('topic', fn () => $this->topic?->name),
             'has_meeting' => $this->zoom_meeting_id !== null,
+            // Whether the viewing staff member can go live as host right now.
+            'can_start' => $request->user() !== null && $this->resource->hostableBy($request->user()),
             'recordings' => $this->whenLoaded('recordings', fn () => $this->recordings->map(fn ($r) => [
                 'id' => $r->id,
                 'title' => $r->title,
