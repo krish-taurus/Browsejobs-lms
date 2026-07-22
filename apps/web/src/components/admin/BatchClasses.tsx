@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 
-type Recording = { id: number; title: string; status: string };
+type Recording = { id: number; title: string; status: string; watch_url: string | null; passcode: string | null };
 type Session = {
   id: number;
   title: string;
@@ -104,6 +104,15 @@ export function BatchClasses({ batchId }: { batchId: string }) {
       apiJson<{ data: { start_url: string } }>(`/api/v1/admin/sessions/${id}/start`, { method: "POST" }),
     onSuccess: (r) => { setError(null); window.open(r.data.start_url, "_blank", "noopener"); },
     onError: (err) => { onError(err); void refresh(); },
+  });
+
+  // Repair: create the Zoom meeting for a class scheduled before Zoom was connected.
+  // The meeting is made on the queue, so refresh shortly after to pick up the link.
+  const createMeeting = useMutation({
+    mutationFn: (id: number) =>
+      apiJson(`/api/v1/admin/sessions/${id}/create-meeting`, { method: "POST" }),
+    onSuccess: () => { setError(null); setTimeout(() => void refresh(), 3000); },
+    onError,
   });
 
   const createSeries = useMutation({
@@ -339,6 +348,16 @@ export function BatchClasses({ batchId }: { batchId: string }) {
                     {start.isPending ? "Opening…" : "Start class"}
                   </button>
                 )}
+                {!s.has_meeting && s.status === "scheduled" && (
+                  <button
+                    onClick={() => createMeeting.mutate(s.id)}
+                    disabled={createMeeting.isPending}
+                    className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-paper disabled:opacity-50"
+                    title="Create the Zoom meeting for this class"
+                  >
+                    {createMeeting.isPending ? "Creating…" : "Create meeting"}
+                  </button>
+                )}
                 {s.status === "scheduled" && (
                   <span className="flex gap-3 text-xs font-semibold">
                     <button
@@ -382,9 +401,24 @@ export function BatchClasses({ batchId }: { batchId: string }) {
               )}
 
               {(s.recordings?.length ?? 0) > 0 && (
-                <p className="mt-2 text-xs text-muted">
-                  Recording: {s.recordings!.map((r) => `${r.title} (${r.status})`).join(", ")}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-muted">Recording:</span>
+                  {s.recordings!.map((r) =>
+                    r.watch_url ? (
+                      <a
+                        key={r.id}
+                        href={r.watch_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-line px-3 py-1 font-semibold text-trust hover:bg-paper"
+                      >
+                        Watch{r.passcode ? ` · passcode ${r.passcode}` : ""}
+                      </a>
+                    ) : (
+                      <span key={r.id} className="text-muted">{r.title} (processing)</span>
+                    ),
+                  )}
+                </div>
               )}
             </div>
           ))}

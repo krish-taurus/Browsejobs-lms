@@ -43,9 +43,10 @@ final class LessonVideo extends Model
     {
         return match ($this->source) {
             VideoSource::Url => $this->url,
-            VideoSource::Recording => $this->recording?->storage_path !== null
-                ? Storage::disk('s3')->temporaryUrl($this->recording->storage_path, now()->addHours(3))
-                : null,
+            VideoSource::Recording => $this->recording?->play_url // Zoom Cloud recording
+                ?? ($this->recording?->storage_path !== null
+                    ? Storage::disk('s3')->temporaryUrl($this->recording->storage_path, now()->addHours(3))
+                    : null),
             VideoSource::Upload => $this->path !== null
                 ? Storage::disk('s3')->temporaryUrl($this->path, now()->addHours(3))
                 : null,

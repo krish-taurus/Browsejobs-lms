@@ -93,17 +93,28 @@ final class ZoomWebhookController extends Controller
             return;
         }
 
+        // Zoom Cloud recordings are watched in place — we store the play URL, not the file.
+        $passcode = $object['recording_play_passcode'] ?? $object['password'] ?? null;
+        $passcode = is_string($passcode) && $passcode !== '' ? $passcode : null;
+
         foreach ((array) ($object['recording_files'] ?? []) as $file) {
             $file = (array) $file;
-            $url = $file['download_url'] ?? null;
-            if (! is_string($url) || $url === '') {
+
+            // Only the video file — skip audio-only, chat, transcript, timeline files.
+            if (strtoupper((string) ($file['file_type'] ?? '')) !== 'MP4') {
+                continue;
+            }
+
+            $playUrl = $file['play_url'] ?? $file['download_url'] ?? null;
+            if (! is_string($playUrl) || $playUrl === '') {
                 continue;
             }
 
             $recordings->handle(
                 $session,
                 (string) ($file['recording_type'] ?? 'shared_screen_with_speaker_view'),
-                $url,
+                $playUrl,
+                $passcode,
                 isset($object['duration']) ? (int) $object['duration'] * 60 : null,
             );
         }

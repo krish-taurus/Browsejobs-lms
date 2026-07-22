@@ -27,6 +27,7 @@ function fmtDuration(s: number | null): string {
 export default function RecordingsPage() {
   const [opening, setOpening] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["me", "recordings"],
@@ -35,11 +36,17 @@ export default function RecordingsPage() {
 
   async function open(r: Recording) {
     setError(null);
+    setNotice(null);
     setOpening(r.id);
     try {
-      const res = await apiJson<{ data: { download_url: string | null } }>(`/api/v1/me/recordings/${r.id}/download`);
-      if (res.data.download_url) {
-        window.open(res.data.download_url, "_blank", "noopener");
+      const res = await apiJson<{ data: { watch_url: string | null; passcode: string | null } }>(`/api/v1/me/recordings/${r.id}/download`);
+      if (res.data.watch_url) {
+        // Zoom cloud recordings can be passcode-protected — surface it so the student can paste it.
+        if (res.data.passcode) {
+          await navigator.clipboard?.writeText(res.data.passcode).catch(() => {});
+          setNotice(`Passcode ${res.data.passcode} (copied to clipboard) — paste it on the Zoom page if it asks.`);
+        }
+        window.open(res.data.watch_url, "_blank", "noopener");
       } else {
         setError("This recording is still being prepared — check back shortly.");
       }
@@ -59,6 +66,7 @@ export default function RecordingsPage() {
       <p className="mt-2 text-sm text-muted">Every class you attend is recorded here — available while your fees are clear.</p>
 
       {error && <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{error}</p>}
+      {notice && <p className="mt-4 rounded-[10px] bg-sky px-3 py-2 text-sm text-deep">{notice}</p>}
 
       {isLoading ? (
         <div className="mt-8 space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="shimmer h-16 rounded-[14px]" />)}</div>
