@@ -53,6 +53,7 @@ use App\Http\Controllers\Admin\RiskController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\Admin\SalaryBenchmarkController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SocialProofController as AdminSocialProofController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
@@ -387,6 +388,19 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('recordings-library', [LessonVideoController::class, 'recordings']);
         Route::get('lessons/{lesson}/flashcards', [FlashcardController::class, 'show']);
         Route::put('lessons/{lesson}/flashcards', [FlashcardController::class, 'upsert']);
+
+        // Course-page social proof (Platform Spec §3): placement stories,
+        // interview-question bank, and course-tagged reviews.
+        Route::get('courses/{course}/placement-stories', [AdminSocialProofController::class, 'stories']);
+        Route::post('courses/{course}/placement-stories', [AdminSocialProofController::class, 'storeStory']);
+        Route::put('placement-stories/{story}', [AdminSocialProofController::class, 'updateStory']);
+        Route::delete('placement-stories/{story}', [AdminSocialProofController::class, 'destroyStory']);
+        Route::post('placement-stories/{story}/screenshot', [AdminSocialProofController::class, 'uploadScreenshot']);
+        Route::get('courses/{course}/interview-questions', [AdminSocialProofController::class, 'questions']);
+        Route::put('courses/{course}/interview-questions', [AdminSocialProofController::class, 'upsertQuestions']);
+        Route::get('courses/{course}/course-reviews', [AdminSocialProofController::class, 'reviews']);
+        Route::post('courses/{course}/course-reviews', [AdminSocialProofController::class, 'storeReview']);
+        Route::delete('course-reviews/{review}', [AdminSocialProofController::class, 'destroyReview']);
         Route::post('lessons/{lesson}/flashcards/generate', [FlashcardController::class, 'generate']);
         Route::get('lessons/{lesson}/project', [ProjectSpecController::class, 'show']);
         Route::put('lessons/{lesson}/project', [ProjectSpecController::class, 'upsert']);
