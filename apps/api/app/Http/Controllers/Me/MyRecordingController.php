@@ -34,18 +34,29 @@ final class MyRecordingController extends Controller
             $recordings = Recording::query()
                 ->where('status', 'stored')
                 ->whereHas('liveSession', fn ($q) => $q->whereIn('batch_id', $batchIds))
-                ->with('liveSession:id,title,scheduled_start,batch_id')
+                ->with([
+                    'liveSession:id,title,scheduled_start,batch_id',
+                    'liveSession.batch:id,number,course_id',
+                    'liveSession.batch.course:id,code,name',
+                ])
                 ->orderByDesc('id')
                 ->get();
 
             return response()->json([
-                'data' => $recordings->map(fn (Recording $r) => [
-                    'id' => $r->id,
-                    'title' => $r->title,
-                    'duration_seconds' => $r->duration_seconds,
-                    'class' => $r->liveSession?->title,
-                    'recorded_on' => $r->liveSession?->scheduled_start?->toIso8601String(),
-                ])->all(),
+                'data' => $recordings->map(function (Recording $r) {
+                    $batch = $r->liveSession?->batch;
+
+                    return [
+                        'id' => $r->id,
+                        'title' => $r->title,
+                        'duration_seconds' => $r->duration_seconds,
+                        'class' => $r->liveSession?->title,
+                        'recorded_on' => $r->liveSession?->scheduled_start?->toIso8601String(),
+                        'batch_number' => $batch?->number,
+                        'course_code' => $batch?->course?->code,
+                        'course_name' => $batch?->course?->name,
+                    ];
+                })->all(),
             ]);
         });
     }

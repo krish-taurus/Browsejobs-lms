@@ -11,11 +11,17 @@ type Recording = {
   duration_seconds: number | null;
   class: string | null;
   recorded_on: string | null;
+  batch_number: string | null;
+  course_code: string | null;
+  course_name: string | null;
 };
 
+// Date + time in IST, matching the class schedule and the admin recordings view.
 function fmtDate(iso: string | null): string {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
+  });
 }
 
 function fmtDuration(s: number | null): string {
@@ -59,6 +65,15 @@ export default function RecordingsPage() {
 
   const recordings = data?.data ?? [];
 
+  // Group by batch (a student is usually in one, but bootcamp + paid can overlap).
+  const groups: { key: string; number: string | null; course: string | null; items: Recording[] }[] = [];
+  for (const r of recordings) {
+    const key = r.batch_number ?? "—";
+    let g = groups.find((x) => x.key === key);
+    if (!g) { g = { key, number: r.batch_number, course: r.course_code, items: [] }; groups.push(g); }
+    g.items.push(r);
+  }
+
   return (
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">Recordings</p>
@@ -75,23 +90,35 @@ export default function RecordingsPage() {
           <EmptyState title="Your recordings will appear here" body="After your first live class, its recording lands here — yours to revisit any time." />
         </div>
       ) : (
-        <div className="mt-8 divide-y divide-line rounded-[14px] border border-line bg-white">
-          {recordings.map((r) => (
-            <div key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
-              <span className="min-w-40 flex-1">
-                <span className="block font-semibold text-ink">{r.class ?? r.title}</span>
-                <span className="mono block text-xs text-muted">
-                  {fmtDate(r.recorded_on)}{r.duration_seconds ? ` · ${fmtDuration(r.duration_seconds)}` : ""}
-                </span>
-              </span>
-              <button
-                onClick={() => open(r)}
-                disabled={opening === r.id}
-                className="rounded-full border border-line px-5 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
-              >
-                {opening === r.id ? "Opening…" : "Watch"}
-              </button>
-            </div>
+        <div className="mt-8 space-y-8">
+          {groups.map((g) => (
+            <section key={g.key}>
+              {g.number && (
+                <div className="flex items-baseline gap-2">
+                  <h2 className="display text-lg text-ink">{g.number}</h2>
+                  {g.course && <span className="mono text-xs uppercase tracking-widest text-muted">{g.course}</span>}
+                </div>
+              )}
+              <div className="mt-3 divide-y divide-line rounded-[14px] border border-line bg-white">
+                {g.items.map((r) => (
+                  <div key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
+                    <span className="min-w-40 flex-1">
+                      <span className="block font-semibold text-ink">{r.class ?? r.title}</span>
+                      <span className="mono block text-xs text-muted">
+                        {fmtDate(r.recorded_on)}{r.duration_seconds ? ` · ${fmtDuration(r.duration_seconds)}` : ""} IST
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => open(r)}
+                      disabled={opening === r.id}
+                      className="rounded-full border border-line px-5 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
+                    >
+                      {opening === r.id ? "Opening…" : "Watch"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

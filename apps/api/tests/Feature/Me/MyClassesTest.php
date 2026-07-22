@@ -100,7 +100,8 @@ it('lists the student recordings', function () {
     Sanctum::actingAs($this->student);
 
     $this->getJson('/api/v1/me/recordings')->assertOk()->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.class', 'Pandas');
+        ->assertJsonPath('data.0.class', 'Pandas')
+        ->assertJsonPath('data.0.batch_number', 'DA-1'); // grouped by batch on the student page
 });
 
 it('hands an enrolled student the Zoom cloud watch url and passcode', function () {
