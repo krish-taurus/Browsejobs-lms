@@ -27,6 +27,9 @@ final class ScheduleSeriesRequest extends FormRequest
             'weekdays' => ['required', 'array', 'min:1'],
             'weekdays.*' => ['integer', 'between:1,7'],
             'time' => ['required', 'date_format:H:i'],
+            // Optional per-weekday time overrides, keyed by ISO weekday (1–7).
+            'times' => ['nullable', 'array'],
+            'times.*' => ['date_format:H:i'],
             'duration_minutes' => ['required', 'integer', 'min:15', 'max:480'],
             'count' => ['required', 'integer', 'min:1', 'max:120'],
             'start_date' => ['required', 'date', 'after_or_equal:today'],

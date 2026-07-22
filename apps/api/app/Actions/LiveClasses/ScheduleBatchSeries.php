@@ -31,6 +31,7 @@ final readonly class ScheduleBatchSeries
 
     /**
      * @param  list<int>  $weekdays  ISO weekdays that hold class (1 = Mon … 7 = Sun)
+     * @param  array<int, string>  $weekdayTimes  optional per-weekday "HH:MM" overriding $time for that day
      * @return list<LiveSession> the sessions created (skipped slots excluded)
      */
     public function handle(
@@ -43,6 +44,7 @@ final readonly class ScheduleBatchSeries
         ?string $titlePrefix = null,
         bool $mapTopics = false,
         bool $record = true,
+        array $weekdayTimes = [],
     ): array {
         $weekdays = array_values(array_unique(array_filter($weekdays, fn ($d) => $d >= 1 && $d <= 7)));
         if ($weekdays === [] || $count < 1) {
@@ -58,7 +60,9 @@ final readonly class ScheduleBatchSeries
 
         while (count($created) < $count && $scanned < self::MAX_SCAN_DAYS) {
             if (in_array($cursor->isoWeekday(), $weekdays, true)) {
-                $start = $cursor->setTimeFromTimeString($time);
+                // A per-day time (e.g. Sat mornings, Wed evenings) overrides the default.
+                $dayTime = $weekdayTimes[$cursor->isoWeekday()] ?? $time;
+                $start = $cursor->setTimeFromTimeString($dayTime);
 
                 if ($start->isFuture() && ! $this->slotTaken($batch, $start)) {
                     $seq = count($created) + 1;
