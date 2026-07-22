@@ -64,6 +64,8 @@ class MessagingSeeder extends Seeder
         ['key' => 'weekly_report', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your weekly progress report is ready. Read it in one tap: {{link}}'],
         ['key' => 'weekly_report', 'channel' => 'email', 'category' => 'utility', 'subject' => 'Your weekly progress report', 'body' => 'Hi {{name}}, your weekly progress report is ready. Read it here: {{link}}'],
         ['key' => 'trainer_brief', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, pre-class brief for {{batch}}: {{body}}'],
+        ['key' => 'batch_allocation', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, you have been allocated to {{batch}} — {{detail}}. You will be notified of any schedule changes.'],
+        ['key' => 'batch_allocation', 'channel' => 'email', 'category' => 'utility', 'subject' => 'You have been allocated to a batch', 'body' => 'Hi {{name}}, you have been allocated to {{batch}} — {{detail}}. You will be notified of any schedule changes to this batch.'],
         ['key' => 'counselor_digest', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your daily risk digest: {{body}}'],
         ['key' => 'mock_nudge', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Nice work {{name}} — you just finished {{topic}}. Lock it in with a 10-minute practice interview: {{link}}'],
         ['key' => 'mentor_booked', 'channel' => 'whatsapp', 'category' => 'utility', 'subject' => null, 'body' => 'Hi {{name}}, your session with {{with}} is confirmed for {{when}}. Details & calendar invite: {{link}}'],

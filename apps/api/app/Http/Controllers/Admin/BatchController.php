@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Batches\CreateBatch;
+use App\Actions\Batches\NotifyBatchAllocation;
 use App\Enums\BatchType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBatchRequest;
 use App\Models\Batch;
+use App\Models\BatchMentor;
 use App\Models\BatchModuleTrainer;
 use App\Models\Course;
 use App\Models\Module;
@@ -56,8 +58,8 @@ final class BatchController extends Controller
     }
 
     /**
-     * Trainer allocation for a batch: the lead trainer, each course module with its
-     * assigned trainer (if any), and the trainers available to pick from.
+     * Staff allocation for a batch: the lead trainer, each course module with its
+     * assigned trainer, the batch's mentors, and the people available to pick from.
      */
     public function moduleTrainers(Batch $batch): JsonResponse
     {
@@ -75,27 +77,38 @@ final class BatchController extends Controller
                 'name' => $m->name,
                 'trainer_id' => $assigned[$m->id] ?? null,
             ])->all(),
-            'trainers' => $this->trainerOptions(),
+            'mentor_ids' => $batch->batchMentors()->pluck('user_id')->map(fn ($id) => (int) $id)->all(),
+            'trainers' => $this->staffOptions(['trainer', 'admin']),
+            'mentors' => $this->staffOptions(['mentor']),
         ]]);
     }
 
     /**
-     * Set the lead trainer and per-module trainer assignments for a batch. A module
-     * with a null trainer clears its override (it falls back to the lead trainer).
+     * Set the lead trainer, per-module trainer assignments, and mentors for a batch.
+     * A module with a null trainer falls back to the lead. Newly-allocated trainers
+     * and mentors are notified automatically.
      */
-    public function setModuleTrainers(Request $request, Batch $batch): JsonResponse
+    public function setModuleTrainers(Request $request, Batch $batch, NotifyBatchAllocation $notify): JsonResponse
     {
-        $validTrainerIds = $this->trainerIds();
+        $validTrainerIds = $this->staffIds(['trainer', 'admin']);
+        $validMentorIds = $this->staffIds(['mentor']);
         $data = $request->validate([
             'lead_trainer_id' => ['nullable', 'integer'],
             'assignments' => ['array'],
             'assignments.*.module_id' => ['required', 'integer'],
             'assignments.*.trainer_id' => ['nullable', 'integer'],
+            'mentor_ids' => ['array'],
+            'mentor_ids.*' => ['integer'],
         ]);
 
         $moduleIds = Module::query()->where('course_id', $batch->course_id)->pluck('id')->all();
 
-        DB::transaction(function () use ($batch, $data, $validTrainerIds, $moduleIds): void {
+        // Capture the previous allocation so we only notify people who are new.
+        $prevLead = $batch->trainer_id;
+        $prevModuleTrainers = $batch->moduleTrainers()->pluck('user_id', 'module_id')->all();
+        $prevMentors = $batch->batchMentors()->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+
+        DB::transaction(function () use ($batch, $data, $validTrainerIds, $validMentorIds, $moduleIds): void {
             $lead = $data['lead_trainer_id'] ?? null;
             $batch->update(['trainer_id' => in_array($lead, $validTrainerIds, true) ? $lead : null]);
 
@@ -117,29 +130,77 @@ final class BatchController extends Controller
                     ['tenant_id' => $batch->tenant_id, 'user_id' => (int) $trainerId],
                 );
             }
+
+            // Replace the mentor set with the (valid) submitted ids.
+            $mentorIds = array_values(array_intersect(array_map('intval', $data['mentor_ids'] ?? []), $validMentorIds));
+            BatchMentor::query()->where('batch_id', $batch->id)->whereNotIn('user_id', $mentorIds ?: [0])->delete();
+            foreach ($mentorIds as $mentorId) {
+                BatchMentor::query()->updateOrCreate(
+                    ['batch_id' => $batch->id, 'user_id' => $mentorId],
+                    ['tenant_id' => $batch->tenant_id],
+                );
+            }
         });
 
-        return $this->moduleTrainers($batch->refresh());
+        $this->notifyNewlyAllocated($batch->refresh(), $notify, $prevLead, $prevModuleTrainers, $prevMentors);
+
+        return $this->moduleTrainers($batch);
     }
 
-    /** @return list<array{id:int, name:string}> */
-    private function trainerOptions(): array
+    /**
+     * Message trainers/mentors who are newly allocated (vs the previous state).
+     *
+     * @param  array<int, int>  $prevModuleTrainers  module_id => user_id
+     * @param  list<int>  $prevMentors
+     */
+    private function notifyNewlyAllocated(Batch $batch, NotifyBatchAllocation $notify, ?int $prevLead, array $prevModuleTrainers, array $prevMentors): void
+    {
+        $batch->load('moduleTrainers.module', 'batchMentors');
+
+        // Group each trainer's newly-assigned module names.
+        $newModulesByTrainer = [];
+        foreach ($batch->moduleTrainers as $mt) {
+            if (($prevModuleTrainers[$mt->module_id] ?? null) !== $mt->user_id) {
+                $newModulesByTrainer[$mt->user_id][] = $mt->module?->name ?? 'a module';
+            }
+        }
+        foreach ($newModulesByTrainer as $userId => $names) {
+            $notify->send(User::query()->find($userId), $batch, 'teaching '.implode(', ', $names));
+        }
+
+        if ($batch->trainer_id !== null && $batch->trainer_id !== $prevLead) {
+            $notify->send($batch->trainer, $batch, 'as the lead trainer');
+        }
+
+        foreach (array_diff($batch->batchMentors->pluck('user_id')->map(fn ($id) => (int) $id)->all(), $prevMentors) as $userId) {
+            $notify->send(User::query()->find($userId), $batch, 'as a mentor');
+        }
+    }
+
+    /**
+     * @param  list<string>  $roles
+     * @return list<array{id:int, name:string}>
+     */
+    private function staffOptions(array $roles): array
     {
         return User::query()
             ->where('user_type', 'staff')
-            ->whereHas('roles', fn ($q) => $q->whereIn('slug', ['trainer', 'admin']))
+            ->whereHas('roles', fn ($q) => $q->whereIn('slug', $roles))
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name])
             ->all();
     }
 
-    /** @return list<int> */
-    private function trainerIds(): array
+    /**
+     * @param  list<string>  $roles
+     * @return list<int>
+     */
+    private function staffIds(array $roles): array
     {
         return User::query()
             ->where('user_type', 'staff')
-            ->whereHas('roles', fn ($q) => $q->whereIn('slug', ['trainer', 'admin']))
-            ->pluck('id')->all();
+            ->whereHas('roles', fn ($q) => $q->whereIn('slug', $roles))
+            ->pluck('id')->map(fn ($id) => (int) $id)->all();
     }
 }
