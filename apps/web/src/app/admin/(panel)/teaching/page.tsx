@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiJson } from "@/lib/api";
+import { ApiError, apiJson } from "@/lib/api";
 
 /**
  * "My teaching" — a trainer/mentor's own board: every batch they are involved in
@@ -30,7 +31,9 @@ type UpcomingClass = {
   topic: string | null;
   scheduled_start: string;
   scheduled_end: string | null;
+  status: string;
   you_teach: boolean;
+  can_start: boolean;
   join_url: string | null;
 };
 
@@ -49,10 +52,27 @@ const rolePill: Record<string, string> = {
 };
 
 export default function TeachingPage() {
-  const { data, isLoading } = useQuery({
+  const [starting, setStarting] = useState<number | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin", "my-teaching"],
     queryFn: () => apiJson<{ data: Board }>("/api/v1/admin/my-teaching"),
   });
+
+  async function startClass(id: number) {
+    setErr(null);
+    setStarting(id);
+    try {
+      const r = await apiJson<{ data: { start_url: string } }>(`/api/v1/admin/sessions/${id}/start`, { method: "POST" });
+      window.open(r.data.start_url, "_blank", "noopener");
+    } catch (e) {
+      setErr(e instanceof ApiError ? (e.firstError ?? e.message) : "Could not start the class.");
+      void refetch(); // the window may have closed — refresh what's startable
+    } finally {
+      setStarting(null);
+    }
+  }
 
   if (isLoading) {
     return <div className="shimmer h-40 w-full rounded-[14px]" />;
@@ -111,6 +131,11 @@ export default function TeachingPage() {
 
           <section className="mt-10">
             <h2 className="display text-lg text-ink">Upcoming classes</h2>
+            <p className="mt-1 text-xs text-muted">
+              The <span className="font-medium text-ink">Start class</span> button opens the Zoom meeting as host — it appears
+              from 15 minutes before your class begins.
+            </p>
+            {err && <p className="mt-3 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{err}</p>}
             {board.upcoming.length === 0 ? (
               <p className="mt-2 text-sm text-muted">No scheduled classes coming up in your batches.</p>
             ) : (
@@ -120,6 +145,9 @@ export default function TeachingPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-ink">{c.title}</span>
+                        {c.status === "live" && (
+                          <span className="rounded-full bg-verify/10 px-2 py-0.5 text-[10px] font-semibold text-verify">Live now</span>
+                        )}
                         {c.you_teach ? (
                           <span className="rounded-full bg-verify/10 px-2 py-0.5 text-[10px] font-semibold text-verify">You teach</span>
                         ) : (
@@ -130,7 +158,15 @@ export default function TeachingPage() {
                         {c.batch_number}{c.topic ? ` · ${c.topic}` : ""} · {ist(c.scheduled_start)} IST
                       </p>
                     </div>
-                    {c.join_url && (
+                    {c.can_start ? (
+                      <button
+                        onClick={() => startClass(c.id)}
+                        disabled={starting === c.id}
+                        className="rounded-full bg-trust px-5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
+                      >
+                        {starting === c.id ? "Opening…" : "Start class"}
+                      </button>
+                    ) : c.join_url ? (
                       <a
                         href={c.join_url}
                         target="_blank"
@@ -139,7 +175,7 @@ export default function TeachingPage() {
                       >
                         Join
                       </a>
-                    )}
+                    ) : null}
                   </div>
                 ))}
               </div>
