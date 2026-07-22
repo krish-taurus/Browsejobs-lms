@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
 
@@ -57,6 +58,17 @@ export default function LessonNotesPage({ params }: { params: Promise<{ lesson: 
       </div>
       <div className="mt-6 rounded-2xl border border-line bg-white p-6">
         {data.notes ? renderNotes(data.notes) : <p className="text-sm text-muted">No notes yet.</p>}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-sky/30 p-5">
+        <div>
+          <p className="text-sm font-semibold text-ink">Lock it in with flashcards</p>
+          <p className="mt-0.5 text-xs text-muted">Quick recall practice on a spaced-repetition schedule.</p>
+        </div>
+        <Link href={`/flashcards/${lesson}`}
+          className="rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep">
+          Review flashcards →
+        </Link>
       </div>
     </div>
   );

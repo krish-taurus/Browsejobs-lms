@@ -157,6 +157,20 @@ export default function ContentEditorPage({ params }: { params: Promise<{ lesson
           {note.pdf_uploaded && <p className="mono mt-2 text-[10px] uppercase tracking-widest text-verify">Uploaded PDF attached</p>}
         </div>
       )}
+
+      {/* Flashcards */}
+      {note && (
+        <div className="mt-6 rounded-2xl border border-line bg-white p-5">
+          <p className="text-sm font-semibold text-ink">4. Flashcards</p>
+          <p className="mt-1 text-xs text-muted">
+            Turn this class into recall prompts students review on a spaced-repetition schedule. Draft with AI from these notes, edit, then publish.
+          </p>
+          <Link href={`/admin/flashcards/${lesson}`}
+            className="mt-3 inline-block rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-paper">
+            Edit flashcards →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
