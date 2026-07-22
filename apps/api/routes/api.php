@@ -497,6 +497,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         // Per-module trainer allocation (multiple trainers per batch).
         Route::get('batches/{batch}/module-trainers', [BatchController::class, 'moduleTrainers']);
         Route::put('batches/{batch}/module-trainers', [BatchController::class, 'setModuleTrainers']);
+        // Reschedule/cancel are admin-only (a trainer cannot); notifies all batch staff.
+        Route::post('sessions/{session}/reschedule', [LiveSessionController::class, 'reschedule']);
+        Route::post('sessions/{session}/cancel', [LiveSessionController::class, 'cancel']);
 
         // Zoom host-license pool (PRD §6.3) — allocate a license per mentor.
         Route::get('zoom-licenses', [ZoomLicenseController::class, 'index']);
@@ -540,8 +543,6 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::get('batches/{batch}/sessions', [LiveSessionController::class, 'index']);
         Route::post('batches/{batch}/sessions', [LiveSessionController::class, 'store']);
         Route::post('batches/{batch}/sessions/series', [LiveSessionController::class, 'storeSeries']);
-        Route::post('sessions/{session}/reschedule', [LiveSessionController::class, 'reschedule']);
-        Route::post('sessions/{session}/cancel', [LiveSessionController::class, 'cancel']);
 
         // Send a specific mock / assignment to a batch (PRD §6.5/§6.6).
         Route::get('batches/{batch}/dispatch-options', [BatchDispatchController::class, 'options']);

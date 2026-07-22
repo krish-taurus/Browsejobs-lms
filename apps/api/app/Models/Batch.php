@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -92,6 +93,47 @@ class Batch extends Model
         }
 
         return $this->trainer;
+    }
+
+    /**
+     * Mentors allocated to this batch (PRD §6.3).
+     *
+     * @return HasMany<BatchMentor, $this>
+     */
+    public function batchMentors(): HasMany
+    {
+        return $this->hasMany(BatchMentor::class);
+    }
+
+    /**
+     * Everyone to notify about a batch change: the lead trainer, every module
+     * trainer, every allocated mentor, and every admin in the tenant — de-duped.
+     *
+     * @return Collection<int, User>
+     */
+    public function staffRecipients(): Collection
+    {
+        $this->loadMissing(['trainer', 'moduleTrainers.trainer', 'batchMentors.mentor']);
+
+        $staff = collect([$this->trainer])
+            ->merge($this->moduleTrainers->map->trainer)
+            ->merge($this->batchMentors->map->mentor)
+            ->merge($this->tenantAdmins());
+
+        return $staff->filter()->unique('id')->values();
+    }
+
+    /**
+     * All admins in this batch's tenant.
+     *
+     * @return Collection<int, User>
+     */
+    public function tenantAdmins(): Collection
+    {
+        return User::query()
+            ->where('user_type', 'staff')
+            ->whereHas('roles', fn ($q) => $q->whereIn('slug', ['admin', 'super-admin']))
+            ->get();
     }
 
     /**
