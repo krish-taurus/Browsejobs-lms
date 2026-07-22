@@ -10,7 +10,7 @@ type Review = {
   author_name: string;
   rating: number;
   body: string;
-  source: "google" | "whatsapp" | "platform";
+  source: "google" | "justdial" | "whatsapp" | "platform";
   course_slug: string | null;
   reviewed_on: string | null;
 };
@@ -23,6 +23,7 @@ type ReviewsResponse = {
 const FILTERS = [
   { key: "", label: "All reviews" },
   { key: "google", label: "Google" },
+  { key: "justdial", label: "JustDial" },
   { key: "whatsapp", label: "WhatsApp" },
   { key: "platform", label: "Testimonials" },
 ] as const;
@@ -38,12 +39,14 @@ function Stars({ rating }: { rating: number }) {
 }
 
 function SourceBadge({ source }: { source: Review["source"] }) {
-  const styles: Record<Review["source"], { label: string; cls: string }> = {
+  const styles: Record<string, { label: string; cls: string }> = {
     google: { label: "Google", cls: "bg-sky text-deep" },
+    justdial: { label: "JustDial", cls: "bg-paper text-muted border border-line" },
     whatsapp: { label: "WhatsApp", cls: "bg-verify-bg text-verify" },
     platform: { label: "Verified testimonial", cls: "bg-paper text-muted border border-line" },
   };
-  const s = styles[source];
+  // Fall back for any source the API adds later, so a badge never crashes the wall.
+  const s = styles[source] ?? { label: source, cls: "bg-paper text-muted border border-line" };
   return (
     <span className={`mono rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${s.cls}`}>
       {s.label}
