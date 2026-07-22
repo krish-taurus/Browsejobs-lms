@@ -73,6 +73,7 @@ use App\Http\Controllers\Auth\StudentAuthController;
 use App\Http\Controllers\Care\CareController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
+use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\FeeStatusController;
@@ -188,6 +189,10 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         ->middleware('throttle:10,1');
 
     Route::get('reviews', [ReviewController::class, 'index']);
+
+    // Per-course social proof (Platform Spec §3): placement stories, interview-
+    // question bank, and course-tagged reviews. Public, host tenant.
+    Route::get('courses/{slug}/social-proof', [SocialProofController::class, 'show'])->middleware('throttle:60,1');
 
     // Proof Engine aggregates (PRD §6.11) — anonymised, disclaimered.
     Route::get('proof', ProofController::class)->middleware('throttle:30,1');
