@@ -26,14 +26,14 @@ beforeEach(function () {
     });
 });
 
-it('arms the full 12h/2h/5min ladder for a future session', function () {
+it('arms the full 12h/2h/1h/5min ladder for a future session', function () {
     Queue::fake();
 
     app(ScheduleLiveSession::class)->handle($this->batch, 'Class', now()->addDays(2));
 
-    Queue::assertPushed(SendSessionReminder::class, 3);
+    Queue::assertPushed(SendSessionReminder::class, 4);
 
-    foreach (['12h', '2h', '5min'] as $window) {
+    foreach (['12h', '2h', '1h', '5min'] as $window) {
         Queue::assertPushed(SendSessionReminder::class, fn ($job) => $job->window === $window);
     }
 });
@@ -41,8 +41,9 @@ it('arms the full 12h/2h/5min ladder for a future session', function () {
 it('skips reminder rungs whose time has already passed', function () {
     Queue::fake();
 
-    // Only the 5-minute rung is still in the future for a class one hour out.
-    app(ScheduleLiveSession::class)->handle($this->batch, 'Class', now()->addHour());
+    // For a class 30 minutes out, the 12h/2h/1h rungs are already past — only the
+    // 5-minute rung is still in the future.
+    app(ScheduleLiveSession::class)->handle($this->batch, 'Class', now()->addMinutes(30));
 
     Queue::assertPushed(SendSessionReminder::class, 1);
     Queue::assertPushed(SendSessionReminder::class, fn ($job) => $job->window === '5min');

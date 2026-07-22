@@ -63,7 +63,7 @@ it('reschedules: updates Zoom, logs old/new, and re-arms the ladder for the new 
         ->and($this->session->reminder_token)->not->toBe('original');
 
     Queue::assertPushed(UpdateZoomMeeting::class);
-    Queue::assertPushed(SendSessionReminder::class, 3); // re-armed ladder for the new time
+    Queue::assertPushed(SendSessionReminder::class, 4); // re-armed ladder for the new time
 
     $change = SessionChange::withoutGlobalScopes()->where('type', 'rescheduled')->first();
     expect($change)->not->toBeNull()
