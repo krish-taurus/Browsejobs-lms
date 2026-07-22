@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             CurriculumSeeder::class,
             ReviewSeeder::class,
+            SocialProofSeeder::class,
             CrmSeeder::class,
             PaymentsSeeder::class,
             MessagingSeeder::class,
