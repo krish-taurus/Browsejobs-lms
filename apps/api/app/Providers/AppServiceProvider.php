@@ -13,6 +13,9 @@ use App\Services\Crm\RuleBasedLeadScorer;
 use App\Support\AI\ProviderResolver;
 use App\Support\Certificates\CertificateRenderer;
 use App\Support\Certificates\HtmlCertificateRenderer;
+use App\Support\Drive\DriveClient;
+use App\Support\Drive\GoogleDriveClient;
+use App\Support\Drive\NullDriveClient;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
@@ -116,6 +119,17 @@ class AppServiceProvider extends ServiceProvider
             $config = config('services.jsearch');
 
             return $config['api_key'] !== '' ? new HttpJSearchTransport($config) : new NullJobApiTransport;
+        });
+
+        // Google Drive reviews intake (Platform Spec §3). Real client when a service
+        // account JSON is set (admin Settings / env), else a safe no-op. Tests bind a fake.
+        $this->app->bind(DriveClient::class, function (): DriveClient {
+            $json = (string) config('services.google_drive.service_account_json');
+            $creds = $json !== '' ? json_decode($json, true) : null;
+
+            return is_array($creds) && ($creds['private_key'] ?? '') !== ''
+                ? new GoogleDriveClient($creds)
+                : new NullDriveClient;
         });
 
         // Messaging hub (P2.4). Real WhatsApp client from config; tests bind a fake.

@@ -27,6 +27,11 @@ Schedule::command('support:check-sla')->hourly();
 // for classes that have ended, once the flashcards exist. Idempotent.
 Schedule::command('class:wrapup')->hourly();
 
+// Google Drive review intake (Platform Spec §3): pull new review images from the
+// configured folder into the triage queue. Weekly; a no-op until a service account
+// is configured. Idempotent (dedup by Drive file id).
+Schedule::command('reviews:sync-drive')->weeklyOn(1, '05:30');
+
 // Student rescore (PRD §6.4): nightly mastery/engagement/risk/PRI + snapshots.
 Schedule::command('scores:recompute')->dailyAt('06:00');
 
