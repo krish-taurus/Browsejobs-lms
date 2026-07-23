@@ -37,7 +37,7 @@ class Quiz extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'lesson_id', 'title', 'instructions', 'time_limit_sec', 'pass_pct',
-        'shuffle', 'status', 'source', 'approved_by', 'approved_at',
+        'shuffle', 'status', 'source', 'approved_by', 'approved_at', 'pdf_path', 'pdf_uploaded',
     ];
 
     /**
@@ -52,6 +52,7 @@ class Quiz extends Model
             'status' => QuizStatus::class,
             'source' => QuizSource::class,
             'approved_at' => 'datetime',
+            'pdf_uploaded' => 'boolean',
         ];
     }
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\CrmTaskController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
+use App\Http\Controllers\Admin\DayBuilderController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FlashcardController;
@@ -381,6 +382,16 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::patch('modules/{module}', [ModuleController::class, 'update']);
         Route::delete('modules/{module}', [ModuleController::class, 'destroy']);
         Route::post('modules/{module}/clone', [ModuleController::class, 'clone']);
+        // Day-by-day syllabus builder (ADR 0049): manual day entry, AI day plans
+        // from keywords, beginner-notes drafts, and MCQ assignment papers.
+        Route::get('modules/{module}/days', [DayBuilderController::class, 'index']);
+        Route::post('modules/{module}/days', [DayBuilderController::class, 'store']);
+        Route::post('modules/{module}/days/plan', [DayBuilderController::class, 'plan'])->middleware('throttle:ai');
+        Route::post('topics/{topic}/simple-notes', [DayBuilderController::class, 'simpleNotes'])->middleware('throttle:ai');
+        Route::post('topics/{topic}/assignment/generate', [DayBuilderController::class, 'assignment'])->middleware('throttle:ai');
+        Route::post('quizzes/{quiz}/pdf', [DayBuilderController::class, 'renderPdf']);
+        Route::post('quizzes/{quiz}/pdf/upload', [DayBuilderController::class, 'uploadPdf']);
+        Route::get('quizzes/{quiz}/pdf', [DayBuilderController::class, 'downloadPdf']);
         Route::post('topics', [TopicController::class, 'store']);
         Route::patch('topics/{topic}', [TopicController::class, 'update']);
         Route::delete('topics/{topic}', [TopicController::class, 'destroy']);

@@ -34,6 +34,11 @@ final class CurriculumNodeRequest extends FormRequest
             'type' => ['sometimes', Rule::enum(LessonType::class)],
             'mock_enabled' => ['sometimes', 'boolean'],
             'required_mocks' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:20'],
+            // Day-builder fields (ADR 0049): a topic can be a numbered teaching day.
+            'day_number' => ['sometimes', 'nullable', 'integer', 'between:1,365'],
+            'summary' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'keywords' => ['sometimes', 'nullable', 'array', 'max:12'],
+            'keywords.*' => ['string', 'max:60'],
         ];
     }
 }

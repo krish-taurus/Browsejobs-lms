@@ -23,7 +23,7 @@ class Topic extends Model
     use HasFactory;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'module_id', 'name', 'position', 'mock_enabled'];
+    protected $fillable = ['tenant_id', 'module_id', 'name', 'position', 'mock_enabled', 'day_number', 'keywords', 'summary'];
 
     /**
      * @return BelongsTo<Module, $this>
@@ -46,6 +46,6 @@ class Topic extends Model
      */
     protected function casts(): array
     {
-        return ['mock_enabled' => 'boolean'];
+        return ['mock_enabled' => 'boolean', 'day_number' => 'integer', 'keywords' => 'array'];
     }
 }

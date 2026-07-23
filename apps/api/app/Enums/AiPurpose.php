@@ -27,6 +27,7 @@ enum AiPurpose: string
     case TranscriptParse = 'transcript_parse';
     case JdExtract = 'jd_extract';
     case SyllabusRecommend = 'syllabus_recommend';
+    case DayPlan = 'day_plan';
     case Cv = 'cv';
     case LinkedinOptimize = 'linkedin_optimize';
     case GithubPortfolio = 'github_portfolio';
