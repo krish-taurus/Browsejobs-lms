@@ -124,6 +124,20 @@ it('tightens a plain query to an exact phrase with NOT exclusions before calling
         ->and($fake->runs[0]['input']['location'])->toBe('India'); // rest of the input untouched
 });
 
+it('tightens the Naukri actor\'s keyword field the same way', function () {
+    Queue::fake();
+    $fake = fakeApify([]);
+    $source = scraperSource($this->tenant, [
+        'input' => ['keyword' => 'python developer', 'maxResults' => 100, 'fetchDetails' => true],
+        'exclude' => ['Sales'],
+    ]);
+
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    expect($fake->runs[0]['input']['keyword'])->toBe('"python developer" NOT Sales')
+        ->and($fake->runs[0]['input']['fetchDetails'])->toBeTrue();
+});
+
 it('leaves an admin-written boolean query untouched', function () {
     Queue::fake();
     $fake = fakeApify([]);

@@ -67,24 +67,28 @@ final readonly class ScraperAdapter implements FeedAdapter
      */
     private function tightenQuery(array $input, array $config): array
     {
-        $query = $input['query'] ?? null;
-        if (! is_string($query) || trim($query) === '') {
-            return $input;
-        }
-
-        $query = trim($query);
-        if (! str_contains($query, '"') && preg_match('/\b(AND|OR|NOT)\b/', $query) !== 1) {
-            $query = '"'.$query.'"';
-        }
-
-        foreach ((array) ($config['exclude'] ?? []) as $term) {
-            $term = trim((string) $term);
-            if ($term !== '') {
-                $query .= ' NOT '.(str_contains($term, ' ') ? '"'.$term.'"' : $term);
+        // Actors name the search field differently: `query` (LinkedIn),
+        // `keyword` (Naukri), `search`. Tighten whichever ones are present.
+        foreach (['query', 'keyword', 'search'] as $field) {
+            $query = $input[$field] ?? null;
+            if (! is_string($query) || trim($query) === '') {
+                continue;
             }
-        }
 
-        $input['query'] = $query;
+            $query = trim($query);
+            if (! str_contains($query, '"') && preg_match('/\b(AND|OR|NOT)\b/', $query) !== 1) {
+                $query = '"'.$query.'"';
+            }
+
+            foreach ((array) ($config['exclude'] ?? []) as $term) {
+                $term = trim((string) $term);
+                if ($term !== '') {
+                    $query .= ' NOT '.(str_contains($term, ' ') ? '"'.$term.'"' : $term);
+                }
+            }
+
+            $input[$field] = $query;
+        }
 
         return $input;
     }
