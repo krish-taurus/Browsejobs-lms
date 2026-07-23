@@ -115,6 +115,7 @@ use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
 use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
+use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
@@ -210,6 +211,10 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     // Proof Engine aggregates (PRD §6.11) — anonymised, disclaimered.
     Route::get('proof', ProofController::class)->middleware('throttle:30,1');
 
+    // Public job board (ADR 0048): last-7-days openings, no auth — every card
+    // funnels to registration for match %, prep questions and mocks.
+    Route::get('jobs', [JobBoardController::class, 'index'])->middleware('throttle:60,1');
+
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
         Route::post('otp/verify', [StudentAuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
@@ -295,6 +300,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/jobs/{item}/copilot', [MeJobFeedController::class, 'copilot']);
     Route::post('me/jobs/{item}/save', [MeJobFeedController::class, 'save']);
     Route::post('me/jobs/{item}/dismiss', [MeJobFeedController::class, 'dismiss']);
+    // Job prep (ADR 0048): per-JD potential questions (generated once, cached
+    // on the item) and a quick text mock scoped to that posting's JD.
+    Route::get('me/jobs/{item}/prep', [MeJobFeedController::class, 'prep'])->middleware('throttle:ai');
+    Route::post('me/jobs/{item}/mock', [MeJobFeedController::class, 'mock'])->middleware('throttle:ai');
 
     // DPDP data-subject requests (PRD §8): student raises access/deletion.
     Route::get('me/data-requests', [MeDataRequestController::class, 'index']);

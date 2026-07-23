@@ -5,41 +5,84 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Me;
 
 use App\Actions\JobFeed\ApplyToFeedItem;
+use App\Actions\JobFeed\GenerateJobPrepQuestions;
+use App\Actions\Mocks\StartJobMock;
 use App\Http\Controllers\Controller;
 use App\Models\CvDocument;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSave;
+use App\Support\JobFeed\ConfidenceScorer;
 use App\Support\JobFeed\JobsForYou;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * The student "Jobs for You" feed (PRD §6.22): relevance-ranked openings with a
- * match-% badge and the "why/gap" explanation, plus save/dismiss. Reads only the
- * viewer's own tenant + interactions.
+ * The student "Jobs for You" feed (PRD §6.22, ADR 0048): relevance-ranked
+ * openings with a match-% badge, the "why/gap" explanation, an interview
+ * confidence score, per-JD prep questions, a quick JD mock, and save/dismiss.
+ * Reads only the viewer's own tenant + interactions.
  */
 final class JobFeedController extends Controller
 {
     public function index(Request $request, JobsForYou $feed): JsonResponse
     {
         $rows = $feed->for($request->user());
+        $confidence = new ConfidenceScorer($request->user());
 
         return response()->json([
-            'data' => array_map(fn (array $row) => [
-                'id' => $row['item']->id,
-                'title' => $row['item']->title,
-                'company' => $row['item']->company,
-                'location' => $row['item']->location,
-                'work_mode' => $row['item']->work_mode,
-                'source_kind' => $row['item']->source_kind,
-                'apply_url' => $row['item']->apply_url,
-                'posted_at' => $row['item']->posted_at?->toDateString(),
-                'match_pct' => $row['match_pct'],
-                'matched' => $row['matched'],
-                'gap' => $row['gap'],
-                'saved' => $row['saved'],
-            ], $rows),
+            'data' => array_map(function (array $row) use ($confidence) {
+                $c = $confidence->for((int) $row['match_pct']);
+
+                return [
+                    'id' => $row['item']->id,
+                    'title' => $row['item']->title,
+                    'company' => $row['item']->company,
+                    'location' => $row['item']->location,
+                    'work_mode' => $row['item']->work_mode,
+                    'source_kind' => $row['item']->source_kind,
+                    'apply_url' => $row['item']->apply_url,
+                    'posted_at' => $row['item']->posted_at?->toDateString(),
+                    'match_pct' => $row['match_pct'],
+                    'matched' => $row['matched'],
+                    'gap' => $row['gap'],
+                    'saved' => $row['saved'],
+                    'confidence_pct' => $c['confidence_pct'],
+                    'confidence_based_on' => $c['based_on'],
+                    'has_mock_signal' => $confidence->hasMock(),
+                ];
+            }, $rows),
         ]);
+    }
+
+    /**
+     * Potential interview questions for one posting — real-bank questions for
+     * the role first, then JD-derived ones. Generated once, cached on the item.
+     */
+    public function prep(Request $request, JobFeedItem $item, GenerateJobPrepQuestions $generate): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($item->tenant_id === $user->tenant_id && $item->status === JobFeedItem::STATUS_ACTIVE, 404);
+
+        return app(TenantContext::class)->run($user->tenant, fn (): JsonResponse => response()->json([
+            'data' => ['questions' => $generate->handle($user, $item)],
+        ]));
+    }
+
+    /**
+     * Quick mock for this job: a text mock whose interviewer stays on this
+     * posting's JD. Same engine, scorecard and PRI blend as course mocks.
+     */
+    public function mock(Request $request, JobFeedItem $item, StartJobMock $start): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($item->tenant_id === $user->tenant_id && $item->status === JobFeedItem::STATUS_ACTIVE, 404);
+
+        return app(TenantContext::class)->run($user->tenant, function () use ($start, $user, $item): JsonResponse {
+            $interview = $start->handle($user, $item);
+
+            return response()->json(['data' => ['mock_id' => $interview->id]], 201);
+        });
     }
 
     public function apply(Request $request, JobFeedItem $item, ApplyToFeedItem $apply): JsonResponse

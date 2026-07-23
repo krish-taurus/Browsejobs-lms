@@ -31,11 +31,12 @@ const KINDS = [
   { value: "api", label: "Licensed job API" },
   { value: "ats", label: "ATS (Greenhouse/Lever)" },
   { value: "csv", label: "CSV / manual" },
+  { value: "scraper", label: "Scraper (Apify actor)" },
 ];
 
 export default function JobFeedPage() {
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", kind: "internal", priority: "10" });
+  const [form, setForm] = useState({ name: "", kind: "internal", priority: "10", actorId: "", input: "" });
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -51,12 +52,23 @@ export default function JobFeedPage() {
   const onError = (err: unknown) => setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
 
   const addSource = useMutation({
-    mutationFn: () =>
-      apiJson("/api/v1/admin/job-feed/sources", {
+    mutationFn: () => {
+      if (form.kind === "scraper" && form.input) {
+        try { JSON.parse(form.input); } catch { throw new ApiError(422, { message: "Actor input must be valid JSON." }); }
+      }
+      return apiJson("/api/v1/admin/job-feed/sources", {
         method: "POST",
-        body: JSON.stringify({ name: form.name, kind: form.kind, priority: Number(form.priority) || 0 }),
-      }),
-    onSuccess: () => { setForm({ name: "", kind: "internal", priority: "10" }); setError(null); refresh(); },
+        body: JSON.stringify({
+          name: form.name,
+          kind: form.kind,
+          priority: Number(form.priority) || 0,
+          config: form.kind === "scraper"
+            ? { actor_id: form.actorId, input: form.input ? JSON.parse(form.input) : {} }
+            : undefined,
+        }),
+      });
+    },
+    onSuccess: () => { setForm({ name: "", kind: "internal", priority: "10", actorId: "", input: "" }); setError(null); refresh(); },
     onError,
   });
 
@@ -81,8 +93,9 @@ export default function JobFeedPage() {
       <p className="kicker text-trust">Live job feed</p>
       <h1 className="display mt-2 text-3xl text-ink">Job-feed sources</h1>
       <p className="mt-1 text-sm text-muted">
-        Pluggable sources — internal openings, hiring-partner feeds, a licensed API, ATS endpoints, or CSV.
-        Never scraped. Ingested postings run through the same skill-extraction pipeline and appear in every
+        Pluggable sources — internal openings, hiring-partner feeds, a licensed API, ATS endpoints, CSV,
+        or an Apify scraper actor (Naukri / LinkedIn). Ingested postings run through the same
+        skill-extraction pipeline, feed the public job board (7-day window), and appear in every
         student&apos;s &ldquo;Jobs for You&rdquo; feed.
       </p>
 
@@ -98,7 +111,17 @@ export default function JobFeedPage() {
           </select>
           <input value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} inputMode="numeric" placeholder="Priority" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust" />
         </div>
-        <button onClick={() => addSource.mutate()} disabled={!form.name.trim() || addSource.isPending} className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
+        {form.kind === "scraper" && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <input value={form.actorId} onChange={(e) => setForm({ ...form, actorId: e.target.value })} placeholder="Apify actor, e.g. bebity/linkedin-jobs-scraper" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust" />
+            <input value={form.input} onChange={(e) => setForm({ ...form, input: e.target.value })} placeholder='Actor input JSON, e.g. {"query":"data engineer","location":"India"}' className="mono rounded-[10px] border border-line bg-white px-3 py-2 text-xs outline-none focus:border-trust" />
+            <p className="text-xs text-muted sm:col-span-2">
+              Runs on the twice-daily feed sync under your Apify token (APIFY_TOKEN). Scraped postings expire
+              after 7 days automatically, keeping the board fresh.
+            </p>
+          </div>
+        )}
+        <button onClick={() => addSource.mutate()} disabled={!form.name.trim() || addSource.isPending || (form.kind === "scraper" && !form.actorId.trim())} className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {addSource.isPending ? "Adding…" : "Add source"}
         </button>
       </div>
