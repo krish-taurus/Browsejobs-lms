@@ -41,8 +41,10 @@ final readonly class ScraperAdapter implements FeedAdapter
             return [];
         }
 
+        $input = $this->tightenQuery((array) ($source->config['input'] ?? []), (array) $source->config);
+
         $jobs = [];
-        foreach ($this->apify->run($actorId, (array) ($source->config['input'] ?? [])) as $raw) {
+        foreach ($this->apify->run($actorId, $input) as $raw) {
             $job = $this->normalize($raw);
             if ($job !== null) {
                 $jobs[] = $job;
@@ -50,6 +52,41 @@ final readonly class ScraperAdapter implements FeedAdapter
         }
 
         return $jobs;
+    }
+
+    /**
+     * Tighten the actor's search query before spending money on a run: a plain
+     * role name becomes an exact phrase ("Data engineer" instead of fuzzy
+     * keyword matching, which returns Salesforce and frontend roles), and the
+     * source's `exclude` terms are appended as NOT clauses. A query the admin
+     * already wrote with quotes or AND/OR/NOT boolean syntax is left alone.
+     *
+     * @param  array<string, mixed>  $input
+     * @param  array<string, mixed>  $config
+     * @return array<string, mixed>
+     */
+    private function tightenQuery(array $input, array $config): array
+    {
+        $query = $input['query'] ?? null;
+        if (! is_string($query) || trim($query) === '') {
+            return $input;
+        }
+
+        $query = trim($query);
+        if (! str_contains($query, '"') && preg_match('/\b(AND|OR|NOT)\b/', $query) !== 1) {
+            $query = '"'.$query.'"';
+        }
+
+        foreach ((array) ($config['exclude'] ?? []) as $term) {
+            $term = trim((string) $term);
+            if ($term !== '') {
+                $query .= ' NOT '.(str_contains($term, ' ') ? '"'.$term.'"' : $term);
+            }
+        }
+
+        $input['query'] = $query;
+
+        return $input;
     }
 
     /**

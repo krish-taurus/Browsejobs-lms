@@ -109,6 +109,34 @@ it('maps the LinkedIn jobs actor output shape, storing its skills and skipping A
     Queue::assertNotPushed(ExtractJobFeedItemSkills::class);
 });
 
+it('tightens a plain query to an exact phrase with NOT exclusions before calling the actor', function () {
+    Queue::fake();
+    $fake = fakeApify([]);
+    $source = scraperSource($this->tenant, [
+        'input' => ['query' => 'Data engineer', 'location' => 'India'],
+        'exclude' => ['Salesforce', 'Frontend', 'Digital Marketing'],
+    ]);
+
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    expect($fake->runs)->toHaveCount(1)
+        ->and($fake->runs[0]['input']['query'])->toBe('"Data engineer" NOT Salesforce NOT Frontend NOT "Digital Marketing"')
+        ->and($fake->runs[0]['input']['location'])->toBe('India'); // rest of the input untouched
+});
+
+it('leaves an admin-written boolean query untouched', function () {
+    Queue::fake();
+    $fake = fakeApify([]);
+    $source = scraperSource($this->tenant, [
+        'input' => ['query' => '"Data Engineer" OR "ETL Developer"'],
+        'exclude' => [],
+    ]);
+
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    expect($fake->runs[0]['input']['query'])->toBe('"Data Engineer" OR "ETL Developer"');
+});
+
 it('re-ingesting the same postings creates no duplicates', function () {
     Queue::fake();
     fakeApify([

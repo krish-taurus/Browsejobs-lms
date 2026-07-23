@@ -67,6 +67,10 @@ final class JobFeedController extends Controller
             'config.actor_id' => ['required_if:kind,scraper', 'string', 'max:190'],
             'config.input' => ['nullable', 'array'],
             'config.query' => ['nullable', 'array'],
+            // NOT-terms appended to the scraper query so fuzzy LinkedIn search
+            // doesn't burn scrape budget on unrelated roles.
+            'config.exclude' => ['nullable', 'array', 'max:15'],
+            'config.exclude.*' => ['string', 'max:60'],
             'config.freshness_days' => ['nullable', 'integer', 'between:1,90'],
         ]);
 
