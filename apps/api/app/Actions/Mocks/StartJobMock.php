@@ -9,7 +9,6 @@ use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\MockTurn;
 use App\Models\User;
-use App\Support\Entitlements\EntitlementService;
 
 /**
  * "Quick mock for this job" (ADR 0048): spins a text mock scoped to one
@@ -17,15 +16,14 @@ use App\Support\Entitlements\EntitlementService;
  * (is_active=false) so course pickers never list it — role and competencies
  * come from the posting itself, so the interviewer stays on that JD. The rest
  * of the mock engine (answer/finish/scorecard → PRI blend) is unchanged.
+ * Authorisation is the Interview Kit (enrolled / Career+ / paid unlock),
+ * enforced by the controller — not the global text-practice flag, which only
+ * governs free unmetered course practice.
  */
 final readonly class StartJobMock
 {
-    public function __construct(private EntitlementService $entitlements) {}
-
     public function handle(User $student, JobFeedItem $item): MockInterview
     {
-        abort_unless($this->entitlements->settings()->text_practice_enabled, 403, 'Text practice is not enabled.');
-
         // One text mock at a time, same as the course flow — resume, don't fork.
         $existing = MockInterview::query()
             ->where('user_id', $student->id)

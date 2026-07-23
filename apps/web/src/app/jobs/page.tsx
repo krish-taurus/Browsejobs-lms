@@ -24,17 +24,21 @@ type PublicJob = {
   summary: string;
   posted_at: string | null;
   teaser_questions: string[];
+  question_count: number;
+  real_question_count: number;
 };
 
-async function fetchJobs(): Promise<{ jobs: PublicJob[]; windowDays: number }> {
+type Offer = { sku: string; name: string; price_paise: number };
+
+async function fetchJobs(): Promise<{ jobs: PublicJob[]; windowDays: number; offers: Offer[] }> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
   try {
     const res = await fetch(`${base}/api/v1/jobs`, { next: { revalidate: 1800 } });
-    if (!res.ok) return { jobs: [], windowDays: 7 };
-    const body = (await res.json()) as { data: { jobs: PublicJob[]; window_days: number } };
-    return { jobs: body.data.jobs, windowDays: body.data.window_days };
+    if (!res.ok) return { jobs: [], windowDays: 7, offers: [] };
+    const body = (await res.json()) as { data: { jobs: PublicJob[]; window_days: number; kit_offers: Offer[] } };
+    return { jobs: body.data.jobs, windowDays: body.data.window_days, offers: body.data.kit_offers ?? [] };
   } catch {
-    return { jobs: [], windowDays: 7 };
+    return { jobs: [], windowDays: 7, offers: [] };
   }
 }
 
@@ -47,7 +51,9 @@ function postedLabel(iso: string | null): string {
 }
 
 export default async function PublicJobsPage() {
-  const { jobs, windowDays } = await fetchJobs();
+  const { jobs, windowDays, offers } = await fetchJobs();
+  const kit = offers.find((o) => o.sku === "job-kit");
+  const kitMentor = offers.find((o) => o.sku === "job-kit-mentor");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -83,6 +89,20 @@ export default async function PublicJobsPage() {
             your match score for each one, the questions that interview is likely to ask, and a CV
             rebuilt for the exact JD. We never auto-apply on your behalf — you stay in control.
           </p>
+          {kit && (
+            <p className="mt-3 max-w-2xl text-sm text-muted">
+              Every job has an <span className="font-semibold text-ink">Interview Kit</span> — the full
+              likely-questions paper, unlimited AI mocks on that exact JD, and your JD-rebuilt CV — for{" "}
+              <span className="mono text-ink">₹{Math.round(kit.price_paise / 100)}</span>
+              {kitMentor && (
+                <>
+                  {" "}· or <span className="mono text-ink">₹{Math.round(kitMentor.price_paise / 100)}</span> with a
+                  live 1:1 mentor to prep you for that interview
+                </>
+              )}
+              . Free while you&apos;re enrolled in any BrowseJobs program.
+            </p>
+          )}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/register"
@@ -142,6 +162,7 @@ export default async function PublicJobsPage() {
                     <div className="mt-3 rounded-[10px] bg-paper p-3">
                       <p className="mono text-[10px] uppercase tracking-widest text-muted">
                         This interview will likely ask
+                        {job.real_question_count > 0 && ` · ${job.real_question_count} from real interviews`}
                       </p>
                       <ul className="mt-1.5 space-y-1">
                         {job.teaser_questions.map((q) => (
@@ -151,7 +172,9 @@ export default async function PublicJobsPage() {
                         ))}
                       </ul>
                       <p className="mt-1.5 text-[11px] text-muted">
-                        Sign in for the full list — and a mock interview on this exact JD.
+                        {job.question_count > 3
+                          ? `${job.question_count - 3} more in the full paper — sign in to unlock it, plus a mock on this exact JD.`
+                          : "Sign in for the full paper — and a mock interview on this exact JD."}
                       </p>
                     </div>
                   )}

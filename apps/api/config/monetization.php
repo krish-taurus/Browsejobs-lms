@@ -23,6 +23,17 @@ return [
     'mentor' => [
         'extra_paise' => 49_900,       // ₹499 / extra 1:1
     ],
+    'job_kit' => [
+        // Interview Kit per job posting (ADR 0048): full question paper +
+        // unlimited JD mocks for that job (the JD-tailored CV is included free
+        // per PRD §6.22). Enrolled students and Career+ get kits at no charge.
+        'price_paise' => 10_000,        // ₹100 / job
+        'mentor_price_paise' => 29_900, // ₹299 / job — kit + a 1:1 mentor session
+    ],
+    // Extra credits a pack sku grants beyond its own feature (bundles).
+    'pack_bonuses' => [
+        'job-kit-mentor' => ['mentor' => 1],
+    ],
     'career_plus' => [
         'price_paise' => 49_900,       // ₹499 / month
         'period_days' => 30,

@@ -304,6 +304,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // on the item) and a quick text mock scoped to that posting's JD.
     Route::get('me/jobs/{item}/prep', [MeJobFeedController::class, 'prep'])->middleware('throttle:ai');
     Route::post('me/jobs/{item}/mock', [MeJobFeedController::class, 'mock'])->middleware('throttle:ai');
+    Route::post('me/jobs/{item}/unlock', [MeJobFeedController::class, 'unlock'])->middleware('throttle:20,1');
 
     // DPDP data-subject requests (PRD §8): student raises access/deletion.
     Route::get('me/data-requests', [MeDataRequestController::class, 'index']);

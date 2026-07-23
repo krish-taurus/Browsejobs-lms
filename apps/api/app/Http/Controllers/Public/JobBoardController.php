@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
 use App\Models\JobFeedItem;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -43,17 +45,33 @@ final class JobBoardController extends Controller
                 'skills' => array_slice($i->extracted_skills ?? [], 0, 8),
                 'summary' => mb_substr(trim($i->description), 0, 280),
                 'posted_at' => $i->posted_at?->toDateString(),
-                // Teaser: up to three prep questions when they're already generated.
+                // Teaser: up to three prep questions when they're already generated,
+                // plus honest provenance counts (never invented figures).
                 'teaser_questions' => array_slice(
                     array_map(fn ($q) => (string) ($q['question'] ?? ''), (array) ($i->prep_questions ?? [])),
                     0,
                     3,
                 ),
+                'question_count' => count((array) ($i->prep_questions ?? [])),
+                'real_question_count' => count(array_filter(
+                    (array) ($i->prep_questions ?? []),
+                    fn ($q) => ($q['source'] ?? null) === 'real',
+                )),
             ]);
+
+        // Server-owned kit prices for the public hooks (CLAUDE.md: figures are
+        // never client-sent). Absent until the products are seeded.
+        $offers = Product::query()
+            ->where('feature', EntitlementFeature::JobKit->value)
+            ->where('active', true)
+            ->orderBy('price_paise')
+            ->get(['sku', 'name', 'price_paise'])
+            ->map(fn (Product $p) => ['sku' => $p->sku, 'name' => $p->name, 'price_paise' => $p->price_paise]);
 
         return response()->json(['data' => [
             'jobs' => $items,
             'window_days' => self::WINDOW_DAYS,
+            'kit_offers' => $offers,
         ]]);
     }
 }

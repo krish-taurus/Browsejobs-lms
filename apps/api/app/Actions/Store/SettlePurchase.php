@@ -69,9 +69,7 @@ final readonly class SettlePurchase
         $user = $purchase->student;
 
         match ($purchase->kind) {
-            ProductKind::Pack => $this->entitlements->grantCredits(
-                $user, (string) $purchase->feature, (int) ($purchase->product?->grant_amount ?? 0), "purchase:{$purchase->sku}", $purchase,
-            ),
+            ProductKind::Pack => $this->grantPack($purchase, $user),
             ProductKind::Subscription => $this->entitlements->grantEntitlement(
                 $user, 'career_plus', 'career_plus',
                 now()->addDays((int) ($purchase->product?->period_days ?? config('monetization.career_plus.period_days', 30))),
@@ -80,6 +78,21 @@ final readonly class SettlePurchase
             ProductKind::SelfPaced => $this->grantSelfPaced($purchase, $user),
             ProductKind::Upgrade => $this->grantUpgrade($purchase, $user),
         };
+    }
+
+    private function grantPack(ProductPurchase $purchase, User $user): void
+    {
+        $this->entitlements->grantCredits(
+            $user, (string) $purchase->feature, (int) ($purchase->product?->grant_amount ?? 0), "purchase:{$purchase->sku}", $purchase,
+        );
+
+        // Bundle skus grant extras beyond their own feature — e.g. the ₹299
+        // Interview Kit + Mentor also drops one mentor-session credit (ADR 0048).
+        /** @var array<string, int> $bonuses */
+        $bonuses = (array) config("monetization.pack_bonuses.{$purchase->sku}", []);
+        foreach ($bonuses as $feature => $amount) {
+            $this->entitlements->grantCredits($user, $feature, (int) $amount, "purchase_bonus:{$purchase->sku}", $purchase);
+        }
     }
 
     private function grantSelfPaced(ProductPurchase $purchase, User $user): void

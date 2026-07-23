@@ -2,23 +2,34 @@
 
 declare(strict_types=1);
 
+use App\Actions\Store\SettlePurchase;
+use App\Actions\Store\StartPurchase;
+use App\Enums\ProductKind;
+use App\Models\Batch;
+use App\Models\BatchMember;
+use App\Models\Course;
 use App\Models\CvProfile;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSource;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
+use App\Models\Product;
 use App\Models\RealInterviewQuestion;
 use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Entitlements\EntitlementService;
+use App\Support\Razorpay\FakeRazorpayClient;
+use App\Support\Razorpay\RazorpayClient;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
 /**
- * Per-JD interview prep (ADR 0048): potential questions (real bank + JD),
- * the confidence score, and the quick JD mock.
+ * Per-JD interview prep + the Interview Kit paywall (ADR 0048): potential
+ * questions (real bank + JD), confidence score, quick JD mock, and unlocks.
  */
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
@@ -43,24 +54,85 @@ function prepItem(Tenant $tenant, array $overrides = []): JobFeedItem
     });
 }
 
-/* ---- Potential questions ---- */
+/** Give the student an occupying batch seat — kits are part of the program. */
+function jobPrepEnrol(Tenant $tenant, User $student): void
+{
+    withinTenant($tenant, function () use ($tenant, $student): void {
+        $course = Course::factory()->for($tenant)->create();
+        $batch = Batch::factory()->for($tenant)->create(['course_id' => $course->id, 'type' => 'paid']);
+        BatchMember::factory()->for($tenant)->create([
+            'batch_id' => $batch->id, 'user_id' => $student->id, 'status' => 'enrolled',
+        ]);
+    });
+}
 
-it('serves real-bank questions for the role first, then JD-derived ones, and caches on the item', function () {
+/* ---- Potential questions + paywall ---- */
+
+it('gives an enrolled student the full paper: real-bank questions first, JD-derived after, cached', function () {
+    jobPrepEnrol($this->tenant, $this->student);
     $item = prepItem($this->tenant);
     withinTenant($this->tenant, fn () => RealInterviewQuestion::factory()->for($this->tenant)->create([
         'role_title' => 'Data Engineer',
     ]));
     Sanctum::actingAs($this->student);
 
-    $questions = getJson("/api/v1/me/jobs/{$item->id}/prep")->assertOk()->json('data.questions');
+    $data = getJson("/api/v1/me/jobs/{$item->id}/prep")->assertOk()->json('data');
 
-    // Real question leads, labelled as real; JD-derived (AI fallback here) follow.
-    expect($questions[0]['source'])->toBe('real')
-        ->and(collect($questions)->pluck('source'))->toContain('jd')
-        ->and(collect($questions)->pluck('question')->first(fn ($q) => str_contains($q, 'spark')))->not->toBeNull();
+    expect($data['unlocked'])->toBeTrue()
+        ->and($data['questions'][0]['source'])->toBe('real')
+        ->and($data['real_count'])->toBe(1)
+        ->and(collect($data['questions'])->pluck('question')->first(fn ($q) => str_contains($q, 'spark')))->not->toBeNull();
 
     // Cached on the item — the next viewer costs nothing.
     expect($item->fresh()->prep_questions)->not->toBeEmpty();
+});
+
+it('shows an outsider only a 3-question sample with honest counts and the kit offers', function () {
+    $item = prepItem($this->tenant);
+    withinTenant($this->tenant, function (): void {
+        Product::factory()->for($this->tenant)->create([
+            'sku' => 'job-kit', 'name' => 'Interview Kit · one job', 'feature' => 'job_kit',
+            'kind' => ProductKind::Pack->value, 'price_paise' => 10_000, 'grant_amount' => 1,
+        ]);
+    });
+    Sanctum::actingAs($this->student);
+
+    $data = getJson("/api/v1/me/jobs/{$item->id}/prep")->assertOk()->json('data');
+
+    expect($data['unlocked'])->toBeFalse()
+        ->and($data['questions'])->toHaveCount(3)
+        ->and($data['total'])->toBeGreaterThan(3)
+        ->and($data['offers'][0]['sku'])->toBe('job-kit')
+        ->and($data['credits'])->toBe(0);
+});
+
+it('unlocks a job with a kit credit and 402s with offers when the wallet is empty', function () {
+    $item = prepItem($this->tenant);
+    withinTenant($this->tenant, function (): void {
+        Product::factory()->for($this->tenant)->create([
+            'sku' => 'job-kit', 'feature' => 'job_kit', 'kind' => ProductKind::Pack->value,
+            'price_paise' => 10_000, 'grant_amount' => 1,
+        ]);
+    });
+    Sanctum::actingAs($this->student);
+
+    // Empty wallet → 402 with the offers.
+    postJson("/api/v1/me/jobs/{$item->id}/unlock")->assertStatus(402)
+        ->assertJsonPath('error.code', 'no_job_kit_credits')
+        ->assertJsonPath('error.offers.0.sku', 'job-kit');
+
+    // With a credit the unlock sticks and the full paper opens.
+    app(EntitlementService::class)->grantCredits($this->student, 'job_kit', 1, 'test');
+    postJson("/api/v1/me/jobs/{$item->id}/unlock")->assertOk()->assertJsonPath('data.unlocked', true);
+
+    $data = getJson("/api/v1/me/jobs/{$item->id}/prep")->assertOk()->json('data');
+    expect($data['unlocked'])->toBeTrue()
+        ->and(count($data['questions']))->toBe($data['total'])
+        ->and(app(EntitlementService::class)->balance($this->student, 'job_kit'))->toBe(0);
+
+    // Unlocking again never double-spends.
+    postJson("/api/v1/me/jobs/{$item->id}/unlock")->assertOk();
+    expect(app(EntitlementService::class)->balance($this->student, 'job_kit'))->toBe(0);
 });
 
 it('404s prep for another tenant\'s posting', function () {
@@ -104,13 +176,14 @@ it('reports a match-only basis when no PRI or mock exists yet', function () {
 
     expect($row['confidence_based_on'])->toBe(['skill match'])
         ->and($row['has_mock_signal'])->toBeFalse()
-        ->and($row['confidence_pct'])->toBe($row['match_pct']);
+        ->and($row['confidence_pct'])->toBe($row['match_pct'])
+        ->and($row['unlocked'])->toBeFalse();
 });
 
 /* ---- Quick JD mock ---- */
 
-it('starts a quick mock scoped to the posting via a hidden blueprint', function () {
-    config(['monetization.text_practice_enabled' => true]);
+it('starts a quick mock for an enrolled student via a hidden per-posting blueprint', function () {
+    jobPrepEnrol($this->tenant, $this->student);
     $item = prepItem($this->tenant, ['company' => 'Acme Analytics']);
     Sanctum::actingAs($this->student);
 
@@ -131,19 +204,40 @@ it('starts a quick mock scoped to the posting via a hidden blueprint', function 
         ->and(MockBlueprint::withoutGlobalScopes()->where('job_feed_item_id', $item->id)->count())->toBe(1);
 });
 
-it('honours the text-practice gate for JD mocks', function () {
-    config(['monetization.text_practice_enabled' => false]);
+it('402s a JD mock for an outsider until they unlock the kit', function () {
     $item = prepItem($this->tenant);
     Sanctum::actingAs($this->student);
 
-    postJson("/api/v1/me/jobs/{$item->id}/mock")->assertForbidden();
+    postJson("/api/v1/me/jobs/{$item->id}/mock")->assertStatus(402)
+        ->assertJsonPath('error.code', 'job_kit_required');
+
+    app(EntitlementService::class)->grantCredits($this->student, 'job_kit', 1, 'test');
+    postJson("/api/v1/me/jobs/{$item->id}/unlock")->assertOk();
+    postJson("/api/v1/me/jobs/{$item->id}/mock")->assertCreated();
 });
 
 it('404s a JD mock on another tenant\'s posting', function () {
-    config(['monetization.text_practice_enabled' => true]);
     $other = Tenant::factory()->create();
     $foreign = prepItem($other);
     Sanctum::actingAs($this->student);
 
     postJson("/api/v1/me/jobs/{$foreign->id}/mock")->assertNotFound();
+});
+
+/* ---- ₹299 bundle ---- */
+
+it('settles the kit+mentor bundle: one job_kit credit plus one mentor credit', function () {
+    Storage::fake('s3');
+    app()->instance(RazorpayClient::class, new FakeRazorpayClient);
+    $product = withinTenant($this->tenant, fn () => Product::factory()->for($this->tenant)->create([
+        'sku' => 'job-kit-mentor', 'name' => 'Interview Kit + mentor 1:1 · one job', 'feature' => 'job_kit',
+        'kind' => ProductKind::Pack->value, 'price_paise' => 29_900, 'grant_amount' => 1,
+    ]));
+
+    $purchase = withinTenant($this->tenant, fn () => app(StartPurchase::class)->handle($this->student, $product));
+    withinTenant($this->tenant, fn () => app(SettlePurchase::class)->handle($purchase, 'pay_TEST1'));
+
+    $svc = app(EntitlementService::class);
+    expect($svc->balance($this->student, 'job_kit'))->toBe(1)
+        ->and($svc->balance($this->student, 'mentor'))->toBe(1);
 });

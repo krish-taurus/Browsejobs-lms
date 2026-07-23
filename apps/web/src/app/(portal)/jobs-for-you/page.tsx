@@ -20,9 +20,13 @@ type Job = {
   confidence_pct: number;
   confidence_based_on: string[];
   has_mock_signal: boolean;
+  unlocked: boolean;
 };
 
 type PrepQuestion = { question: string; why: string | null; source: string };
+type Prep = { unlocked: boolean; questions: PrepQuestion[]; total: number; real_count: number };
+type Offer = { product_id: number; sku: string; name: string; price_paise: number };
+type Kit = { credits: number; offers: Offer[] };
 
 function matchTone(pct: number): string {
   if (pct >= 70) return "bg-verify-bg text-verify";
@@ -37,11 +41,14 @@ export default function JobsForYouPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
   const [prepOpen, setPrepOpen] = useState<number | null>(null);
-  const [prep, setPrep] = useState<Record<number, PrepQuestion[]>>({});
+  const [prep, setPrep] = useState<Record<number, Prep>>({});
   const [prepLoading, setPrepLoading] = useState<number | null>(null);
+  const [kit, setKit] = useState<Kit>({ credits: 0, offers: [] });
 
   const load = useCallback(() => {
-    apiJson<{ data: Job[] }>("/api/v1/me/jobs").then((r) => setJobs(r.data)).catch(() => setJobs([]));
+    apiJson<{ data: Job[]; kit: Kit }>("/api/v1/me/jobs")
+      .then((r) => { setJobs(r.data); setKit(r.kit); })
+      .catch(() => setJobs([]));
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -84,8 +91,8 @@ export default function JobsForYouPage() {
     setPrepLoading(job.id);
     setError(null);
     try {
-      const r = await apiJson<{ data: { questions: PrepQuestion[] } }>(`/api/v1/me/jobs/${job.id}/prep`);
-      setPrep((p) => ({ ...p, [job.id]: r.data.questions }));
+      const r = await apiJson<{ data: Prep }>(`/api/v1/me/jobs/${job.id}/prep`);
+      setPrep((p) => ({ ...p, [job.id]: r.data }));
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not load the questions.");
       setPrepOpen(null);
@@ -101,8 +108,42 @@ export default function JobsForYouPage() {
       await apiJson<{ data: { mock_id: number } }>(`/api/v1/me/jobs/${job.id}/mock`, { method: "POST" });
       router.push("/mock");
     } catch (err) {
-      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the mock.");
+      if (err instanceof ApiError && err.status === 402) {
+        setError("JD mocks are part of the Interview Kit — unlock this job below.");
+      } else {
+        setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the mock.");
+      }
       setBusy(null);
+    }
+  }
+
+  async function unlock(job: Job) {
+    setBusy(job.id);
+    setError(null);
+    try {
+      await apiJson(`/api/v1/me/jobs/${job.id}/unlock`, { method: "POST" });
+      setPrep((p) => { const n = { ...p }; delete n[job.id]; return n; });
+      setPrepOpen(null);
+      setNotice("Unlocked — the full paper and JD mocks for this job are yours.");
+      load();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        setError("You have no kit credits — buy an Interview Kit below, complete payment in the Store, then unlock.");
+      } else {
+        setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not unlock.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function buyKit(offer: Offer) {
+    setError(null);
+    try {
+      await apiJson("/api/v1/me/purchases", { method: "POST", body: JSON.stringify({ product_id: offer.product_id }) });
+      setNotice("Order created — complete the payment from the Store page, then hit Unlock on the job.");
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the purchase.");
     }
   }
 
@@ -200,9 +241,10 @@ export default function JobsForYouPage() {
                 <div className="mt-3 rounded-[10px] bg-paper p-4">
                   <p className="mono text-[10px] uppercase tracking-widest text-muted">
                     Questions this interview is likely to ask
+                    {prep[job.id].real_count > 0 && ` · ${prep[job.id].real_count} from real interviews for this role`}
                   </p>
                   <ul className="mt-2 space-y-2">
-                    {prep[job.id].map((q) => (
+                    {prep[job.id].questions.map((q) => (
                       <li key={q.question} className="text-sm text-ink">
                         {q.question}
                         {q.source === "real" && (
@@ -212,6 +254,39 @@ export default function JobsForYouPage() {
                       </li>
                     ))}
                   </ul>
+
+                  {!prep[job.id].unlocked && (
+                    <div className="mt-4 rounded-[10px] border border-line bg-white p-4">
+                      <p className="text-sm font-semibold text-ink">
+                        {prep[job.id].total - prep[job.id].questions.length} more question{prep[job.id].total - prep[job.id].questions.length === 1 ? "" : "s"} in the full paper for this job.
+                      </p>
+                      <p className="mt-1 text-xs text-muted">
+                        The Interview Kit unlocks the complete paper, unlimited AI mocks on this exact JD,
+                        and includes your JD-rebuilt CV. One job, one kit — prep like you already work there.
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {kit.credits > 0 ? (
+                          <button onClick={() => unlock(job)} disabled={busy === job.id}
+                            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                            Unlock with 1 kit credit ({kit.credits} left)
+                          </button>
+                        ) : (
+                          kit.offers.map((o) => (
+                            <button key={o.sku} onClick={() => buyKit(o)}
+                              className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-trust hover:border-trust">
+                              {o.sku === "job-kit-mentor" ? "Kit + 1:1 mentor" : "Interview Kit"} · ₹{Math.round(o.price_paise / 100)}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      {kit.offers.some((o) => o.sku === "job-kit-mentor") && kit.credits === 0 && (
+                        <p className="mt-2 text-[11px] text-muted">
+                          The ₹{Math.round((kit.offers.find((o) => o.sku === "job-kit-mentor")?.price_paise ?? 29900) / 100)} option adds a
+                          live 1:1 with a mentor who preps you for this exact interview.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

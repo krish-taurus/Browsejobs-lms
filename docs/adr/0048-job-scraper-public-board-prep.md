@@ -57,11 +57,25 @@ text mock through the existing engine via a per-posting `MockBlueprint`
 competencies come from the posting, so the interviewer stays on that JD;
 scorecards and the PRI blend are unchanged.
 
-**Monetisation lands on existing rails, later.** Registration is already open
-(`auth/register`); Apply Assist's JD-tailored CV stays free per the PRD;
-Career+ (₹499/mo) remains the unlimited tier for boosters/tailoring. Metered
-free allowances and jd-mock/jd-cv packs need founder-approved prices before
-seeding — deferred to a follow-up, tracked with the revenue-model proposal.
+**The Interview Kit paywall (founder-priced).** Per posting: everyone signed
+in sees a free 3-question sample plus honest provenance counts ("N asked in
+real interviews for this role" — computed, never invented; the founder's
+"collected from 100+ interviews" framing is only ever rendered from real bank
+counts). The full paper + unlimited JD mocks unlock per job:
+- **₹100 Interview Kit** (`job-kit`, Pack, feature `job_kit`, grant 1) — full
+  question paper, unlimited JD mocks on that posting, and the JD-rebuilt CV
+  (which stays free per PRD §6.22 — the kit truthfully lists it as included);
+- **₹299 Kit + Mentor** (`job-kit-mentor`) — same, plus one 1:1 mentor-session
+  credit via a config-driven pack bonus in `SettlePurchase`
+  (`monetization.pack_bonuses`), booked on the existing mentor calendar;
+- **enrolled students and Career+ subscribers get every kit at no charge**
+  (`JobKitAccess`: occupying batch seat → all access), protecting the ₹30,000
+  program's value and giving outsiders a reason to upgrade.
+Unlocks spend `job_kit` wallet credits into `job_kit_unlocks` (one row per
+user × posting); an empty wallet answers 402 with the server-owned offers,
+mirroring the mentor-booking pattern. Registration is already open
+(`auth/register`), so the public board's every card funnels into this ladder —
+and the ladder's gap explanations funnel into the free masterclass.
 
 ## Consequences
 
