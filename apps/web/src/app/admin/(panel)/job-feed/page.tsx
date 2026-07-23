@@ -36,7 +36,7 @@ const KINDS = [
 
 export default function JobFeedPage() {
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", kind: "internal", priority: "10", actorId: "", input: "", exclude: "" });
+  const [form, setForm] = useState({ name: "", kind: "internal", priority: "10", actorId: "", input: "", exclude: "", token: "" });
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -67,12 +67,13 @@ export default function JobFeedPage() {
                 actor_id: form.actorId,
                 input: form.input ? JSON.parse(form.input) : {},
                 exclude: form.exclude ? form.exclude.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+                token: form.token.trim() || undefined,
               }
             : undefined,
         }),
       });
     },
-    onSuccess: () => { setForm({ name: "", kind: "internal", priority: "10", actorId: "", input: "", exclude: "" }); setError(null); refresh(); },
+    onSuccess: () => { setForm({ name: "", kind: "internal", priority: "10", actorId: "", input: "", exclude: "", token: "" }); setError(null); refresh(); },
     onError,
   });
 
@@ -119,12 +120,14 @@ export default function JobFeedPage() {
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input value={form.actorId} onChange={(e) => setForm({ ...form, actorId: e.target.value })} placeholder="Apify actor, e.g. bebity/linkedin-jobs-scraper" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust" />
             <input value={form.input} onChange={(e) => setForm({ ...form, input: e.target.value })} placeholder='Actor input JSON, e.g. {"query":"Data engineer","location":"India"}' className="mono rounded-[10px] border border-line bg-white px-3 py-2 text-xs outline-none focus:border-trust" />
-            <input value={form.exclude} onChange={(e) => setForm({ ...form, exclude: e.target.value })} placeholder="Exclude terms, e.g. Salesforce, Frontend, Sales" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust sm:col-span-2" />
+            <input value={form.exclude} onChange={(e) => setForm({ ...form, exclude: e.target.value })} placeholder="Exclude terms, e.g. Salesforce, Frontend, Sales" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust" />
+            <input type="password" value={form.token} onChange={(e) => setForm({ ...form, token: e.target.value })} placeholder="Apify token override (optional)" autoComplete="off" className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-trust" />
             <p className="text-xs text-muted sm:col-span-2">
               The query is tightened automatically before each run: a plain role becomes an exact phrase
               (&ldquo;Data engineer&rdquo;) and exclude terms are appended as NOT clauses — so the scrape budget
-              goes on relevant roles. Runs on the twice-daily feed sync under your Apify token (APIFY_TOKEN);
-              scraped postings expire after 7 days automatically.
+              goes on relevant roles. Runs on the twice-daily feed sync under the platform Apify token
+              (Settings → Job scrapers) — or this source&apos;s own token override, if you bill an actor to a
+              different Apify account. Scraped postings expire after 7 days automatically.
             </p>
           </div>
         )}

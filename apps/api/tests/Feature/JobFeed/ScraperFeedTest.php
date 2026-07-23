@@ -31,12 +31,12 @@ function fakeApify(array $items): ApifyTransport
         /** @var list<array<string, mixed>> */
         public array $items = [];
 
-        /** @var list<array{actor: string, input: array<string, mixed>}> */
+        /** @var list<array{actor: string, input: array<string, mixed>, token: string|null}> */
         public array $runs = [];
 
-        public function run(string $actorId, array $input): array
+        public function run(string $actorId, array $input, ?string $token = null): array
         {
-            $this->runs[] = ['actor' => $actorId, 'input' => $input];
+            $this->runs[] = ['actor' => $actorId, 'input' => $input, 'token' => $token];
 
             return $this->items;
         }
@@ -149,6 +149,55 @@ it('leaves an admin-written boolean query untouched', function () {
     withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
 
     expect($fake->runs[0]['input']['query'])->toBe('"Data Engineer" OR "ETL Developer"');
+});
+
+it('maps the Naukri jobs actor output shape from the founder\'s dataset', function () {
+    Queue::fake();
+    // Exact field shape of the founder's Naukri run (dataset_naukrijobsfeed).
+    fakeApify([[
+        'jobId' => '230726501905',
+        'title' => 'Python Developer',
+        'companyName' => 'Lighthouse',
+        'experienceText' => '0-2 Yrs',
+        'location' => 'Bengaluru',
+        'skills' => ['Computer science', 'Linux', 'Postgresql', 'MySQL'],
+        'createdDate' => '2026-07-23T10:51:52.000Z',
+        'portalUrl' => 'https://www.naukri.com/job-listings-python-developer-lighthouse-230726501905',
+        'description' => str_repeat('Manage IT operations, Linux servers and PostgreSQL databases. ', 5),
+        'jobRole' => 'System Administrator / Engineer',
+        'wfhType' => 'office',
+        'jobType' => 'fulltime',
+        'isRepost' => false,
+    ]]);
+
+    $source = scraperSource($this->tenant);
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    $item = JobFeedItem::withoutGlobalScopes()->sole();
+    expect($item->external_id)->toBe('230726501905')
+        ->and($item->apply_url)->toBe('https://www.naukri.com/job-listings-python-developer-lighthouse-230726501905')
+        ->and($item->posted_at->toDateString())->toBe('2026-07-23')
+        ->and($item->work_mode)->toBe('onsite')
+        ->and($item->role_title)->toBe('System Administrator / Engineer')
+        ->and($item->seniority)->toBe('0-2 Yrs')
+        ->and($item->extracted_skills)->toBe(['computer science', 'linux', 'postgresql', 'mysql']);
+
+    Queue::assertNotPushed(ExtractJobFeedItemSkills::class); // actor skills used directly
+});
+
+it('passes a per-source token override to the transport', function () {
+    Queue::fake();
+    $fake = fakeApify([]);
+    $source = scraperSource($this->tenant, ['token' => 'apify_api_OTHER_ACCOUNT']);
+
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    expect($fake->runs[0]['token'])->toBe('apify_api_OTHER_ACCOUNT');
+
+    // Without an override the platform token (Settings / APIFY_TOKEN) is used.
+    $plain = scraperSource($this->tenant, ['token' => null]);
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($plain));
+    expect($fake->runs[1]['token'])->toBeNull();
 });
 
 it('re-ingesting the same postings creates no duplicates', function () {

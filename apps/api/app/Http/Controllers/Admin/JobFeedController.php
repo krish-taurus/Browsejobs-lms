@@ -71,6 +71,9 @@ final class JobFeedController extends Controller
             // doesn't burn scrape budget on unrelated roles.
             'config.exclude' => ['nullable', 'array', 'max:15'],
             'config.exclude.*' => ['string', 'max:60'],
+            // Optional per-source Apify token override; the platform token from
+            // the admin Settings screen is the default for every scraper.
+            'config.token' => ['nullable', 'string', 'max:200'],
             'config.freshness_days' => ['nullable', 'integer', 'between:1,90'],
         ]);
 

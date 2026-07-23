@@ -43,8 +43,12 @@ final readonly class ScraperAdapter implements FeedAdapter
 
         $input = $this->tightenQuery((array) ($source->config['input'] ?? []), (array) $source->config);
 
+        // A source may bill its actor to a different Apify account via a token
+        // override in its config; the platform token (admin Settings) is the default.
+        $token = trim((string) ($source->config['token'] ?? '')) ?: null;
+
         $jobs = [];
-        foreach ($this->apify->run($actorId, $input) as $raw) {
+        foreach ($this->apify->run($actorId, $input, $token) as $raw) {
             $job = $this->normalize($raw);
             if ($job !== null) {
                 $jobs[] = $job;
@@ -113,9 +117,9 @@ final readonly class ScraperAdapter implements FeedAdapter
             externalId: $this->str($raw, ['id', 'jobId', 'job_id', 'jobkey', 'listingId']),
             location: $this->str($raw, ['location', 'jobLocation', 'place', 'city']),
             workMode: $this->workMode($raw),
-            applyUrl: $this->str($raw, ['url', 'link', 'jobUrl', 'job_url', 'applyUrl', 'apply_url']),
-            roleTitle: $this->str($raw, ['roleTitle', 'occupation']) ?? $title,
-            seniority: $this->str($raw, ['seniority', 'seniorityLevel', 'experienceLevel']),
+            applyUrl: $this->str($raw, ['url', 'link', 'jobUrl', 'job_url', 'applyUrl', 'apply_url', 'portalUrl', 'staticUrl']),
+            roleTitle: $this->str($raw, ['roleTitle', 'occupation', 'jobRole']) ?? $title,
+            seniority: $this->str($raw, ['seniority', 'seniorityLevel', 'experienceLevel', 'experienceText']),
             postedAt: $this->postedAt($raw),
             skills: $this->skills($raw),
         );
@@ -169,7 +173,7 @@ final readonly class ScraperAdapter implements FeedAdapter
      */
     private function workMode(array $raw): ?string
     {
-        $mode = $this->str($raw, ['workMode', 'work_mode', 'workplaceType', 'jobType']);
+        $mode = $this->str($raw, ['workMode', 'work_mode', 'workplaceType', 'wfhType', 'jobType']);
         if ($mode !== null) {
             $mode = mb_strtolower($mode);
 
@@ -189,7 +193,7 @@ final readonly class ScraperAdapter implements FeedAdapter
      */
     private function postedAt(array $raw): ?Carbon
     {
-        $value = $this->str($raw, ['postedAt', 'posted_at', 'postedDate', 'publishedAt', 'listedAt', 'datePosted', 'createdAt']);
+        $value = $this->str($raw, ['postedAt', 'posted_at', 'postedDate', 'publishedAt', 'listedAt', 'datePosted', 'createdAt', 'createdDate']);
         if ($value === null) {
             return null;
         }
