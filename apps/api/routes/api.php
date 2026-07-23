@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchDispatchController;
+use App\Http\Controllers\Admin\CandidatePerformanceController;
 use App\Http\Controllers\Admin\CannedResponseController;
 use App\Http\Controllers\Admin\CareAdminController;
 use App\Http\Controllers\Admin\CelebrationController;
@@ -605,6 +606,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         // Candidates directory + reallocation (student-first view).
         Route::get('students', [StudentController::class, 'index']);
         Route::post('students/{student}/enrollments', [StudentController::class, 'enroll']);
+
+        // Candidate Performance (ADR 0050): batch-wise weighted ranking + detail.
+        Route::get('candidate-performance', [CandidatePerformanceController::class, 'index']);
+        Route::get('candidate-performance/{user}', [CandidatePerformanceController::class, 'show']);
     });
 
     // Built-in CRM (PRD §6.12).

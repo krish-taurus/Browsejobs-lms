@@ -115,11 +115,27 @@ it('generates beginner notes as a draft on an auto-created notes lesson', functi
     expect(Lesson::withoutGlobalScopes()->where('topic_id', $topic->id)->where('type', 'notes')->count())->toBe(1);
 });
 
-it('generates a day-focused MCQ assignment as a draft quiz', function () {
+it('refuses to generate an assignment before the chapter has notes', function () {
     $module = dayModule($this->tenant);
     $topic = Topic::factory()->for($this->tenant)->create([
         'module_id' => $module->id, 'name' => 'Lists', 'day_number' => 4,
-        'keywords' => ['lists', 'indexing'], 'summary' => 'Ordered collections.',
+    ]);
+
+    postJson("/api/v1/admin/topics/{$topic->id}/assignment/generate")
+        ->assertUnprocessable()
+        ->assertJsonPath('error.code', 'notes_required');
+
+    expect(Quiz::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('generates numbered assignments from the chapter notes', function () {
+    $module = dayModule($this->tenant);
+    $topic = Topic::factory()->for($this->tenant)->create([
+        'module_id' => $module->id, 'name' => 'Lists', 'day_number' => 4,
+    ]);
+    $lesson = Lesson::factory()->for($this->tenant)->create(['topic_id' => $topic->id, 'type' => 'notes']);
+    LessonNote::factory()->for($this->tenant)->create([
+        'lesson_id' => $lesson->id, 'notes' => 'A list is like a train: wagons in order. mylist[0] is the first wagon.',
     ]);
     $this->fake->reply = json_encode([
         ['prompt' => 'What does mylist[0] return?', 'options' => ['First item', 'Last item', 'An error', 'The length'], 'correct_index' => 0, 'explanation' => 'Indexing starts at 0.'],
@@ -130,12 +146,15 @@ it('generates a day-focused MCQ assignment as a draft quiz', function () {
         ->assertJsonPath('data.questions', 2)
         ->assertJsonPath('data.status', 'draft');
 
-    $quiz = Quiz::withoutGlobalScopes()->sole();
-    expect($quiz->questions()->count())->toBe(2)
-        ->and($quiz->lesson?->topic_id)->toBe($topic->id)
-        // The prompt was focused on this day, not the whole module.
-        ->and($this->fake->calls[0]->user)->toContain('Day 4: Lists')
-        ->and($this->fake->calls[0]->user)->toContain('lists, indexing');
+    // Questions come FROM the notes, and each generation adds a NEW numbered assignment.
+    expect($this->fake->calls[0]->user)->toContain('wagons in order');
+    postJson("/api/v1/admin/topics/{$topic->id}/assignment/generate")->assertCreated();
+
+    $quizzes = Quiz::withoutGlobalScopes()->orderBy('id')->get();
+    expect($quizzes)->toHaveCount(2)
+        ->and($quizzes[0]->title)->toBe('Lists — Assignment 1')
+        ->and($quizzes[1]->title)->toBe('Lists — Assignment 2')
+        ->and($quizzes[0]->lesson_id)->not->toBe($quizzes[1]->lesson_id);
 });
 
 it('renders, uploads, and serves the assignment paper PDF', function () {
@@ -195,5 +214,5 @@ it('lists days with their notes and assignment status', function () {
         ->assertJsonPath('data.module.name', 'Python')
         ->assertJsonPath('data.days.0.day_number', 6)
         ->assertJsonPath('data.days.0.notes.status', 'approved')
-        ->assertJsonPath('data.days.0.assignment', null);
+        ->assertJsonPath('data.days.0.assignments', []);
 });

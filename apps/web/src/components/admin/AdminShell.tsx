@@ -34,6 +34,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/batches", label: "Batches" },
       { href: "/admin/students", label: "Candidates" },
+      { href: "/admin/performance", label: "Candidate performance" },
       { href: "/admin/zoom", label: "Zoom licenses" },
     ],
   },
