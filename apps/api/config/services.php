@@ -100,6 +100,14 @@ return [
         'host' => env('JSEARCH_API_HOST', 'jsearch.p.rapidapi.com'),
     ],
 
+    'apify' => [
+        // Apify actor runs for scraper job-feed sources (ADR 0048 — explicit
+        // founder override of the PRD no-scraping rule). No token = scraper
+        // sources stay off (Null transport). Tests fake the transport.
+        'token' => env('APIFY_TOKEN', ''),
+        'base_url' => env('APIFY_BASE_URL', 'https://api.apify.com'),
+    ],
+
     'zoom' => [
         'account_id' => env('ZOOM_ACCOUNT_ID', ''),
         'client_id' => env('ZOOM_CLIENT_ID', ''),

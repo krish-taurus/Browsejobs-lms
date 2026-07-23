@@ -32,6 +32,8 @@ class MonetizationSeeder extends Seeder
                 ['sku' => 'voice-single', 'name' => 'Voice mock · single session', 'feature' => 'voice_mock', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.voice_mock.single_paise'), 'grant' => 1, 'period' => null],
                 ['sku' => 'voice-3pack', 'name' => 'Voice mock · 3-pack', 'feature' => 'voice_mock', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.voice_mock.pack_price_paise'), 'grant' => (int) config('monetization.voice_mock.pack_size'), 'period' => null],
                 ['sku' => 'mentor-extra', 'name' => 'Extra mentor 1:1', 'feature' => 'mentor', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.mentor.extra_paise'), 'grant' => 1, 'period' => null],
+                ['sku' => 'job-kit', 'name' => 'Interview Kit · one job', 'feature' => 'job_kit', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.job_kit.price_paise'), 'grant' => 1, 'period' => null],
+                ['sku' => 'job-kit-mentor', 'name' => 'Interview Kit + mentor 1:1 · one job', 'feature' => 'job_kit', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.job_kit.mentor_price_paise'), 'grant' => 1, 'period' => null],
                 ['sku' => 'career-plus', 'name' => 'Career+ (monthly)', 'feature' => 'career_plus', 'kind' => ProductKind::Subscription, 'price' => (int) config('monetization.career_plus.price_paise'), 'grant' => 0, 'period' => (int) config('monetization.career_plus.period_days')],
             ];
 

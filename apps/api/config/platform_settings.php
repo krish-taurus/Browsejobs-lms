@@ -78,6 +78,14 @@ return [
             ],
         ],
 
+        'apify' => [
+            'label' => 'Job scrapers (Apify)',
+            'help' => 'One Apify token runs all your scraper sources — LinkedIn, Naukri, or any actor — under your Apify account (Apify Console → Settings → API tokens). A source on the Job feed page can also carry its own token override if you ever bill an actor to a different Apify account.',
+            'fields' => [
+                ['key' => 'token', 'label' => 'Apify API token', 'type' => 'secret', 'config' => 'services.apify.token'],
+            ],
+        ],
+
         'google_drive' => [
             'label' => 'Google Drive reviews',
             'help' => 'Paste the shared Drive folder link your team drops reviews into — you can change it here anytime. The service-account JSON lets the scheduled sync read that folder (share the folder to the service account as Viewer).',

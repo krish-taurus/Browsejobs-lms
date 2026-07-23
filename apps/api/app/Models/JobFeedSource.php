@@ -38,7 +38,9 @@ class JobFeedSource extends Model
 
     public const KIND_CSV = 'csv';
 
-    public const KINDS = [self::KIND_INTERNAL, self::KIND_PARTNER, self::KIND_API, self::KIND_ATS, self::KIND_CSV];
+    public const KIND_SCRAPER = 'scraper';
+
+    public const KINDS = [self::KIND_INTERNAL, self::KIND_PARTNER, self::KIND_API, self::KIND_ATS, self::KIND_CSV, self::KIND_SCRAPER];
 
     /** @var list<string> */
     protected $fillable = [

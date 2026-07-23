@@ -12,9 +12,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * One ingested, normalised job posting in the live feed (PRD §6.22). Never
- * scraped — always from an authorised adapter. `extracted_skills` comes from the
- * §6.21 JD pipeline and drives per-student relevance scoring.
+ * One ingested, normalised job posting in the live feed (PRD §6.22; scraper
+ * sources per ADR 0048). `extracted_skills` comes from the §6.21 JD pipeline
+ * and drives per-student relevance scoring. `prep_questions` caches the
+ * AI-generated potential interview questions — generated once per posting.
  *
  * @property int $id
  * @property int|null $tenant_id
@@ -29,6 +30,7 @@ use Illuminate\Support\Str;
  * @property string $source_kind
  * @property string|null $role_title
  * @property list<string>|null $extracted_skills
+ * @property list<array{question: string, why: string|null, source: string}>|null $prep_questions
  * @property string|null $seniority
  * @property int $quality_score
  * @property string $fingerprint
@@ -50,7 +52,7 @@ class JobFeedItem extends Model
     protected $fillable = [
         'tenant_id', 'job_feed_source_id', 'external_id', 'title', 'company', 'location',
         'work_mode', 'description', 'apply_url', 'source_kind', 'role_title',
-        'extracted_skills', 'seniority', 'quality_score', 'fingerprint', 'status',
+        'extracted_skills', 'prep_questions', 'seniority', 'quality_score', 'fingerprint', 'status',
         'posted_at', 'expires_at', 'ingested_at',
     ];
 
@@ -61,6 +63,7 @@ class JobFeedItem extends Model
     {
         return [
             'extracted_skills' => 'array',
+            'prep_questions' => 'array',
             'quality_score' => 'integer',
             'posted_at' => 'datetime',
             'expires_at' => 'datetime',

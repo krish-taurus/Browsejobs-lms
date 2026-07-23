@@ -8,6 +8,7 @@ use App\Actions\JobFeed\IngestJobFeed;
 use App\Http\Controllers\Controller;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSource;
+use App\Support\JobFeed\Adapters\ScraperAdapter;
 use App\Support\JobFeed\NormalizedJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Job-feed source management + ingestion (PRD §6.22). Placement team configures
- * sources, triggers a sync, and bulk-imports postings via CSV. Never scrapes.
+ * sources, triggers a sync, and bulk-imports postings via CSV. Scraper sources
+ * (Apify actors — ADR 0048 founder override) are configured here like any other.
  */
 final class JobFeedController extends Controller
 {
@@ -59,12 +61,33 @@ final class JobFeedController extends Controller
             'name' => ['required', 'string', 'max:190'],
             'kind' => ['required', Rule::in(JobFeedSource::KINDS)],
             'priority' => ['nullable', 'integer', 'between:0,100'],
+            // Adapter configuration: the API kind takes `query`; the scraper kind
+            // (ADR 0048) takes `actor_id` + `input`; any kind may set freshness_days.
+            'config' => ['nullable', 'array'],
+            'config.actor_id' => ['required_if:kind,scraper', 'string', 'max:190'],
+            'config.input' => ['nullable', 'array'],
+            'config.query' => ['nullable', 'array'],
+            // NOT-terms appended to the scraper query so fuzzy LinkedIn search
+            // doesn't burn scrape budget on unrelated roles.
+            'config.exclude' => ['nullable', 'array', 'max:15'],
+            'config.exclude.*' => ['string', 'max:60'],
+            // Optional per-source Apify token override; the platform token from
+            // the admin Settings screen is the default for every scraper.
+            'config.token' => ['nullable', 'string', 'max:200'],
+            'config.freshness_days' => ['nullable', 'integer', 'between:1,90'],
         ]);
+
+        $config = (array) ($data['config'] ?? []);
+        if ($data['kind'] === JobFeedSource::KIND_SCRAPER) {
+            // Scraped boards age fast — the founder wants a rolling 7-day window.
+            $config['freshness_days'] ??= ScraperAdapter::DEFAULT_FRESHNESS_DAYS;
+        }
 
         $source = JobFeedSource::query()->create([
             'tenant_id' => $request->user()->tenant_id,
             'name' => $data['name'],
             'kind' => $data['kind'],
+            'config' => $config === [] ? null : $config,
             'priority' => $data['priority'] ?? 0,
             'is_active' => true,
         ]);

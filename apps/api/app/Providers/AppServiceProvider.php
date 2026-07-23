@@ -20,6 +20,8 @@ use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
 use App\Support\Interviews\TranscriptionClient;
+use App\Support\JobFeed\ApifyTransport;
+use App\Support\JobFeed\HttpApifyTransport;
 use App\Support\JobFeed\HttpJSearchTransport;
 use App\Support\JobFeed\JobApiTransport;
 use App\Support\JobFeed\NullJobApiTransport;
@@ -119,6 +121,17 @@ class AppServiceProvider extends ServiceProvider
             $config = config('services.jsearch');
 
             return $config['api_key'] !== '' ? new HttpJSearchTransport($config) : new NullJobApiTransport;
+        });
+
+        // Scraper job-feed sources via Apify actors (ADR 0048 — founder-approved
+        // override of the no-scraping rule). The token comes from the admin
+        // Settings screen (or APIFY_TOKEN); without one the client is a safe
+        // no-op and scraper sources sync to nothing. Tests bind a fake.
+        $this->app->bind(ApifyTransport::class, function (): ApifyTransport {
+            /** @var array{token: string, base_url: string} $config */
+            $config = config('services.apify');
+
+            return new HttpApifyTransport($config);
         });
 
         // Google Drive reviews intake (Platform Spec §3). Real client when a service

@@ -12,4 +12,5 @@ enum EntitlementFeature: string
     case Cv = 'cv';
     case VoiceMock = 'voice_mock';
     case Mentor = 'mentor';
+    case JobKit = 'job_kit';
 }
