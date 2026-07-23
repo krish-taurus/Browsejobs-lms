@@ -67,7 +67,9 @@ final readonly class IngestJobFeed
             $created = $this->store($source, $job, $freshnessDays);
             $created === null ? $duplicates++ : $ingested++;
 
-            if ($created !== null) {
+            // Sources that pre-extract skills (e.g. the LinkedIn scraper) skip
+            // AI extraction — the item is matchable immediately at zero AI cost.
+            if ($created !== null && empty($created->extracted_skills)) {
                 ExtractJobFeedItemSkills::dispatch($created->id);
             }
         }
@@ -103,6 +105,7 @@ final readonly class IngestJobFeed
                 'apply_url' => $job->applyUrl,
                 'source_kind' => $source->kind,
                 'role_title' => $job->roleTitle !== null ? mb_substr($job->roleTitle, 0, 255) : null,
+                'extracted_skills' => $job->skills,
                 'seniority' => $job->seniority,
                 'fingerprint' => $fingerprint,
                 'status' => JobFeedItem::STATUS_ACTIVE,

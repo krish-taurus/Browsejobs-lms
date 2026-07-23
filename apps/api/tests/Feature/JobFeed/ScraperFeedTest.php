@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\JobFeed\IngestJobFeed;
+use App\Jobs\ExtractJobFeedItemSkills;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSource;
 use App\Models\Tenant;
@@ -77,6 +78,35 @@ it('ingests scraped postings with tolerant field mapping and a 7-day expiry', fu
         ->and($items[1]->work_mode)->toBe('remote')
         // The founder's rolling window: scraped postings expire 7 days after posting.
         ->and($items[0]->expires_at->diffInDays($items[0]->posted_at))->toBeLessThanOrEqual(7.0);
+});
+
+it('maps the LinkedIn jobs actor output shape, storing its skills and skipping AI extraction', function () {
+    Queue::fake();
+    // Exact field shape of the founder's Apify run (actor PeTP8M7vkdTthJvqk).
+    fakeApify([[
+        'jobUrl' => 'https://www.linkedin.com/jobs/view/4440685444',
+        'jobTitle' => 'Data Engineer',
+        'companyName' => 'JB Group of Companies',
+        'location' => 'Mumbai Metropolitan Region, IN',
+        'employmentType' => 'Full-time',
+        'seniorityLevel' => 'Associate',
+        'postedDate' => '2026-07-16',
+        'jobDescription' => str_repeat('Advanced analytics with Python, Pandas, MySQL and BigQuery pipelines. ', 5),
+        'skills' => ['Data Analysis', 'GCP', 'Machine Learning', 'MySQL', 'Python', 'SQL'],
+        'applyUrl' => 'https://www.linkedin.com/jobs/view/4440685444',
+    ]]);
+
+    $source = scraperSource($this->tenant);
+    withinTenant($this->tenant, fn () => app(IngestJobFeed::class)->fromSource($source));
+
+    $item = JobFeedItem::withoutGlobalScopes()->sole();
+    expect($item->extracted_skills)->toBe(['data analysis', 'gcp', 'machine learning', 'mysql', 'python', 'sql'])
+        ->and($item->seniority)->toBe('Associate')
+        ->and($item->posted_at->toDateString())->toBe('2026-07-16')
+        ->and($item->apply_url)->toBe('https://www.linkedin.com/jobs/view/4440685444');
+
+    // Skills came from the actor — no AI extraction job was queued for it.
+    Queue::assertNotPushed(ExtractJobFeedItemSkills::class);
 });
 
 it('re-ingesting the same postings creates no duplicates', function () {

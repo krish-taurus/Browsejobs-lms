@@ -76,7 +76,35 @@ final readonly class ScraperAdapter implements FeedAdapter
             roleTitle: $this->str($raw, ['roleTitle', 'occupation']) ?? $title,
             seniority: $this->str($raw, ['seniority', 'seniorityLevel', 'experienceLevel']),
             postedAt: $this->postedAt($raw),
+            skills: $this->skills($raw),
         );
+    }
+
+    /**
+     * Skills many actors pre-extract (e.g. LinkedIn's `skills` array) — passed
+     * through so items are matchable immediately without an AI extraction call.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return list<string>|null
+     */
+    private function skills(array $raw): ?array
+    {
+        $value = $raw['skills'] ?? $raw['skillsRequired'] ?? null;
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $skills = [];
+        foreach ($value as $skill) {
+            $clean = mb_strtolower(trim((string) $skill));
+            if ($clean !== '' && mb_strlen($clean) <= 40) {
+                $skills[] = $clean;
+            }
+        }
+
+        $skills = array_values(array_unique(array_slice($skills, 0, 20)));
+
+        return $skills === [] ? null : $skills;
     }
 
     /**

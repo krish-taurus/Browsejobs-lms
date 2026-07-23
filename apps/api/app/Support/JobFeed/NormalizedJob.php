@@ -10,6 +10,11 @@ namespace App\Support\JobFeed;
  */
 final readonly class NormalizedJob
 {
+    /**
+     * @param  list<string>|null  $skills  skills the source already extracted
+     *                                     (e.g. LinkedIn scraper output) — stored
+     *                                     directly so AI extraction is skipped
+     */
     public function __construct(
         public string $title,
         public string $company,
@@ -21,5 +26,6 @@ final readonly class NormalizedJob
         public ?string $roleTitle = null,
         public ?string $seniority = null,
         public ?\DateTimeInterface $postedAt = null,
+        public ?array $skills = null,
     ) {}
 }
