@@ -178,6 +178,7 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
   const { id } = use(params);
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [advanced, setAdvanced] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "course", id],
@@ -201,6 +202,9 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
       <Link href="/admin/curriculum" className="text-sm text-trust hover:underline">← All programs</Link>
       <p className="kicker mt-4 text-trust">Curriculum · {course?.code}</p>
       <h1 className="display mt-2 text-3xl text-ink">{course?.name ?? "…"}</h1>
+      <p className="mt-1 text-sm text-muted">
+        Build each module chapter by chapter — notes and assignments live inside the chapters.
+      </p>
 
       {error && (
         <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">
@@ -215,7 +219,22 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
         </div>
       ) : (
         <div className="mt-8 space-y-5">
-          {course?.modules.map((m, mi) => (
+          {!advanced && course?.modules.map((m, mi) => (
+            <section key={m.id} className="flex flex-wrap items-center gap-3 rounded-[14px] border border-line bg-white p-5">
+              <span className="mono text-sm text-trust">{String(mi + 1).padStart(2, "0")}</span>
+              <div className="min-w-40 flex-1">
+                <h2 className="display text-lg text-ink">{m.name}</h2>
+                <p className="mono text-[11px] uppercase tracking-widest text-muted">
+                  {m.topics.length} chapter{m.topics.length === 1 ? "" : "s"}
+                </p>
+              </div>
+              <a href={`/admin/curriculum/${id}/days/${m.id}`} className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white">
+                Chapters →
+              </a>
+            </section>
+          ))}
+
+          {advanced && course?.modules.map((m, mi) => (
             <section key={m.id} className="rounded-[14px] border border-line bg-white p-5">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="display text-lg text-ink">
@@ -224,7 +243,7 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
                 </h2>
                 <div className="flex items-center gap-4">
                   <a href={`/admin/curriculum/${id}/days/${m.id}`} className="text-xs font-semibold text-trust hover:underline">
-                    Day builder →
+                    Chapters →
                   </a>
                   <button
                     onClick={() => {
@@ -333,6 +352,10 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
               </div>
             </section>
           ))}
+
+          <button onClick={() => setAdvanced(!advanced)} className="text-xs font-semibold text-muted hover:text-trust">
+            {advanced ? "Hide advanced structure" : "Advanced structure (raw topics & lessons, videos, labs) ▸"}
+          </button>
 
           <section className="rounded-[14px] border border-dashed border-line bg-white p-5">
             <p className="kicker text-muted">Add module</p>
