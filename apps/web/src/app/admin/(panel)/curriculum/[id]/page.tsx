@@ -222,16 +222,21 @@ export default function AdminCourseTreePage({ params }: { params: Promise<{ id: 
                   <span className="mono mr-2 text-sm text-trust">{String(mi + 1).padStart(2, "0")}</span>
                   {m.name}
                 </h2>
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Delete module “${m.name}” and everything in it?`)) {
-                      mutate.mutate({ path: `/api/v1/admin/modules/${m.id}`, method: "DELETE" });
-                    }
-                  }}
-                  className="text-xs font-semibold text-warn hover:underline"
-                >
-                  Delete module
-                </button>
+                <div className="flex items-center gap-4">
+                  <a href={`/admin/curriculum/${id}/days/${m.id}`} className="text-xs font-semibold text-trust hover:underline">
+                    Day builder →
+                  </a>
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Delete module “${m.name}” and everything in it?`)) {
+                        mutate.mutate({ path: `/api/v1/admin/modules/${m.id}`, method: "DELETE" });
+                      }
+                    }}
+                    className="text-xs font-semibold text-warn hover:underline"
+                  >
+                    Delete module
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 space-y-3 border-l-2 border-line pl-4">

@@ -31,7 +31,7 @@ final class TopicController extends Controller
 
     public function update(CurriculumNodeRequest $request, Topic $topic): JsonResponse
     {
-        $topic->update($request->safe()->only(['name', 'position', 'mock_enabled']));
+        $topic->update($request->safe()->only(['name', 'position', 'mock_enabled', 'day_number', 'summary', 'keywords']));
 
         CurriculumChanged::dispatch((int) $topic->module?->course_id, (int) $topic->tenant_id);
 

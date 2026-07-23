@@ -77,7 +77,16 @@ class CurriculumSeeder extends Seeder
             foreach (['Concepts', 'Hands-on Lab'] as $tIndex => $topicName) {
                 $topic = Topic::query()->updateOrCreate(
                     ['tenant_id' => $tenantId, 'module_id' => $module->id, 'name' => $topicName],
-                    ['position' => $tIndex],
+                    [
+                        'position' => $tIndex,
+                        // Day-builder demo data (ADR 0049): every seeded topic is a
+                        // numbered teaching day with keywords driving AI generation.
+                        'day_number' => $tIndex + 1,
+                        'keywords' => $tIndex === 0 ? ['fundamentals', 'core concepts'] : ['practice', 'hands-on'],
+                        'summary' => $tIndex === 0
+                            ? 'The core ideas of this module, from zero.'
+                            : 'Apply what you learned in a guided lab.',
+                    ],
                 );
 
                 Lesson::query()->updateOrCreate(

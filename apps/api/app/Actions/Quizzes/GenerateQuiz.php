@@ -10,6 +10,7 @@ use App\Enums\QuizStatus;
 use App\Models\Module;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
+use App\Models\Topic;
 use App\Models\User;
 use App\Services\AI\AiGateway;
 use App\Support\Tenancy\TenantContext;
@@ -29,8 +30,8 @@ final readonly class GenerateQuiz
     public function handle(Quiz $quiz, User $actor, int $count = 8): int
     {
         return app(TenantContext::class)->run($quiz->tenant, function () use ($quiz, $actor, $count): int {
-            $module = $quiz->lesson?->topic?->module;
-            $vars = $this->vars($module, $count);
+            $topic = $quiz->lesson?->topic;
+            $vars = $this->vars($topic?->module, $count, $topic);
 
             $result = $this->gateway->complete(
                 $actor,
@@ -73,10 +74,22 @@ final readonly class GenerateQuiz
     /**
      * @return array<string, string>
      */
-    private function vars(?Module $module, int $count): array
+    private function vars(?Module $module, int $count, ?Topic $topic = null): array
     {
         $course = $module?->course;
         $topics = $module?->topics()->pluck('name')->implode(', ') ?? '';
+
+        // A day-builder topic (ADR 0049) carries its own keywords/summary — focus
+        // the questions on that single day instead of the whole module.
+        if ($topic !== null && ($topic->keywords !== null || filled($topic->summary))) {
+            $topics = trim(sprintf(
+                '%s%s. %s Keywords: %s',
+                $topic->day_number ? "Day {$topic->day_number}: " : '',
+                $topic->name,
+                (string) ($topic->summary ?? ''),
+                implode(', ', (array) ($topic->keywords ?? [])) ?: $topic->name,
+            ));
+        }
 
         return [
             'count' => (string) $count,
