@@ -125,7 +125,7 @@ it('filters the combined calendar by expertise tag', function () {
 
 /* ---- Booking ---- */
 
-it('books a slot: consumes a credit, creates Zoom, notifies both sides, and self-guards early reminders', function () {
+it('books a slot: consumes a credit, notifies both sides, creates NO Zoom (direct connect), and self-guards early reminders', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     Sanctum::actingAs($student);
 
@@ -133,16 +133,31 @@ it('books a slot: consumes a credit, creates Zoom, notifies both sides, and self
         'mentor_profile_id' => $mentor->id, 'starts_at' => tueTenIst(),
     ])->assertCreated()->assertJsonPath('data.status', 'booked');
 
+    // Direct connect (ADR 0043): the mentor reaches out — no meeting is created.
     $session = MentorSession::withoutGlobalScopes()->sole();
-    expect($session->zoom_meeting_id)->not->toBeNull()
-        ->and($session->join_url)->toContain('zoom.test')
+    expect($session->zoom_meeting_id)->toBeNull()
+        ->and($session->join_url)->toBeNull()
         ->and(app(EntitlementService::class)->balance($student, 'mentor'))->toBe(0)
-        ->and($this->zoom->created[0]['duration'])->toBe(30);
+        ->and($this->zoom->created)->toHaveCount(0);
 
     // Both sides told instantly; reminders armed but silent this far out.
     expect(Message::withoutGlobalScopes()->where('template_key', 'mentor_booked')->count())->toBe(2)
         ->and(Message::withoutGlobalScopes()->where('template_key', 'mentor_reminder')->count())->toBe(0)
         ->and($session->reminded_24h_at)->toBeNull();
+});
+
+it('hands the mentor the student contact for a booked session (direct connect)', function () {
+    ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
+    $student->update(['phone' => '+919876543210', 'email' => 'student@example.com']);
+    Sanctum::actingAs($student);
+    postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $mentor->id, 'starts_at' => tueTenIst()])
+        ->assertCreated();
+
+    Sanctum::actingAs($mentor->user);
+    getJson('/api/v1/me/mentorhub')->assertOk()
+        ->assertJsonPath('data.upcoming.0.student_phone', '+919876543210')
+        ->assertJsonPath('data.upcoming.0.student_email', 'student@example.com')
+        ->assertJsonPath('data.upcoming.0.join_url', null);
 });
 
 it('answers 402 with the mentor top-up when the wallet is empty', function () {
@@ -254,7 +269,7 @@ it('scopes mentors to the student\'s course — a DevOps mentor never reaches a 
 
 /* ---- Cancel / reschedule / reminders ---- */
 
-it('cancels with notice: refunds the credit, deletes Zoom, and tells both sides', function () {
+it('cancels with notice: refunds the credit and tells both sides', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     Sanctum::actingAs($student);
     $id = postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $mentor->id, 'starts_at' => tueTenIst()])
@@ -263,9 +278,24 @@ it('cancels with notice: refunds the credit, deletes Zoom, and tells both sides'
     postJson("/api/v1/me/mentor-sessions/{$id}/cancel")->assertOk()
         ->assertJsonPath('data.status', 'cancelled');
 
+    // Direct-connect sessions never had a meeting, so there is nothing to delete.
     expect(app(EntitlementService::class)->balance($student, 'mentor'))->toBe(1)
-        ->and($this->zoom->deleted)->toHaveCount(1)
+        ->and($this->zoom->deleted)->toHaveCount(0)
         ->and(Message::withoutGlobalScopes()->where('template_key', 'mentor_cancelled')->count())->toBe(2);
+});
+
+it('still cleans up Zoom when cancelling a legacy session that has a meeting', function () {
+    ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
+    $session = MentorSession::factory()->for($this->tenant)->create([
+        'mentor_profile_id' => $mentor->id, 'student_id' => $student->id,
+        'starts_at' => AppTime::parse(tueTenIst()), 'status' => 'booked',
+        'zoom_meeting_id' => 'legacy-1', 'join_url' => 'https://zoom.test/j/legacy',
+    ]);
+    Sanctum::actingAs($student);
+
+    postJson("/api/v1/me/mentor-sessions/{$session->id}/cancel")->assertOk();
+
+    expect($this->zoom->deleted)->toHaveCount(1);
 });
 
 it('refuses a student cancel inside the 4-hour window', function () {
@@ -279,7 +309,7 @@ it('refuses a student cancel inside the 4-hour window', function () {
     expect(MentorSession::withoutGlobalScopes()->sole()->status)->toBe('booked');
 });
 
-it('reschedules to a valid slot, updates Zoom, and re-arms reminders', function () {
+it('reschedules to a valid slot and re-arms reminders (no Zoom involved)', function () {
     ['mentor' => $mentor, 'student' => $student] = mentoringSetup($this->tenant);
     Sanctum::actingAs($student);
     $id = postJson('/api/v1/me/mentor-sessions', ['mentor_profile_id' => $mentor->id, 'starts_at' => tueTenIst()])
@@ -290,7 +320,7 @@ it('reschedules to a valid slot, updates Zoom, and re-arms reminders', function 
         ->assertOk()
         ->assertJsonPath('data.starts_at', $newStart);
 
-    expect($this->zoom->updated)->toHaveCount(1)
+    expect($this->zoom->updated)->toHaveCount(0)
         ->and(Message::withoutGlobalScopes()->where('template_key', 'mentor_rescheduled')->count())->toBe(2);
 
     // A reminder armed for the OLD start time dies on its guard.

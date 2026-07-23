@@ -13,17 +13,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * A scheduled live class backed by a Zoom meeting.
+ * A scheduled live class backed by a Zoom meeting. `kind` separates normal
+ * classes from weekly batch mentoring sessions (same engine, ADR 0043);
+ * `host_user_id` is an explicit host override (the mentoring session's
+ * mentor) — when null the module/lead trainer hosts.
  *
  * @property int $id
  * @property int|null $tenant_id
  * @property int $batch_id
  * @property int|null $topic_id
+ * @property string $kind
+ * @property int|null $host_user_id
  * @property string $title
  * @property Carbon $scheduled_start
  * @property Carbon|null $scheduled_end
  * @property string|null $zoom_meeting_id
  * @property string|null $zoom_join_url
+ * @property int|null $zoom_license_id
  * @property LiveSessionStatus $status
  */
 class LiveSession extends Model
@@ -36,10 +42,14 @@ class LiveSession extends Model
     /** Minutes after the scheduled end the host link stays valid. */
     public const HOST_TRAIL_MINUTES = 60;
 
+    public const KIND_CLASS = 'class';
+
+    public const KIND_MENTORING = 'mentoring';
+
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'batch_id', 'topic_id', 'title', 'scheduled_start', 'scheduled_end',
-        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'status', 'reminder_token', 'auto_record', 'wrapped_up_at',
+        'tenant_id', 'batch_id', 'topic_id', 'kind', 'host_user_id', 'title', 'scheduled_start', 'scheduled_end',
+        'zoom_meeting_id', 'zoom_join_url', 'zoom_start_url', 'zoom_license_id', 'status', 'reminder_token', 'auto_record', 'wrapped_up_at',
     ];
 
     /**
@@ -75,6 +85,16 @@ class LiveSession extends Model
     public function topic(): BelongsTo
     {
         return $this->belongsTo(Topic::class);
+    }
+
+    /**
+     * Explicit per-session host (the mentor of a mentoring session).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function host(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'host_user_id');
     }
 
     /**
@@ -116,7 +136,8 @@ class LiveSession extends Model
 
     /**
      * Whether this staff member may host now: the class is hostable and they are its
-     * assigned trainer (module trainer, falling back to the lead) or an admin.
+     * assigned host — the explicit per-session host when one is set (a mentoring
+     * session's mentor), else the module trainer falling back to the lead — or an admin.
      */
     public function hostableBy(User $user): bool
     {
@@ -126,6 +147,10 @@ class LiveSession extends Model
 
         if ($user->hasRole('admin', 'super-admin')) {
             return true;
+        }
+
+        if ($this->host_user_id !== null) {
+            return (int) $this->host_user_id === (int) $user->id;
         }
 
         $this->batch->loadMissing(['trainer', 'moduleTrainers.trainer']);

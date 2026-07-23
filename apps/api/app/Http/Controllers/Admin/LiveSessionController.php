@@ -45,6 +45,7 @@ final class LiveSessionController extends Controller
         $sessions = $batch->liveSessions()
             ->with([
                 'topic:id,name,module_id',
+                'host:id,name',
                 'recordings:id,live_session_id,title,status,play_url,passcode',
                 'batch.trainer', 'batch.moduleTrainers.trainer',
             ])
@@ -69,9 +70,11 @@ final class LiveSessionController extends Controller
             $request->filled('scheduled_end') ? AppTime::parse($request->string('scheduled_end')->toString()) : null,
             $topic,
             $request->boolean('record', true),
+            $request->input('kind') ?: LiveSession::KIND_CLASS,
+            $this->resolveHost($request, $batch),
         );
 
-        return (new LiveSessionResource($session->load('topic:id,name')))->response()->setStatusCode(201);
+        return (new LiveSessionResource($session->load(['topic:id,name', 'host:id,name'])))->response()->setStatusCode(201);
     }
 
     /**
@@ -92,11 +95,42 @@ final class LiveSessionController extends Controller
             $request->boolean('map_topics'),
             $request->boolean('record', true),
             $this->weekdayTimes($request->array('times')),
+            $request->input('kind') ?: LiveSession::KIND_CLASS,
+            $this->resolveHost($request, $batch),
         );
 
         return LiveSessionResource::collection(
-            collect($created)->each->load('topic:id,name')
+            collect($created)->each->load(['topic:id,name', 'host:id,name'])
         )->response()->setStatusCode(201);
+    }
+
+    /**
+     * The explicit host for a mentoring session must be someone actually on the
+     * batch — its lead trainer, a module trainer, or an allocated mentor — so a
+     * session can never be handed to a stranger (or another tenant's user).
+     */
+    private function resolveHost(ScheduleSessionRequest|ScheduleSeriesRequest $request, Batch $batch): ?int
+    {
+        if (! $request->filled('host_user_id')) {
+            return null;
+        }
+
+        $hostId = (int) $request->integer('host_user_id');
+        $batch->loadMissing(['trainer', 'moduleTrainers', 'batchMentors']);
+
+        $staffIds = collect([$batch->trainer_id])
+            ->merge($batch->moduleTrainers->pluck('user_id'))
+            ->merge($batch->batchMentors->pluck('user_id'))
+            ->filter()
+            ->map(fn ($id) => (int) $id);
+
+        if (! $staffIds->contains($hostId)) {
+            throw ValidationException::withMessages([
+                'host_user_id' => 'The host must be a trainer or mentor allocated to this batch.',
+            ]);
+        }
+
+        return $hostId;
     }
 
     /**
@@ -144,12 +178,16 @@ final class LiveSessionController extends Controller
     }
 
     /**
-     * Hand the assigned trainer (or an admin) the Zoom host `start_url` so they can go
-     * live as host in one tap. Gated + time-windowed by {@see StartLiveSession}; returns
-     * a 422 with the reason (not your class / too early / not ready) when not allowed.
+     * Hand the assigned host (trainer, mentoring-session mentor, or an admin) the Zoom
+     * host `start_url` so they can go live in one tap. The route carries no permission
+     * middleware — a mentor hosting a weekly mentoring session has no teach-classes —
+     * so this endpoint keeps students out itself; who may host is gated + time-windowed
+     * by {@see StartLiveSession}, which 422s with the reason when not allowed.
      */
     public function start(LiveSession $session, StartLiveSession $start): JsonResponse
     {
+        abort_unless(request()->user()?->user_type === 'staff', 403);
+
         $url = $start->handle($session, request()->user());
 
         return response()->json(['data' => ['start_url' => $url]]);

@@ -27,6 +27,8 @@ final class LiveSessionResource extends JsonResource
             'scheduled_start' => $this->scheduled_start?->toIso8601String(),
             'scheduled_end' => $this->scheduled_end?->toIso8601String(),
             'status' => $this->status->value,
+            'kind' => $this->kind ?? LiveSession::KIND_CLASS,
+            'host' => $this->whenLoaded('host', fn () => $this->host?->name),
             'auto_record' => (bool) $this->auto_record,
             'topic' => $this->whenLoaded('topic', fn () => $this->topic?->name),
             'has_meeting' => $this->zoom_meeting_id !== null,

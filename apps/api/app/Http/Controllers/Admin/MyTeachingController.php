@@ -101,17 +101,24 @@ final class MyTeachingController extends Controller
             ->limit(50)
             ->get()
             ->map(function (LiveSession $session) use ($userId, $isAdmin, $batchModels, $now): array {
-                $batch = $batchModels->get($session->batch_id);
-                $teacher = $batch?->trainerForModule($session->topic?->module_id);
-                $youTeach = $teacher !== null && (int) $teacher->id === $userId;
+                // An explicit per-session host (a mentoring session's mentor) wins;
+                // otherwise the module trainer falling back to the lead teaches.
+                if ($session->host_user_id !== null) {
+                    $youTeach = (int) $session->host_user_id === $userId;
+                } else {
+                    $batch = $batchModels->get($session->batch_id);
+                    $teacher = $batch?->trainerForModule($session->topic?->module_id);
+                    $youTeach = $teacher !== null && (int) $teacher->id === $userId;
+                }
 
-                // The assigned teacher (or any admin) may go live as host within the
-                // host window — mirrors StartLiveSession, which enforces it server-side.
+                // The assigned host (or any admin) may go live within the host
+                // window — mirrors StartLiveSession, which enforces it server-side.
                 $canStart = ($youTeach || $isAdmin) && $session->hostWindowOpen($now) && $session->zoom_start_url !== null;
 
                 return [
                     'id' => $session->id,
                     'title' => $session->title,
+                    'kind' => $session->kind ?? LiveSession::KIND_CLASS,
                     'batch_number' => $session->batch?->number,
                     'course_code' => $session->batch?->course?->code,
                     'topic' => $session->topic?->name,

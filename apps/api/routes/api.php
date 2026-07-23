@@ -545,13 +545,17 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     // a trainer, a per-module trainer and a mentor all see their side of the batch.
     Route::get('my-teaching', [MyTeachingController::class, 'index']);
 
+    // Go live as host. Self-gating (StartLiveSession only hands the host link to the
+    // session's assigned host — trainer or mentoring-session mentor — or an admin), so
+    // no permission middleware: a mentor hosting a weekly mentoring session (ADR 0043)
+    // has no teach-classes permission but must still be able to start their session.
+    Route::post('sessions/{session}/start', [LiveSessionController::class, 'start']);
+
     // Live-class scheduling (PRD §6.3). Reschedule/cancel auto-notify the batch.
     Route::middleware('can:teach-classes')->group(function () {
         Route::get('batches/{batch}/sessions', [LiveSessionController::class, 'index']);
         Route::post('batches/{batch}/sessions', [LiveSessionController::class, 'store']);
         Route::post('batches/{batch}/sessions/series', [LiveSessionController::class, 'storeSeries']);
-        // Go live as host: hands the assigned trainer/admin the Zoom host start_url.
-        Route::post('sessions/{session}/start', [LiveSessionController::class, 'start']);
         // Repair: create the Zoom meeting for a class that has none (e.g. scheduled
         // before Zoom was connected).
         Route::post('sessions/{session}/create-meeting', [LiveSessionController::class, 'createMeeting']);

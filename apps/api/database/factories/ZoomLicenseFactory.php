@@ -22,7 +22,6 @@ class ZoomLicenseFactory extends Factory
             'tenant_id' => Tenant::factory(),
             'label' => 'License '.fake()->numberBetween(1, 20),
             'zoom_user_id' => fake()->unique()->safeEmail(),
-            'mentor_id' => null,
             'active' => true,
         ];
     }

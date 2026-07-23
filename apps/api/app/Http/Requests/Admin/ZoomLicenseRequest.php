@@ -7,7 +7,8 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Create or update a Zoom host license and its mentor allocation (PRD §6.3).
+ * Create or update a Zoom host license (PRD §6.3). Licenses auto-rotate across
+ * whoever is teaching (ADR 0043), so there is no per-person allocation here.
  */
 final class ZoomLicenseRequest extends FormRequest
 {
@@ -24,7 +25,6 @@ final class ZoomLicenseRequest extends FormRequest
         return [
             'label' => ['required', 'string', 'max:120'],
             'zoom_user_id' => ['required', 'string', 'max:200'],
-            'mentor_id' => ['nullable', 'integer'],
             'active' => ['nullable', 'boolean'],
         ];
     }

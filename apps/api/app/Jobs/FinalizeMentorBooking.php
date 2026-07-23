@@ -9,7 +9,6 @@ use App\Models\MentorSession;
 use App\Models\Tenant;
 use App\Support\Messaging\Messenger;
 use App\Support\Tenancy\TenantContext;
-use App\Support\Zoom\ZoomClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,10 +16,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Post-booking pipeline (PRD §6.11): Zoom auto-create → instant both-side
+ * Post-booking pipeline (PRD §6.11, ADR 0043): instant both-side
  * notifications (WhatsApp/email via Messenger + dashboard cards; the email
- * carries the .ics link) → arm the T-24h and T-1h reminders. Queued —
- * booking answers instantly, Zoom latency never blocks the request.
+ * carries the .ics link) → arm the T-24h and T-1h reminders. 1:1 sessions
+ * are direct-connect — no Zoom meeting is created; the mentor sees the
+ * student's contact on their Mentoring page and reaches out at the slot.
  */
 final class FinalizeMentorBooking implements ShouldQueue
 {
@@ -31,7 +31,7 @@ final class FinalizeMentorBooking implements ShouldQueue
 
     public function __construct(public readonly int $sessionId) {}
 
-    public function handle(ZoomClient $zoom, Messenger $messenger): void
+    public function handle(Messenger $messenger): void
     {
         $session = MentorSession::query()->withoutGlobalScopes()
             ->with(['mentor.user', 'student'])
@@ -45,24 +45,10 @@ final class FinalizeMentorBooking implements ShouldQueue
             return;
         }
 
-        app(TenantContext::class)->run($tenant, function () use ($session, $zoom, $messenger): void {
+        app(TenantContext::class)->run($tenant, function () use ($session, $messenger): void {
             $student = $session->student;
             $mentorUser = $session->mentor?->user;
             $label = $session->purpose === MentorSession::PURPOSE_PLACEMENT ? 'Placement interview' : 'Mentor session';
-
-            if ($session->zoom_meeting_id === null) {
-                $meeting = $zoom->createMeeting(
-                    "{$label}: {$student?->name} × {$mentorUser?->name}",
-                    $session->starts_at->toImmutable(),
-                    $session->duration_minutes,
-                );
-
-                $session->update([
-                    'zoom_meeting_id' => $meeting->id,
-                    'join_url' => $meeting->joinUrl,
-                    'start_url' => $meeting->startUrl,
-                ]);
-            }
 
             $when = $session->starts_at->copy()
                 ->setTimezone((string) config('mentoring.timezone', 'Asia/Kolkata'))
@@ -81,7 +67,7 @@ final class FinalizeMentorBooking implements ShouldQueue
                     'tenant_id' => $session->tenant_id,
                     'user_id' => $student->id,
                     'title' => "{$label} booked — {$when}",
-                    'body' => "With {$mentorUser?->name}. The join link and calendar invite are on your Mentors page.",
+                    'body' => "With {$mentorUser?->name}. Your mentor will connect with you directly at the scheduled time — the calendar invite is on your Mentors page.",
                     'url' => '/mentors',
                 ]);
             }
@@ -98,7 +84,7 @@ final class FinalizeMentorBooking implements ShouldQueue
                     'tenant_id' => $session->tenant_id,
                     'user_id' => $mentorUser->id,
                     'title' => "New {$label} — {$when}",
-                    'body' => "With {$student?->name}.",
+                    'body' => "With {$student?->name}. Their contact is on your Mentoring page — you connect directly.",
                     'url' => '/admin/mentoring',
                 ]);
             }

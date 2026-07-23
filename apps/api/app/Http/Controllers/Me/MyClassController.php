@@ -35,6 +35,7 @@ final class MyClassController extends Controller
                 'data' => $sessions->map(fn (LiveSession $s) => [
                     'id' => $s->id,
                     'title' => $s->title,
+                    'kind' => $s->kind ?? LiveSession::KIND_CLASS,
                     'batch' => $s->batch?->number,
                     'topic' => $s->topic?->name,
                     'scheduled_start' => $s->scheduled_start?->toIso8601String(),

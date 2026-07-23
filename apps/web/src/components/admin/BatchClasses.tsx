@@ -11,10 +11,14 @@ type Session = {
   scheduled_start: string | null;
   scheduled_end: string | null;
   status: string;
+  kind: string;
+  host: string | null;
   has_meeting: boolean;
   can_start: boolean;
   recordings?: Recording[];
 };
+type Person = { id: number; name: string };
+type StaffPayload = { lead_trainer_id: number | null; mentor_ids: number[]; trainers: Person[]; mentors: Person[] };
 
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "bg-sky text-deep",
@@ -47,7 +51,7 @@ export function BatchClasses({ batchId }: { batchId: string }) {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [schedule, setSchedule] = useState({ title: "", start: "", end: "", record: true });
+  const [schedule, setSchedule] = useState({ title: "", start: "", end: "", record: true, kind: "class", hostId: "" });
   const [reschedulingId, setReschedulingId] = useState<number | null>(null);
   const [reschedule, setReschedule] = useState({ start: "", reason: "" });
   const [showSeries, setShowSeries] = useState(false);
@@ -55,6 +59,7 @@ export function BatchClasses({ batchId }: { batchId: string }) {
     startDate: "", time: "18:00", duration: 90, count: 10,
     weekdays: [1, 2, 3, 4, 5], mapTopics: true, record: true,
     perDayTime: false, times: {} as Record<number, string>,
+    kind: "class", hostId: "",
   });
   const [seriesMsg, setSeriesMsg] = useState<string | null>(null);
 
@@ -62,6 +67,23 @@ export function BatchClasses({ batchId }: { batchId: string }) {
     queryKey: ["admin", "batch-sessions", batchId],
     queryFn: () => apiJson<{ data: Session[] }>(`/api/v1/admin/batches/${batchId}/sessions`),
   });
+
+  // The batch's allocated staff, for the mentoring-session host picker. A viewer
+  // without manage-batches simply gets no picker (the query is left to fail quietly).
+  const staffQuery = useQuery({
+    queryKey: ["admin", "batch-trainers", batchId],
+    queryFn: () => apiJson<{ data: StaffPayload }>(`/api/v1/admin/batches/${batchId}/module-trainers`),
+    retry: false,
+  });
+  const staff = staffQuery.data?.data;
+  // Mentors allocated to this batch first — they are the natural weekly-session hosts —
+  // then the lead trainer as a fallback option.
+  const hostOptions: Person[] = staff
+    ? [
+        ...staff.mentors.filter((m) => staff.mentor_ids.includes(m.id)),
+        ...staff.trainers.filter((t) => t.id === staff.lead_trainer_id),
+      ]
+    : [];
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "batch-sessions", batchId] });
   const onError = (err: unknown) =>
@@ -76,9 +98,11 @@ export function BatchClasses({ batchId }: { batchId: string }) {
           scheduled_start: toIso(schedule.start),
           scheduled_end: schedule.end ? toIso(schedule.end) : null,
           record: schedule.record,
+          kind: schedule.kind,
+          host_user_id: schedule.kind === "mentoring" && schedule.hostId ? Number(schedule.hostId) : null,
         }),
       }),
-    onSuccess: () => { setSchedule({ title: "", start: "", end: "", record: true }); setError(null); void refresh(); },
+    onSuccess: () => { setSchedule({ title: "", start: "", end: "", record: true, kind: "class", hostId: "" }); setError(null); void refresh(); },
     onError,
   });
 
@@ -130,13 +154,15 @@ export function BatchClasses({ batchId }: { batchId: string }) {
           duration_minutes: series.duration,
           count: series.count,
           start_date: series.startDate,
-          map_topics: series.mapTopics,
+          map_topics: series.kind === "mentoring" ? false : series.mapTopics,
           record: series.record,
+          kind: series.kind,
+          host_user_id: series.kind === "mentoring" && series.hostId ? Number(series.hostId) : null,
         }),
       }),
     onSuccess: (res) => {
       setError(null);
-      setSeriesMsg(`Scheduled ${res.data.length} class${res.data.length === 1 ? "" : "es"}.`);
+      setSeriesMsg(`Scheduled ${res.data.length} session${res.data.length === 1 ? "" : "s"}.`);
       void refresh();
     },
     onError: (err) => { setSeriesMsg(null); onError(err); },
@@ -179,12 +205,34 @@ export function BatchClasses({ batchId }: { batchId: string }) {
         onSubmit={(e) => { e.preventDefault(); create.mutate(); }}
         className="mt-4 rounded-[14px] border border-line bg-white p-5"
       >
-        <p className="kicker text-muted">Schedule a class</p>
+        <p className="kicker text-muted">Schedule a session</p>
         <div className="mt-3 space-y-2.5">
+          <div className="flex flex-wrap gap-2.5">
+            <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Type
+              <select value={schedule.kind} onChange={(e) => setSchedule({ ...schedule, kind: e.target.value })} className={inputCls}>
+                <option value="class">Class</option>
+                <option value="mentoring">Mentoring · doubt clearing</option>
+              </select>
+            </label>
+            {schedule.kind === "mentoring" && (
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Host (mentor)
+                <select value={schedule.hostId} onChange={(e) => setSchedule({ ...schedule, hostId: e.target.value })} className={inputCls}>
+                  <option value="">Pick a host…</option>
+                  {hostOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+            )}
+          </div>
+          {schedule.kind === "mentoring" && hostOptions.length === 0 && (
+            <p className="text-xs text-muted">
+              No mentors allocated to this batch yet — add one under Trainers &amp; mentors above.
+            </p>
+          )}
           <input
             required value={schedule.title}
             onChange={(e) => setSchedule({ ...schedule, title: e.target.value })}
-            placeholder="Class title, e.g. SQL — Window functions" className={`${inputCls} w-full`} maxLength={200}
+            placeholder={schedule.kind === "mentoring" ? "Session title, e.g. Weekly doubt clearing" : "Class title, e.g. SQL — Window functions"}
+            className={`${inputCls} w-full`} maxLength={200}
           />
           <div className="flex flex-wrap gap-2.5">
             <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Starts
@@ -204,10 +252,10 @@ export function BatchClasses({ batchId }: { batchId: string }) {
           </label>
         </div>
         <button
-          disabled={create.isPending || !schedule.title || !schedule.start}
+          disabled={create.isPending || !schedule.title || !schedule.start || (schedule.kind === "mentoring" && !schedule.hostId)}
           className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {create.isPending ? "Scheduling…" : "Schedule class"}
+          {create.isPending ? "Scheduling…" : schedule.kind === "mentoring" ? "Schedule mentoring session" : "Schedule class"}
         </button>
       </form>
 
@@ -220,13 +268,37 @@ export function BatchClasses({ batchId }: { batchId: string }) {
         >
           <span>
             <span className="kicker text-muted">Schedule a recurring series</span>
-            <span className="mt-0.5 block text-xs text-muted">Generate the whole calendar in one go — daily or on set days.</span>
+            <span className="mt-0.5 block text-xs text-muted">
+              Generate the whole calendar in one go — daily classes, or a weekly mentoring session hosted by a mentor.
+            </span>
           </span>
           <span className="mono text-lg text-muted">{showSeries ? "−" : "+"}</span>
         </button>
 
         {showSeries && (
           <form onSubmit={(e) => { e.preventDefault(); createSeries.mutate(); }} className="mt-4 space-y-3">
+            <div className="flex flex-wrap gap-2.5">
+              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Type
+                <select value={series.kind} onChange={(e) => setSeries({ ...series, kind: e.target.value })} className={inputCls}>
+                  <option value="class">Classes</option>
+                  <option value="mentoring">Weekly mentoring · doubt clearing</option>
+                </select>
+              </label>
+              {series.kind === "mentoring" && (
+                <label className="flex flex-1 flex-col gap-1 text-xs text-muted">Host (mentor)
+                  <select value={series.hostId} onChange={(e) => setSeries({ ...series, hostId: e.target.value })} className={inputCls}>
+                    <option value="">Pick a host…</option>
+                    {hostOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </label>
+              )}
+            </div>
+            {series.kind === "mentoring" && (
+              <p className="text-xs text-muted">
+                Runs on the class engine: auto Zoom meeting, reminders, recording, and the Start button on the
+                mentor&rsquo;s teaching board. Pick one weekday below for a weekly cadence.
+              </p>
+            )}
             <div>
               <span className="text-xs text-muted">Quick pick</span>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -303,12 +375,14 @@ export function BatchClasses({ batchId }: { batchId: string }) {
                   onChange={(e) => setSeries({ ...series, count: Number(e.target.value) })} className={inputCls} />
               </label>
             </div>
-            <label className="flex items-center gap-2 text-sm text-ink">
-              <input type="checkbox" checked={series.mapTopics}
-                onChange={(e) => setSeries({ ...series, mapTopics: e.target.checked })}
-                className="h-4 w-4 rounded border-line text-trust" />
-              Title classes from the syllabus (one topic per class, in order)
-            </label>
+            {series.kind === "class" && (
+              <label className="flex items-center gap-2 text-sm text-ink">
+                <input type="checkbox" checked={series.mapTopics}
+                  onChange={(e) => setSeries({ ...series, mapTopics: e.target.checked })}
+                  className="h-4 w-4 rounded border-line text-trust" />
+                Title classes from the syllabus (one topic per class, in order)
+              </label>
+            )}
             <label className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" checked={series.record}
                 onChange={(e) => setSeries({ ...series, record: e.target.checked })}
@@ -317,7 +391,7 @@ export function BatchClasses({ batchId }: { batchId: string }) {
             </label>
             {seriesMsg && <p className="mono text-xs text-verify">{seriesMsg}</p>}
             <button
-              disabled={createSeries.isPending || series.weekdays.length === 0 || !series.startDate || !series.time}
+              disabled={createSeries.isPending || series.weekdays.length === 0 || !series.startDate || !series.time || (series.kind === "mentoring" && !series.hostId)}
               className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               {createSeries.isPending ? "Scheduling…" : "Schedule series"}
@@ -339,8 +413,15 @@ export function BatchClasses({ batchId }: { batchId: string }) {
             <div key={s.id} className="px-5 py-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="min-w-40 flex-1">
-                  <span className="block font-semibold text-ink">{s.title}</span>
-                  <span className="mono block text-xs text-muted">{fmt(s.scheduled_start)}</span>
+                  <span className="flex items-center gap-2 font-semibold text-ink">
+                    {s.title}
+                    {s.kind === "mentoring" && (
+                      <span className="mono rounded-full bg-sky px-2 py-0.5 text-[10px] uppercase tracking-widest text-deep">Mentoring</span>
+                    )}
+                  </span>
+                  <span className="mono block text-xs text-muted">
+                    {fmt(s.scheduled_start)}{s.host ? ` · hosted by ${s.host}` : ""}
+                  </span>
                 </span>
                 <span className={`mono rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${STATUS_STYLES[s.status] ?? "bg-paper text-muted"}`}>
                   {s.status}

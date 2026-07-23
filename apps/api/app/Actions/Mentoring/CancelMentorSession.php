@@ -15,8 +15,9 @@ use Illuminate\Validation\ValidationException;
 /**
  * Cancels a session (PRD §6.11). Students are held to the 4-hour notice
  * rule; mentors/staff can cancel any time. Every cancellation refunds the
- * credit — the student only ever loses one by not showing up. Zoom cleanup
- * is queued; both sides are told immediately.
+ * credit — the student only ever loses one by not showing up. Both sides are
+ * told immediately. 1:1s are direct-connect (ADR 0043); only a legacy
+ * session that still carries a Zoom meeting gets queued cleanup.
  */
 final readonly class CancelMentorSession
 {

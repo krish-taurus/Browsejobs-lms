@@ -7,6 +7,8 @@ import { ApiError, apiJson } from "@/lib/api";
 type HubSession = {
   id: number;
   student: string | null;
+  student_phone: string | null;
+  student_email: string | null;
   purpose: string;
   status: string;
   no_show_side: string | null;
@@ -153,6 +155,14 @@ export default function MentoringHubPage() {
             </span>
           </p>
           <p className="text-xs text-muted">{ist(s.starts_at)} IST</p>
+          {/* Direct connect: no Zoom — the mentor reaches out on these details at the slot. */}
+          {s.status === "booked" && (s.student_phone || s.student_email) && (
+            <p className="mono mt-1 text-xs text-ink">
+              {s.student_phone && <a href={`tel:${s.student_phone}`} className="text-trust hover:underline">{s.student_phone}</a>}
+              {s.student_phone && s.student_email && <span className="text-muted"> · </span>}
+              {s.student_email && <a href={`mailto:${s.student_email}`} className="text-trust hover:underline">{s.student_email}</a>}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {s.join_url && s.status === "booked" && (
@@ -178,6 +188,10 @@ export default function MentoringHubPage() {
       <p className="mt-1 text-sm text-muted">
         {data.profile.headline ?? "Your sessions and availability."}
         {data.profile.rating !== null && <span className="text-amber"> · ★ {data.profile.rating}</span>}
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        1:1 sessions are direct-connect — call or message the student on the contact shown at the
+        scheduled time. No Zoom link is created for 1:1s.
       </p>
       {error && <p className="mt-3 text-sm text-warn">{error}</p>}
 

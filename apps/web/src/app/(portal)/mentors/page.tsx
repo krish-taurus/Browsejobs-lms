@@ -80,7 +80,7 @@ export default function MentorsPage() {
         method: "POST",
         body: JSON.stringify({ mentor_profile_id: slot.mentor_profile_id, starts_at: slot.starts_at }),
       });
-      setNotice("Booked! The Zoom link and calendar invite are on their way — see My sessions below.");
+      setNotice("Booked! Your mentor will connect with you directly at the scheduled time — see My sessions below.");
       load();
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
@@ -129,8 +129,8 @@ export default function MentorsPage() {
         <span className="mono text-xs text-muted">{data.credits} session{data.credits === 1 ? "" : "s"} left</span>
       </div>
       <p className="mt-1 text-sm text-muted">
-        Book a 1:1 with a mentor — pick any open slot below (times in IST). Finish a module to earn
-        extra sessions.
+        Book a 1:1 with a mentor — pick any open slot below (times in IST). Your mentor connects
+        with you directly at the scheduled time. Finish a module to earn extra sessions.
       </p>
 
       {error && <p className="mt-3 text-sm text-warn">{error}</p>}
@@ -237,6 +237,9 @@ export default function MentorsPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   {s.status === "booked" && s.join_url && (
                     <a href={s.join_url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-trust px-4 py-1.5 text-xs font-semibold text-white">Join</a>
+                  )}
+                  {s.status === "booked" && !s.join_url && (
+                    <span className="text-xs text-muted">Your mentor will contact you directly</span>
                   )}
                   {s.status === "booked" && (
                     <a href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1/me/mentor-sessions/${s.id}/ics`} className="text-xs text-trust hover:underline">.ics</a>

@@ -45,14 +45,19 @@ final readonly class ScheduleBatchSeries
         bool $mapTopics = false,
         bool $record = true,
         array $weekdayTimes = [],
+        string $kind = LiveSession::KIND_CLASS,
+        ?int $hostUserId = null,
     ): array {
         $weekdays = array_values(array_unique(array_filter($weekdays, fn ($d) => $d >= 1 && $d <= 7)));
         if ($weekdays === [] || $count < 1) {
             return [];
         }
 
+        // Mentoring sessions are doubt-clearing, not syllabus delivery — never map topics.
+        $mapTopics = $mapTopics && $kind === LiveSession::KIND_CLASS;
         $topics = $mapTopics ? $this->syllabusTopics($batch) : collect();
-        $prefix = trim((string) ($titlePrefix ?? 'Class')) ?: 'Class';
+        $default = $kind === LiveSession::KIND_MENTORING ? 'Mentoring session' : 'Class';
+        $prefix = trim((string) ($titlePrefix ?? $default)) ?: $default;
 
         $created = [];
         $cursor = $startDate->startOfDay();
@@ -77,6 +82,8 @@ final readonly class ScheduleBatchSeries
                         $start->addMinutes($durationMinutes),
                         $topic,
                         $record,
+                        $kind,
+                        $hostUserId,
                     );
                 }
             }

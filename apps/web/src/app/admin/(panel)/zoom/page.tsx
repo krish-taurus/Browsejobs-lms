@@ -9,11 +9,8 @@ type License = {
   id: number;
   label: string;
   zoom_user_id: string;
-  mentor_id: number | null;
-  mentor: string | null;
   active: boolean;
 };
-type Staff = { id: number; name: string };
 
 const inputCls =
   "rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
@@ -21,11 +18,11 @@ const inputCls =
 export default function AdminZoomPage() {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ label: "", zoom_user_id: "", mentor_id: "" });
+  const [form, setForm] = useState({ label: "", zoom_user_id: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "zoom-licenses"],
-    queryFn: () => apiJson<{ data: License[]; assignable: Staff[] }>("/api/v1/admin/zoom-licenses"),
+    queryFn: () => apiJson<{ data: License[] }>("/api/v1/admin/zoom-licenses"),
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "zoom-licenses"] });
@@ -35,21 +32,17 @@ export default function AdminZoomPage() {
     mutationFn: () =>
       apiJson("/api/v1/admin/zoom-licenses", {
         method: "POST",
-        body: JSON.stringify({
-          label: form.label,
-          zoom_user_id: form.zoom_user_id,
-          mentor_id: form.mentor_id ? Number(form.mentor_id) : null,
-        }),
+        body: JSON.stringify({ label: form.label, zoom_user_id: form.zoom_user_id }),
       }),
-    onSuccess: () => { setForm({ label: "", zoom_user_id: "", mentor_id: "" }); setError(null); void refresh(); },
+    onSuccess: () => { setForm({ label: "", zoom_user_id: "" }); setError(null); void refresh(); },
     onError,
   });
 
-  const allocate = useMutation({
-    mutationFn: (l: License & { mentor_id: number | null }) =>
+  const toggle = useMutation({
+    mutationFn: (l: License) =>
       apiJson(`/api/v1/admin/zoom-licenses/${l.id}`, {
         method: "PUT",
-        body: JSON.stringify({ label: l.label, zoom_user_id: l.zoom_user_id, mentor_id: l.mentor_id, active: l.active }),
+        body: JSON.stringify({ label: l.label, zoom_user_id: l.zoom_user_id, active: !l.active }),
       }),
     onSuccess: () => { setError(null); void refresh(); },
     onError,
@@ -62,15 +55,15 @@ export default function AdminZoomPage() {
   });
 
   const licenses = data?.data ?? [];
-  const staff = data?.assignable ?? [];
 
   return (
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">Live classes</p>
       <h1 className="display mt-2 text-3xl text-ink">Zoom licenses</h1>
       <p className="mt-1 text-sm text-muted">
-        Each license is a Zoom host. Allocate one per mentor so two mentors can teach at the same time —
-        a batch&rsquo;s classes run on its trainer&rsquo;s license and record to the cloud by default.
+        Each license is a Zoom host account. Licenses rotate automatically: every class claims
+        whichever license is free at its time slot, so two licenses cover any two overlapping
+        classes — no matter which trainer is teaching. Nothing is dedicated to one person.
       </p>
 
       {error && <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{error}</p>}
@@ -80,10 +73,6 @@ export default function AdminZoomPage() {
         <div className="mt-3 flex flex-wrap gap-2.5">
           <input required value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="Label, e.g. Host 1" className={`${inputCls} min-w-40 flex-1`} />
           <input required value={form.zoom_user_id} onChange={(e) => setForm({ ...form, zoom_user_id: e.target.value })} placeholder="Zoom user / email" className={`${inputCls} min-w-52 flex-1`} />
-          <select value={form.mentor_id} onChange={(e) => setForm({ ...form, mentor_id: e.target.value })} className={`${inputCls} w-44`}>
-            <option value="">Unassigned</option>
-            {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
         </div>
         <button disabled={create.isPending || !form.label || !form.zoom_user_id} className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {create.isPending ? "Adding…" : "Add license"}
@@ -102,14 +91,12 @@ export default function AdminZoomPage() {
                 <span className="block font-semibold text-ink">{l.label}</span>
                 <span className="mono block text-xs text-muted">{l.zoom_user_id}</span>
               </span>
-              <select
-                value={l.mentor_id ?? ""}
-                onChange={(e) => allocate.mutate({ ...l, mentor_id: e.target.value ? Number(e.target.value) : null })}
-                className={`${inputCls} w-44 py-1.5`}
-              >
-                <option value="">Unassigned</option>
-                {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <span className={`mono rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${l.active ? "bg-verify-bg text-verify" : "bg-paper text-muted"}`}>
+                {l.active ? "In rotation" : "Paused"}
+              </span>
+              <button onClick={() => toggle.mutate(l)} className="text-xs font-semibold text-trust hover:underline">
+                {l.active ? "Pause" : "Resume"}
+              </button>
               <button onClick={() => remove.mutate(l.id)} className="text-xs font-semibold text-warn hover:underline">Delete</button>
             </div>
           ))}

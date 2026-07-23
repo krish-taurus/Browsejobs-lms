@@ -66,17 +66,20 @@ final class SendMentorReminder implements ShouldQueue
             $when = $session->starts_at->copy()
                 ->setTimezone((string) config('mentoring.timezone', 'Asia/Kolkata'))
                 ->format('D, j M · g:i A').' IST';
+            $frontend = rtrim((string) config('app.frontend_url', ''), '/');
 
+            // Direct-connect sessions (ADR 0043): each side's link is their own
+            // session page, where the mentor also finds the student's contact.
             foreach ([
-                [$session->student, (string) $session->mentor?->user?->name],
-                [$session->mentor?->user, (string) $session->student?->name],
-            ] as [$recipient, $with]) {
+                [$session->student, (string) $session->mentor?->user?->name, "{$frontend}/mentors"],
+                [$session->mentor?->user, (string) $session->student?->name, "{$frontend}/admin/mentoring"],
+            ] as [$recipient, $with, $link]) {
                 if ($recipient !== null) {
                     $messenger->send($recipient, 'mentor_reminder', [
                         'name' => $recipient->name,
                         'with' => $with,
                         'when' => $when,
-                        'link' => (string) $session->join_url,
+                        'link' => $link,
                     ]);
                 }
             }

@@ -171,6 +171,12 @@ final class MentorBookingController extends Controller
             $start = $model->starts_at->copy()->utc()->format('Ymd\THis\Z');
             $end = $model->starts_at->copy()->addMinutes($model->duration_minutes)->utc()->format('Ymd\THis\Z');
 
+            // Direct connect (ADR 0043): no meeting link — the mentor reaches
+            // out at the slot. Legacy sessions may still carry a join URL.
+            $description = $model->join_url !== null
+                ? "Join: {$model->join_url}"
+                : 'Your mentor will connect with you directly at the scheduled time.';
+
             $ics = implode("\r\n", [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
@@ -181,7 +187,7 @@ final class MentorBookingController extends Controller
                 "DTSTART:{$start}",
                 "DTEND:{$end}",
                 "SUMMARY:{$label} with {$model->mentor?->user?->name}",
-                "DESCRIPTION:Join: {$model->join_url}",
+                "DESCRIPTION:{$description}",
                 $model->join_url !== null ? "URL:{$model->join_url}" : 'URL:',
                 'END:VEVENT',
                 'END:VCALENDAR',
