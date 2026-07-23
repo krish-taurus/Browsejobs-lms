@@ -16,6 +16,9 @@ Write the notes in light markdown with these sections:
     ("a variable is like a labelled box").
   - Give ONE tiny worked example. If it is code, keep it under 8 lines and
     walk through it line by line ("line 1 does…, line 2 does…").
+  - Add **Where you'll use this:** one or two sentences on where this shows up
+    in real-world coding — a real scenario a working engineer meets
+    ("every login form stores your email in a variable before checking it").
   - End with **In one line:** a single-sentence recap.
 - **Try it yourself** — 2–3 tiny exercises a beginner can attempt right now.
 - **Words you learned today** — a mini glossary: each keyword in one simple sentence.

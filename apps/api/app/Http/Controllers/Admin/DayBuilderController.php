@@ -43,9 +43,26 @@ final class DayBuilderController extends Controller
 
         $days = $topics->map(function (Topic $topic) use ($notes, $quizzes): array {
             $noteLesson = $topic->lessons->first(fn ($l) => $l->type->value === 'notes');
-            $quizLesson = $topic->lessons->first(fn ($l) => $l->type->value === 'quiz');
             $note = $noteLesson !== null ? $notes->get($noteLesson->id) : null;
-            $quiz = $quizLesson !== null ? $quizzes->get($quizLesson->id) : null;
+
+            // A chapter can carry several numbered assignments (each quiz id is
+            // the unique code sent to candidates).
+            $assignments = $topic->lessons
+                ->filter(fn ($l) => $l->type->value === 'quiz')
+                ->sortBy('position')
+                ->map(fn ($l) => $quizzes->get($l->id))
+                ->filter()
+                ->values()
+                ->map(fn (Quiz $quiz) => [
+                    'lesson_id' => $quiz->lesson_id,
+                    'quiz_id' => $quiz->id,
+                    'code' => sprintf('A-%05d', $quiz->id),
+                    'title' => $quiz->title,
+                    'status' => $quiz->status->value,
+                    'questions' => (int) $quiz->questions_count,
+                    'has_pdf' => filled($quiz->pdf_path),
+                    'pdf_uploaded' => (bool) $quiz->pdf_uploaded,
+                ]);
 
             return [
                 'id' => $topic->id,
@@ -60,14 +77,7 @@ final class DayBuilderController extends Controller
                     'has_pdf' => filled($note->pdf_path),
                     'pdf_uploaded' => (bool) $note->pdf_uploaded,
                 ],
-                'assignment' => $quiz === null ? null : [
-                    'lesson_id' => $quiz->lesson_id,
-                    'quiz_id' => $quiz->id,
-                    'status' => $quiz->status->value,
-                    'questions' => (int) $quiz->questions_count,
-                    'has_pdf' => filled($quiz->pdf_path),
-                    'pdf_uploaded' => (bool) $quiz->pdf_uploaded,
-                ],
+                'assignments' => $assignments,
             ];
         });
 
@@ -142,13 +152,20 @@ final class DayBuilderController extends Controller
         ]], 201);
     }
 
-    /** Generate the day's MCQ assignment as a draft quiz. */
+    /** Generate a new MCQ assignment for the chapter — from its notes, never before them. */
     public function assignment(Request $request, Topic $topic, GenerateTopicAssignment $generate): JsonResponse
     {
         $count = (int) $request->input('count', 8);
         abort_unless($count >= 3 && $count <= 20, 422, 'Question count must be 3–20.');
 
-        $result = $generate->handle($topic, $request->user(), $count);
+        $note = GenerateTopicAssignment::notesFor($topic);
+        if ($note === null) {
+            return response()->json([
+                'error' => ['code' => 'notes_required', 'message' => 'Create this chapter\'s notes first — assignments are generated from them.'],
+            ], 422);
+        }
+
+        $result = $generate->handle($topic, $request->user(), $note, $count);
 
         if ($result['written'] === 0) {
             return response()->json([
@@ -158,6 +175,7 @@ final class DayBuilderController extends Controller
 
         return response()->json(['data' => [
             'quiz_id' => $result['quiz']->id,
+            'code' => sprintf('A-%05d', $result['quiz']->id),
             'lesson_id' => $result['quiz']->lesson_id,
             'questions' => $result['written'],
             'status' => $result['quiz']->status->value,
