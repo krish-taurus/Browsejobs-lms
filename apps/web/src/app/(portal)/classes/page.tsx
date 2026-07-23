@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 type LiveClass = {
   id: number;
   title: string;
+  kind: string;
   batch: string | null;
   topic: string | null;
   scheduled_start: string | null;
@@ -151,6 +152,9 @@ export default function ClassesPage() {
                           <span className="min-w-40 flex-1">
                             <span className="flex items-center gap-2">
                               <span className="font-semibold text-ink">{c.title}</span>
+                              {c.kind === "mentoring" && (
+                                <span className="mono rounded-full bg-sky px-2 py-0.5 text-[10px] uppercase tracking-widest text-deep">Mentoring</span>
+                              )}
                               {c.status === "live" && (
                                 <span className="rounded-full bg-verify/10 px-2 py-0.5 text-[10px] font-semibold text-verify">Live now</span>
                               )}

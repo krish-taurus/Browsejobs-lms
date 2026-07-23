@@ -19,8 +19,9 @@ use Illuminate\Validation\ValidationException;
  * Books a 1:1 (PRD §6.11). The slot is re-validated through the same
  * SlotFinder math the calendar shows, the double-book race is settled under
  * a row lock, and one mentor credit is consumed inside the same transaction
- * — booking and payment can never disagree. Zoom + notifications +
- * reminders run queued (CLAUDE.md: Zoom calls are queued).
+ * — booking and payment can never disagree. Notifications + reminders run
+ * queued. 1:1s are direct-connect (ADR 0043): no Zoom meeting is created —
+ * the mentor gets the student's contact and reaches out at the slot.
  */
 final readonly class BookMentorSession
 {

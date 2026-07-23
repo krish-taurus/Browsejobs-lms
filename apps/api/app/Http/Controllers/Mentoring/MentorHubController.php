@@ -36,7 +36,7 @@ final class MentorHubController extends Controller
 
             $sessions = MentorSession::query()
                 ->where('mentor_profile_id', $profile->id)
-                ->with('student:id,name')
+                ->with('student:id,name,email,phone')
                 ->orderBy('starts_at')
                 ->limit(100)
                 ->get();
@@ -180,14 +180,22 @@ final class MentorHubController extends Controller
      */
     private function row(MentorSession $s): array
     {
+        $booked = $s->status === MentorSession::STATUS_BOOKED;
+
         return [
             'id' => $s->id,
             'student' => $s->student?->name,
+            // Direct connect (ADR 0043): the mentor reaches out at the slot, so a
+            // booked session carries the student's contact instead of a Zoom link.
+            'student_phone' => $booked ? $s->student?->phone : null,
+            'student_email' => $booked ? $s->student?->email : null,
             'purpose' => $s->purpose,
             'status' => $s->status,
             'no_show_side' => $s->no_show_side,
             'starts_at' => $s->starts_at->clone()->utc()->toIso8601String(),
-            'join_url' => $s->status === MentorSession::STATUS_BOOKED ? $s->start_url ?? $s->join_url : null,
+            // Legacy sessions booked before the direct-connect change may still
+            // have a meeting; new ones never do.
+            'join_url' => $booked ? $s->start_url ?? $s->join_url : null,
             'feedback' => $s->feedback,
             'student_rating' => $s->student_rating,
         ];

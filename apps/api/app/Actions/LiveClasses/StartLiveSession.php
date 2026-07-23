@@ -21,7 +21,7 @@ final readonly class StartLiveSession
     {
         if (! $this->mayHost($session, $staff)) {
             throw ValidationException::withMessages([
-                'access' => 'Only the assigned trainer or an admin can start this class.',
+                'access' => 'Only the assigned host or an admin can start this session.',
             ]);
         }
 
@@ -56,13 +56,18 @@ final readonly class StartLiveSession
     }
 
     /**
-     * The class's assigned teacher (module trainer, falling back to the lead) or
-     * any admin / super-admin in the tenant may host.
+     * The class's assigned host — the explicit per-session host when one is set
+     * (a mentoring session's mentor), else the module trainer falling back to the
+     * lead — or any admin / super-admin in the tenant may host.
      */
     private function mayHost(LiveSession $session, User $staff): bool
     {
         if ($staff->hasRole('admin', 'super-admin')) {
             return true;
+        }
+
+        if ($session->host_user_id !== null) {
+            return (int) $session->host_user_id === (int) $staff->id;
         }
 
         $batch = $session->batch;

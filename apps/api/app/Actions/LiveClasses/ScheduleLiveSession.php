@@ -27,11 +27,15 @@ final readonly class ScheduleLiveSession
         ?CarbonInterface $end = null,
         ?Topic $topic = null,
         bool $record = true,
+        string $kind = LiveSession::KIND_CLASS,
+        ?int $hostUserId = null,
     ): LiveSession {
         $session = LiveSession::query()->create([
             'tenant_id' => $batch->tenant_id,
             'batch_id' => $batch->id,
             'topic_id' => $topic?->id,
+            'kind' => $kind,
+            'host_user_id' => $hostUserId,
             'title' => $title,
             'scheduled_start' => $start,
             'scheduled_end' => $end,

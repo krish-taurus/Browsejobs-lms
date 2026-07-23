@@ -17,7 +17,8 @@ use Illuminate\Validation\ValidationException;
  * Moves a session to a new slot (PRD §6.11, 4-hour notice on the old time).
  * The credit stays spent — a reschedule is not a cancel-and-rebook. Old
  * reminders die on their start-time guard; fresh ones are armed for the new
- * time; Zoom is updated in place, so the join link survives.
+ * time. 1:1s are direct-connect (ADR 0043) — only legacy sessions that still
+ * carry a Zoom meeting get it moved in place.
  */
 final readonly class RescheduleMentorSession
 {
@@ -64,6 +65,8 @@ final readonly class RescheduleMentorSession
             ]);
         });
 
+        // New 1:1s are direct-connect with no meeting (ADR 0043); this only
+        // maintains sessions booked before that change.
         if ($session->zoom_meeting_id !== null) {
             SyncMentorZoom::dispatch($session->id, 'update');
         }
@@ -96,7 +99,7 @@ final readonly class RescheduleMentorSession
                     'name' => $recipient->name,
                     'with' => $with,
                     'when' => $when,
-                    'link' => (string) $session->join_url,
+                    'link' => rtrim((string) config('app.frontend_url', ''), '/').'/mentors',
                 ]);
             }
         }

@@ -36,6 +36,10 @@ final class ScheduleSeriesRequest extends FormRequest
             'title_prefix' => ['nullable', 'string', 'max:120'],
             'map_topics' => ['nullable', 'boolean'],
             'record' => ['nullable', 'boolean'],
+            // Weekly batch mentoring runs on the same engine (ADR 0043); a
+            // mentoring series carries its mentor as an explicit host.
+            'kind' => ['nullable', 'in:class,mentoring'],
+            'host_user_id' => ['nullable', 'integer'],
         ];
     }
 

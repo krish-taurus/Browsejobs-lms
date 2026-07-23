@@ -29,6 +29,10 @@ final class ScheduleSessionRequest extends FormRequest
             'scheduled_end' => ['nullable', 'date', 'after:scheduled_start'],
             'topic_id' => ['nullable', 'integer'],
             'record' => ['nullable', 'boolean'],
+            // Weekly batch mentoring runs on the same engine (ADR 0043); a
+            // mentoring session carries its mentor as an explicit host.
+            'kind' => ['nullable', 'in:class,mentoring'],
+            'host_user_id' => ['nullable', 'integer'],
         ];
     }
 }

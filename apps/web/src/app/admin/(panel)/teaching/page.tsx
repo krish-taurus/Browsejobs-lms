@@ -26,6 +26,7 @@ type TeachingBatch = {
 type UpcomingClass = {
   id: number;
   title: string;
+  kind: string;
   batch_number: string | null;
   course_code: string | null;
   topic: string | null;
@@ -145,6 +146,9 @@ export default function TeachingPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-ink">{c.title}</span>
+                        {c.kind === "mentoring" && (
+                          <span className="mono rounded-full bg-sky px-2 py-0.5 text-[10px] uppercase tracking-widest text-deep">Mentoring</span>
+                        )}
                         {c.status === "live" && (
                           <span className="rounded-full bg-verify/10 px-2 py-0.5 text-[10px] font-semibold text-verify">Live now</span>
                         )}
