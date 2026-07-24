@@ -17,7 +17,7 @@ test("curriculum manager opens the class notes editor", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/admin\/curriculum/);
 
-  await page.getByRole("link", { name: "Class notes" }).first().click();
+  await page.getByRole("link", { name: "Notes editor" }).first().click();
   await expect(page.getByRole("heading", { name: "Class notes" })).toBeVisible();
 
   // Open the seeded, approved notes lesson and confirm the editor renders.
