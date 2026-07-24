@@ -35,6 +35,7 @@ final class InterviewBankController extends Controller
                     'source' => $t->source,
                     'original_name' => $t->original_name,
                     'role_title' => $t->role_title,
+                    'company' => $t->company,
                     'course' => $t->course?->name,
                     'uploader' => $t->uploader?->name,
                     'status' => $t->status,
@@ -54,6 +55,7 @@ final class InterviewBankController extends Controller
                 'text' => $request->input('text'),
                 'course_id' => $request->filled('course_id') ? $request->integer('course_id') : null,
                 'role_title' => $request->input('role_title'),
+                'company' => $request->input('company'),
             ],
             $request->file('file'),
         );

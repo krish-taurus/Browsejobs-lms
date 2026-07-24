@@ -42,6 +42,12 @@ export default function SyllabusAdvisorPage() {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
 
+  const [intelCourse, setIntelCourse] = useState("");
+  const intel = useQuery({
+    queryKey: ["admin", "interview-intel", intelCourse],
+    queryFn: () => apiJson<{ data: { courses: { id: number; name: string }[]; course_id: number; sample: number; topics: { topic: string; frequency: number; questions: number; struggles: number; items: { question: string; asked_count: number; difficulty: string | null; round_type: string | null; company: string | null }[] }[]; companies: { company: string; frequency: number }[] } }>(`/api/v1/admin/interview-intel${intelCourse ? `?course_id=${intelCourse}` : ""}`),
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "syllabus-recommendations"],
     queryFn: () => apiJson<{ data: Payload }>("/api/v1/admin/syllabus-recommendations"),
@@ -72,6 +78,59 @@ export default function SyllabusAdvisorPage() {
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">Curriculum intelligence</p>
       <h1 className="display mt-2 text-3xl text-ink">Syllabus advisor</h1>
+
+      {/* What interviews actually ask — pure aggregation over the approved bank */}
+      <section className="mt-6 rounded-[14px] border border-line bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="kicker text-verify">What interviews actually ask</p>
+          <select value={intelCourse} onChange={(e) => setIntelCourse(e.target.value)} className="rounded-[10px] border border-line bg-white px-3 py-1.5 text-sm outline-none focus:border-trust">
+            {(intel.data?.data.courses ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        {intel.isLoading ? (
+          <div className="mt-4 shimmer h-24 rounded-[10px]" />
+        ) : (intel.data?.data.topics ?? []).length === 0 ? (
+          <p className="mt-3 text-sm text-muted">
+            No approved interview questions yet for this course. Upload real interviews under
+            Careers → Interview bank and approve the extracted questions — this ranking builds itself from them.
+          </p>
+        ) : (
+          <>
+            <p className="mono mt-1 text-[11px] uppercase tracking-widest text-muted">
+              {intel.data?.data.sample} approved questions · ranked by how often each topic is asked
+            </p>
+            {(intel.data?.data.companies ?? []).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {(intel.data?.data.companies ?? []).map((c) => (
+                  <span key={c.company} className="mono rounded-full bg-sky px-2.5 py-0.5 text-[11px] text-deep">{c.company} · {c.frequency}</span>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 space-y-2">
+              {(intel.data?.data.topics ?? []).map((t, i) => (
+                <details key={t.topic} className="rounded-[10px] border border-line bg-paper px-4 py-3">
+                  <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
+                    <span className="mono w-6 text-muted">#{i + 1}</span>
+                    <span className="font-semibold text-ink">{t.topic}</span>
+                    <span className="mono text-xs text-muted">asked {t.frequency}× · {t.questions} question{t.questions === 1 ? "" : "s"}</span>
+                    {t.struggles > 0 && <span className="mono rounded-full bg-warn/10 px-2 py-0.5 text-[10px] text-warn">{t.struggles} struggled</span>}
+                  </summary>
+                  <ul className="mt-3 space-y-2 border-t border-line pt-3">
+                    {t.items.map((q, j) => (
+                      <li key={j} className="text-sm text-ink">
+                        {q.question}
+                        <span className="mono ml-2 text-[10px] uppercase tracking-widest text-muted">
+                          {[q.company, q.round_type, q.difficulty, `asked ${q.asked_count}×`].filter(Boolean).join(" · ")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
       <p className="mt-1 text-sm text-muted">
         Evidence-backed recommendations that cross-reference real job-market demand, interview-bank
         frequency, and where candidates actually struggle. Approving records the decision — apply the

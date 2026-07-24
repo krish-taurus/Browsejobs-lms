@@ -49,7 +49,7 @@ class InterviewTranscript extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'uploader_id', 'course_id', 'source', 'original_name',
-        'encrypted_path', 'raw_text', 'role_title', 'outcome', 'status',
+        'encrypted_path', 'raw_text', 'role_title', 'company', 'outcome', 'status',
         'parse_error', 'questions_found', 'consent_confirmed_at',
     ];
 
