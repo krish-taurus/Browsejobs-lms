@@ -63,6 +63,7 @@ export default function AdminInterviewBankPage() {
   const [source, setSource] = useState<(typeof SOURCES)[number]>("text");
   const [text, setText] = useState("");
   const [roleTitle, setRoleTitle] = useState("");
+  const [company, setCompany] = useState("");
   const [courseId, setCourseId] = useState("");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +98,7 @@ export default function AdminInterviewBankPage() {
       form.append("source", source);
       form.append("consent", consent ? "1" : "0");
       if (roleTitle.trim()) form.append("role_title", roleTitle.trim());
+      if (company.trim()) form.append("company", company.trim());
       if (courseId) form.append("course_id", courseId);
       const file = fileRef.current?.files?.[0];
       if (file) form.append("file", file);
@@ -165,6 +167,12 @@ export default function AdminInterviewBankPage() {
             value={roleTitle}
             onChange={(e) => setRoleTitle(e.target.value)}
             placeholder="Role title (e.g. Data Engineer)"
+            className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
+          />
+          <input
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="Company (e.g. Infosys)"
             className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
           />
           <select

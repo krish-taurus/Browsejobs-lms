@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
 use App\Http\Controllers\Admin\InterviewBankController;
+use App\Http\Controllers\Admin\InterviewIntelController;
 use App\Http\Controllers\Admin\JobFeedController;
 use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
@@ -453,6 +454,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('syllabuses/{syllabus}/approve', [SyllabusController::class, 'approve']);
 
         // Curriculum Intelligence — syllabus recommendation reports (PRD §6.21).
+        Route::get('interview-intel', [InterviewIntelController::class, 'index']);
         Route::get('syllabus-recommendations', [SyllabusRecommendationController::class, 'index']);
         Route::post('courses/{course}/syllabus-recommendations', [SyllabusRecommendationController::class, 'generate'])->middleware('throttle:ai');
         Route::post('syllabus-recommendations/{recommendation}/approve', [SyllabusRecommendationController::class, 'approve']);
