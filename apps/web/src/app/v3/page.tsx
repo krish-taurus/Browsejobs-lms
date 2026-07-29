@@ -81,10 +81,13 @@ function Counter({ to, suffix = "", decimals = 0 }: { to: number; suffix?: strin
 /* Apple-style scrubbed paragraph: words ignite as the scrollbar passes them. */
 function Word({ children, progress, range }: { children: string; progress: MotionValue<number>; range: [number, number] }) {
   const opacity = useTransform(progress, range, [0.12, 1]);
+  // Real space after each word so selection/copy and screen readers get spaces.
   return (
-    <motion.span style={{ opacity }} className="mr-[0.28em] inline-block">
-      {children}
-    </motion.span>
+    <>
+      <motion.span style={{ opacity }} className="inline-block">
+        {children}
+      </motion.span>{" "}
+    </>
   );
 }
 
@@ -100,6 +103,78 @@ function ScrubText({ text, className = "" }: { text: string; className?: string 
         </Word>
       ))}
     </p>
+  );
+}
+
+/* --------------------------------- manifesto -------------------------------- */
+
+const MACHINE_VERBS = [
+  { icon: "🎧", verb: "Studies", body: "~50 real interview transcripts, every day", accent: "#1b6df0" },
+  { icon: "🎯", verb: "Teaches", body: "exactly what companies ask right now", accent: "#7c3aed" },
+  { icon: "🥊", verb: "Drills", body: "you until pressure feels normal", accent: "#f59e0b" },
+  { icon: "📡", verb: "Hunts", body: "jobs with you until you sign an offer", accent: "#0ba860" },
+];
+
+function ManifestoSection() {
+  return (
+    <section className="mx-auto max-w-5xl px-6 py-32 md:py-44">
+      <ScrubText
+        className="font-display text-4xl font-bold leading-[1.12] tracking-tight text-[#0a1220] md:text-6xl"
+        text="Colleges hand you a degree. Nobody hands you a career."
+      />
+      <motion.p
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.9, ease: EASE }}
+        className="font-display mt-6 text-4xl font-bold leading-[1.12] tracking-tight md:text-6xl"
+      >
+        <span className="bg-gradient-to-r from-[#1b6df0] via-[#4d94ff] to-[#7c3aed] bg-clip-text text-transparent">
+          So we built a machine.
+        </span>
+      </motion.p>
+
+      <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        {MACHINE_VERBS.map((m, i) => (
+          <motion.div
+            key={m.verb}
+            initial={{ opacity: 0, y: 40, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.15 + i * 0.12, duration: 0.7, ease: EASE }}
+            whileHover={{ y: -6 }}
+            className="relative overflow-hidden rounded-2xl border p-5 md:p-6"
+            style={{ background: `linear-gradient(160deg, ${m.accent}10, #ffffff 60%)`, borderColor: `${m.accent}30` }}
+          >
+            <span aria-hidden className="pointer-events-none absolute -right-2 -top-4 font-display text-6xl font-bold" style={{ color: `${m.accent}12` }}>
+              {`0${i + 1}`}
+            </span>
+            <motion.span
+              initial={{ scale: 0, rotate: -15 }}
+              whileInView={{ scale: 1, rotate: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 + i * 0.12, type: "spring", stiffness: 280, damping: 14 }}
+              className="grid h-10 w-10 place-items-center rounded-xl text-lg"
+              style={{ background: `${m.accent}16` }}
+            >
+              {m.icon}
+            </motion.span>
+            <p className="font-display mt-3 text-xl font-bold md:text-2xl" style={{ color: m.accent }}>
+              {m.verb}
+            </p>
+            <p className="mt-1 text-xs leading-snug text-black/55 md:text-sm">{m.body}</p>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "34%" }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 + i * 0.12, duration: 0.7, ease: EASE }}
+              className="mt-4 h-1 rounded-full"
+              style={{ background: m.accent }}
+            />
+          </motion.div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -769,16 +844,86 @@ function MentorsTile() {
   );
 }
 
-const BENTO: { span: string; el: React.ReactNode }[] = [
-  { span: "md:col-span-6", el: <CoachTile /> },
-  { span: "md:col-span-2", el: <CvTile /> },
-  { span: "md:col-span-2", el: <ClassesTile /> },
-  { span: "md:col-span-2", el: <TrackerTile /> },
-  { span: "md:col-span-2", el: <LabsTile /> },
-  { span: "md:col-span-2", el: <CertTile /> },
-  { span: "md:col-span-2", el: <FreeLadderTile /> },
-  { span: "md:col-span-3", el: <TracksTile /> },
-  { span: "md:col-span-3", el: <MentorsTile /> },
+/** MCQ tests + mastery map: weak topics turning green. */
+function MasteryTile() {
+  const rows = [
+    { t: "SQL & databases", v: 92, c: "#0ba860" },
+    { t: "Python", v: 84, c: "#0ba860" },
+    { t: "Spark tuning", v: 61, c: "#f5a623" },
+  ];
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b6df0]">MCQ tests & mastery map</p>
+      <h3 className="font-display mt-3 text-xl font-bold">Watch weak topics turn green.</h3>
+      <div className="mt-5 space-y-3">
+        {rows.map((r, i) => (
+          <div key={r.t}>
+            <div className="mb-1 flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-black/60">{r.t}</span>
+              <span className="font-mono font-bold" style={{ color: r.c }}>
+                <Counter to={r.v} suffix="%" />
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.07]">
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: `${r.v}%` }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.25 + i * 0.15, duration: 1.1, ease: EASE }}
+                className="h-full rounded-full"
+                style={{ background: r.c }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[10px] text-black/40">Every MCQ updates your map — the coach targets the amber.</p>
+    </div>
+  );
+}
+
+/** WhatsApp nudges: reminder bubbles popping in. */
+function WhatsAppTile() {
+  const msgs = [
+    "⏰ SQL windows class in 2 hours — join link inside",
+    "🎙️ Mock scored 92/100. Review your gap report",
+    "🎉 Your CV cleared ATS — 3 new matches waiting",
+  ];
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#128c4b]">WhatsApp nudges</p>
+      <h3 className="font-display mt-3 text-xl font-bold">The platform that pings you first.</h3>
+      <div className="mt-5 space-y-2">
+        {msgs.map((m, i) => (
+          <motion.div
+            key={m}
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 + i * 0.25, type: "spring", stiffness: 260, damping: 18 }}
+            className="max-w-[95%] rounded-2xl rounded-bl-md bg-[#dcf8c6] px-3.5 py-2 text-[11px] leading-snug text-[#0a1220] shadow-sm"
+          >
+            {m}
+          </motion.div>
+        ))}
+      </div>
+      <p className="mt-3 text-[10px] text-black/40">Class reminders 12h, 2h & 5 min before — plus every win.</p>
+    </div>
+  );
+}
+
+const BENTO: { span: string; accent: string; el: React.ReactNode }[] = [
+  { span: "md:col-span-6", accent: "#1b6df0", el: <CoachTile /> },
+  { span: "md:col-span-2", accent: "#7c3aed", el: <CvTile /> },
+  { span: "md:col-span-2", accent: "#d64545", el: <ClassesTile /> },
+  { span: "md:col-span-2", accent: "#0ba860", el: <TrackerTile /> },
+  { span: "md:col-span-2", accent: "#f5a623", el: <LabsTile /> },
+  { span: "md:col-span-2", accent: "#1b6df0", el: <MasteryTile /> },
+  { span: "md:col-span-2", accent: "#25D366", el: <WhatsAppTile /> },
+  { span: "md:col-span-3", accent: "#0ba860", el: <CertTile /> },
+  { span: "md:col-span-3", accent: "#0e3fa9", el: <FreeLadderTile /> },
+  { span: "md:col-span-3", accent: "#1b6df0", el: <TracksTile /> },
+  { span: "md:col-span-3", accent: "#7c3aed", el: <MentorsTile /> },
 ];
 
 /* ------------------------------ path / journey ----------------------------- */
@@ -2168,13 +2313,8 @@ export default function V3Landing() {
         </motion.div>
       </section>
 
-      {/* ----------------------- scrubbed manifesto text ---------------------- */}
-      <section className="mx-auto max-w-4xl px-6 py-32 md:py-44">
-        <ScrubText
-          className="font-display text-4xl font-bold leading-[1.15] tracking-tight md:text-6xl"
-          text="Colleges hand you a degree. Nobody hands you a career. So we built a machine that studies real interview transcripts, teaches you exactly what companies ask, drills you until pressure feels normal — and then goes job-hunting with you."
-        />
-      </section>
+      {/* ------------------------------ manifesto ----------------------------- */}
+      <ManifestoSection />
 
       {/* ---------------------------- the path (7 steps) ---------------------- */}
       <PathSection />
@@ -2226,7 +2366,7 @@ export default function V3Landing() {
           >
             No add-on pricing for the things that get you hired. Every tool below ships with every track.
           </motion.p>
-          <div className="mt-14 grid gap-5 md:grid-cols-6">
+          <div className="mt-14 grid gap-4 md:grid-cols-6 md:gap-5">
             {BENTO.map((b, i) => (
               <motion.div
                 key={i}
@@ -2235,8 +2375,17 @@ export default function V3Landing() {
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: (i % 3) * 0.1, duration: 0.8, ease: EASE }}
                 whileHover={{ y: -5 }}
-                className={`rounded-3xl border border-black/[0.05] bg-white p-7 shadow-[0_10px_40px_rgba(10,18,32,0.05)] transition-shadow hover:shadow-[0_18px_60px_rgba(27,109,240,0.12)] ${b.span}`}
+                className={`relative overflow-hidden rounded-3xl border p-6 shadow-[0_10px_40px_rgba(10,18,32,0.04)] transition-shadow md:p-7 ${b.span}`}
+                style={{
+                  background: `linear-gradient(165deg, ${b.accent}0d, #ffffff 55%)`,
+                  borderColor: `${b.accent}2b`,
+                }}
               >
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1"
+                  style={{ background: `linear-gradient(90deg, ${b.accent}, ${b.accent}00 70%)` }}
+                />
                 {b.el}
               </motion.div>
             ))}
