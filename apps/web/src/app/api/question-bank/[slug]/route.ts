@@ -1,30 +1,27 @@
 import { NextResponse } from "next/server";
 import { getCourseDetail } from "@/content/courses";
+import { getInterviewQuestions, getJobDemand, getMarketSignals, type QRound, type Signal } from "@/lib/kimi-intel";
 
 /**
  * Downloadable interview question bank per track: a self-contained, print-
  * ready HTML file (students can Save as PDF) combining the kimi-k3 question
  * bank, rising/cooling skill demand, and the track's market-demand snapshot.
- * Data comes from the sibling API routes (shared hourly caches), so this
- * stays consistent with what the page shows.
+ * Calls the shared getters in-process (same hourly caches as the API routes)
+ * — self-HTTP fails behind the production proxy.
  */
-
-type QRound = { round: number; name: string; questions: string[] };
-type Signal = { skill: string; change: string; note: string };
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export async function GET(req: Request, ctx: { params: Promise<{ slug: string }> }) {
+export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
   const course = getCourseDetail(slug);
   if (!course || !course.live) return NextResponse.json({ error: "unknown course" }, { status: 404 });
 
-  const origin = new URL(req.url).origin;
   const [qb, ms, jd] = await Promise.all([
-    fetch(`${origin}/api/interview-questions`).then((r) => r.json()).catch(() => null),
-    fetch(`${origin}/api/market-signals`).then((r) => r.json()).catch(() => null),
-    fetch(`${origin}/api/job-demand`).then((r) => r.json()).catch(() => null),
+    getInterviewQuestions().catch(() => null),
+    getMarketSignals().catch(() => null),
+    getJobDemand().catch(() => null),
   ]);
 
   const rounds: QRound[] = qb?.tracks?.[slug] ?? [];
