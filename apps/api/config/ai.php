@@ -35,7 +35,7 @@ return [
             'driver' => 'openai_compatible',
             'api_key' => env('KIMI_API_KEY', ''),
             'base_url' => env('KIMI_BASE_URL', 'https://api.moonshot.ai/v1'),
-            'model' => env('KIMI_MODEL', 'kimi-k2-turbo-preview'),
+            'model' => env('KIMI_MODEL', 'kimi-k3'),
         ],
         'deepseek' => [
             'driver' => 'openai_compatible',
