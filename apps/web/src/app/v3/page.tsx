@@ -103,6 +103,133 @@ function ScrubText({ text, className = "" }: { text: string; className?: string 
   );
 }
 
+/* ---------------------------------- navbar --------------------------------- */
+
+const NAV_LINKS = [
+  { href: "#path", label: "How it works" },
+  { href: "#programs", label: "Programs" },
+  { href: "#fees", label: "Fees" },
+  { href: "#verify", label: "Verify us" },
+  { href: "#reviews", label: "Reviews" },
+];
+
+function SiteNav() {
+  const [open, setOpen] = useState(false);
+
+  // Lenis swallows native hash jumps, so drive section scrolls explicitly.
+  const go = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    setOpen(false);
+    const el = document.querySelector(href);
+    if (el) {
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+      history.replaceState(null, "", href);
+    }
+  };
+
+  return (
+    <motion.header
+      initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }}
+      className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/80 backdrop-blur-xl"
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 md:px-6">
+        <Link href="/" aria-label="BrowseJobs home" onClick={() => setOpen(false)}>
+          <Wordmark />
+        </Link>
+
+        {/* Desktop menu */}
+        <nav className="hidden items-center gap-7 md:flex">
+          {NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} onClick={(e) => go(e, l.href)} className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+              {l.label}
+            </a>
+          ))}
+          <Link href="/student" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+            Student sign in
+          </Link>
+        </nav>
+
+        {/* Hamburger (mobile only) */}
+        <button
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white md:hidden"
+        >
+          <span className="relative block h-3.5 w-4.5">
+            <motion.span
+              animate={open ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              className="absolute left-0 top-0 block h-[2px] w-full rounded-full bg-[#0a1220]"
+            />
+            <motion.span
+              animate={open ? { opacity: 0, x: 8 } : { opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute left-0 top-1/2 block h-[2px] w-full -translate-y-1/2 rounded-full bg-[#0a1220]"
+            />
+            <motion.span
+              animate={open ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              className="absolute bottom-0 left-0 block h-[2px] w-full rounded-full bg-[#0a1220]"
+            />
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile menu panel */}
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="overflow-hidden border-t border-black/[0.06] bg-white md:hidden"
+          >
+            <div className="space-y-1 px-5 py-4">
+              {NAV_LINKS.map((l, i) => (
+                <motion.a
+                  key={l.href}
+                  href={l.href}
+                  onClick={(e) => go(e, l.href)}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.06 + i * 0.05, duration: 0.3, ease: EASE }}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-[#0a1220] transition-colors hover:bg-[#f6f9fe]"
+                >
+                  {l.label}
+                </motion.a>
+              ))}
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.06 + NAV_LINKS.length * 0.05, duration: 0.3, ease: EASE }}
+              >
+                <Link
+                  href="/student"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                >
+                  Student sign in
+                </Link>
+              </motion.div>
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + NAV_LINKS.length * 0.05, duration: 0.3, ease: EASE }}
+                onClick={() => { setOpen(false); openLeadModal({ variant: "masterclass" }); }}
+                className="mt-2 block w-full rounded-full bg-[#1b6df0] px-5 py-3 text-center text-base font-bold text-white shadow-[0_8px_28px_rgba(27,109,240,0.35)]"
+              >
+                Book Free Masterclass
+              </motion.button>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  );
+}
+
 /* ------------------------------ product demos ------------------------------ */
 
 const CHAT_SCRIPT = [
@@ -1930,42 +2057,7 @@ export default function V3Landing() {
         @keyframes v3marqueeR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
       `}} />
       {/* -------------------------------- nav -------------------------------- */}
-      <motion.header
-        initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/70 backdrop-blur-xl"
-      >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <Link href="/" aria-label="BrowseJobs home">
-            <Wordmark />
-          </Link>
-          <nav className="hidden items-center gap-7 lg:flex">
-            {[
-              { href: "#path", label: "How it works" },
-              { href: "#programs", label: "Programs" },
-              { href: "#fees", label: "Fees" },
-              { href: "#verify", label: "Verify us" },
-              { href: "#reviews", label: "Reviews" },
-            ].map((l) => (
-              <a key={l.href} href={l.href} className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
-                {l.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/student" className="hidden text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220] md:block">
-              Student sign in
-            </Link>
-            <Magnetic>
-              <button
-                onClick={() => openLeadModal({ variant: "masterclass" })}
-                className="rounded-full bg-[#0a1220] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1b6df0]"
-              >
-                Book Free Masterclass
-              </button>
-            </Magnetic>
-          </div>
-        </div>
-      </motion.header>
+      <SiteNav />
 
       {/* ------------------------------- hero -------------------------------- */}
       <section ref={heroRef} className="flex min-h-[92vh] flex-col items-center justify-center px-6 pt-28 text-center">
