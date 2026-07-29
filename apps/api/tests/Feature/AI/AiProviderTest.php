@@ -61,6 +61,32 @@ it('speaks the OpenAI chat-completions dialect and parses the reply', function (
     });
 });
 
+it('sends kimi-k3 to the Moonshot endpoint by default', function () {
+    Http::fake([
+        'api.moonshot.ai/*' => Http::response([
+            'model' => 'kimi-k3',
+            'choices' => [[
+                'message' => ['role' => 'assistant', 'content' => 'Hello from Kimi'],
+                'finish_reason' => 'stop',
+            ]],
+            'usage' => ['prompt_tokens' => 12, 'completion_tokens' => 4],
+        ]),
+    ]);
+
+    config(['ai.provider' => 'kimi', 'ai.providers.kimi.api_key' => 'sk-kimi-test']);
+
+    $result = app(AiClient::class)->complete(new AiMessage(user: 'Say hello'));
+
+    expect($result->text)->toBe('Hello from Kimi')
+        ->and($result->model)->toBe('kimi-k3');
+
+    Http::assertSent(function ($request) {
+        return $request->url() === 'https://api.moonshot.ai/v1/chat/completions'
+            && $request->hasHeader('Authorization', 'Bearer sk-kimi-test')
+            && $request['model'] === 'kimi-k3';
+    });
+});
+
 it('honours a per-call model override on the openai-compatible driver', function () {
     Http::fake(['api.x.ai/*' => Http::response([
         'choices' => [['message' => ['content' => 'ok'], 'finish_reason' => 'stop']],
