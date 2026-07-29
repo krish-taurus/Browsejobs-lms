@@ -1112,7 +1112,25 @@ function TiltLight({ children, accent, className = "" }: { children: React.React
   );
 }
 
+type HomeDemand = Record<string, { total: number; trend: string }>;
+
 function ProgramsSection() {
+  const [demand, setDemand] = useState<HomeDemand | null>(null);
+  const [demandLive, setDemandLive] = useState(false);
+  useEffect(() => {
+    fetch("/api/job-demand")
+      .then((r) => r.json())
+      .then((d) => {
+        const compact: HomeDemand = {};
+        for (const [k, v] of Object.entries(d.tracks ?? {})) {
+          const t = v as { total: number; trend: string };
+          compact[k] = { total: t.total, trend: t.trend };
+        }
+        setDemand(compact);
+        setDemandLive(d.source === "kimi-k3");
+      })
+      .catch(() => setDemand(null));
+  }, []);
   return (
     <section id="programs" className="mx-auto max-w-6xl px-6 py-32">
       <motion.p
@@ -1127,6 +1145,14 @@ function ProgramsSection() {
       >
         Four live tracks. Each one rebuilt monthly.
       </motion.h2>
+      <motion.p
+        initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
+        className="mt-5 max-w-xl text-lg text-black/50"
+      >
+        Only four — because <strong className="text-[#0a1220]">demand decides what we teach.</strong> We run
+        tracks only where the market is actively hiring, and the live opening counts below prove it.
+        {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● live market analysis</span>}
+      </motion.p>
       <div className="mt-14 grid gap-6 md:grid-cols-2">
         {PROGRAMS.map((c, i) => (
           <motion.div
@@ -1154,13 +1180,25 @@ function ProgramsSection() {
                     </motion.span>
                     <span className="rounded-full px-3 py-1 font-mono text-xs font-bold" style={{ background: `${c.accent}14`, color: c.accent }}>{c.code}</span>
                   </div>
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-[#0ba860]">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute h-full w-full animate-ping rounded-full bg-[#0ba860] opacity-60" />
-                      <span className="relative h-2 w-2 rounded-full bg-[#0ba860]" />
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#0ba860]">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute h-full w-full animate-ping rounded-full bg-[#0ba860] opacity-60" />
+                        <span className="relative h-2 w-2 rounded-full bg-[#0ba860]" />
+                      </span>
+                      Live
                     </span>
-                    Live
-                  </span>
+                    {demand?.[c.slug] && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 18 }}
+                        className="rounded-full px-2.5 py-1 text-[10px] font-bold"
+                        style={{ background: `${c.accent}12`, color: c.accent }}
+                      >
+                        ≈{demand[c.slug].total.toLocaleString("en-IN")} openings ▲ {demand[c.slug].trend}
+                      </motion.span>
+                    )}
+                  </div>
                 </div>
                 <h3 className="font-display relative mt-6 text-3xl font-bold md:text-4xl">
                   {c.name}
