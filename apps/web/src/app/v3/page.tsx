@@ -327,7 +327,7 @@ function CoachTile() {
           className="w-44 rounded-2xl bg-[#e7f1fe] p-4"
         >
           <p className="text-[9px] font-bold uppercase tracking-widest text-[#0e3fa9]">Next best action</p>
-          <p className="mt-1.5 text-xs font-medium leading-snug text-[#0a1220]">Re-attempt the SQL window-functions mock — you're 1 score away from green.</p>
+          <p className="mt-1.5 text-xs font-medium leading-snug text-[#0a1220]">Re-attempt the SQL window-functions mock — you&apos;re 1 score away from green.</p>
         </motion.div>
       </div>
     </div>
