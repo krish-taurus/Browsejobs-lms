@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\EmployerApplicationStage;
+use App\Enums\EmployerInterviewRound;
+use App\Enums\EmployerInterviewStatus;
 use App\Enums\EmployerJobStatus;
 use App\Enums\EmployerRole;
 use App\Enums\JdMockStatus;
+use App\Models\EmployerInterview;
 use App\Models\EmployerJob;
+use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
 use App\Models\JdMock;
@@ -90,7 +95,7 @@ final class EmployerSeeder extends Seeder
                 ],
             );
 
-            JdMock::query()->updateOrCreate(
+            $mock = JdMock::query()->updateOrCreate(
                 ['employer_job_id' => $job->id, 'version' => 1],
                 [
                     'status' => JdMockStatus::Ready->value,
@@ -114,6 +119,95 @@ final class EmployerSeeder extends Seeder
                     'generated_at' => now(),
                 ],
             );
+
+            $this->seedApplications($tenant, $job, $mock);
         });
+    }
+
+    /**
+     * A pipeline with real shape so the employer dashboard is demo-able the
+     * moment it is opened (CLAUDE.md DoD #7) — graded applicants ranked above
+     * ungraded, candidates spread across stages, and one graded L1 round so the
+     * evidence view has something to show.
+     */
+    private function seedApplications(Tenant $tenant, EmployerJob $job, JdMock $mock): void
+    {
+        /** @var list<array{name: string, email: string, score: int|null, stage: EmployerApplicationStage, days: int}> */
+        $roster = [
+            ['name' => 'Ananya Iyer', 'email' => 'ananya.iyer@example.com', 'score' => 91, 'stage' => EmployerApplicationStage::L1, 'days' => 6],
+            ['name' => 'Rahul Verma', 'email' => 'rahul.verma@example.com', 'score' => 84, 'stage' => EmployerApplicationStage::Shortlisted, 'days' => 5],
+            ['name' => 'Sneha Nair', 'email' => 'sneha.nair@example.com', 'score' => 78, 'stage' => EmployerApplicationStage::Graded, 'days' => 3],
+            ['name' => 'Vikram Reddy', 'email' => 'vikram.reddy@example.com', 'score' => 72, 'stage' => EmployerApplicationStage::Graded, 'days' => 2],
+            ['name' => 'Meera Joshi', 'email' => 'meera.joshi@example.com', 'score' => 64, 'stage' => EmployerApplicationStage::Graded, 'days' => 2],
+            ['name' => 'Karthik Menon', 'email' => 'karthik.menon@example.com', 'score' => null, 'stage' => EmployerApplicationStage::Applied, 'days' => 1],
+            ['name' => 'Divya Sharma', 'email' => 'divya.sharma@example.com', 'score' => null, 'stage' => EmployerApplicationStage::Applied, 'days' => 1],
+        ];
+
+        foreach ($roster as $entry) {
+            $candidate = User::query()->where('email', $entry['email'])->first()
+                ?? User::factory()->create([
+                    'tenant_id' => $tenant->id,
+                    'name' => $entry['name'],
+                    'email' => $entry['email'],
+                    'user_type' => 'student',
+                ]);
+
+            $application = EmployerJobApplication::query()->updateOrCreate(
+                ['employer_job_id' => $job->id, 'candidate_id' => $candidate->id],
+                [
+                    'jd_mock_id' => $mock->id,
+                    'mock_score' => $entry['score'],
+                    'graded_at' => $entry['score'] === null ? null : now()->subDays($entry['days']),
+                    'stage' => $entry['stage']->value,
+                    'created_at' => now()->subDays($entry['days']),
+                ],
+            );
+
+            if ($application->transitions()->doesntExist()) {
+                $application->transitions()->create([
+                    'from_stage' => null,
+                    'to_stage' => EmployerApplicationStage::Applied->value,
+                    'actor_type' => 'user',
+                    'actor_id' => $candidate->id,
+                    'occurred_at' => now()->subDays($entry['days']),
+                ]);
+            }
+        }
+
+        // The top candidate has a graded L1 round, so the evidence view shows
+        // per-dimension scores and a recruiter summary immediately.
+        $top = EmployerJobApplication::query()
+            ->where('employer_job_id', $job->id)
+            ->whereHas('candidate', fn ($query) => $query->where('email', 'ananya.iyer@example.com'))
+            ->first();
+
+        if ($top !== null) {
+            EmployerInterview::query()->updateOrCreate(
+                ['employer_job_application_id' => $top->id, 'round' => EmployerInterviewRound::L1->value],
+                [
+                    'status' => EmployerInterviewStatus::Graded->value,
+                    'question_set' => $mock->questions,
+                    'rubric' => $mock->rubric,
+                    'answers' => [
+                        ['question_id' => 1, 'answer' => 'At Zeta I rebuilt the orders pipeline as an incremental dbt model keyed on updated_at with a 48-hour lookback window, so late-arriving rows were reprocessed without a full refresh. Runtime went from 40 minutes to under 4.'],
+                        ['question_id' => 2, 'answer' => 'First I check whether the failure is the DAG or the source: task duration and log timestamps in the Airflow UI, then whether the upstream extract landed. Intermittent 3am failures are usually a race with the source export, so I add a sensor with a timeout rather than a fixed delay.'],
+                    ],
+                    'dimension_scores' => [
+                        'technical_depth' => 88,
+                        'problem_solving' => 84,
+                        'experience_evidence' => 90,
+                        'communication' => 76,
+                    ],
+                    'overall_score' => 86,
+                    'grading_summary' => 'Strongest evidence is the incremental pipeline rebuild — specific mechanism, specific outcome, and she named the trade-off she accepted. Debugging answer was structured and started from the right question. Communication is concise but occasionally skips context a non-technical stakeholder would need. Positive hire signal for a mid-level data engineering role.',
+                    'grading_source' => 'ai',
+                    'invited_at' => now()->subDays(4),
+                    'expires_at' => now()->addDays(1),
+                    'started_at' => now()->subDays(4),
+                    'submitted_at' => now()->subDays(4),
+                    'graded_at' => now()->subDays(4),
+                ],
+            );
+        }
     }
 }

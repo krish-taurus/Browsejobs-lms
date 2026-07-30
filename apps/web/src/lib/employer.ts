@@ -186,9 +186,16 @@ export const STAGE_LABELS: Record<ApplicationStage, string> = {
   withdrawn: "Withdrawn",
 };
 
-/** The next forward stage a recruiter usually advances to. */
+/**
+ * The next forward stage a recruiter advances to by hand.
+ *
+ * `graded` is skipped: it is assigned by the system when a candidate's JD
+ * mock is scored, never chosen by a recruiter — so an ungraded applicant
+ * advances straight to Shortlisted.
+ */
 export function nextStage(stage: ApplicationStage): ApplicationStage | null {
   const idx = STAGE_ORDER.indexOf(stage);
   if (idx < 0 || idx >= STAGE_ORDER.length - 1) return null;
-  return STAGE_ORDER[idx + 1];
+  const next = STAGE_ORDER[idx + 1];
+  return next === "graded" ? "shortlisted" : next;
 }
