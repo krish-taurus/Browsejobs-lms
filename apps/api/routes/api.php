@@ -85,6 +85,9 @@ use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
+use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
+use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
+use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
@@ -366,6 +369,24 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
     Route::post('me/tutor/labs/{lesson}', [TutorController::class, 'askLab'])->middleware('throttle:ai');
     Route::post('logout', [SessionController::class, 'destroy']);
+});
+
+// Employer portal API (PRD-E, ADR 0051). Tenant resolves from the
+// authenticated user; workspace roles are membership attributes checked in
+// controllers via ResolvesMembership — not platform permission slugs.
+Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group(function () {
+    Route::get('workspaces', [EmployerWorkspaceController::class, 'index']);
+    Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
+    Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);
+
+    Route::get('workspaces/{workspace}/members', [EmployerMemberController::class, 'index']);
+    Route::patch('workspaces/{workspace}/members/{member}', [EmployerMemberController::class, 'updateRole']);
+    Route::delete('workspaces/{workspace}/members/{member}', [EmployerMemberController::class, 'destroy']);
+    Route::get('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invites']);
+    Route::post('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invite'])->middleware('throttle:20,1');
+
+    Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is
