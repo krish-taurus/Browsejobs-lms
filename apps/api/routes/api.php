@@ -85,6 +85,7 @@ use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
+use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
@@ -96,6 +97,7 @@ use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
+use App\Http\Controllers\Me\EmployerJobBrowseController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
@@ -368,6 +370,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
+    // Employer JD board for candidates: browse, free apply, track (PRD-E F3).
+    Route::get('me/employer-jobs', [EmployerJobBrowseController::class, 'index']);
+    Route::get('me/employer-jobs/applications', [EmployerJobBrowseController::class, 'applications']);
+    Route::get('me/employer-jobs/{job}', [EmployerJobBrowseController::class, 'show']);
+    Route::post('me/employer-jobs/{job}/apply', [EmployerJobBrowseController::class, 'apply'])->middleware('throttle:20,1');
+
     Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
     Route::post('me/tutor/labs/{lesson}', [TutorController::class, 'askLab'])->middleware('throttle:ai');
     Route::post('logout', [SessionController::class, 'destroy']);
@@ -399,6 +407,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/jobs/{job}/status', [EmployerJobController::class, 'changeStatus']);
     Route::get('workspaces/{workspace}/jobs/{job}/mock', [EmployerJdMockController::class, 'show']);
     Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
+
+    // Applications: graded-first ranking, evidence view, stage moves (PRD-E F3).
+    Route::get('workspaces/{workspace}/jobs/{job}/applications', [EmployerApplicationController::class, 'index']);
+    Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show']);
+    Route::post('workspaces/{workspace}/jobs/{job}/applications/{application}/stage', [EmployerApplicationController::class, 'moveStage']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is
