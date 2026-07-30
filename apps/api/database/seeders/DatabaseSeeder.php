@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
             MarketSignalSeeder::class,
             // Employer module (PRD-E F1): demo workspace + employer logins.
             EmployerSeeder::class,
+            CandidateDemoSeeder::class,
             // Last: a login-ready demo persona spanning the whole journey.
             DemoSeeder::class,
         ]);
