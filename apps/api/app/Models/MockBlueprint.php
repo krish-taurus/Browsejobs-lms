@@ -32,7 +32,7 @@ class MockBlueprint extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'course_id', 'job_feed_item_id', 'role_title', 'skill', 'competencies', 'opening_question', 'is_active',
+        'tenant_id', 'course_id', 'job_feed_item_id', 'employer_job_id', 'role_title', 'skill', 'competencies', 'opening_question', 'is_active',
     ];
 
     /**

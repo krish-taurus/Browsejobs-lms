@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Employers;
 
+use App\Actions\Cv\GenerateCv;
 use App\Enums\EmployerApplicationStage;
 use App\Enums\EmployerJobStatus;
 use App\Events\ApplicationReceived;
+use App\Models\CvDocument;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\User;
@@ -23,6 +25,8 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class ApplyToEmployerJob
 {
+    public function __construct(private GenerateCv $cv) {}
+
     /** @param array<int, array<string, mixed>>|null $knockoutAnswers */
     public function handle(EmployerJob $job, User $candidate, ?array $knockoutAnswers = null): EmployerJobApplication
     {
@@ -43,10 +47,16 @@ final readonly class ApplyToEmployerJob
                 ]);
             }
 
+            // A CV rebuilt against this exact JD, free — the same courtesy an
+            // external application already gets. Applying is the outcome we
+            // want, so it is never taxed like a standalone CV generation.
+            $document = $this->cv->handle($candidate, CvDocument::SOURCE_TAILORED, $job->description);
+
             $application = EmployerJobApplication::create([
                 'employer_job_id' => $job->id,
                 'candidate_id' => $candidate->id,
                 'jd_mock_id' => $job->currentMock()?->id,
+                'cv_document_id' => $document->id,
                 'stage' => EmployerApplicationStage::Applied->value,
                 'knockout_answers' => $knockoutAnswers,
             ]);

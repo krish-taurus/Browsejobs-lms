@@ -101,10 +101,12 @@ use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
+use App\Http\Controllers\Me\CandidateDashboardController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
 use App\Http\Controllers\Me\EmployerJobBrowseController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
+use App\Http\Controllers\Me\VerificationController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
@@ -131,6 +133,7 @@ use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
 use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
+use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\SalaryController;
@@ -230,6 +233,11 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     // Public job board (ADR 0048): last-7-days openings, no auth — every card
     // funnels to registration for match %, prep questions and mocks.
     Route::get('jobs', [JobBoardController::class, 'index'])->middleware('throttle:60,1');
+
+    // Segmented board (PRD-E F10): employers hiring through BrowseJobs and
+    // aggregated market roles, kept apart because only the first can be
+    // applied to here. Works signed-out; signed-in adds own-application state.
+    Route::get('job-board', [JobBoardSegmentedController::class, 'index'])->middleware('throttle:60,1');
 
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
@@ -382,6 +390,13 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/employer-jobs/applications', [EmployerJobBrowseController::class, 'applications']);
     Route::get('me/employer-jobs/{job}', [EmployerJobBrowseController::class, 'show']);
     Route::post('me/employer-jobs/{job}/apply', [EmployerJobBrowseController::class, 'apply'])->middleware('throttle:20,1');
+    // The mock IS the application: retakes are unlimited while the pack holds.
+    Route::post('me/employer-jobs/{job}/mock', [EmployerJobBrowseController::class, 'mock'])->middleware('throttle:ai');
+
+    // Candidate command centre + verification (PRD-E F9/F11).
+    Route::get('me/candidate-dashboard', [CandidateDashboardController::class, 'show']);
+    Route::get('me/verification', [VerificationController::class, 'index']);
+    Route::post('me/verification/{kind}', [VerificationController::class, 'submit'])->middleware('throttle:10,1');
 
     // Async L1/L2 rounds for candidates (PRD-E F5).
     Route::get('me/employer-interviews', [MeEmployerInterviewController::class, 'index']);
