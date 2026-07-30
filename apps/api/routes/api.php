@@ -86,6 +86,8 @@ use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
+use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
+use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
@@ -387,6 +389,16 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invite'])->middleware('throttle:20,1');
 
     Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
+
+    // JDs + JD-specific mocks (PRD-E F2).
+    Route::get('workspaces/{workspace}/jobs', [EmployerJobController::class, 'index']);
+    Route::post('workspaces/{workspace}/jobs', [EmployerJobController::class, 'store'])->middleware('throttle:30,1');
+    Route::get('workspaces/{workspace}/jobs/{job}', [EmployerJobController::class, 'show']);
+    Route::patch('workspaces/{workspace}/jobs/{job}', [EmployerJobController::class, 'update']);
+    Route::post('workspaces/{workspace}/jobs/{job}/publish', [EmployerJobController::class, 'publish']);
+    Route::post('workspaces/{workspace}/jobs/{job}/status', [EmployerJobController::class, 'changeStatus']);
+    Route::get('workspaces/{workspace}/jobs/{job}/mock', [EmployerJdMockController::class, 'show']);
+    Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is

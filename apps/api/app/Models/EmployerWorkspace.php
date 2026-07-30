@@ -64,6 +64,12 @@ final class EmployerWorkspace extends Model
         return $this->hasMany(EmployerInvite::class);
     }
 
+    /** @return HasMany<EmployerJob, $this> */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(EmployerJob::class);
+    }
+
     public function memberFor(User $user): ?EmployerMember
     {
         return $this->members()->where('user_id', $user->id)->first();

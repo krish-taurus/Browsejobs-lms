@@ -26,6 +26,7 @@ enum AiPurpose: string
     case Mock = 'mock';
     case TranscriptParse = 'transcript_parse';
     case JdExtract = 'jd_extract';
+    case JdMockGen = 'jd_mock_gen';
     case SyllabusRecommend = 'syllabus_recommend';
     case DayPlan = 'day_plan';
     case Cv = 'cv';
