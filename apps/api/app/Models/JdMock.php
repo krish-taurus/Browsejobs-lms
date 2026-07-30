@@ -6,9 +6,11 @@ namespace App\Models;
 
 use App\Enums\JdMockStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Database\Factories\JdMockFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Versioned JD-specific mock (questions + rubric) — PRD-E F2. A version
@@ -23,13 +25,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $source
  * @property array<string, mixed>|null $questions
  * @property array<string, mixed>|null $rubric
- * @property \Illuminate\Support\Carbon|null $generated_at
+ * @property Carbon|null $generated_at
  */
 final class JdMock extends Model
 {
     use BelongsToTenant;
 
-    /** @use HasFactory<\Database\Factories\JdMockFactory> */
+    /** @use HasFactory<JdMockFactory> */
     use HasFactory;
 
     protected $fillable = [

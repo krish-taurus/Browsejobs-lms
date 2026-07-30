@@ -21,9 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class AcceptEmployerInvite
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(User $user, string $token): EmployerMember
     {

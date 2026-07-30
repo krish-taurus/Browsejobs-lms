@@ -18,9 +18,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class ChangeEmployerMemberRole
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(EmployerMember $member, EmployerRole $role, User $actor): EmployerMember
     {

@@ -22,9 +22,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class InviteEmployerMember
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(EmployerWorkspace $workspace, User $inviter, string $email, EmployerRole $role): EmployerInvite
     {

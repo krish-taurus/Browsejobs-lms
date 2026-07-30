@@ -13,7 +13,5 @@ final class EmployerMemberInvited
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public readonly EmployerInvite $invite)
-    {
-    }
+    public function __construct(public readonly EmployerInvite $invite) {}
 }

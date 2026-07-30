@@ -14,9 +14,7 @@ use App\Support\Tenancy\TenantContext;
 /** PRD-E F2 — create a draft JD in a workspace. */
 final readonly class CreateEmployerJob
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     /** @param array<string, mixed> $attributes */
     public function handle(EmployerWorkspace $workspace, User $creator, array $attributes): EmployerJob

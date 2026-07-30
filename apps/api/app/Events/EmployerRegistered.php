@@ -13,7 +13,5 @@ final class EmployerRegistered
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public readonly EmployerWorkspace $workspace)
-    {
-    }
+    public function __construct(public readonly EmployerWorkspace $workspace) {}
 }

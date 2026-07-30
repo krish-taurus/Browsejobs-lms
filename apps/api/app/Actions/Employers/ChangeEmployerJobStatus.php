@@ -17,9 +17,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class ChangeEmployerJobStatus
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(EmployerJob $job, EmployerJobStatus $target, User $actor): EmployerJob
     {

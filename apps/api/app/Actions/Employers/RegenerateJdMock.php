@@ -20,9 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class RegenerateJdMock
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(EmployerJob $job, User $actor): JdMock
     {

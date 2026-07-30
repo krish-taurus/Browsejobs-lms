@@ -6,9 +6,11 @@ namespace App\Models;
 
 use App\Enums\EmployerRole;
 use App\Models\Concerns\BelongsToTenant;
+use Database\Factories\EmployerMemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -16,15 +18,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $employer_workspace_id
  * @property int $user_id
  * @property EmployerRole $role
- * @property \Illuminate\Support\Carbon $joined_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon $joined_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 final class EmployerMember extends Model
 {
     use BelongsToTenant;
 
-    /** @use HasFactory<\Database\Factories\EmployerMemberFactory> */
+    /** @use HasFactory<EmployerMemberFactory> */
     use HasFactory;
 
     protected $fillable = [

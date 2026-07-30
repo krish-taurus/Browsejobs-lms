@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Enums\EmployerJobStatus;
 use App\Enums\JdMockStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Database\Factories\EmployerJobFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Employer-owned JD (PRD-E F2, ADR 0051) — separate from the
@@ -34,13 +36,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $openings
  * @property array<int, array<string, mixed>>|null $knockout_questions
  * @property EmployerJobStatus $status
- * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Carbon|null $published_at
  */
 final class EmployerJob extends Model
 {
     use BelongsToTenant;
 
-    /** @use HasFactory<\Database\Factories\EmployerJobFactory> */
+    /** @use HasFactory<EmployerJobFactory> */
     use HasFactory;
 
     protected $fillable = [

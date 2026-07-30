@@ -13,7 +13,5 @@ final class EmployerJobPublished
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public readonly EmployerJob $job)
-    {
-    }
+    public function __construct(public readonly EmployerJob $job) {}
 }

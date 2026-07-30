@@ -12,7 +12,9 @@ use App\Models\JdMock;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiClient;
+use App\Services\AI\AiGateway;
 use App\Services\AI\FakeAiClient;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 
@@ -56,7 +58,7 @@ it('generates a ready mock from a valid AI response', function (): void {
 
     $mock = JdMock::factory()->for($this->tenant)->create(['employer_job_id' => $this->job->id]);
 
-    (new GenerateJdMock($mock->id))->handle(app(\App\Services\AI\AiGateway::class));
+    (new GenerateJdMock($mock->id))->handle(app(AiGateway::class));
 
     $mock = $mock->fresh();
     expect($mock->status)->toBe(JdMockStatus::Ready)
@@ -72,7 +74,7 @@ it('falls back to a deterministic mock on malformed AI output', function (): voi
 
     $mock = JdMock::factory()->for($this->tenant)->create(['employer_job_id' => $this->job->id]);
 
-    (new GenerateJdMock($mock->id))->handle(app(\App\Services\AI\AiGateway::class));
+    (new GenerateJdMock($mock->id))->handle(app(AiGateway::class));
 
     $mock = $mock->fresh();
     expect($mock->status)->toBe(JdMockStatus::Ready)
@@ -86,7 +88,7 @@ it('is idempotent: a non-pending mock is never reprocessed', function (): void {
     $originalQuestions = $ready->questions;
 
     $this->fake->reply = validMockJson();
-    (new GenerateJdMock($ready->id))->handle(app(\App\Services\AI\AiGateway::class));
+    (new GenerateJdMock($ready->id))->handle(app(AiGateway::class));
 
     expect($ready->fresh()->questions)->toBe($originalQuestions)
         ->and($this->fake->calls)->toBeEmpty();
@@ -95,7 +97,7 @@ it('is idempotent: a non-pending mock is never reprocessed', function (): void {
 it('exposes the mock via the API and regenerates as a new version', function (): void {
     // Fake the bus: with the sync queue the pending version would be
     // generated inline and the in-flight guard would never be observable.
-    \Illuminate\Support\Facades\Bus::fake([GenerateJdMock::class]);
+    Bus::fake([GenerateJdMock::class]);
 
     JdMock::factory()->for($this->tenant)->ready()->create(['employer_job_id' => $this->job->id]);
 
@@ -115,5 +117,5 @@ it('exposes the mock via the API and regenerates as a new version', function ():
     $this->postJson("/api/v1/employer/workspaces/{$this->workspace->id}/jobs/{$this->job->id}/mock/regenerate")
         ->assertUnprocessable();
 
-    \Illuminate\Support\Facades\Bus::assertDispatched(GenerateJdMock::class, 1);
+    Bus::assertDispatched(GenerateJdMock::class, 1);
 });

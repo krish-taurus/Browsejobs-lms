@@ -13,7 +13,5 @@ final class JdMockGenerated
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public readonly JdMock $mock)
-    {
-    }
+    public function __construct(public readonly JdMock $mock) {}
 }

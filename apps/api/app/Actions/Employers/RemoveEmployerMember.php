@@ -17,9 +17,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class RemoveEmployerMember
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function handle(EmployerMember $member, User $actor): void
     {

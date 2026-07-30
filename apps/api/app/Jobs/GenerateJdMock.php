@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Enums\AiPurpose;
 use App\Enums\JdMockStatus;
 use App\Events\JdMockGenerated;
+use App\Models\EmployerJob;
 use App\Models\JdMock;
 use App\Models\Tenant;
 use App\Models\User;
@@ -31,9 +32,7 @@ final class GenerateJdMock implements ShouldQueue
     use InteractsWithQueue;
     use SerializesModels;
 
-    public function __construct(public readonly int $jdMockId)
-    {
-    }
+    public function __construct(public readonly int $jdMockId) {}
 
     public function handle(AiGateway $gateway): void
     {
@@ -73,7 +72,7 @@ final class GenerateJdMock implements ShouldQueue
     }
 
     /** @return array{questions: array<int, array<string, mixed>>, rubric: array<string, mixed>}|null */
-    private function viaAi(AiGateway $gateway, User $actor, \App\Models\EmployerJob $job): ?array
+    private function viaAi(AiGateway $gateway, User $actor, EmployerJob $job): ?array
     {
         try {
             $result = $gateway->complete($actor, AiPurpose::JdMockGen, 'jd_mock_gen', 1, [
@@ -113,7 +112,7 @@ final class GenerateJdMock implements ShouldQueue
      *
      * @return array{questions: array<int, array<string, mixed>>, rubric: array<string, mixed>}
      */
-    private function fallback(\App\Models\EmployerJob $job): array
+    private function fallback(EmployerJob $job): array
     {
         $questions = [];
         $id = 1;

@@ -19,12 +19,10 @@ use Illuminate\Support\Str;
  */
 final readonly class RegisterEmployerWorkspace
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     /**
-     * @param array{name: string, website?: string|null, industry?: string|null, company_size?: string|null, gstin?: string|null, locations?: array<int, string>|null} $attributes
+     * @param  array{name: string, website?: string|null, industry?: string|null, company_size?: string|null, gstin?: string|null, locations?: array<int, string>|null}  $attributes
      */
     public function handle(User $creator, array $attributes): EmployerWorkspace
     {
