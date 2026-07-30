@@ -85,8 +85,10 @@ use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
+use App\Http\Controllers\Auth\EmployerAuthController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
+use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
@@ -233,6 +235,7 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         Route::post('otp/verify', [StudentAuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
         Route::post('register/request', [RegisterController::class, 'request'])->middleware('throttle:6,1');
         Route::post('register/verify', [RegisterController::class, 'verify'])->middleware('throttle:10,1');
+        Route::post('employer/login', [EmployerAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/2fa', [StaffAuthController::class, 'verify'])->middleware('throttle:10,1');
     });
@@ -395,6 +398,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 // controllers via ResolvesMembership — not platform permission slugs.
 Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group(function () {
     Route::get('workspaces', [EmployerWorkspaceController::class, 'index']);
+    Route::get('workspaces/{workspace}/dashboard', [EmployerDashboardController::class, 'show']);
     Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
     Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
     Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);
