@@ -24,7 +24,7 @@ final readonly class MoveApplicationStage
     public function handle(
         EmployerJobApplication $application,
         EmployerApplicationStage $target,
-        User $actor,
+        ?User $actor,
         ?string $note = null,
         string $actorType = 'user',
     ): EmployerJobApplication {
@@ -52,7 +52,7 @@ final readonly class MoveApplicationStage
                 'from_stage' => $from->value,
                 'to_stage' => $target->value,
                 'actor_type' => $actorType,
-                'actor_id' => $actor->id,
+                'actor_id' => $actor?->id,
                 'note' => $note,
                 'occurred_at' => now(),
             ]);

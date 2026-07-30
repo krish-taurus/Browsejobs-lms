@@ -86,6 +86,7 @@ use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
+use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
@@ -421,6 +422,12 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show']);
     Route::post('workspaces/{workspace}/jobs/{job}/applications/{application}/stage', [EmployerApplicationController::class, 'moveStage']);
     Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}/interviews', [EmployerInterviewController::class, 'index']);
+
+    // Automation rules (PRD-E F6): advance/park only, never reject/offer.
+    Route::get('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'index']);
+    Route::post('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'store']);
+    Route::post('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}/toggle', [EmployerAutomationRuleController::class, 'toggle']);
+    Route::delete('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}', [EmployerAutomationRuleController::class, 'destroy']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is
