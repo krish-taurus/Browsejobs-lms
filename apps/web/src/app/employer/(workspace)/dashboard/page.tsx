@@ -3,166 +3,301 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { durations, ease, staggerContainer, revealVariants } from "@/lib/motion";
 import { MonoCounter } from "@/components/motion/MonoCounter";
 import { useWorkspace } from "@/components/employer/EmployerShell";
-import { employerApi, STAGE_ORDER, STAGE_LABELS, type DashboardData } from "@/lib/employer";
+import {
+  EASE,
+  InkPanel,
+  Label,
+  LiveDot,
+  PageHead,
+  Pill,
+  PrimaryButton,
+  Skeleton,
+  Tile,
+} from "@/components/employer/ui";
+import {
+  DEEP,
+  Funnel,
+  PipelineBar,
+  Ring,
+  ScoreHistogram,
+  SKY,
+  TrendChart,
+  TRUST,
+  VERIFY,
+  VIOLET,
+} from "@/components/employer/charts";
+import { employerApi, STAGE_LABELS, type DashboardData } from "@/lib/employer";
 
-/** Blue-scale for pipeline segments: deep → trust → sky (spec §5.3). */
-const SEGMENT_CLASSES = [
-  "bg-deep", "bg-trust", "bg-trust/80", "bg-trust/60", "bg-trust/45", "bg-sky", "bg-verify/70", "bg-verify",
-];
+const SEGMENT_COLORS: Record<string, string> = {
+  applied: "#c7d7f5",
+  graded: SKY,
+  shortlisted: TRUST,
+  l1: DEEP,
+  l2: VIOLET,
+  human_round: "#5b3fb8",
+  offer: VERIFY,
+  hired: "#08935420",
+};
 
 export default function EmployerDashboardPage() {
   const { workspace } = useWorkspace();
   const reduce = useReducedMotion();
   const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     setData(null);
-    setError(false);
-    employerApi.dashboard(workspace.id)
-      .then((res) => setData(res.data))
-      .catch(() => setError(true));
+    setFailed(false);
+    employerApi.dashboard(workspace.id).then((res) => setData(res.data)).catch(() => setFailed(true));
   }, [workspace.id]);
 
-  if (error) {
+  if (failed) {
     return (
-      <p className="rounded-card border border-line bg-white p-6 text-sm text-muted shadow-soft">
-        The dashboard could not load. Refresh to try again.
+      <p className="rounded-3xl border border-black/[0.07] bg-white p-8 text-sm text-black/50">
+        The command centre could not load. Refresh to try again.
       </p>
     );
   }
 
   if (!data) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="shimmer h-24 rounded-card" />)}
+      <div className="space-y-5">
+        <Skeleton className="h-24" />
+        <div className="grid gap-4 md:grid-cols-6">
+          <Skeleton className="h-36 md:col-span-2" />
+          <Skeleton className="h-36 md:col-span-2" />
+          <Skeleton className="h-36 md:col-span-2" />
         </div>
-        <div className="shimmer h-32 rounded-card" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   const topJob = [...data.pipeline].sort((a, b) => b.awaiting_review - a.awaiting_review)[0];
+  const gradedPct = data.total_applications
+    ? Math.round((data.graded_applications / data.total_applications) * 100)
+    : 0;
 
   return (
-    <motion.div variants={staggerContainer} initial={reduce ? false : "hidden"} animate="show" className="space-y-6">
-      <motion.div variants={revealVariants}>
-        <p className="mono text-[11px] uppercase tracking-widest text-trust">Command centre</p>
-        <h1 className="display mt-1 text-2xl text-ink">{workspace.name}</h1>
-      </motion.div>
+    <div className="space-y-7 pb-10">
+      <PageHead
+        kicker="Command centre"
+        title={workspace.name}
+        sub="Every applicant below arrived pre-interviewed and graded against your own job description."
+      />
 
-      {/* 4-up mono stat band (spec §5.2) */}
-      <motion.div variants={revealVariants} className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Active JDs" value={data.active_jobs} />
-        <Stat label="Graded applicants · 7d" value={data.graded_last_7d} />
-        <Stat label="Awaiting your review" value={data.awaiting_review} accent />
-        <Stat label="Offers open" value={data.offers_open} />
-      </motion.div>
-
-      {/* Next Best Action — the loudest element (spec §5.2) */}
-      <motion.div variants={revealVariants}>
-        {topJob && topJob.awaiting_review > 0 ? (
-          <div className="flex flex-col justify-between gap-4 rounded-panel bg-ink p-6 text-white shadow-soft sm:flex-row sm:items-center">
+      {/* Hero row: the one action that matters + the proof metric ------ */}
+      <div className="grid gap-4 md:grid-cols-6 md:gap-5">
+        <InkPanel className="md:col-span-4">
+          <div className="flex h-full flex-col justify-between gap-6">
             <div>
-              <p className="mono text-[10px] uppercase tracking-widest text-sky/60">Next best action</p>
-              <p className="mt-1 text-lg font-semibold">
-                <span className="mono">{topJob.awaiting_review}</span> graded applicant{topJob.awaiting_review === 1 ? "" : "s"} waiting on{" "}
-                <span className="text-sky">{topJob.title}</span>
+              <div className="flex items-center gap-2">
+                <LiveDot />
+                <Label dark>Next best action</Label>
+              </div>
+              {topJob && topJob.awaiting_review > 0 ? (
+                <p className="font-display mt-3 text-2xl font-bold leading-[1.15] tracking-tight md:text-[2.1rem]">
+                  <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                    {topJob.awaiting_review} graded {topJob.awaiting_review === 1 ? "applicant" : "applicants"}
+                  </span>
+                  <br />
+                  waiting on {topJob.title}.
+                </p>
+              ) : (
+                <p className="font-display mt-3 text-2xl font-bold leading-[1.15] tracking-tight md:text-[2.1rem]">
+                  {data.active_jobs === 0 ? (
+                    <>
+                      Post your first JD.{" "}
+                      <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                        The mock builds itself.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Nothing waiting on you.{" "}
+                      <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                        Pipeline is clear.
+                      </span>
+                    </>
+                  )}
+                </p>
+              )}
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-white/50">
+                {topJob && topJob.awaiting_review > 0
+                  ? "Each one has a scored interview transcript and a rubric breakdown attached — no CV guesswork."
+                  : data.active_jobs === 0
+                    ? "Publishing a JD generates its own interview and grading rubric automatically."
+                    : "New graded applicants appear here the moment they finish their interview."}
               </p>
             </div>
-            <Link
-              href={`/employer/jobs/${topJob.id}`}
-              className="rounded-input bg-trust px-5 py-2.5 text-center text-sm font-semibold text-white"
-            >
-              Review now
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-panel border border-line bg-white p-6 shadow-soft">
-            <p className="mono text-[10px] uppercase tracking-widest text-muted">Next best action</p>
-            <p className="mt-1 text-sm text-ink">
-              {data.active_jobs === 0
-                ? "Post your first JD — a JD-specific mock interview is generated for it automatically."
-                : "All caught up. New graded applicants will appear here the moment they finish their mock."}
-            </p>
-            {data.active_jobs === 0 && (
-              <Link href="/employer/jobs/new" className="mt-3 inline-block rounded-input bg-trust px-5 py-2.5 text-sm font-semibold text-white">
-                Post a JD
+            <div className="flex flex-wrap items-center gap-3">
+              {topJob && topJob.awaiting_review > 0 ? (
+                <PrimaryButton href={`/employer/jobs/${topJob.id}`}>Review now</PrimaryButton>
+              ) : (
+                <PrimaryButton href="/employer/jobs/new">Post a JD</PrimaryButton>
+              )}
+              <Link
+                href="/employer/jobs"
+                className="text-sm font-medium text-white/50 underline-offset-4 transition-colors hover:text-white"
+              >
+                All jobs
               </Link>
-            )}
+            </div>
           </div>
-        )}
-      </motion.div>
+        </InkPanel>
 
-      {/* Pipeline pulse per active JD (spec §5.2) */}
-      <motion.div variants={revealVariants} className="rounded-panel border border-line bg-white p-6 shadow-soft">
-        <div className="flex items-baseline justify-between">
-          <h2 className="display text-lg text-ink">Pipeline pulse</h2>
-          <p className="mono text-[10px] uppercase tracking-widest text-muted">
-            {data.total_applications} applications · {data.graded_applications} graded
-          </p>
-        </div>
+        <Tile accent={VERIFY} className="md:col-span-2" index={1}>
+          <Label>Pre-interviewed</Label>
+          <div className="mt-4 flex items-center gap-4">
+            <Ring value={gradedPct} size={96} color={VERIFY} track="#e6f7ef">
+              <span className="font-display text-xl font-bold">{gradedPct}%</span>
+            </Ring>
+            <div>
+              <p className="font-display text-2xl font-bold leading-none">
+                <MonoCounter value={data.graded_applications} className="font-display" />
+              </p>
+              <p className="mt-1 text-[13px] leading-snug text-black/50">
+                of {data.total_applications} applicants arrived with a graded interview
+              </p>
+            </div>
+          </div>
+        </Tile>
+      </div>
 
-        {data.pipeline.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">
-            No published JDs yet.{" "}
-            <Link className="font-medium text-trust" href="/employer/jobs/new">Post one</Link>{" "}
-            and pre-interviewed applicants will start flowing in.
-          </p>
-        ) : (
-          <ul className="mt-4 space-y-4">
-            {data.pipeline.map((job) => {
-              const total = Object.values(job.stage_counts).reduce((a, b) => a + b, 0);
-              return (
-                <li key={job.id}>
-                  <Link href={`/employer/jobs/${job.id}`} className="group block">
-                    <div className="flex items-baseline justify-between">
-                      <p className="text-sm font-semibold text-ink group-hover:text-trust">{job.title}</p>
-                      <p className="mono text-xs text-muted">{total} in pipeline</p>
-                    </div>
-                    <div className="mt-2 flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-paper">
-                      {total > 0 &&
-                        STAGE_ORDER.map((stage, i) => {
-                          const count = job.stage_counts[stage] ?? 0;
-                          if (count === 0) return null;
-                          return (
-                            <motion.div
-                              key={stage}
-                              title={`${STAGE_LABELS[stage]}: ${count}`}
-                              initial={reduce ? false : { scaleX: 0 }}
-                              animate={{ scaleX: 1 }}
-                              transition={{ duration: durations.slower, ease }}
-                              style={{ width: `${(count / total) * 100}%`, transformOrigin: "left" }}
-                              className={SEGMENT_CLASSES[i] ?? "bg-sky"}
-                            />
-                          );
-                        })}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </motion.div>
+      {/* Stat band -------------------------------------------------- */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
+        <Stat index={0} label="Active JDs" value={data.active_jobs} accent={TRUST} ghost="01" />
+        <Stat index={1} label="Graded · last 7 days" value={data.graded_last_7d} accent={SKY} ghost="02" />
+        <Stat index={2} label="Interviews in flight" value={data.interviews_in_flight} accent={VIOLET} ghost="03" />
+        <Stat index={3} label="Offers open" value={data.offers_open} accent={VERIFY} ghost="04" />
+      </div>
 
-      <motion.p variants={revealVariants} className="mono text-[10px] leading-relaxed text-muted">
+      {/* Charts row -------------------------------------------------- */}
+      <div className="grid items-start gap-4 md:grid-cols-6 md:gap-5">
+        <Tile accent={TRUST} className="md:col-span-4" index={0} hover={false}>
+          <div className="flex items-baseline justify-between">
+            <div>
+              <Label>Applications vs gradings</Label>
+              <p className="font-display mt-1 text-lg font-bold">Last 14 days</p>
+            </div>
+            <Pill tone="trust">{data.total_applications} total</Pill>
+          </div>
+          <div className="mt-5">
+            <TrendChart points={data.trend} height={130} />
+          </div>
+        </Tile>
+
+        <Tile accent={DEEP} className="md:col-span-2" index={1} hover={false}>
+          <Label>Hiring funnel</Label>
+          <p className="font-display mt-1 text-lg font-bold">Stage by stage</p>
+          <div className="mt-4">
+            <Funnel stages={data.funnel} />
+          </div>
+        </Tile>
+      </div>
+
+      <div className="grid items-start gap-4 md:grid-cols-6 md:gap-5">
+        <Tile accent={VIOLET} className="md:col-span-2" index={0} hover={false}>
+          <Label>Score distribution</Label>
+          <p className="font-display mt-1 text-lg font-bold">Where your talent sits</p>
+          <div className="mt-4">
+            <ScoreHistogram bands={data.score_distribution} threshold={70} />
+          </div>
+        </Tile>
+
+        {/* Pipeline pulse per JD ------------------------------------ */}
+        <Tile accent={TRUST} className="md:col-span-4" index={1} hover={false}>
+          <div className="flex items-baseline justify-between">
+            <div>
+              <Label>Pipeline pulse</Label>
+              <p className="font-display mt-1 text-lg font-bold">Live per JD</p>
+            </div>
+            <span className="font-mono text-[11px] text-black/40">
+              {data.awaiting_review} awaiting review
+            </span>
+          </div>
+
+          {data.pipeline.length === 0 ? (
+            <p className="mt-4 text-sm text-black/50">
+              No published JDs yet.{" "}
+              <Link className="font-semibold text-[#1b6df0]" href="/employer/jobs/new">
+                Post one
+              </Link>{" "}
+              and pre-interviewed applicants start flowing in.
+            </p>
+          ) : (
+            <ul className="mt-5 space-y-5">
+              {data.pipeline.map((job, i) => {
+                const total = Object.values(job.stage_counts).reduce((a, b) => a + b, 0);
+                const segments = Object.entries(job.stage_counts).map(([key, count]) => ({
+                  key,
+                  label: STAGE_LABELS[key as keyof typeof STAGE_LABELS] ?? key,
+                  count,
+                  color: SEGMENT_COLORS[key] ?? SKY,
+                }));
+
+                return (
+                  <motion.li
+                    key={job.id}
+                    initial={reduce ? false : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: EASE, delay: i * 0.06 }}
+                  >
+                    <Link href={`/employer/jobs/${job.id}`} className="group block">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-sm font-semibold transition-colors group-hover:text-[#1b6df0]">
+                          {job.title}
+                        </p>
+                        <span className="font-mono text-[11px] text-black/40">
+                          {job.awaiting_review > 0 && (
+                            <span className="mr-2 font-semibold text-[#1b6df0]">
+                              {job.awaiting_review} to review
+                            </span>
+                          )}
+                          {total} in pipeline
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <PipelineBar segments={segments} />
+                      </div>
+                    </Link>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          )}
+        </Tile>
+      </div>
+
+      <p className="font-mono text-[10px] leading-relaxed text-black/35">
         Counts reflect this workspace&apos;s live pipeline. Interview grading normally completes within the hour;
-        delayed gradings are shown honestly as pending — scores are never fabricated.
-      </motion.p>
-    </motion.div>
+        delayed gradings are shown as pending — scores are never fabricated.
+      </p>
+    </div>
   );
 }
 
-function Stat({ label, value, accent = false }: { label: string; value: number; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  accent,
+  ghost,
+  index,
+}: {
+  label: string;
+  value: number;
+  accent: string;
+  ghost: string;
+  index: number;
+}) {
   return (
-    <div className={`rounded-card border p-5 shadow-soft ${accent && value > 0 ? "border-trust bg-sky" : "border-line bg-white"}`}>
-      <MonoCounter value={value} className="mono text-3xl font-semibold text-ink" />
-      <p className="mt-1 text-xs text-muted">{label}</p>
-    </div>
+    <Tile accent={accent} index={index} ghost={ghost}>
+      <Label>{label}</Label>
+      <p className="font-display mt-3 text-4xl font-bold leading-none tracking-tight md:text-5xl">
+        <MonoCounter value={value} className="font-display" />
+      </p>
+    </Tile>
   );
 }

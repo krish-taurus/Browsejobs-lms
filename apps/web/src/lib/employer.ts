@@ -19,7 +19,24 @@ export type Workspace = {
 
 export type StageCounts = Record<string, number>;
 
+export type TalentPoolCandidate = {
+  candidate_id: number;
+  name: string;
+  match_score: number;
+  skill_match_pct: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  readiness_index: number;
+  mock_average: number;
+  mock_attempts: number;
+  training: { course: string; status: string } | null;
+  cv_ready: boolean;
+};
+
 export type DashboardData = {
+  funnel: { stage: string; label: string; count: number }[];
+  trend: { date: string; applications: number; graded: number }[];
+  score_distribution: { band: string; floor: number; count: number }[];
   active_jobs: number;
   total_applications: number;
   graded_applications: number;
@@ -162,6 +179,11 @@ export const employerApi = {
     apiJson<{ data: AutomationRule }>(`${base}/workspaces/${ws}/jobs/${job}/automation-rules/${rule}/toggle`, {
       method: "POST",
     }),
+
+  talentPool: (ws: number, job: number) =>
+    apiJson<{ data: TalentPoolCandidate[] }>(`${base}/workspaces/${ws}/jobs/${job}/talent-pool`),
+  inviteStudent: (ws: number, job: number, candidate: number) =>
+    apiJson(`${base}/workspaces/${ws}/jobs/${job}/talent-pool/${candidate}/invite`, { method: "POST" }),
 
   members: (ws: number) => apiJson<{ data: MemberRow[] }>(`${base}/workspaces/${ws}/members`),
   invite: (ws: number, email: string, role: EmployerRole) =>

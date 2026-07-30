@@ -155,13 +155,13 @@ function Guarded({ children }: { children: ReactNode }) {
       }}
     >
       <CommandPalette workspaceId={workspace.id} />
-      <div className="min-h-screen md:grid md:grid-cols-[230px_1fr]">
-        <aside className="hidden border-r border-line bg-ink text-white md:flex md:flex-col">
+      <div className="min-h-screen bg-white font-body text-[#0a1220] antialiased selection:bg-[#1b6df0] selection:text-white md:grid md:grid-cols-[248px_1fr]">
+        <aside className="relative hidden overflow-hidden bg-[#0a0f1c] text-white md:flex md:flex-col">
           <div className="flex items-center gap-2 px-6 py-5">
             <Mark tone="dark" />
             <div>
               <span className="display block leading-none">BrowseJobs</span>
-              <span className="mono text-[10px] uppercase tracking-widest text-sky/60">Employer</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/40">Employer</span>
             </div>
           </div>
 
@@ -170,14 +170,14 @@ function Guarded({ children }: { children: ReactNode }) {
               value={workspace.id}
               onChange={(e) => setActiveId(Number(e.target.value))}
               aria-label="Switch workspace"
-              className="mx-3 mb-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+              className="mx-3 mb-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
             >
               {workspaces.map((w) => (
                 <option key={w.id} value={w.id} className="text-ink">{w.name}</option>
               ))}
             </select>
           ) : (
-            <p className="px-6 pb-2 text-sm font-medium text-sky/80">{workspace.name}</p>
+            <p className="px-6 pb-3 text-sm font-semibold text-white/80">{workspace.name}</p>
           )}
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4 pt-2">
@@ -187,8 +187,10 @@ function Guarded({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? "bg-white/10 text-white" : "text-sky/60 hover:bg-white/5 hover:text-white"
+                  className={`group relative flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ${
+                    active
+                      ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      : "text-white/45 hover:bg-white/[0.04] hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -197,23 +199,23 @@ function Guarded({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <p className="mono px-6 pb-2 text-[10px] uppercase tracking-widest text-sky/40">
+          <p className="px-6 pb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/25">
             ⌘K to jump anywhere
           </p>
           <button
             onClick={() => logout().then(() => router.replace("/employer"))}
-            className="m-3 rounded-lg px-3 py-2.5 text-left text-sm text-sky/60 hover:bg-white/5 hover:text-white"
+            className="m-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white"
           >
             Sign out
           </button>
         </aside>
 
         <div className="flex min-h-screen flex-col">
-          <header className="flex items-center justify-between border-b border-line bg-white/80 px-5 py-3 backdrop-blur-md">
-            <p className="text-sm text-muted">
-              <span className="font-semibold text-ink">{user.name}</span>
-              <span className="mono ml-2 text-xs uppercase tracking-widest text-muted">
-                {workspace.my_role ?? "member"} · {workspace.name}
+          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-black/[0.06] bg-white/80 px-5 py-3.5 backdrop-blur-xl md:px-8">
+            <p className="flex items-center gap-2.5 text-sm">
+              <span className="font-semibold">{user.name}</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">
+                {(workspace.my_role ?? "member").replace("_", " ")}
               </span>
             </p>
             <button
@@ -252,7 +254,7 @@ function Guarded({ children }: { children: ReactNode }) {
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: durations.base, ease }}
-            className="flex-1 px-5 py-8 md:px-8"
+            className="flex-1 px-5 py-8 md:px-8 md:py-10"
           >
             {children}
           </motion.main>
