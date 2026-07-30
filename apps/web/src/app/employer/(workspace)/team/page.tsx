@@ -1,8 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { ApiError } from "@/lib/api";
 import { useWorkspace } from "@/components/employer/EmployerShell";
+import {
+  EASE,
+  InkPanel,
+  Label,
+  PageHead,
+  Pill,
+  PrimaryButton,
+  Skeleton,
+  Tile,
+} from "@/components/employer/ui";
+import { DEEP, TRUST, VERIFY, VIOLET } from "@/components/employer/charts";
 import { employerApi, type EmployerRole, type MemberRow } from "@/lib/employer";
 
 const ROLE_LABELS: Record<EmployerRole, string> = {
@@ -17,8 +29,35 @@ const ROLE_HINTS: Record<EmployerRole, string> = {
   hiring_manager: "Reviews shortlists and evidence",
 };
 
+const ROLE_ACCENT: Record<EmployerRole, string> = {
+  owner: VIOLET,
+  recruiter: TRUST,
+  hiring_manager: DEEP,
+};
+
+/** Initials avatar — no image uploads in the workspace yet. */
+function Avatar({ name, accent }: { name: string; accent: string }) {
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return (
+    <span
+      aria-hidden
+      className="font-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-[13px] font-bold"
+      style={{ background: `${accent}14`, color: accent }}
+    >
+      {initials || "—"}
+    </span>
+  );
+}
+
 export default function EmployerTeamPage() {
   const { workspace } = useWorkspace();
+  const reduce = useReducedMotion();
   const [members, setMembers] = useState<MemberRow[] | null>(null);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<EmployerRole>("recruiter");
@@ -51,76 +90,152 @@ export default function EmployerTeamPage() {
     }
   }
 
+  const counts = (members ?? []).reduce<Record<string, number>>((acc, m) => {
+    acc[m.role] = (acc[m.role] ?? 0) + 1;
+    return acc;
+  }, {});
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <p className="mono text-[11px] uppercase tracking-widest text-trust">Team</p>
-        <h1 className="display mt-1 text-2xl text-ink">{workspace.name}</h1>
-      </div>
+    <div className="space-y-7 pb-10">
+      <PageHead
+        kicker="Team"
+        title={workspace.name}
+        sub="Who can post, who can decide. Every invite is a single-use signed link, and role changes are written to the audit log."
+      />
 
-      {isOwner && (
-        <form onSubmit={invite} className="rounded-panel border border-line bg-white p-6 shadow-soft">
-          <p className="mono text-[10px] uppercase tracking-widest text-muted">Invite a teammate</p>
-          <div className="mt-3 flex flex-wrap items-end gap-3">
-            <div className="min-w-[220px] flex-1">
-              <label className="mb-1 block text-sm font-medium text-ink" htmlFor="invite-email">Work email</label>
-              <input
-                id="invite-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-input border border-line px-3 py-2 text-sm"
-                placeholder="colleague@company.com"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-ink" htmlFor="invite-role">Role</label>
-              <select
-                id="invite-role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as EmployerRole)}
-                className="rounded-input border border-line px-3 py-2 text-sm"
-              >
-                <option value="recruiter">Recruiter</option>
-                <option value="hiring_manager">Hiring manager</option>
-                <option value="owner">Owner</option>
-              </select>
-            </div>
-            <button disabled={busy} className="rounded-input bg-trust px-4 py-2 text-sm font-semibold text-white shadow-soft disabled:opacity-50">
-              {busy ? "Sending…" : "Send invite"}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-muted">{ROLE_HINTS[role]}</p>
-          {message && <p className="mt-2 text-sm text-verify">{message}</p>}
-          {error && <p className="mt-2 text-sm text-warn">{error}</p>}
-        </form>
-      )}
+      <div className="grid items-start gap-4 md:grid-cols-6 md:gap-5">
+        <div className="space-y-4 md:col-span-4 md:space-y-5">
+          {isOwner && (
+            <InkPanel glow={TRUST}>
+              <form onSubmit={invite}>
+                <Label dark>Invite a teammate</Label>
+                <p className="font-display mt-2.5 text-xl font-bold leading-tight md:text-2xl">
+                  Add someone to{" "}
+                  <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                    {workspace.name}
+                  </span>
+                </p>
 
-      <div className="rounded-panel border border-line bg-white p-6 shadow-soft">
-        <p className="mono text-[10px] uppercase tracking-widest text-muted">Members</p>
-        {members === null ? (
-          <div className="mt-3 space-y-2">{[0, 1].map((i) => <div key={i} className="shimmer h-12 rounded-lg" />)}</div>
-        ) : (
-          <ul className="mt-3 divide-y divide-line">
-            {members.map((m) => (
-              <li key={m.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-ink">{m.user?.name ?? "Member"}</p>
-                  <p className="text-xs text-muted">{m.user?.email}</p>
+                <div className="mt-5 flex flex-wrap items-end gap-3">
+                  <div className="min-w-[220px] flex-1">
+                    <label htmlFor="invite-email" className="block text-[13px] font-semibold text-white/70">
+                      Work email
+                    </label>
+                    <input
+                      id="invite-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none transition-shadow placeholder:text-white/25 focus:border-[#4d94ff] focus:ring-4 focus:ring-[#1b6df0]/25"
+                      placeholder="colleague@company.com"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="invite-role" className="block text-[13px] font-semibold text-white/70">
+                      Role
+                    </label>
+                    <select
+                      id="invite-role"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as EmployerRole)}
+                      className="mt-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none focus:border-[#4d94ff] focus:ring-4 focus:ring-[#1b6df0]/25"
+                    >
+                      <option className="text-[#0a1220]" value="recruiter">Recruiter</option>
+                      <option className="text-[#0a1220]" value="hiring_manager">Hiring manager</option>
+                      <option className="text-[#0a1220]" value="owner">Owner</option>
+                    </select>
+                  </div>
+                  <PrimaryButton type="submit" disabled={busy}>
+                    {busy ? "Sending…" : "Send invite"}
+                  </PrimaryButton>
                 </div>
-                <span className="mono rounded-full bg-sky px-3 py-1 text-[10px] uppercase tracking-widest text-deep">
-                  {ROLE_LABELS[m.role]}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
-      {!isOwner && (
-        <p className="text-xs text-muted">Only workspace owners can invite or change teammates.</p>
-      )}
+                <p className="mt-3 text-[13px] text-white/40">
+                  <span className="font-semibold text-white/70">{ROLE_LABELS[role]}</span>
+                  {" — "}
+                  {ROLE_HINTS[role].charAt(0).toLowerCase() + ROLE_HINTS[role].slice(1)}.
+                </p>
+                {message && (
+                  <p className="mt-3 rounded-2xl bg-[#0ba860]/15 px-4 py-2.5 text-[13px] text-[#6ee7b7]">{message}</p>
+                )}
+                {error && (
+                  <p className="mt-3 rounded-2xl bg-[#d64545]/15 px-4 py-2.5 text-[13px] text-[#fca5a5]">{error}</p>
+                )}
+              </form>
+            </InkPanel>
+          )}
+
+          <Tile accent={TRUST} index={0} hover={false}>
+            <div className="flex items-baseline justify-between">
+              <div>
+                <Label>Members</Label>
+                <p className="font-display mt-1 text-lg font-bold">
+                  {members === null ? "Loading" : `${members.length} in this workspace`}
+                </p>
+              </div>
+              {!isOwner && (
+                <span className="text-[11px] text-black/40">Owners manage the team</span>
+              )}
+            </div>
+
+            {members === null ? (
+              <div className="mt-5 space-y-2.5">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} className="h-16" />
+                ))}
+              </div>
+            ) : members.length === 0 ? (
+              <p className="mt-4 text-sm text-black/50">No members loaded.</p>
+            ) : (
+              <ul className="mt-5 space-y-2.5">
+                {members.map((m, i) => {
+                  const accent = ROLE_ACCENT[m.role] ?? TRUST;
+                  return (
+                    <motion.li
+                      key={m.id}
+                      initial={reduce ? false : { opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.55, ease: EASE, delay: i * 0.05 }}
+                      className="flex items-center gap-4 rounded-2xl border border-black/[0.06] bg-white/70 p-3.5"
+                    >
+                      <Avatar name={m.user?.name ?? "Member"} accent={accent} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{m.user?.name ?? "Member"}</p>
+                        <p className="truncate font-mono text-[11px] text-black/40">{m.user?.email}</p>
+                      </div>
+                      <Pill tone={m.role === "owner" ? "trust" : "neutral"}>{ROLE_LABELS[m.role]}</Pill>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            )}
+          </Tile>
+        </div>
+
+        {/* Role legend — permissions stated plainly, not buried in docs */}
+        <div className="space-y-4 md:col-span-2 md:space-y-5">
+          {(["owner", "recruiter", "hiring_manager"] as EmployerRole[]).map((r, i) => (
+            <Tile key={r} accent={ROLE_ACCENT[r]} index={i} hover={false}>
+              <div className="flex items-baseline justify-between gap-3">
+                <Label>{ROLE_LABELS[r]}</Label>
+                <span className="font-mono text-[11px] font-semibold" style={{ color: ROLE_ACCENT[r] }}>
+                  {counts[r] ?? 0}
+                </span>
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-black/55">{ROLE_HINTS[r]}</p>
+            </Tile>
+          ))}
+
+          <Tile accent={VERIFY} index={3} hover={false}>
+            <Label>Invite security</Label>
+            <p className="mt-2 text-[13px] leading-relaxed text-black/55">
+              Invite links are signed, single-use and expire in 7 days. Accepting one consumes it atomically, so a
+              forwarded link cannot be replayed.
+            </p>
+          </Tile>
+        </div>
+      </div>
     </div>
   );
 }

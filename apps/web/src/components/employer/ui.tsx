@@ -261,3 +261,67 @@ export function LiveDot({ color = "#0ba860" }: { color?: string }) {
 export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`shimmer rounded-3xl ${className}`} />;
 }
+
+/**
+ * Shared control surface. Generous height for touch, a visible focus
+ * ring (never removed), and the same hairline the tiles use.
+ */
+export const controlCls =
+  "w-full rounded-2xl border border-black/[0.09] bg-white px-4 py-3 text-sm text-[#0a1220] outline-none transition-shadow placeholder:text-black/25 focus:border-[#1b6df0] focus:ring-4 focus:ring-[#1b6df0]/12";
+
+/** Labelled form field with optional helper text under the label. */
+export function Field({
+  label,
+  hint,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  htmlFor?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-[#0a1220]">
+        {label}
+      </label>
+      {hint && <p className="mb-2 mt-0.5 text-[12px] leading-snug text-black/40">{hint}</p>}
+      <div className={hint ? "" : "mt-2"}>{children}</div>
+    </div>
+  );
+}
+
+/** Checkbox styled as a selectable card, so the hit area is a full row. */
+export function CheckCard({
+  checked,
+  onChange,
+  title,
+  sub,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  title: string;
+  sub?: string;
+}) {
+  return (
+    <label
+      className="flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors"
+      style={{
+        borderColor: checked ? "#1b6df04d" : "rgba(0,0,0,0.09)",
+        background: checked ? "#1b6df00a" : "#fff",
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 accent-[#1b6df0]"
+      />
+      <span>
+        <span className="block text-[13px] font-semibold text-[#0a1220]">{title}</span>
+        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-black/45">{sub}</span>}
+      </span>
+    </label>
+  );
+}
