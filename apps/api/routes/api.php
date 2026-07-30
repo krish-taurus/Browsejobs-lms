@@ -94,6 +94,7 @@ use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
+use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Labs\LabController;
@@ -426,6 +427,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show']);
     Route::post('workspaces/{workspace}/jobs/{job}/applications/{application}/stage', [EmployerApplicationController::class, 'moveStage']);
     Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}/interviews', [EmployerInterviewController::class, 'index']);
+
+    // Trained LMS students matched to a JD (PRD-E F7).
+    Route::get('workspaces/{workspace}/jobs/{job}/talent-pool', [EmployerTalentPoolController::class, 'index']);
+    Route::post('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/invite', [EmployerTalentPoolController::class, 'invite'])->middleware('throttle:60,1');
 
     // Automation rules (PRD-E F6): advance/park only, never reject/offer.
     Route::get('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'index']);

@@ -4,18 +4,24 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\BatchMemberStatus;
 use App\Enums\EmployerApplicationStage;
 use App\Enums\EmployerInterviewRound;
 use App\Enums\EmployerInterviewStatus;
 use App\Enums\EmployerJobStatus;
 use App\Enums\EmployerRole;
 use App\Enums\JdMockStatus;
+use App\Models\Batch;
+use App\Models\BatchMember;
+use App\Models\Course;
+use App\Models\CvProfile;
 use App\Models\EmployerInterview;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
 use App\Models\JdMock;
+use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
@@ -121,7 +127,65 @@ final class EmployerSeeder extends Seeder
             );
 
             $this->seedApplications($tenant, $job, $mock);
+            $this->seedTrainedTalent($tenant);
         });
+    }
+
+    /**
+     * Trained BrowseJobs students who have not applied yet — the talent
+     * pool an employer can source from (PRD-E F7). Each carries the
+     * evidence only this platform has: a built CV, a readiness index,
+     * and a completed programme.
+     */
+    private function seedTrainedTalent(Tenant $tenant): void
+    {
+        $course = Course::query()->where('name', 'like', '%Data Engineering%')->first()
+            ?? Course::query()->first();
+
+        $batch = $course !== null
+            ? Batch::query()->where('course_id', $course->id)->first()
+            : null;
+
+        /** @var list<array{name: string, email: string, skills: list<string>, pri: int}> */
+        $talent = [
+            ['name' => 'Aditya Rao', 'email' => 'aditya.rao@example.com', 'skills' => ['python', 'sql', 'airflow', 'aws', 'dbt', 'spark'], 'pri' => 88],
+            ['name' => 'Fatima Sheikh', 'email' => 'fatima.sheikh@example.com', 'skills' => ['python', 'sql', 'aws', 'data modeling'], 'pri' => 81],
+            ['name' => 'Nikhil Kulkarni', 'email' => 'nikhil.kulkarni@example.com', 'skills' => ['python', 'sql', 'airflow'], 'pri' => 74],
+            ['name' => 'Pooja Deshmukh', 'email' => 'pooja.deshmukh@example.com', 'skills' => ['sql', 'aws'], 'pri' => 63],
+        ];
+
+        foreach ($talent as $entry) {
+            $student = User::query()->where('email', $entry['email'])->first()
+                ?? User::factory()->create([
+                    'tenant_id' => $tenant->id,
+                    'name' => $entry['name'],
+                    'email' => $entry['email'],
+                    'user_type' => 'student',
+                ]);
+
+            CvProfile::query()->updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'tenant_id' => $tenant->id,
+                    'data' => [
+                        'skills' => $entry['skills'],
+                        'summary' => 'Completed the BrowseJobs programme with a graded project portfolio.',
+                    ],
+                ],
+            );
+
+            StudentScore::query()->updateOrCreate(
+                ['user_id' => $student->id],
+                ['tenant_id' => $tenant->id, 'pri' => $entry['pri'], 'computed_at' => now()],
+            );
+
+            if ($batch !== null) {
+                BatchMember::query()->updateOrCreate(
+                    ['batch_id' => $batch->id, 'user_id' => $student->id],
+                    ['tenant_id' => $tenant->id, 'status' => BatchMemberStatus::Completed->value],
+                );
+            }
+        }
     }
 
     /**
