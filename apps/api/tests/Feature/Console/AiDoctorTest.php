@@ -37,3 +37,48 @@ it('surfaces the provider error body on a rejected key', function () {
         ->expectsOutputToContain('HTTP 401')
         ->assertExitCode(1);
 });
+
+it('tests every configured provider and names the one that works', function (): void {
+    // The exact shape of "I added a new key and nothing changed": an older
+    // provider still holds a key, so the resolver keeps choosing it, and its
+    // failure is the only thing anyone sees.
+    config([
+        'ai.provider' => 'anthropic',
+        'ai.providers.anthropic.api_key' => 'stale-key',
+        'ai.providers.deepseek.api_key' => 'fresh-key',
+    ]);
+
+    Http::fake([
+        'api.anthropic.com/*' => Http::response(['error' => ['message' => 'invalid x-api-key']], 401),
+        'api.deepseek.com/*' => Http::response([
+            'model' => 'deepseek-chat',
+            'choices' => [['message' => ['content' => 'OK'], 'finish_reason' => 'stop']],
+            'usage' => ['prompt_tokens' => 8, 'completion_tokens' => 1],
+        ]),
+    ]);
+
+    $this->artisan('ai:doctor --all')
+        ->expectsOutputToContain('anthropic')
+        ->expectsOutputToContain('deepseek')
+        // The point of the flag: say plainly that the active one is the
+        // broken one while a working key sits unused. Asserted on the plain
+        // line rather than the styled warning, which renders separately.
+        ->expectsOutputToContain('Set Active provider in Admin')
+        ->assertFailed();
+});
+
+it('passes --all when the active provider is the one that works', function (): void {
+    config([
+        'ai.provider' => 'deepseek',
+        'ai.providers.anthropic.api_key' => '',
+        'ai.providers.deepseek.api_key' => 'fresh-key',
+    ]);
+
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'model' => 'deepseek-chat',
+        'choices' => [['message' => ['content' => 'OK'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 8, 'completion_tokens' => 1],
+    ])]);
+
+    $this->artisan('ai:doctor --all')->assertSuccessful();
+});
