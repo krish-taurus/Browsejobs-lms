@@ -11,6 +11,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
 import { HomeJobs } from "@/components/landing/HomeJobs";
+import { Disclaimer } from "@/components/brand/Disclaimer";
 import { LoginMenu } from "@/components/landing/LoginMenu";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Footer } from "@/components/landing/Footer";
@@ -1144,7 +1145,7 @@ function ProgramsSection() {
           compact[k] = { total: t.total, trend: t.trend };
         }
         setDemand(compact);
-        setDemandLive(d.source === "kimi-k3");
+        setDemandLive(d.source === "counted");
       })
       .catch(() => setDemand(null));
   }, []);
@@ -1167,8 +1168,8 @@ function ProgramsSection() {
         className="mt-5 max-w-xl text-lg text-black/50"
       >
         Only four — because <strong className="text-[#0a1220]">demand decides what we teach.</strong> We run
-        tracks only where the market is actively hiring, and the live opening counts below prove it.
-        {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● live market analysis</span>}
+        tracks only where the market is actively hiring.
+        {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● counted from our job feed</span>}
       </motion.p>
       <div className="mt-14 grid gap-6 md:grid-cols-2">
         {PROGRAMS.map((c, i) => (
@@ -2034,7 +2035,7 @@ function ReviewsSection() {
 const ENGINE_SKILLS = ["SQL window functions", "Spark partitioning", "Airflow DAG design", "dbt incremental models", "Kafka consumer groups", "Docker multi-stage builds", "Kubernetes probes", "Terraform state", "Python decorators", "Slowly changing dimensions", "CI/CD rollbacks", "Power BI DAX measures", "Data modelling trade-offs", "REST vs. event-driven"];
 
 type MarketSignal = { skill: string; change: string; note: string };
-type MarketData = { rising: MarketSignal[]; cooling: MarketSignal[]; source: string; updated: string };
+type MarketData = { rising: MarketSignal[]; cooling: MarketSignal[]; source: string; updated: string; sample?: number };
 
 function SignalBar({ s, i, up }: { s: MarketSignal; i: number; up: boolean }) {
   const pct = Math.min(100, Math.abs(parseInt(s.change.replace(/[^0-9-]/g, ""), 10) || 20) * 1.5);
@@ -2101,11 +2102,18 @@ function IntelSection() {
           <motion.span
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-              data?.source === "kimi-k3" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400" : "border-white/15 bg-white/[0.04] text-white/40"
+              data?.source === "counted" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400" : "border-white/15 bg-white/[0.04] text-white/40"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${data?.source === "kimi-k3" ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
-            {data ? (data.source === "kimi-k3" ? "Generated live by kimi-k3" : "Curated sample") : "Asking the LLM…"}
+            <span className={`h-1.5 w-1.5 rounded-full ${data?.source === "counted" ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+            {/* The badge may only claim what the figures are. "Counted" means
+                measured over postings we ingested; anything else is bundled
+                illustrative content and says so. */}
+            {data
+              ? data.source === "counted"
+                ? `Counted from ${data.sample?.toLocaleString("en-IN") ?? ""} postings we track`
+                : "Illustrative sample — not measured"
+              : "Loading…"}
           </motion.span>
         </div>
 
@@ -2135,10 +2143,17 @@ function IntelSection() {
             </div>
           </div>
         </div>
+        {/* The caveat has to match the source. It previously said the deltas
+            were "estimated by the platform's own LLM", which was at least
+            honest about being estimates; now that they are counted, saying so
+            is both more accurate and a stronger claim. */}
         <p className="mt-6 text-[11px] text-white/30">
-          Demand deltas estimated by the platform&apos;s own LLM from hiring-market knowledge — directional signals, not guarantees.
+          {data?.source === "counted"
+            ? `Share of postings mentioning each skill, over the last ${30} days against the 30 before it, counted across the roles we ingest. Movement in what employers ask for — not a forecast.`
+            : "Illustrative sample, not measured. Shown when we do not yet have enough postings to count a trend honestly."}
           {data?.updated ? ` Updated ${new Date(data.updated).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}.` : ""}
         </p>
+        <Disclaimer className="mt-3 !text-white/30" />
 
         <div className="mt-14 grid gap-5 md:grid-cols-2">
           <motion.div

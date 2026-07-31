@@ -76,8 +76,9 @@ Schedule::command('jobs:nudge')->dailyAt('09:30');
 // P4.8c Apply Assist: daily follow-up nudges on stalled applications.
 Schedule::command('applications:follow-ups')->dailyAt('10:00');
 
-// Market intelligence (landing boards): daily snapshot refresh.
-Schedule::command('market:refresh')->dailyAt('05:45');
+// Market intelligence (landing boards): refresh at midnight so the boards
+// carry the day's figures from the moment the date changes.
+Schedule::command('market:refresh')->dailyAt('00:00');
 
 // Daily Market Brief teaser to open leads, after the morning snapshot refresh.
 Schedule::job(new SendDailyBrief)->dailyAt('08:30');

@@ -9,8 +9,21 @@
  * latency ~15s; max_tokens must leave room for thinking tokens.
  */
 
+/**
+ * Where a figure came from, and the only thing a badge may claim.
+ *
+ * `counted` — measured over postings we ingested.
+ * `sample`  — bundled illustrative content. Never a measurement, and the UI
+ *             must not imply otherwise.
+ *
+ * `kimi-k3` is gone from market figures on purpose: the prompt behind them
+ * asked a model for estimates that were "order-of-magnitude correct", and the
+ * page badged that as live market analysis.
+ */
+export type SourceKind = "counted" | "sample";
+
 export type Signal = { skill: string; change: string; note: string };
-export type MarketSignals = { rising: Signal[]; cooling: Signal[]; source: "kimi-k3" | "sample"; updated: string };
+export type MarketSignals = { rising: Signal[]; cooling: Signal[]; source: SourceKind; updated: string; sample?: number };
 
 export type QRound = { round: number; name: string; questions: string[] };
 export type QuestionBank = { tracks: Record<string, QRound[]>; source: "kimi-k3" | "sample"; updated: string };
@@ -22,9 +35,39 @@ export type TrackDemand = {
   roles: { role: string; count: number }[];
   cities: { city: string; share: number }[];
 };
-export type JobDemand = { tracks: Record<string, TrackDemand>; source: "kimi-k3" | "sample"; updated: string };
+export type JobDemand = { tracks: Record<string, TrackDemand>; source: SourceKind; updated: string; sample?: number };
 
 const TTL_MS = 60 * 60 * 1000;
+
+type CountedFeed = {
+  tracks: Record<string, {
+    label: string;
+    sufficient: boolean;
+    total: number;
+    trend_pct?: number;
+    cities?: { name: string; share: number }[];
+    roles?: { name: string; count: number }[];
+    sources?: { name: string; share: number }[];
+  }>;
+  rising: { skill: string; change_pct: number; postings: number }[];
+  cooling: { skill: string; change_pct: number; postings: number }[];
+  sample: number;
+  window_days: number;
+  sufficient: boolean;
+};
+
+/** The counted snapshot from the API, or null when it cannot be reached. */
+async function countedFeed(): Promise<CountedFeed | null> {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  try {
+    const res = await fetch(`${base}/api/v1/market-intel`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: { feed?: CountedFeed } };
+    return body.data?.feed ?? null;
+  } catch {
+    return null;
+  }
+}
 
 async function kimiJson<T>(system: string, user: string, maxTokens: number): Promise<T> {
   const key = process.env.KIMI_API_KEY;
@@ -75,19 +118,31 @@ let signalsAt = 0;
 export async function getMarketSignals(): Promise<MarketSignals> {
   const stamp = new Date().toISOString();
   if (signalsCache && Date.now() - signalsAt < TTL_MS) return signalsCache;
-  try {
-    const parsed = await kimiJson<Pick<MarketSignals, "rising" | "cooling">>(
-      "You are a pragmatic job-market analyst covering Indian tech hiring (data engineering, DevOps/cloud, data analytics, Python backend). Respond with strict JSON only.",
-      'Return {"rising":[{"skill","change","note"} x5],"cooling":[{"skill","change","note"} x4]} for skill demand in Indian tech hiring right now. "change" is a plausible year-over-year demand delta like "+38%" or "-21%". "note" is a punchy reason under 8 words. Skills must be specific and current.',
-      4000,
-    );
-    if (!Array.isArray(parsed.rising) || parsed.rising.length === 0) throw new Error("bad shape");
-    signalsCache = { rising: parsed.rising, cooling: parsed.cooling, source: "kimi-k3", updated: stamp };
+
+  const feed = await countedFeed();
+
+  // `sufficient` is the API's own judgement about its sample. Rendering
+  // whatever came back regardless is how a real count over nine postings ends
+  // up presented as a market signal.
+  if (feed && feed.sufficient && feed.rising.length > 0) {
+    const toSignal = (m: { skill: string; change_pct: number; postings: number }): Signal => ({
+      skill: m.skill,
+      change: `${m.change_pct > 0 ? "+" : ""}${m.change_pct}%`,
+      note: `${m.postings} postings in the last ${feed.window_days} days`,
+    });
+
+    signalsCache = {
+      rising: feed.rising.map(toSignal),
+      cooling: feed.cooling.map(toSignal),
+      source: "counted",
+      sample: feed.sample,
+      updated: stamp,
+    };
     signalsAt = Date.now();
     return signalsCache;
-  } catch {
-    return { ...SIGNALS_FALLBACK, updated: stamp };
   }
+
+  return { ...SIGNALS_FALLBACK, updated: stamp };
 }
 
 /* ---------------------------- interview questions --------------------------- */
@@ -175,17 +230,33 @@ let demandAt = 0;
 export async function getJobDemand(): Promise<JobDemand> {
   const stamp = new Date().toISOString();
   if (demandCache && Date.now() - demandAt < TTL_MS) return demandCache;
-  try {
-    const parsed = await kimiJson<{ tracks: Record<string, TrackDemand> }>(
-      "You are a job-market analyst for Indian tech hiring. Give realistic current estimates of active job postings (order-of-magnitude correct, India, last 30 days, across Naukri/LinkedIn/other portals). Respond with strict JSON only.",
-      'Return {"tracks":{"data-engineering":{"total":N,"trend":"+12%","portals":[{"name":"Naukri","share":N},{"name":"LinkedIn","share":N},{"name":"Others","share":N}],"roles":[{"role","count"} x3-4],"cities":[{"city","share"} x4]}, "devops-cloud":{...},"data-analytics":{...},"python-backend":{...}}}. total = estimated active postings in India last 30 days for the track. Shares are percentages summing ~100. Role counts sum to roughly total. trend = month-over-month direction.',
-      6000,
-    );
-    if (!parsed.tracks || typeof parsed.tracks["data-engineering"]?.total !== "number") throw new Error("bad shape");
-    demandCache = { tracks: parsed.tracks, source: "kimi-k3", updated: stamp };
-    demandAt = Date.now();
-    return demandCache;
-  } catch {
-    return { tracks: DEMAND_FALLBACK, source: "sample", updated: stamp };
+
+  const feed = await countedFeed();
+
+  if (feed && feed.sufficient) {
+    const tracks: Record<string, TrackDemand> = {};
+
+    for (const [slug, t] of Object.entries(feed.tracks)) {
+      // A track below the floor is left out rather than shown at whatever
+      // number it happens to have. Someone choosing what to learn should not
+      // be handed a figure we would not defend.
+      if (!t.sufficient) continue;
+
+      tracks[slug] = {
+        total: t.total,
+        trend: `${(t.trend_pct ?? 0) > 0 ? "+" : ""}${t.trend_pct ?? 0}%`,
+        portals: (t.sources ?? []).map((x) => ({ name: x.name, share: x.share })),
+        roles: (t.roles ?? []).map((x) => ({ role: x.name, count: x.count })),
+        cities: (t.cities ?? []).map((x) => ({ city: x.name, share: x.share })),
+      };
+    }
+
+    if (Object.keys(tracks).length > 0) {
+      demandCache = { tracks, source: "counted", sample: feed.sample, updated: stamp };
+      demandAt = Date.now();
+      return demandCache;
+    }
   }
+
+  return { tracks: DEMAND_FALLBACK, source: "sample", updated: stamp };
 }
