@@ -92,6 +92,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { href: "/admin/tenants", label: "Tenants", role: "super-admin" },
       { href: "/admin/data-requests", label: "Data requests", role: "super-admin" },
       { href: "/admin/funding-news", label: "Funding Radar", role: "super-admin" },
+      { href: "/admin/employers", label: "Employers", role: "super-admin" },
       { href: "/admin/settings", label: "Settings", role: "super-admin" },
     ],
   },

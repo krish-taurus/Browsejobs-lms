@@ -24,6 +24,17 @@ trait ResolvesMembership
 
         abort_if($member === null, 403, 'You are not a member of this workspace.');
 
+        // Suspension is enforced here because this is the one place every
+        // employer endpoint passes through. It was previously a column
+        // nothing read, which made "suspend" a button that changed a label
+        // and nothing else — the whole team kept full access to candidate
+        // contact details and the pipeline.
+        abort_if(
+            $workspace->status === EmployerWorkspace::STATUS_SUSPENDED,
+            403,
+            'This workspace is suspended. Contact BrowseJobs to restore access.',
+        );
+
         return $member;
     }
 

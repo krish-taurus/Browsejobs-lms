@@ -34,6 +34,11 @@ final class EmployerWorkspace extends Model
     /** @use HasFactory<EmployerWorkspaceFactory> */
     use HasFactory;
 
+    public const STATUS_ACTIVE = 'active';
+
+    /** Access is cut for the whole team, enforced in ResolvesMembership. */
+    public const STATUS_SUSPENDED = 'suspended';
+
     protected $fillable = [
         'tenant_id',
         'name',

@@ -44,6 +44,7 @@ final class EmployerInvite extends Model
         'invited_by_id',
         'email',
         'role',
+        'grants_credential',
         'token',
         'expires_at',
         'accepted_at',
@@ -53,6 +54,7 @@ final class EmployerInvite extends Model
     {
         return [
             'role' => EmployerRole::class,
+            'grants_credential' => 'boolean',
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];

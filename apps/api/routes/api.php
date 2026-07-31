@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\CvApprovalController;
 use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestController;
 use App\Http\Controllers\Admin\DayBuilderController;
 use App\Http\Controllers\Admin\DunningController;
+use App\Http\Controllers\Admin\EmployerAdminController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FlashcardController;
 use App\Http\Controllers\Admin\FundingNewsController;
@@ -424,6 +425,16 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 // Employer portal API (PRD-E, ADR 0051). Tenant resolves from the
 // authenticated user; workspace roles are membership attributes checked in
 // controllers via ResolvesMembership — not platform permission slugs.
+/*
+| Claiming an onboarding invite is deliberately unauthenticated: ops created
+| the account without a usable password, so the employer has nothing to sign
+| in with yet. The token is the credential, and it is single-use, expiring,
+| and only able to set a password on an account that never had one.
+*/
+Route::middleware('tenant.domain')->prefix('v1/employer')->group(function (): void {
+    Route::post('invites/claim', [EmployerInviteController::class, 'claim'])->middleware('throttle:10,1');
+});
+
 Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group(function () {
     Route::get('workspaces', [EmployerWorkspaceController::class, 'index']);
     Route::get('workspaces/{workspace}/dashboard', [EmployerDashboardController::class, 'show']);
@@ -668,6 +679,13 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     Route::middleware('can:manage-settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index']);
         Route::put('settings', [SettingsController::class, 'update']);
+
+        // Employer onboarding (PRD-E F1). Platform-level, same gate as the
+        // integration credentials: creating a customer's workspace and their
+        // first login is not an institute-admin action.
+        Route::get('employers', [EmployerAdminController::class, 'index']);
+        Route::post('employers', [EmployerAdminController::class, 'store']);
+        Route::post('employers/{workspace}/status', [EmployerAdminController::class, 'status']);
 
         // Funding Radar curation ("our research") — sourced public news items.
         Route::get('funding-news', [FundingNewsController::class, 'index']);
