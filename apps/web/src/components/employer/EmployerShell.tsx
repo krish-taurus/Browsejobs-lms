@@ -62,33 +62,33 @@ function CreateWorkspaceCard({ onCreated }: { onCreated: () => Promise<void> }) 
 
   return (
     <div className="grid min-h-screen place-items-center bg-[#05070d] px-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-panel border border-line bg-[#0a0f1c] p-8 shadow-soft">
-        <p className="mono text-[11px] uppercase tracking-widest text-trust">Set up your workspace</p>
-        <h1 className="display mt-2 text-2xl text-ink">Welcome to BrowseJobs for employers</h1>
-        <p className="mt-2 text-sm text-muted">
+      <form onSubmit={submit} className="w-full max-w-md rounded-panel border border-white/[0.10] bg-[#0a0f1c] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.5)]">
+        <p className="mono text-[11px] uppercase tracking-widest text-[#4d8ef7]">Set up your workspace</p>
+        <h1 className="display mt-2 text-2xl text-white">Welcome to BrowseJobs for employers</h1>
+        <p className="mt-2 text-sm text-white/55">
           Name your company workspace. You can invite your team right after.
         </p>
-        <label className="mt-6 block text-sm font-medium text-ink" htmlFor="ws-name">Company name</label>
+        <label className="mt-6 block text-sm font-medium text-white/80" htmlFor="ws-name">Company name</label>
         <input
           id="ws-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="mt-1 w-full rounded-input border border-line px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-input border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-shadow placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
           placeholder="Acme Technologies"
         />
-        <label className="mt-4 block text-sm font-medium text-ink" htmlFor="ws-industry">Industry (optional)</label>
+        <label className="mt-4 block text-sm font-medium text-white/80" htmlFor="ws-industry">Industry (optional)</label>
         <input
           id="ws-industry"
           value={industry}
           onChange={(e) => setIndustry(e.target.value)}
-          className="mt-1 w-full rounded-input border border-line px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-input border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-shadow placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
           placeholder="IT Services"
         />
-        {error && <p className="mt-3 text-sm text-warn">{error}</p>}
+        {error && <p className="mt-3 rounded-xl bg-[#e05561]/15 px-3 py-2 text-sm text-[#fca5a5]">{error}</p>}
         <button
           disabled={busy || name.trim() === ""}
-          className="mt-6 w-full rounded-input bg-trust px-4 py-2.5 text-sm font-semibold text-white shadow-soft disabled:opacity-50"
+          className="mt-6 w-full rounded-input bg-[#4d8ef7] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(77,142,247,0.35)] disabled:opacity-50 disabled:shadow-none"
         >
           {busy ? "Creating…" : "Create workspace"}
         </button>
@@ -220,7 +220,7 @@ function Guarded({ children }: { children: ReactNode }) {
             </p>
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink md:hidden"
+              className="rounded-lg border border-white/[0.14] px-3 py-1.5 text-sm font-medium text-white/80 md:hidden"
               aria-expanded={menuOpen}
             >
               {menuOpen ? "Close" : "Menu"}
@@ -228,13 +228,13 @@ function Guarded({ children }: { children: ReactNode }) {
           </header>
 
           {menuOpen && (
-            <div className="border-b border-line bg-[#0a0f1c] px-5 py-4 md:hidden">
+            <div className="border-b border-white/[0.08] bg-[#0a0f1c] px-5 py-4 md:hidden">
               <div className="space-y-1">
                 {NAV.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`block py-1 text-sm font-medium ${pathname.startsWith(item.href) ? "text-trust" : "text-ink"}`}
+                    className={`block py-1 text-sm font-medium ${pathname.startsWith(item.href) ? "text-[#4d8ef7]" : "text-white/70"}`}
                   >
                     {item.label}
                   </Link>
@@ -242,7 +242,7 @@ function Guarded({ children }: { children: ReactNode }) {
               </div>
               <button
                 onClick={() => logout().then(() => router.replace("/employer"))}
-                className="mt-4 text-sm font-medium text-muted"
+                className="mt-4 text-sm font-medium text-white/50"
               >
                 Sign out
               </button>

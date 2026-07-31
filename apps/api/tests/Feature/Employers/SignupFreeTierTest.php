@@ -9,6 +9,7 @@ use App\Models\EmployerWorkspace;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Entitlements\EntitlementService;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -104,4 +105,31 @@ it('refuses when the confirmation does not match', function (): void {
         ->assertFailed();
 
     expect(User::withoutGlobalScopes()->where('email', 'founder@example.com')->exists())->toBeFalse();
+});
+
+it('names the reason an employer sign-in is refused', function (): void {
+    // A row inserted by hand: plain-text password, wrong type, deactivated.
+    // Written straight to the table — the model's `hashed` cast would
+    // otherwise hash it and hide the very case being reproduced.
+    $user = User::factory()->for($this->tenant)->create([
+        'email' => 'manual@example.com',
+        'user_type' => 'student',
+        'is_active' => false,
+    ]);
+    DB::table('users')->where('id', $user->id)->update(['password' => 'plaintext-not-a-hash']);
+
+    $this->artisan('employer:diagnose', ['email' => 'manual@example.com'])
+        ->expectsOutputToContain('Password is not a hash')
+        ->expectsOutputToContain('no workspace membership')
+        ->expectsOutputToContain('deactivated')
+        ->assertFailed();
+});
+
+it('reports a healthy employer account as sound', function (): void {
+    $this->artisan('employer:grant-owner', ['email' => 'ok@example.com'])
+        ->expectsQuestion('Password for the employer portal (input hidden)', 'a-very-long-password')
+        ->expectsQuestion('Confirm password', 'a-very-long-password')
+        ->assertSuccessful();
+
+    $this->artisan('employer:diagnose', ['email' => 'ok@example.com'])->assertSuccessful();
 });
