@@ -135,7 +135,7 @@ function JourneyExplorer({ course, accent }: { course: CourseDetail; accent: str
     <div ref={ref}>
       {/* module rail */}
       <div className="relative">
-        <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 bg-black/[0.08] md:block" />
+        <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 bg-fg/[0.08] md:block" />
         <div className="relative flex flex-wrap justify-center gap-2 md:justify-between md:gap-0">
           {course.modules.map((mod, i) => (
             <button
@@ -156,7 +156,7 @@ function JourneyExplorer({ course, accent }: { course: CourseDetail; accent: str
               >
                 M{i + 1}
               </motion.span>
-              <span className={`hidden max-w-[80px] text-center text-[8px] font-semibold leading-tight lg:block ${i === active ? "text-black/70" : "text-black/30"}`}>
+              <span className={`hidden max-w-[80px] text-center text-[8px] font-semibold leading-tight lg:block ${i === active ? "text-fg/70" : "text-fg/30"}`}>
                 {mod.title.split(" ").slice(0, 2).join(" ")}
               </span>
             </button>
@@ -182,12 +182,12 @@ function JourneyExplorer({ course, accent }: { course: CourseDetail; accent: str
             <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: accent }}>
               Module {active + 1} of {n}
             </span>
-            <span className="rounded-full bg-black/[0.05] px-3 py-1 text-[10px] font-bold text-black/45">
+            <span className="rounded-full bg-fg/[0.05] px-3 py-1 text-[10px] font-bold text-fg/45">
               {m.topics.length} topics
             </span>
           </div>
           <h3 className="font-display relative mt-4 text-2xl font-bold md:text-3xl">{m.title}</h3>
-          <p className="relative mt-2 max-w-xl text-black/55">{m.hook}</p>
+          <p className="relative mt-2 max-w-xl text-fg/55">{m.hook}</p>
           <div className="relative mt-5 flex flex-wrap gap-1.5">
             {m.topics.slice(0, 10).map((t, ti) => (
               <motion.span
@@ -195,7 +195,7 @@ function JourneyExplorer({ course, accent }: { course: CourseDetail; accent: str
                 initial={{ opacity: 0, scale: 0.7 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 + ti * 0.045, type: "spring", stiffness: 300, damping: 18 }}
-                className="rounded-full border bg-white px-3 py-1.5 text-[11px] font-medium text-black/60"
+                className="rounded-full border bg-surface px-3 py-1.5 text-[11px] font-medium text-fg/60"
                 style={{ borderColor: `${accent}30` }}
               >
                 {t}
@@ -240,13 +240,13 @@ function TutorDemo({ q, a, accent }: { q: string; a: string; accent: string }) {
         </motion.p>
       )}
       {step >= 2 ? (
-        <motion.p initial={{ opacity: 0, x: -16, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} className="max-w-[92%] rounded-2xl rounded-bl-md bg-white/10 px-3.5 py-2.5 text-[11px] leading-snug text-white/85">
+        <motion.p initial={{ opacity: 0, x: -16, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} className="max-w-[92%] rounded-2xl rounded-bl-md bg-surface/10 px-3.5 py-2.5 text-[11px] leading-snug text-white/85">
           {a}
         </motion.p>
       ) : step === 1 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-14 gap-1 rounded-2xl rounded-bl-md bg-white/10 px-3.5 py-3">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-14 gap-1 rounded-2xl rounded-bl-md bg-surface/10 px-3.5 py-3">
           {[0, 1, 2].map((d) => (
-            <motion.span key={d} animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: d * 0.15 }} className="h-1.5 w-1.5 rounded-full bg-white/50" />
+            <motion.span key={d} animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: d * 0.15 }} className="h-1.5 w-1.5 rounded-full bg-surface/50" />
           ))}
         </motion.div>
       ) : null}
@@ -270,7 +270,7 @@ function MockDemo({ q }: { q: string }) {
           />
         ))}
       </div>
-      <p className="mt-3 rounded-xl bg-white/5 px-3.5 py-2.5 text-[11px] italic leading-snug text-white/70">“{q}”</p>
+      <p className="mt-3 rounded-xl bg-surface/5 px-3.5 py-2.5 text-[11px] italic leading-snug text-white/70">“{q}”</p>
       <p className="pt-2 text-[10px] text-[#c084fc]">voice AI calls you · scored on real data</p>
     </div>
   );
@@ -286,7 +286,7 @@ function MasteryDemo({ course, accent }: { course: CourseDetail; accent: string 
             <span className="truncate pr-2">{r.t}</span>
             <span className="font-mono font-bold" style={{ color: r.v > 70 ? "#34d399" : "#fbbf24" }}>{r.v}%</span>
           </div>
-          <div className="h-1 overflow-hidden rounded-full bg-white/10">
+          <div className="h-1 overflow-hidden rounded-full bg-surface/10">
             <motion.div
               initial={{ width: 0 }}
               whileInView={{ width: `${r.v}%` }}
@@ -318,7 +318,7 @@ function RadarDemo({ course }: { course: CourseDetail }) {
             style={{ background: "conic-gradient(from 0deg, rgba(16,185,129,0.5) 0deg, transparent 70deg)" }}
           />
         </div>
-        <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+        <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface" />
       </div>
       <div className="mt-3 flex flex-wrap justify-center gap-1.5">
         {course.roles.slice(0, 3).map((role, i) => (
@@ -364,7 +364,7 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
   if (!demand) {
     return (
       <section className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <div className="h-40 animate-pulse rounded-3xl bg-black/[0.04]" />
+        <div className="h-40 animate-pulse rounded-3xl bg-fg/[0.04]" />
       </section>
     );
   }
@@ -382,8 +382,8 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
             The market is hiring for this. <span style={{ color: accent }}>We checked.</span>
           </h2>
         </div>
-        <span className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider ${live ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-black/10 bg-black/[0.03] text-black/40"}`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-black/25"}`} />
+        <span className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider ${live ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-fg/10 bg-fg/[0.03] text-fg/40"}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-500" : "bg-fg/25"}`} />
           {live ? "AI market analysis · kimi-k3" : "Curated estimate"}
         </span>
       </div>
@@ -409,7 +409,7 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
                 <div className="mb-1 flex justify-between text-[10px] text-white/55">
                   <span className="font-bold">{p.name}</span><span>{p.share}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-1.5 overflow-hidden rounded-full bg-surface/10">
                   <motion.div
                     initial={{ width: 0 }} whileInView={{ width: `${p.share}%` }} viewport={{ once: true }}
                     transition={{ delay: 0.4 + i * 0.15, duration: 1, ease: EASE }}
@@ -426,17 +426,17 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
         <motion.div
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }}
           transition={{ delay: 0.1, duration: 0.8, ease: EASE }}
-          className="rounded-3xl border border-black/[0.06] bg-white p-8 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+          className="rounded-3xl border border-fg/[0.06] bg-surface p-8 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
         >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Openings by role</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-fg/40">Openings by role</p>
           <div className="mt-4 space-y-3">
             {demand.roles.map((r, i) => (
               <div key={r.role}>
                 <div className="mb-1 flex justify-between text-[11px]">
-                  <span className="font-bold text-black/70">{r.role}</span>
-                  <span className="font-mono text-black/45">≈{r.count.toLocaleString("en-IN")}</span>
+                  <span className="font-bold text-fg/70">{r.role}</span>
+                  <span className="font-mono text-fg/45">≈{r.count.toLocaleString("en-IN")}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-black/[0.06]">
+                <div className="h-2 overflow-hidden rounded-full bg-fg/[0.06]">
                   <motion.div
                     initial={{ width: 0 }} whileInView={{ width: `${(r.count / maxRole) * 100}%` }} viewport={{ once: true }}
                     transition={{ delay: 0.3 + i * 0.12, duration: 1, ease: EASE }}
@@ -447,14 +447,14 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
               </div>
             ))}
           </div>
-          <p className="mt-5 text-[10px] font-bold uppercase tracking-widest text-black/40">Where the jobs are</p>
+          <p className="mt-5 text-[10px] font-bold uppercase tracking-widest text-fg/40">Where the jobs are</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {demand.cities.map((c, i) => (
               <motion.span
                 key={c.city}
                 initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
                 transition={{ delay: 0.5 + i * 0.1, type: "spring", stiffness: 300, damping: 18 }}
-                className="rounded-full border px-3 py-1 text-[11px] font-semibold text-black/60"
+                className="rounded-full border px-3 py-1 text-[11px] font-semibold text-fg/60"
                 style={{ borderColor: `${accent}30` }}
               >
                 {c.city} · {c.share}%
@@ -472,7 +472,7 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
         >
           <span className="text-3xl">🧭</span>
           <h3 className="font-display mt-4 text-xl font-bold">Demand decides our modules.</h3>
-          <p className="mt-3 flex-1 text-sm leading-relaxed text-black/55">
+          <p className="mt-3 flex-1 text-sm leading-relaxed text-fg/55">
             We don&apos;t run courses in every domain — only where the market is actually hiring.
             That&apos;s why there are just four live tracks, and why the {courseName} syllabus is
             rebuilt monthly from what this demand is asking for.
@@ -488,7 +488,7 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
           </a>
         </motion.div>
       </div>
-      <p className="mt-5 text-[11px] text-black/35">
+      <p className="mt-5 text-[11px] text-fg/35">
         Estimates from BrowseJobs&apos; AI market analysis of Indian tech hiring — directional signals, not exact counts. No scraping: we cite public portals and show you how to count them yourself.
       </p>
     </section>
@@ -543,18 +543,18 @@ function CourseReviews({ slug, accent }: { slug: string; accent: string }) {
             initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }}
             transition={{ delay: i * 0.12, duration: 0.8, ease: EASE }}
             whileHover={{ y: -5 }}
-            className="flex flex-col rounded-3xl border border-black/[0.06] bg-white p-6 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+            className="flex flex-col rounded-3xl border border-fg/[0.06] bg-surface p-6 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold">{r.n}</p>
               <span className="rounded-full px-2.5 py-0.5 text-[9px] font-bold" style={{ background: `${accent}14`, color: accent }}>{r.src}</span>
             </div>
             <p className="mt-1 text-xs text-[#f5a623]">★★★★★</p>
-            <p className="mt-3 flex-1 text-[13px] leading-relaxed text-black/60">“{r.q}”</p>
+            <p className="mt-3 flex-1 text-[13px] leading-relaxed text-fg/60">“{r.q}”</p>
           </motion.div>
         ))}
       </div>
-      <p className="mt-6 text-center text-xs text-black/35">
+      <p className="mt-6 text-center text-xs text-fg/35">
         Real reviews from Google, JustDial and verified students — never a fabricated one.{" "}
         <Link href="/reviews" className="font-bold hover:underline" style={{ color: accent }}>Read all reviews →</Link>
       </p>
@@ -597,8 +597,8 @@ function InterviewIntel({ slug, accent }: { slug: string; accent: string }) {
           <h3 className="font-display mt-2 text-2xl font-bold text-white md:text-3xl">What this track&apos;s interviews ask</h3>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-bold uppercase ${live ? "bg-emerald-400/10 text-emerald-400" : "bg-white/[0.06] text-white/40"}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+          <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-bold uppercase ${live ? "bg-emerald-400/10 text-emerald-400" : "bg-surface/[0.06] text-white/40"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-surface/30"}`} />
             {rounds ? (live ? "Generated live by kimi-k3" : "Curated sample") : "Loading…"}
           </span>
           <a
@@ -614,8 +614,8 @@ function InterviewIntel({ slug, accent }: { slug: string; accent: string }) {
 
       {!rounds || !r ? (
         <div className="mt-6 space-y-2">
-          <div className="h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
-          <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/10" />
+          <div className="h-3 w-2/3 animate-pulse rounded-full bg-surface/10" />
+          <div className="h-3 w-1/2 animate-pulse rounded-full bg-surface/10" />
         </div>
       ) : (
         <>
@@ -646,9 +646,9 @@ function InterviewIntel({ slug, accent }: { slug: string; accent: string }) {
                   initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 + qi * 0.12, duration: 0.4, ease: EASE }}
-                  className="rounded-2xl bg-white/[0.05] p-4"
+                  className="rounded-2xl bg-surface/[0.05] p-4"
                 >
-                  <span className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/50">Q{qi + 1}</span>
+                  <span className="rounded bg-surface/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/50">Q{qi + 1}</span>
                   <p className="mt-2 text-[12px] leading-snug text-white/80">“{q}”</p>
                 </motion.div>
               ))}
@@ -687,7 +687,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
   const book = () => openLeadModal({ variant: "masterclass", courseSlug: course.slug });
 
   return (
-    <main className="bg-white font-body text-[#0a1220] antialiased selection:text-white" style={{ ["--tw-selection" as never]: accent }}>
+    <main className="bg-surface font-body text-ink antialiased selection:text-white" style={{ ["--tw-selection" as never]: accent }}>
       <style dangerouslySetInnerHTML={{ __html: `
         ::selection { background: ${accent}; }
         @keyframes ckMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -696,15 +696,15 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
       {/* nav */}
       <motion.header
         initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/80 backdrop-blur-xl"
+        className="fixed inset-x-0 top-0 z-50 border-b border-fg/[0.06] bg-surface/80 backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 md:px-6">
           <Link href="/" aria-label="BrowseJobs home"><Wordmark /></Link>
           <div className="flex items-center gap-5">
-            <a href="#journey" className="hidden text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220] sm:block">
+            <a href="#journey" className="hidden text-sm font-medium text-fg/50 transition-colors hover:text-ink sm:block">
               The journey
             </a>
-            <Link href="/courses" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+            <Link href="/courses" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
               All programs
             </Link>
           </div>
@@ -746,7 +746,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
 
           <motion.p
             initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }}
-            className="mx-auto mt-5 max-w-xl text-lg text-black/50"
+            className="mx-auto mt-5 max-w-xl text-lg text-fg/50"
           >
             {course.tagline}{" "}
             {course.roles.length > 0 && (
@@ -778,10 +778,10 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
                 key={f.label}
                 initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.85 + i * 0.08, type: "spring", stiffness: 280, damping: 18 }}
-                className="rounded-2xl border bg-white px-3 py-3 text-center shadow-[0_8px_30px_rgba(10,18,32,0.05)]"
+                className="rounded-2xl border bg-surface px-3 py-3 text-center shadow-[0_8px_30px_rgba(10,18,32,0.05)]"
                 style={{ borderColor: `${accent}20` }}
               >
-                <p className="text-[9px] font-bold uppercase tracking-widest text-black/35">{f.label}</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-fg/35">{f.label}</p>
                 <p className="mt-1 text-sm font-bold">{f.value}</p>
               </motion.div>
             ))}
@@ -800,7 +800,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
               Explore the journey <span className="inline-block transition-transform group-hover:translate-y-0.5">↓</span>
             </a>
           </motion.div>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="mt-4 text-sm text-black/35">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="mt-4 text-sm text-fg/35">
             3 free steps first · ₹30,000 only after the free bootcamp · pay-after-placement path
           </motion.p>
         </div>
@@ -808,11 +808,11 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
 
       {/* tools marquee */}
       {course.tools.length > 0 && (
-        <section className="border-y border-black/[0.06] bg-[#f6f9fe] py-5">
+        <section className="border-y border-fg/[0.06] bg-paper py-5">
           <div className="overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_12%,black_88%,transparent)]">
             <div className="flex w-max gap-3 pr-3" style={{ animation: "ckMarquee 26s linear infinite" }}>
               {[...course.tools, ...course.tools].map((t, i) => (
-                <span key={i} className="whitespace-nowrap rounded-full border border-black/[0.08] bg-white px-4 py-1.5 font-mono text-xs text-black/55">
+                <span key={i} className="whitespace-nowrap rounded-full border border-fg/[0.08] bg-surface px-4 py-1.5 font-mono text-xs text-fg/55">
                   {t}
                 </span>
               ))}
@@ -871,7 +871,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
                 key={c.t}
                 initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: (i % 4) * 0.1, duration: 0.8, ease: EASE }}
-                className="rounded-3xl border border-white/10 bg-white/[0.04] p-6"
+                className="rounded-3xl border border-white/10 bg-surface/[0.04] p-6"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{c.t}</p>
                 <h3 className="font-display mt-1.5 text-lg font-bold">{c.k}</h3>
@@ -898,7 +898,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
 
       {/* ------------------------------ projects ------------------------------- */}
       {course.projects.length > 0 && (
-        <section className="bg-[#f6f9fe] px-6 py-24 md:py-32">
+        <section className="bg-paper px-6 py-24 md:py-32">
           <div className="mx-auto max-w-6xl">
             <motion.p
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
@@ -919,18 +919,18 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
                   initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: (i % 3) * 0.1, duration: 0.8, ease: EASE }}
                   whileHover={{ y: -6 }}
-                  className="flex flex-col rounded-3xl border border-black/[0.06] bg-white p-7 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+                  className="flex flex-col rounded-3xl border border-fg/[0.06] bg-surface p-7 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
                 >
                   <span className="font-mono text-xs font-bold" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</span>
                   <h3 className="font-display mt-2 text-xl font-bold">{p.title}</h3>
-                  <p className="mt-2 flex-1 text-sm text-black/50">{p.body}</p>
+                  <p className="mt-2 flex-1 text-sm text-fg/50">{p.body}</p>
                   <ul className="mt-4 space-y-1.5">
                     {p.points.slice(0, 3).map((pt, pi) => (
                       <motion.li
                         key={pt}
                         initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                         transition={{ delay: 0.3 + pi * 0.1, duration: 0.5 }}
-                        className="flex gap-2 text-xs text-black/60"
+                        className="flex gap-2 text-xs text-fg/60"
                       >
                         <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full text-[8px] font-bold text-white" style={{ background: accent }}>✓</span>
                         {pt}
@@ -986,7 +986,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
             className="mt-10"
           >
             <Magnetic>
-              <button onClick={book} className="rounded-full bg-white px-11 py-4.5 text-lg font-bold text-[#0a1220] transition-all hover:scale-[1.03] hover:shadow-[0_0_60px_rgba(255,255,255,0.3)]">
+              <button onClick={book} className="rounded-full bg-surface px-11 py-4.5 text-lg font-bold text-ink transition-all hover:scale-[1.03] hover:shadow-[0_0_60px_rgba(255,255,255,0.3)]">
                 Book my free {course.code} masterclass →
               </button>
             </Magnetic>

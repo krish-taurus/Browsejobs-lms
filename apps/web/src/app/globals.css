@@ -19,6 +19,37 @@
   --bj-line: #dce6f5; /* borders, dividers */
   --bj-muted: #5a6b85; /* muted text, captions, disclaimers */
   --bj-white: #ffffff;
+
+  /* Surface = the colour a card sits on; fg = the colour text is drawn in.
+     Both were hardcoded as white/black across the marketing pages, which is
+     what made a theme flip impossible — the variables were already here, the
+     pages just were not using them. */
+  --bj-surface: #ffffff;
+  --bj-fg: #0a1220;
+}
+
+/*
+ * Dark theme. Semantic hues do not move: blue stays the single primary
+ * action, green stays free/verified, amber stays review, red stays refused
+ * (CLAUDE.md design system). Only surfaces, foreground and lines flip, and
+ * the blues lift because #1b6df0 on near-black does not clear AA.
+ */
+:root[data-theme="dark"] {
+  --bj-ink: #f4f7fb;
+  --bj-ink2: #c7d3e4;
+  --bj-deep: #4d8ef7;
+  --bj-trust: #4d8ef7;
+  --bj-sky: #12233d;
+  --bj-verify: #2fcf8d;
+  --bj-verify-bg: #0d2a1f;
+  --bj-warn: #f2a1a7;
+  --bj-amber: #e8bf63;
+  --bj-paper: #05070d;
+  --bj-line: #1d2735;
+  --bj-muted: #93a3ba;
+  --bj-white: #0a0f1c;
+  --bj-surface: #0a0f1c;
+  --bj-fg: #f4f7fb;
 }
 
 @theme inline {
@@ -34,6 +65,8 @@
   --color-paper: var(--bj-paper);
   --color-line: var(--bj-line);
   --color-muted: var(--bj-muted);
+  --color-surface: var(--bj-surface);
+  --color-fg: var(--bj-fg);
 
   /* Spec §2.4: soft shadow only. */
   --shadow-soft: 0 10px 40px rgba(10, 18, 32, 0.1);

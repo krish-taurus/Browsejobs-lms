@@ -122,7 +122,7 @@ function ManifestoSection() {
   return (
     <section className="mx-auto max-w-5xl px-6 py-32 md:py-44">
       <ScrubText
-        className="font-display text-4xl font-bold leading-[1.12] tracking-tight text-[#0a1220] md:text-6xl"
+        className="font-display text-4xl font-bold leading-[1.12] tracking-tight text-ink md:text-6xl"
         text="Colleges hand you a degree. Nobody hands you a career."
       />
       <motion.p
@@ -165,7 +165,7 @@ function ManifestoSection() {
             <p className="font-display mt-3 text-xl font-bold md:text-2xl" style={{ color: m.accent }}>
               {m.verb}
             </p>
-            <p className="mt-1 text-xs leading-snug text-black/55 md:text-sm">{m.body}</p>
+            <p className="mt-1 text-xs leading-snug text-fg/55 md:text-sm">{m.body}</p>
             <motion.div
               initial={{ width: 0 }}
               whileInView={{ width: "34%" }}
@@ -208,7 +208,7 @@ function SiteNav() {
   return (
     <motion.header
       initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }}
-      className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/80 backdrop-blur-xl"
+      className="fixed inset-x-0 top-0 z-50 border-b border-fg/[0.06] bg-surface/80 backdrop-blur-xl"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 md:px-6">
         <Link href="/" aria-label="BrowseJobs home" onClick={() => setOpen(false)}>
@@ -218,11 +218,11 @@ function SiteNav() {
         {/* Desktop menu */}
         <nav className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} onClick={(e) => go(e, l.href)} className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+            <a key={l.href} href={l.href} onClick={(e) => go(e, l.href)} className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
               {l.label}
             </a>
           ))}
-          <Link href="/jobs" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+          <Link href="/jobs" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
             Jobs
           </Link>
           <LoginMenu />
@@ -233,7 +233,7 @@ function SiteNav() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white md:hidden"
+          className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full border border-fg/10 bg-surface md:hidden"
         >
           <span className="relative block h-3.5 w-4.5">
             <motion.span
@@ -263,7 +263,7 @@ function SiteNav() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="overflow-hidden border-t border-black/[0.06] bg-white md:hidden"
+            className="overflow-hidden border-t border-fg/[0.06] bg-surface md:hidden"
           >
             <div className="space-y-1 px-5 py-4">
               {NAV_LINKS.map((l, i) => (
@@ -274,7 +274,7 @@ function SiteNav() {
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.06 + i * 0.05, duration: 0.3, ease: EASE }}
-                  className="block rounded-xl px-4 py-3 text-base font-semibold text-[#0a1220] transition-colors hover:bg-[#f6f9fe]"
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition-colors hover:bg-paper"
                 >
                   {l.label}
                 </motion.a>
@@ -287,21 +287,21 @@ function SiteNav() {
                 <Link
                   href="/jobs"
                   onClick={() => setOpen(false)}
-                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
                 >
                   Jobs
                 </Link>
                 <Link
                   href="/employer"
                   onClick={() => setOpen(false)}
-                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
                 >
                   Employer sign in
                 </Link>
                 <Link
                   href="/student"
                   onClick={() => setOpen(false)}
-                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
                 >
                   Student sign in
                 </Link>
@@ -372,16 +372,16 @@ function ChatDemo() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.45, ease: EASE }}
               className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[11.5px] leading-snug ${
-                m.from === "you" ? "self-end rounded-br-md bg-[#1b6df0] text-white" : "self-start rounded-bl-md bg-white/8 text-white/85"
+                m.from === "you" ? "self-end rounded-br-md bg-[#1b6df0] text-white" : "self-start rounded-bl-md bg-surface/8 text-white/85"
               }`}
             >
               {m.text}
             </motion.div>
           ))}
           {typing && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 self-start rounded-2xl rounded-bl-md bg-white/8 px-4 py-3">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 self-start rounded-2xl rounded-bl-md bg-surface/8 px-4 py-3">
               {[0, 1, 2].map((d) => (
-                <motion.span key={d} animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: d * 0.15 }} className="h-1.5 w-1.5 rounded-full bg-white/50" />
+                <motion.span key={d} animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: d * 0.15 }} className="h-1.5 w-1.5 rounded-full bg-surface/50" />
               ))}
             </motion.div>
           )}
@@ -425,7 +425,7 @@ function CallDemo() {
           />
         ))}
       </div>
-      <p className="mt-5 rounded-xl bg-white/5 px-4 py-3 text-[11.5px] italic leading-snug text-white/70">
+      <p className="mt-5 rounded-xl bg-surface/5 px-4 py-3 text-[11.5px] italic leading-snug text-white/70">
         “Walk me through how you would optimise a slow API endpoint in production…”
       </p>
       <div className="mt-5 space-y-2.5">
@@ -438,7 +438,7 @@ function CallDemo() {
             <div className="mb-1 flex justify-between text-[10px] text-white/50">
               <span>{s.k}</span><span className="font-semibold text-white/80">{s.v}/100</span>
             </div>
-            <div className="h-1 overflow-hidden rounded-full bg-white/10">
+            <div className="h-1 overflow-hidden rounded-full bg-surface/10">
               <motion.div
                 initial={{ width: 0 }}
                 animate={inView ? { width: `${s.v}%` } : { width: 0 }}
@@ -485,7 +485,7 @@ function RadarDemo() {
             style={{ top: p.t, left: p.l }}
           />
         ))}
-        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface" />
       </div>
       <div className="mt-6 space-y-2.5">
         {jobs.map((j) => (
@@ -494,7 +494,7 @@ function RadarDemo() {
             initial={{ opacity: 0, x: 40 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: j.d, duration: 0.6, ease: EASE }}
-            className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 backdrop-blur"
+            className="flex items-center justify-between rounded-xl border border-white/10 bg-surface/[0.05] px-4 py-3 backdrop-blur"
           >
             <div>
               <p className="text-xs font-semibold text-white">{j.role}</p>
@@ -519,7 +519,7 @@ function CoachTile() {
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b6df0]">AI personal coach</p>
         <h3 className="font-display mt-3 text-2xl font-bold md:text-3xl">A coach that reads your data — every single day.</h3>
-        <p className="mt-3 max-w-sm text-black/50">Your Placement Readiness Index, what went well, what needs work, and exactly one next best action. No dashboards to decode.</p>
+        <p className="mt-3 max-w-sm text-fg/50">Your Placement Readiness Index, what went well, what needs work, and exactly one next best action. No dashboards to decode.</p>
       </div>
       <div className="flex shrink-0 items-center gap-6">
         <div className="relative h-28 w-28">
@@ -536,7 +536,7 @@ function CoachTile() {
           <div className="absolute inset-0 grid place-items-center">
             <div className="text-center">
               <p className="font-display text-2xl font-bold"><Counter to={87} /></p>
-              <p className="text-[9px] uppercase tracking-widest text-black/40">PRI</p>
+              <p className="text-[9px] uppercase tracking-widest text-fg/40">PRI</p>
             </div>
           </div>
         </div>
@@ -544,10 +544,10 @@ function CoachTile() {
           initial={{ opacity: 0, x: 24 }}
           animate={inView ? { opacity: 1, x: 0 } : {}}
           transition={{ delay: 1.2, duration: 0.7, ease: EASE }}
-          className="w-44 rounded-2xl bg-[#e7f1fe] p-4"
+          className="w-44 rounded-2xl bg-sky p-4"
         >
           <p className="text-[9px] font-bold uppercase tracking-widest text-[#0e3fa9]">Next best action</p>
-          <p className="mt-1.5 text-xs font-medium leading-snug text-[#0a1220]">Re-attempt the SQL window-functions mock — you&apos;re 1 score away from green.</p>
+          <p className="mt-1.5 text-xs font-medium leading-snug text-ink">Re-attempt the SQL window-functions mock — you&apos;re 1 score away from green.</p>
         </motion.div>
       </div>
     </div>
@@ -575,7 +575,7 @@ function CvTile() {
           </motion.span>
         </div>
         <p className="font-display mt-1 text-3xl font-bold"><Counter to={94} suffix="/100" /></p>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface/10">
           <motion.div
             initial={{ width: 0 }}
             animate={inView ? { width: "94%" } : {}}
@@ -608,9 +608,9 @@ function ClassesTile() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 + i * 0.15, duration: 0.6, ease: EASE }}
-            className="flex items-center gap-3 rounded-xl border border-black/[0.06] bg-white px-3.5 py-2.5"
+            className="flex items-center gap-3 rounded-xl border border-fg/[0.06] bg-surface px-3.5 py-2.5"
           >
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e7f1fe] text-[10px]">▶</span>
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sky text-[10px]">▶</span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold">{r.t}</p>
               {r.live ? (
@@ -618,7 +618,7 @@ function ClassesTile() {
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d64545]" /> STREAMING NOW
                 </p>
               ) : (
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-black/[0.07]">
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-fg/[0.07]">
                   <motion.div
                     initial={{ width: 0 }} whileInView={{ width: `${r.p}%` }} viewport={{ once: true }}
                     transition={{ delay: 0.6 + i * 0.15, duration: 1, ease: EASE }}
@@ -649,28 +649,28 @@ function TrackerTile() {
     <div ref={ref}>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0ba860]">Deployment</p>
       <h3 className="font-display mt-3 text-xl font-bold">Matched, tracked, placed.</h3>
-      <div className="mt-5 rounded-2xl border border-black/[0.06] bg-white p-4">
+      <div className="mt-5 rounded-2xl border border-fg/[0.06] bg-surface p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold">Zoho — Data Analyst</p>
-            <p className="text-[10px] text-black/40">Applied via BrowseJobs referral</p>
+            <p className="text-[10px] text-fg/40">Applied via BrowseJobs referral</p>
           </div>
           <motion.span
             key={stage}
             initial={{ opacity: 0, y: 10, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            className={`rounded-full px-3 py-1 text-[10px] font-bold ${stage === 3 ? "bg-[#e6f7ef] text-[#0ba860]" : "bg-[#e7f1fe] text-[#0e3fa9]"}`}
+            className={`rounded-full px-3 py-1 text-[10px] font-bold ${stage === 3 ? "bg-verify-bg text-[#0ba860]" : "bg-sky text-[#0e3fa9]"}`}
           >
             {stages[stage]}
           </motion.span>
         </div>
         <div className="mt-3 flex gap-1.5">
           {stages.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-500 ${i <= stage ? "bg-[#0ba860]" : "bg-black/[0.08]"}`} />
+            <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-500 ${i <= stage ? "bg-[#0ba860]" : "bg-fg/[0.08]"}`} />
           ))}
         </div>
-        <p className="mt-3 text-[10px] text-black/40">A placement team works every application until you accept.</p>
+        <p className="mt-3 text-[10px] text-fg/40">A placement team works every application until you accept.</p>
       </div>
     </div>
   );
@@ -707,7 +707,7 @@ function LabsTile() {
             {l}
           </motion.p>
         ))}
-        <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.9, repeat: Infinity }} className="inline-block h-3.5 w-1.5 bg-white/70 align-middle" />
+        <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.9, repeat: Infinity }} className="inline-block h-3.5 w-1.5 bg-surface/70 align-middle" />
       </div>
     </div>
   );
@@ -734,11 +734,11 @@ function TracksTile() {
             viewport={{ once: true }}
             transition={{ delay: 0.2 + i * 0.12, duration: 0.6, ease: EASE }}
             whileHover={{ x: 6 }}
-            className="flex items-center justify-between rounded-xl border border-black/[0.06] bg-white px-4 py-3"
+            className="flex items-center justify-between rounded-xl border border-fg/[0.06] bg-surface px-4 py-3"
           >
             <div>
               <p className="text-sm font-bold">{t.name}</p>
-              <p className="text-[10px] text-black/40">{t.tools}</p>
+              <p className="text-[10px] text-fg/40">{t.tools}</p>
             </div>
             <span className="text-[10px] font-bold text-[#0ba860]">● LIVE</span>
           </motion.div>
@@ -746,7 +746,7 @@ function TracksTile() {
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {["Agentic AI", "Cyber Security", "ServiceNow"].map((w) => (
-          <span key={w} className="rounded-full border border-black/10 px-2.5 py-1 text-[10px] font-semibold text-black/40">
+          <span key={w} className="rounded-full border border-fg/10 px-2.5 py-1 text-[10px] font-semibold text-fg/40">
             {w} · Waitlist
           </span>
         ))}
@@ -761,7 +761,7 @@ function CertTile() {
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0ba860]">Verified certificates</p>
       <h3 className="font-display mt-3 text-xl font-bold">Scan the QR. Check us.</h3>
-      <div className="relative mt-5 overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-5">
+      <div className="relative mt-5 overflow-hidden rounded-2xl border border-fg/[0.06] bg-surface p-5">
         <motion.div
           aria-hidden
           animate={{ x: ["-120%", "220%"] }}
@@ -769,20 +769,20 @@ function CertTile() {
           className="absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-[#1b6df0]/10 to-transparent"
         />
         <div className="flex items-center gap-4">
-          <div className="grid h-16 w-16 shrink-0 grid-cols-4 gap-0.5 rounded-lg border border-black/10 p-1.5">
+          <div className="grid h-16 w-16 shrink-0 grid-cols-4 gap-0.5 rounded-lg border border-fg/10 p-1.5">
             {[1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1].map((b, i) => (
               <span key={i} className={`rounded-[2px] ${b ? "bg-[#0a1220]" : "bg-transparent"}`} />
             ))}
           </div>
           <div>
             <p className="text-xs font-bold">Certificate #BJ-2026-4817</p>
-            <p className="text-[10px] text-black/40">Data Analytics · Distinction</p>
+            <p className="text-[10px] text-fg/40">Data Analytics · Distinction</p>
             <motion.p
               initial={{ opacity: 0, scale: 0.7 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 14 }}
-              className="mt-1.5 inline-block rounded-full bg-[#e6f7ef] px-2.5 py-0.5 text-[10px] font-bold text-[#0ba860]"
+              className="mt-1.5 inline-block rounded-full bg-verify-bg px-2.5 py-0.5 text-[10px] font-bold text-[#0ba860]"
             >
               ✓ Verified — recruiters can check this
             </motion.p>
@@ -816,7 +816,7 @@ function FreeLadderTile() {
           </div>
         ))}
       </div>
-      <p className="mt-4 text-[11px] text-black/40">Then decide. Pay-after-placement paths available on every track.</p>
+      <p className="mt-4 text-[11px] text-fg/40">Then decide. Pay-after-placement paths available on every track.</p>
     </div>
   );
 }
@@ -844,7 +844,7 @@ function MentorsTile() {
             </span>
           ))}
         </div>
-        <p className="text-[11px] text-black/45">Real engineers review your work weekly</p>
+        <p className="text-[11px] text-fg/45">Real engineers review your work weekly</p>
       </div>
       <div className="mt-4 rounded-2xl bg-[#0a0f1c] px-4 py-3">
         <p className="text-[9px] uppercase tracking-widest text-white/35">~50 real interviews monitored daily</p>
@@ -877,12 +877,12 @@ function MasteryTile() {
         {rows.map((r, i) => (
           <div key={r.t}>
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-black/60">{r.t}</span>
+              <span className="font-semibold text-fg/60">{r.t}</span>
               <span className="font-mono font-bold" style={{ color: r.c }}>
                 <Counter to={r.v} suffix="%" />
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.07]">
+            <div className="h-1.5 overflow-hidden rounded-full bg-fg/[0.07]">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${r.v}%` }}
@@ -895,7 +895,7 @@ function MasteryTile() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-[10px] text-black/40">Every MCQ updates your map — the coach targets the amber.</p>
+      <p className="mt-3 text-[10px] text-fg/40">Every MCQ updates your map — the coach targets the amber.</p>
     </div>
   );
 }
@@ -919,13 +919,13 @@ function WhatsAppTile() {
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 + i * 0.25, type: "spring", stiffness: 260, damping: 18 }}
-            className="max-w-[95%] rounded-2xl rounded-bl-md bg-[#dcf8c6] px-3.5 py-2 text-[11px] leading-snug text-[#0a1220] shadow-sm"
+            className="max-w-[95%] rounded-2xl rounded-bl-md bg-verify-bg px-3.5 py-2 text-[11px] leading-snug text-ink shadow-sm"
           >
             {m}
           </motion.div>
         ))}
       </div>
-      <p className="mt-3 text-[10px] text-black/40">Class reminders 12h, 2h & 5 min before — plus every win.</p>
+      <p className="mt-3 text-[10px] text-fg/40">Class reminders 12h, 2h & 5 min before — plus every win.</p>
     </div>
   );
 }
@@ -967,7 +967,7 @@ function PathCard({ s, i }: { s: (typeof PATH_STEPS)[number]; i: number }) {
       className={`relative flex w-[300px] shrink-0 flex-col overflow-hidden rounded-3xl border p-7 md:w-[330px] ${
         s.free
           ? "border-[#0ba860]/25 bg-gradient-to-b from-white to-[#e6f7ef]/60 shadow-[0_16px_50px_rgba(11,168,96,0.10)]"
-          : "border-black/[0.07] bg-white shadow-[0_16px_50px_rgba(10,18,32,0.06)]"
+          : "border-fg/[0.07] bg-surface shadow-[0_16px_50px_rgba(10,18,32,0.06)]"
       }`}
     >
       <span aria-hidden className={`pointer-events-none absolute -right-3 -top-7 font-display text-[7rem] font-bold leading-none ${s.free ? "text-[#0ba860]/[0.07]" : "text-[#1b6df0]/[0.06]"}`}>
@@ -979,7 +979,7 @@ function PathCard({ s, i }: { s: (typeof PATH_STEPS)[number]; i: number }) {
           whileInView={{ scale: 1, rotate: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 + (i % 3) * 0.08, type: "spring", stiffness: 280, damping: 14 }}
-          className={`grid h-12 w-12 place-items-center rounded-2xl text-xl ${s.free ? "bg-[#0ba860]/10" : "bg-[#e7f1fe]"}`}
+          className={`grid h-12 w-12 place-items-center rounded-2xl text-xl ${s.free ? "bg-[#0ba860]/10" : "bg-sky"}`}
         >
           {s.icon}
         </motion.span>
@@ -992,12 +992,12 @@ function PathCard({ s, i }: { s: (typeof PATH_STEPS)[number]; i: number }) {
             Free
           </motion.span>
         ) : (
-          <span className="rounded-full bg-black/[0.05] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-black/40">Step {s.n}</span>
+          <span className="rounded-full bg-fg/[0.05] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-fg/40">Step {s.n}</span>
         )}
       </div>
       <h3 className="font-display mt-6 text-2xl font-bold leading-tight">{s.t}</h3>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-black/50">{s.b}</p>
-      <div className={`mt-6 h-1 w-full overflow-hidden rounded-full ${s.free ? "bg-[#0ba860]/15" : "bg-black/[0.06]"}`}>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-fg/50">{s.b}</p>
+      <div className={`mt-6 h-1 w-full overflow-hidden rounded-full ${s.free ? "bg-[#0ba860]/15" : "bg-fg/[0.06]"}`}>
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: "100%" }}
@@ -1032,7 +1032,7 @@ function PathSection() {
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
-        className="mt-5 max-w-lg text-lg text-black/50"
+        className="mt-5 max-w-lg text-lg text-fg/50"
       >
         Keep scrolling — the page walks the whole journey with you, from your first free call to an accepted offer.
       </motion.p>
@@ -1040,7 +1040,7 @@ function PathSection() {
   );
 
   return (
-    <section id="path" className="bg-[#fbfcff] py-24 md:py-0">
+    <section id="path" className="bg-paper py-24 md:py-0">
       {/* Mobile: vertical stack */}
       <div className="mx-auto max-w-3xl px-6 md:hidden">
         {Head}
@@ -1080,7 +1080,7 @@ function PathSection() {
               <p className="mt-3 text-sm text-white/55">The placement fee starts only here — paid from the salary the offer brings.</p>
             </div>
           </motion.div>
-          <div className="mx-auto mt-12 h-1.5 w-full max-w-md rounded-full bg-black/[0.07]">
+          <div className="mx-auto mt-12 h-1.5 w-full max-w-md rounded-full bg-fg/[0.07]">
             <motion.div style={{ width: barW }} className="h-full rounded-full bg-gradient-to-r from-[#0ba860] via-[#1b6df0] to-[#7c3aed]" />
           </div>
         </div>
@@ -1165,9 +1165,9 @@ function ProgramsSection() {
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
-        className="mt-5 max-w-xl text-lg text-black/50"
+        className="mt-5 max-w-xl text-lg text-fg/50"
       >
-        Only four — because <strong className="text-[#0a1220]">demand decides what we teach.</strong> We run
+        Only four — because <strong className="text-ink">demand decides what we teach.</strong> We run
         tracks only where the market is actively hiring.
         {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● counted from our job feed</span>}
       </motion.p>
@@ -1181,7 +1181,7 @@ function ProgramsSection() {
             <a href={`/courses/${c.slug}`} className="block h-full">
               <TiltLight
                 accent={c.accent}
-                className="flex h-full flex-col rounded-3xl border border-black/[0.07] bg-white p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)] transition-all duration-300 hover:shadow-[0_28px_80px_rgba(10,18,32,0.12)]"
+                className="flex h-full flex-col rounded-3xl border border-fg/[0.07] bg-surface p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)] transition-all duration-300 hover:shadow-[0_28px_80px_rgba(10,18,32,0.12)]"
               >
                 <span aria-hidden className="pointer-events-none absolute -right-4 -top-10 font-display text-[9rem] font-bold leading-none opacity-[0.05] transition-opacity duration-300 group-hover:opacity-[0.09]" style={{ color: c.accent }}>
                   {c.code}
@@ -1222,7 +1222,7 @@ function ProgramsSection() {
                   {c.name}
                   <span className="mt-2 block h-1 w-0 rounded-full transition-all duration-500 group-hover:w-24" style={{ background: c.accent }} />
                 </h3>
-                <p className="relative mt-3 flex-1 text-black/50">{c.tag}</p>
+                <p className="relative mt-3 flex-1 text-fg/50">{c.tag}</p>
                 <div className="relative mt-6 flex flex-wrap gap-1.5">
                   {c.tools.map((t, ti) => (
                     <motion.span
@@ -1236,8 +1236,8 @@ function ProgramsSection() {
                     </motion.span>
                   ))}
                 </div>
-                <div className="relative mt-7 flex items-center justify-between border-t border-black/[0.07] pt-5">
-                  <span className="font-mono text-xs text-black/40">{c.projects}</span>
+                <div className="relative mt-7 flex items-center justify-between border-t border-fg/[0.07] pt-5">
+                  <span className="font-mono text-xs text-fg/40">{c.projects}</span>
                   <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: c.accent }}>
                     View syllabus <span className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
                   </span>
@@ -1256,9 +1256,9 @@ function ProgramsSection() {
           { name: "Cyber Security", slug: "cyber-security" },
           { name: "ServiceNow", slug: "servicenow" },
         ].map((w) => (
-          <a key={w.slug} href={`/courses/${w.slug}`} className="group flex items-center justify-between rounded-2xl border border-black/[0.07] bg-[#f6f9fe] px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
-            <span className="font-semibold text-black/60">{w.name}</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-black/35 transition-colors group-hover:text-[#1b6df0]">
+          <a key={w.slug} href={`/courses/${w.slug}`} className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
+            <span className="font-semibold text-fg/60">{w.name}</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-fg/35 transition-colors group-hover:text-[#1b6df0]">
               Waitlist <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
             </span>
           </a>
@@ -1339,7 +1339,7 @@ function ResumeScanDemo() {
       className="relative"
     >
       {/* resume being scanned */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-surface/[0.05] p-6 backdrop-blur">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">your_resume.pdf</p>
           <motion.p
@@ -1352,7 +1352,7 @@ function ResumeScanDemo() {
         </div>
         <div className="mt-4 space-y-2">
           {[100, 82, 94, 68, 88, 40].map((w, i) => (
-            <div key={i} className="h-2 rounded-full bg-white/[0.09]" style={{ width: `${w}%` }} />
+            <div key={i} className="h-2 rounded-full bg-surface/[0.09]" style={{ width: `${w}%` }} />
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-1.5">
@@ -1364,7 +1364,7 @@ function ResumeScanDemo() {
               className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-bold transition-colors duration-500 ${
                 phase >= 1
                   ? k.hit ? "bg-emerald-400/15 text-emerald-400" : "bg-[#d64545]/15 text-[#ff8f8f]"
-                  : "bg-white/[0.07] text-white/40"
+                  : "bg-surface/[0.07] text-white/40"
               }`}
             >
               {k.s}{phase >= 1 ? (k.hit ? " ✓" : " ✗") : ""}
@@ -1394,7 +1394,7 @@ function ResumeScanDemo() {
         initial={{ opacity: 0, y: 30, scale: 0.96 }}
         animate={phase === 2 ? { opacity: 1, y: 0, scale: 1 } : {}}
         transition={{ duration: 0.8, ease: EASE }}
-        className="rounded-3xl border border-[#4d94ff]/25 bg-white/[0.05] p-6 shadow-[0_24px_80px_rgba(27,109,240,0.2)] backdrop-blur"
+        className="rounded-3xl border border-[#4d94ff]/25 bg-surface/[0.05] p-6 shadow-[0_24px_80px_rgba(27,109,240,0.2)] backdrop-blur"
       >
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Career Analysis Report</p>
@@ -1422,7 +1422,7 @@ function ResumeScanDemo() {
             initial={{ opacity: 0, x: 24 }}
             animate={phase === 2 ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.45 + i * 0.2, duration: 0.6, ease: EASE }}
-            className="mt-3 rounded-2xl bg-white/[0.05] p-3.5"
+            className="mt-3 rounded-2xl bg-surface/[0.05] p-3.5"
           >
             <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: r.c }}>{r.k}</p>
             <p className="mt-1 text-sm font-medium text-white/85">{r.v}</p>
@@ -1454,16 +1454,16 @@ function FeesSection() {
         <motion.div
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="rounded-3xl border border-black/[0.07] bg-white p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+          className="rounded-3xl border border-fg/[0.07] bg-surface p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/40">01 · Registration</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">01 · Registration</p>
           <p className="font-display mt-4 text-5xl font-bold">₹<Counter to={30000} /></p>
-          <p className="mt-3 text-black/50">Payable only after the free masterclass and the free 7-hour bootcamp.</p>
+          <p className="mt-3 text-fg/50">Payable only after the free masterclass and the free 7-hour bootcamp.</p>
           <div className="mt-5 flex gap-2">
-            <span className="rounded-full bg-[#e7f1fe] px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">One payment</span>
-            <span className="rounded-full bg-[#e7f1fe] px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">EMI · 3 × ₹10,000</span>
+            <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">One payment</span>
+            <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">EMI · 3 × ₹10,000</span>
           </div>
-          <p className="mt-6 rounded-2xl bg-[#e6f7ef] px-4 py-3 text-sm font-semibold text-[#0ba860]">
+          <p className="mt-6 rounded-2xl bg-verify-bg px-4 py-3 text-sm font-semibold text-[#0ba860]">
             30-day money-back guarantee — any reason, full refund, in writing.
           </p>
         </motion.div>
@@ -1477,7 +1477,7 @@ function FeesSection() {
             Your first 3 months&apos; CTC, due <strong className="text-white">only after you accept an offer</strong> — paid as 6 monthly
             EMIs from your new salary. Your ₹30,000 registration is adjusted inside it.
           </p>
-          <div className="mt-6 rounded-2xl bg-white/[0.05] p-5">
+          <div className="mt-6 rounded-2xl bg-surface/[0.05] p-5">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Worked example · ₹12 LPA offer</p>
             {[
               ["3 months' CTC", "₹3,00,000"],
@@ -1500,7 +1500,7 @@ function FeesSection() {
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
-          className="rounded-3xl border border-black/[0.07] bg-[#f6f9fe] p-8"
+          className="rounded-3xl border border-fg/[0.07] bg-paper p-8"
         >
           <p className="font-display text-lg font-bold">Included, forever</p>
           <ul className="mt-4 space-y-2.5">
@@ -1509,7 +1509,7 @@ function FeesSection() {
                 key={x}
                 initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.15 + i * 0.07, duration: 0.5 }}
-                className="flex items-center gap-2.5 text-sm text-black/65"
+                className="flex items-center gap-2.5 text-sm text-fg/65"
               >
                 <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0ba860] text-[9px] font-bold text-white">✓</span>
                 {x}
@@ -1519,17 +1519,17 @@ function FeesSection() {
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-          className="rounded-3xl border border-black/[0.07] bg-white p-8"
+          className="rounded-3xl border border-fg/[0.07] bg-surface p-8"
         >
           <p className="font-display text-lg font-bold">Optional extras</p>
           <ul className="mt-4 space-y-2.5">
             {[["Extra CV credits", "₹99 / 3"], ["Voice mock interview", "₹249 · ₹599 / 3"], ["Extra 1:1 mentor session", "₹499"], ["Career+ (post-placement)", "₹499 / mo"]].map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between text-sm text-black/65">
-                <span>{k}</span><span className="font-mono text-xs font-bold text-black/45">{v}</span>
+              <li key={k} className="flex items-center justify-between text-sm text-fg/65">
+                <span>{k}</span><span className="font-mono text-xs font-bold text-fg/45">{v}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-5 text-xs leading-relaxed text-black/40">
+          <p className="mt-5 text-xs leading-relaxed text-fg/40">
             Everything needed for the placement promise is included. Charges apply only to extras beyond generous quotas.
           </p>
         </motion.div>
@@ -1553,10 +1553,10 @@ function VerifyDemo1() {
   }, [inView]);
   const done = len >= full.length;
   return (
-    <div ref={ref} className="mt-5 rounded-2xl bg-[#f6f9fe] p-4">
-      <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3.5 py-2.5">
-        <span className="text-black/30">🔍</span>
-        <span className="font-mono text-xs text-black/70">
+    <div ref={ref} className="mt-5 rounded-2xl bg-paper p-4">
+      <div className="flex items-center gap-2 rounded-xl border border-fg/10 bg-surface px-3.5 py-2.5">
+        <span className="text-fg/30">🔍</span>
+        <span className="font-mono text-xs text-fg/70">
           {full.slice(0, len)}
           <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.8, repeat: Infinity }} className="inline-block h-3.5 w-[2px] bg-[#1b6df0] align-middle" />
         </span>
@@ -1565,13 +1565,13 @@ function VerifyDemo1() {
         initial={{ opacity: 0, scale: 0.7 }}
         animate={done ? { opacity: 1, scale: 1 } : {}}
         transition={{ type: "spring", stiffness: 300, damping: 16 }}
-        className="mt-2.5 inline-block rounded-full bg-[#e7f1fe] px-3 py-1 text-[10px] font-bold text-[#0e3fa9]"
+        className="mt-2.5 inline-block rounded-full bg-sky px-3 py-1 text-[10px] font-bold text-[#0e3fa9]"
       >
         Filter: Last 7 days ✓
       </motion.div>
       <div className="mt-3 flex items-baseline gap-2">
         <p className="font-display text-3xl font-bold text-[#1b6df0]">{done ? <Counter to={1247} /> : "—"}</p>
-        <p className="text-[11px] font-semibold text-black/45">postings this week. The demand is real — count it yourself.</p>
+        <p className="text-[11px] font-semibold text-fg/45">postings this week. The demand is real — count it yourself.</p>
       </div>
     </div>
   );
@@ -1583,13 +1583,13 @@ function VerifyDemo2() {
     { s: "SQL", n: 5 }, { s: "Spark", n: 4 }, { s: "Airflow", n: 3 }, { s: "AWS", n: 4 },
   ];
   return (
-    <div className="mt-5 rounded-2xl bg-[#f6f9fe] p-4">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-black/35">Skills repeating across 5 live JDs</p>
+    <div className="mt-5 rounded-2xl bg-paper p-4">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-fg/35">Skills repeating across 5 live JDs</p>
       <div className="mt-3 space-y-2">
         {rows.map((r, i) => (
           <div key={r.s} className="flex items-center gap-2.5">
-            <span className="w-14 font-mono text-[11px] font-bold text-black/60">{r.s}</span>
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/[0.07]">
+            <span className="w-14 font-mono text-[11px] font-bold text-fg/60">{r.s}</span>
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-fg/[0.07]">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${(r.n / 5) * 100}%` }}
@@ -1598,14 +1598,14 @@ function VerifyDemo2() {
                 className="h-full rounded-full bg-gradient-to-r from-[#1b6df0] to-[#7c3aed]"
               />
             </div>
-            <span className="w-8 text-right font-mono text-[10px] font-bold text-black/45">{r.n}/5</span>
+            <span className="w-8 text-right font-mono text-[10px] font-bold text-fg/45">{r.n}/5</span>
           </div>
         ))}
       </div>
       <motion.p
         initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
         transition={{ delay: 1.1, duration: 0.5 }}
-        className="mt-3 inline-block rounded-full bg-[#e6f7ef] px-3 py-1 text-[10px] font-bold text-[#0ba860]"
+        className="mt-3 inline-block rounded-full bg-verify-bg px-3 py-1 text-[10px] font-bold text-[#0ba860]"
       >
         ✓ All four are in our syllabus — check any institute&apos;s the same way
       </motion.p>
@@ -1621,25 +1621,25 @@ function VerifyDemo3() {
     { q: "Do you guarantee a job?", a: "Honestly: no", good: false },
   ];
   return (
-    <div className="mt-5 space-y-2 rounded-2xl bg-[#f6f9fe] p-4">
+    <div className="mt-5 space-y-2 rounded-2xl bg-paper p-4">
       {qs.map((x, i) => (
         <motion.div
           key={x.q}
           initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.25 + i * 0.25, duration: 0.5, ease: EASE }}
-          className="flex items-center justify-between gap-2 rounded-xl border border-black/[0.06] bg-white px-3.5 py-2.5"
+          className="flex items-center justify-between gap-2 rounded-xl border border-fg/[0.06] bg-surface px-3.5 py-2.5"
         >
-          <p className="text-[11px] font-semibold text-black/65">“{x.q}”</p>
+          <p className="text-[11px] font-semibold text-fg/65">“{x.q}”</p>
           <motion.span
             initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
             transition={{ delay: 0.5 + i * 0.25, type: "spring", stiffness: 320, damping: 15 }}
-            className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${x.good ? "bg-[#e6f7ef] text-[#0ba860]" : "bg-[#fdf1e3] text-[#b45309]"}`}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${x.good ? "bg-verify-bg text-[#0ba860]" : "bg-[color:var(--bj-amber)]/15 text-[#b45309]"}`}
           >
             {x.a}
           </motion.span>
         </motion.div>
       ))}
-      <p className="pt-1 text-[10px] text-black/40">Ask every institute the same three. Compare the answers.</p>
+      <p className="pt-1 text-[10px] text-fg/40">Ask every institute the same three. Compare the answers.</p>
     </div>
   );
 }
@@ -1651,7 +1651,7 @@ function HonestySection() {
     { n: "03", min: "5 min", t: "Pressure-test everyone", b: "Three questions separate honest institutes from the rest. Ask them everywhere.", demo: <VerifyDemo3 /> },
   ];
   return (
-    <section id="verify" className="bg-[#f6f9fe] px-6 py-32">
+    <section id="verify" className="bg-paper px-6 py-32">
       <div className="mx-auto max-w-6xl">
         <motion.p
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
@@ -1667,7 +1667,7 @@ function HonestySection() {
         </motion.h2>
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
-          className="mt-5 max-w-xl text-lg text-black/50"
+          className="mt-5 max-w-xl text-lg text-fg/50"
         >
           Fifteen minutes on Naukri is enough to check everything we claim. Here&apos;s how.
         </motion.p>
@@ -1677,14 +1677,14 @@ function HonestySection() {
               key={s.n}
               initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
               transition={{ delay: i * 0.12, duration: 0.8, ease: EASE }}
-              className="flex flex-col rounded-3xl bg-white p-8 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+              className="flex flex-col rounded-3xl bg-surface p-8 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm font-bold text-black/25">{s.n}</span>
-                <span className="rounded-full bg-[#e7f1fe] px-2.5 py-1 text-[10px] font-bold text-[#0e3fa9]">{s.min}</span>
+                <span className="font-mono text-sm font-bold text-fg/25">{s.n}</span>
+                <span className="rounded-full bg-sky px-2.5 py-1 text-[10px] font-bold text-[#0e3fa9]">{s.min}</span>
               </div>
               <h3 className="font-display mt-4 text-xl font-bold">{s.t}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-black/50">{s.b}</p>
+              <p className="mt-3 text-sm leading-relaxed text-fg/50">{s.b}</p>
               <div className="flex-1">{s.demo}</div>
             </motion.div>
           ))}
@@ -1692,7 +1692,7 @@ function HonestySection() {
         <div className="mt-16 grid gap-5 md:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
-            className="rounded-3xl border-2 border-[#0ba860]/25 bg-white p-8"
+            className="rounded-3xl border-2 border-[#0ba860]/25 bg-surface p-8"
           >
             <p className="font-display text-lg font-bold text-[#0ba860]">What we promise in writing</p>
             <ul className="mt-4 space-y-2.5">
@@ -1701,7 +1701,7 @@ function HonestySection() {
                   key={i}
                   initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                   transition={{ delay: 0.15 + i * 0.08, duration: 0.5 }}
-                  className="flex gap-2.5 text-sm text-black/65"
+                  className="flex gap-2.5 text-sm text-fg/65"
                 >
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0ba860] text-[9px] font-bold text-white">✓</span>
                   {x}
@@ -1711,7 +1711,7 @@ function HonestySection() {
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-            className="rounded-3xl border-2 border-[#d64545]/20 bg-white p-8"
+            className="rounded-3xl border-2 border-[#d64545]/20 bg-surface p-8"
           >
             <p className="font-display text-lg font-bold text-[#d64545]">What we will never tell you</p>
             <ul className="mt-4 space-y-2.5">
@@ -1720,7 +1720,7 @@ function HonestySection() {
                   key={i}
                   initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                   transition={{ delay: 0.15 + i * 0.08, duration: 0.5 }}
-                  className="flex gap-2.5 text-sm text-black/65"
+                  className="flex gap-2.5 text-sm text-fg/65"
                 >
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d64545] text-[9px] font-bold text-white">✕</span>
                   {x}
@@ -1771,16 +1771,16 @@ function RoundBank({ rounds, accent, live }: { rounds: QRound[] | null; accent: 
     >
       {!rounds || !r ? (
         <div className="space-y-2">
-          <div className="h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
-          <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/10" />
+          <div className="h-3 w-2/3 animate-pulse rounded-full bg-surface/10" />
+          <div className="h-3 w-1/2 animate-pulse rounded-full bg-surface/10" />
           <p className="pt-1 text-[9px] text-white/30">Loading the question bank…</p>
         </div>
       ) : (
       <>
       <div className="flex items-center justify-between gap-2">
         <p className="text-[8px] font-bold uppercase tracking-widest text-white/40">From the question bank — by round</p>
-        <span className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[8px] font-bold uppercase ${live ? "bg-emerald-400/10 text-emerald-400" : "bg-white/[0.06] text-white/35"}`}>
-          <span className={`h-1 w-1 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+        <span className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[8px] font-bold uppercase ${live ? "bg-emerald-400/10 text-emerald-400" : "bg-surface/[0.06] text-white/35"}`}>
+          <span className={`h-1 w-1 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-surface/30"}`} />
           {live ? "kimi-k3" : "sample"}
         </span>
       </div>
@@ -1827,7 +1827,7 @@ function RoundBank({ rounds, accent, live }: { rounds: QRound[] | null; accent: 
                 transition={{ delay: 0.12 + qi * 0.14, duration: 0.4, ease: EASE }}
                 className="flex items-start gap-2"
               >
-                <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/50">Q{qi + 1}</span>
+                <span className="mt-0.5 shrink-0 rounded bg-surface/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/50">Q{qi + 1}</span>
                 <p className="text-[11px] leading-snug text-white/80">“{q}”</p>
               </motion.div>
             ))}
@@ -1849,7 +1849,7 @@ function StoryCard({ s, i, bank }: { s: (typeof STORIES)[number]; i: number; ban
       viewport={{ once: true, margin: "-40px" }}
       transition={{ delay: (i % 3) * 0.12, duration: 0.85, ease: EASE }}
       whileHover={{ y: -6, rotate: i % 2 ? -0.6 : 0.6 }}
-      className="flex flex-col overflow-hidden rounded-3xl border border-black/[0.07] bg-white shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
+      className="flex flex-col overflow-hidden rounded-3xl border border-fg/[0.07] bg-surface shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
     >
       {/* chat header */}
       <div className="flex items-start justify-between px-6 pb-4 pt-6" style={{ background: `linear-gradient(135deg, ${s.accent}0d, transparent)` }}>
@@ -1864,10 +1864,10 @@ function StoryCard({ s, i, bank }: { s: (typeof STORIES)[number]; i: number; ban
           </motion.span>
           <div>
             <p className="text-sm font-bold">{s.name}</p>
-            <p className="text-[10px] leading-tight text-black/45">{s.path}</p>
+            <p className="text-[10px] leading-tight text-fg/45">{s.path}</p>
           </div>
         </div>
-        <span className="rounded-full border border-black/10 px-2 py-0.5 text-[9px] font-bold uppercase text-black/35">Sample</span>
+        <span className="rounded-full border border-fg/10 px-2 py-0.5 text-[9px] font-bold uppercase text-fg/35">Sample</span>
       </div>
 
       <div className="flex flex-1 flex-col px-6 pb-6">
@@ -1875,20 +1875,20 @@ function StoryCard({ s, i, bank }: { s: (typeof STORIES)[number]; i: number; ban
         <motion.div
           initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.35 + (i % 3) * 0.12, duration: 0.55, ease: EASE }}
-          className="self-start rounded-2xl rounded-bl-md bg-[#f0f2f7] px-4 py-2.5"
+          className="self-start rounded-2xl rounded-bl-md bg-sky px-4 py-2.5"
         >
-          <p className="text-[8px] font-bold uppercase tracking-widest text-black/35">Interview asked</p>
-          <p className="mt-0.5 text-[11.5px] font-semibold text-[#0a1220]">“{s.asked}”</p>
+          <p className="text-[8px] font-bold uppercase tracking-widest text-fg/35">Interview asked</p>
+          <p className="mt-0.5 text-[11.5px] font-semibold text-ink">“{s.asked}”</p>
         </motion.div>
 
         {/* their reply, WhatsApp-style */}
         <motion.div
           initial={{ opacity: 0, x: 18, scale: 0.95 }} whileInView={{ opacity: 1, x: 0, scale: 1 }} viewport={{ once: true }}
           transition={{ delay: 0.6 + (i % 3) * 0.12, duration: 0.55, ease: EASE }}
-          className="mt-3 self-end rounded-2xl rounded-br-md bg-[#dcf8c6] px-4 py-2.5"
+          className="mt-3 self-end rounded-2xl rounded-br-md bg-verify-bg px-4 py-2.5"
         >
-          <p className="text-xs leading-relaxed text-[#0a1220]">{s.quote}</p>
-          <p className="mt-1 flex items-center justify-end gap-1 text-[9px] text-black/35">
+          <p className="text-xs leading-relaxed text-ink">{s.quote}</p>
+          <p className="mt-1 flex items-center justify-end gap-1 text-[9px] text-fg/35">
             6:42 pm
             <motion.span
               initial={{ color: "rgba(0,0,0,0.3)" }}
@@ -1904,8 +1904,8 @@ function StoryCard({ s, i, bank }: { s: (typeof STORIES)[number]; i: number; ban
         {/* outcome stats */}
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
           {[["Package", s.pkg], ["Joined", s.co], ["Cleared", `${s.rounds} rounds`]].map(([k, v]) => (
-            <div key={k} className="rounded-xl bg-[#f6f9fe] px-1 py-2">
-              <p className="text-[8px] font-bold uppercase tracking-wider text-black/35">{k}</p>
+            <div key={k} className="rounded-xl bg-paper px-1 py-2">
+              <p className="text-[8px] font-bold uppercase tracking-wider text-fg/35">{k}</p>
               <p className="truncate text-[11px] font-bold">{v}</p>
             </div>
           ))}
@@ -1954,7 +1954,7 @@ function StoriesSection() {
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
-        className="mt-5 max-w-xl text-lg text-black/50"
+        className="mt-5 max-w-xl text-lg text-fg/50"
       >
         Where learners started, the package and company they landed, the rounds they cleared —
         and the exact question the interview threw at them.
@@ -1964,7 +1964,7 @@ function StoriesSection() {
           <StoryCard key={s.name} s={s} i={i} bank={bank} />
         ))}
       </div>
-      <p className="mt-8 text-center text-xs text-black/35">
+      <p className="mt-8 text-center text-xs text-fg/35">
         Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome.
         Cards marked “Sample” are illustrative — real, consented student stories replace them as they&apos;re published.
       </p>
@@ -1989,7 +1989,7 @@ const REVIEWS = [
 
 function ReviewsSection() {
   return (
-    <section id="reviews" className="border-y border-black/[0.06] bg-[#f6f9fe] py-28">
+    <section id="reviews" className="border-y border-fg/[0.06] bg-paper py-28">
       <div className="mx-auto max-w-6xl px-6">
         <motion.p
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
@@ -2005,7 +2005,7 @@ function ReviewsSection() {
         </motion.h2>
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
-          className="mt-5 max-w-xl text-lg text-black/50"
+          className="mt-5 max-w-xl text-lg text-fg/50"
         >
           Real reviews from Google, JustDial and verified students — never a fabricated one.
         </motion.p>
@@ -2014,13 +2014,13 @@ function ReviewsSection() {
         <div key={row} className="mt-8 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
           <div className="flex w-max gap-5 pr-5" style={{ animation: `${row ? "v3marqueeR" : "v3marquee"} ${row ? 60 : 52}s linear infinite` }}>
             {[...REVIEWS.slice(row * 5, row * 5 + 5), ...REVIEWS.slice(row * 5, row * 5 + 5)].map((r, i) => (
-              <div key={i} className="w-[380px] shrink-0 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-[0_8px_30px_rgba(10,18,32,0.04)]">
+              <div key={i} className="w-[380px] shrink-0 rounded-3xl border border-fg/[0.06] bg-surface p-6 shadow-[0_8px_30px_rgba(10,18,32,0.04)]">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold">{r.n}</p>
-                  <span className="rounded-full bg-[#e7f1fe] px-2.5 py-0.5 text-[9px] font-bold text-[#0e3fa9]">{r.src}</span>
+                  <span className="rounded-full bg-sky px-2.5 py-0.5 text-[9px] font-bold text-[#0e3fa9]">{r.src}</span>
                 </div>
                 <p className="mt-1 text-xs text-[#f5a623]">★★★★★</p>
-                <p className="mt-3 text-[13px] leading-relaxed text-black/60">“{r.q}”</p>
+                <p className="mt-3 text-[13px] leading-relaxed text-fg/60">“{r.q}”</p>
               </div>
             ))}
           </div>
@@ -2046,7 +2046,7 @@ function SignalBar({ s, i, up }: { s: MarketSignal; i: number; up: boolean }) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-30px" }}
       transition={{ delay: i * 0.12, duration: 0.6, ease: EASE }}
-      className="rounded-2xl bg-white/[0.04] p-4"
+      className="rounded-2xl bg-surface/[0.04] p-4"
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-bold text-white/90">{s.skill}</p>
@@ -2059,7 +2059,7 @@ function SignalBar({ s, i, up }: { s: MarketSignal; i: number; up: boolean }) {
           {up ? "▲" : "▼"} {s.change}
         </motion.span>
       </div>
-      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface/[0.07]">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${pct}%` }}
@@ -2102,10 +2102,10 @@ function IntelSection() {
           <motion.span
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-              data?.source === "counted" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400" : "border-white/15 bg-white/[0.04] text-white/40"
+              data?.source === "counted" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400" : "border-white/15 bg-surface/[0.04] text-white/40"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${data?.source === "counted" ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${data?.source === "counted" ? "animate-pulse bg-emerald-400" : "bg-surface/30"}`} />
             {/* The badge may only claim what the figures are. "Counted" means
                 measured over postings we ingested; anything else is bundled
                 illustrative content and says so. */}
@@ -2126,7 +2126,7 @@ function IntelSection() {
               {data
                 ? data.rising.map((s, i) => <SignalBar key={s.skill} s={s} i={i} up />)
                 : Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-[92px] animate-pulse rounded-2xl bg-white/[0.04]" />
+                    <div key={i} className="h-[92px] animate-pulse rounded-2xl bg-surface/[0.04]" />
                   ))}
             </div>
           </div>
@@ -2138,7 +2138,7 @@ function IntelSection() {
               {data
                 ? data.cooling.map((s, i) => <SignalBar key={s.skill} s={s} i={i} up={false} />)
                 : Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-[92px] animate-pulse rounded-2xl bg-white/[0.04]" />
+                    <div key={i} className="h-[92px] animate-pulse rounded-2xl bg-surface/[0.04]" />
                   ))}
             </div>
           </div>
@@ -2159,7 +2159,7 @@ function IntelSection() {
           <motion.div
             initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.8, ease: EASE }}
-            className="rounded-3xl border border-white/10 bg-white/[0.04] p-7"
+            className="rounded-3xl border border-white/10 bg-surface/[0.04] p-7"
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Funding radar · from our research</p>
@@ -2180,7 +2180,7 @@ function IntelSection() {
           <motion.div
             initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.12 }}
-            className="rounded-3xl border border-white/10 bg-white/[0.04] p-7"
+            className="rounded-3xl border border-white/10 bg-surface/[0.04] p-7"
           >
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">GCC expansion · New centre announced</p>
             <p className="mt-4 text-sm font-bold">Pune · hiring wave expected in ~5 months</p>
@@ -2195,7 +2195,7 @@ function IntelSection() {
       <div className="mt-5 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
         <div className="flex w-max gap-3 pr-3" style={{ animation: "v3marquee 40s linear infinite" }}>
           {[...ENGINE_SKILLS, ...ENGINE_SKILLS].map((s, i) => (
-            <span key={i} className="whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 font-mono text-xs text-white/55">
+            <span key={i} className="whitespace-nowrap rounded-full border border-white/10 bg-surface/[0.04] px-4 py-2 font-mono text-xs text-white/55">
               {s}
             </span>
           ))}
@@ -2266,7 +2266,7 @@ export default function V3Landing() {
   const dashY = useTransform(dashScroll, [0, 1], [80, 0]);
 
   return (
-    <main className="bg-white font-body text-[#0a1220] antialiased selection:bg-[#1b6df0] selection:text-white">
+    <main className="bg-surface font-body text-ink antialiased selection:bg-[#1b6df0] selection:text-white">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes v3marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes v3marqueeR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
@@ -2314,10 +2314,10 @@ export default function V3Landing() {
           </h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 0.9, ease: EASE }}
-            className="mx-auto mt-8 max-w-xl text-xl leading-relaxed text-black/50"
+            className="mx-auto mt-8 max-w-xl text-xl leading-relaxed text-fg/50"
           >
             An AI tutor that never sleeps. Mock interviews that call your phone.
-            A job radar that hunts while you study. <strong className="font-semibold text-black">You bring the effort — we bring the offer.</strong>
+            A job radar that hunts while you study. <strong className="font-semibold text-fg">You bring the effort — we bring the offer.</strong>
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.9, ease: EASE }}
@@ -2335,7 +2335,7 @@ export default function V3Landing() {
               Watch it work <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
             </a>
           </motion.div>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-5 text-sm text-black/35">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-5 text-sm text-fg/35">
             Free seat · No card · 20,000+ students before you
           </motion.p>
         </motion.div>
@@ -2345,7 +2345,7 @@ export default function V3Landing() {
       <section ref={dashRef} className="px-6 pb-32" style={{ perspective: 1200 }}>
         <motion.div
           style={{ rotateX: dashRotate, y: dashY, transformStyle: "preserve-3d" }}
-          className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-black/10 bg-[#0a0f1c] shadow-[0_60px_140px_rgba(10,18,32,0.35)]"
+          className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-fg/10 bg-[#0a0f1c] shadow-[0_60px_140px_rgba(10,18,32,0.35)]"
         >
           <div className="flex items-center gap-1.5 border-b border-white/5 px-4 py-3">
             {["#ff5f57", "#febc2e", "#28c840"].map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />)}
@@ -2376,7 +2376,7 @@ export default function V3Landing() {
               </div>
               <div className="mt-4 flex gap-3 text-[10px] text-white/40">
                 <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 font-semibold text-emerald-400">▲ 12 mock interviews cleared</span>
-                <span className="rounded-full bg-white/5 px-2.5 py-1">3 interview calls this week</span>
+                <span className="rounded-full bg-surface/5 px-2.5 py-1">3 interview calls this week</span>
               </div>
             </div>
           </div>
@@ -2416,7 +2416,7 @@ export default function V3Landing() {
       </div>
 
       {/* ---------------------------- everything bento ------------------------ */}
-      <section className="bg-[#f6f9fe] px-6 py-32 md:py-40">
+      <section className="bg-paper px-6 py-32 md:py-40">
         <div className="mx-auto max-w-6xl">
           <motion.p
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE }}
@@ -2432,7 +2432,7 @@ export default function V3Landing() {
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
-            className="mt-5 max-w-xl text-lg text-black/50"
+            className="mt-5 max-w-xl text-lg text-fg/50"
           >
             No add-on pricing for the things that get you hired. Every tool below ships with every track.
           </motion.p>
@@ -2509,13 +2509,13 @@ export default function V3Landing() {
               <p className="font-display text-7xl font-bold tracking-tight md:text-8xl">
                 <Counter to={st.v} suffix={st.s} />
               </p>
-              <p className="mt-3 text-lg text-black/45">{st.label}</p>
+              <p className="mt-3 text-lg text-fg/45">{st.label}</p>
             </motion.div>
           ))}
         </div>
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 1 }}
-          className="mx-auto mt-16 max-w-xl text-black/40"
+          className="mx-auto mt-16 max-w-xl text-fg/40"
         >
           Every number above is backed by verifiable student records —{" "}
           <span className="font-semibold text-[#0ba860]">scan any certificate&apos;s QR to check us.</span>
@@ -2550,7 +2550,7 @@ export default function V3Landing() {
           <Magnetic>
             <button
               onClick={() => openLeadModal({ variant: "masterclass" })}
-              className="rounded-full bg-white px-12 py-5 text-xl font-bold text-[#0a1220] transition-all hover:scale-[1.03] hover:shadow-[0_0_60px_rgba(255,255,255,0.35)]"
+              className="rounded-full bg-surface px-12 py-5 text-xl font-bold text-ink transition-all hover:scale-[1.03] hover:shadow-[0_0_60px_rgba(255,255,255,0.35)]"
             >
               Claim my free seat →
             </button>
