@@ -34,7 +34,7 @@ export function PageHead({
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#1b6df0]"
+          className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#4d8ef7]"
         >
           {kicker}
         </motion.p>
@@ -48,7 +48,7 @@ export function PageHead({
           {highlight && (
             <>
               {" "}
-              <span className="bg-gradient-to-r from-[#1b6df0] via-[#4d94ff] to-[#7c3aed] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#4d8ef7] via-[#7ba9fa] to-[#9d6bf5] bg-clip-text text-transparent">
                 {highlight}
               </span>
             </>
@@ -59,7 +59,7 @@ export function PageHead({
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-3 max-w-xl text-[15px] leading-relaxed text-black/50"
+            className="mt-3 max-w-xl text-[15px] leading-relaxed text-white/55"
           >
             {sub}
           </motion.p>
@@ -97,10 +97,10 @@ export function Tile({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: EASE, delay: (index % 4) * 0.07 }}
       whileHover={hover && !reduce ? { y: -4 } : undefined}
-      className={`relative overflow-hidden rounded-3xl border p-6 shadow-[0_10px_40px_rgba(10,18,32,0.05)] ${className}`}
+      className={`relative overflow-hidden rounded-3xl border p-6 shadow-[0_18px_50px_rgba(0,0,0,0.45)] ${className}`}
       style={{
-        background: `linear-gradient(165deg, ${accent}0d, #ffffff 58%)`,
-        borderColor: `${accent}2b`,
+        background: `linear-gradient(158deg, ${accent}14, #0a0f1c 62%)`,
+        borderColor: `${accent}33`,
       }}
     >
       <span
@@ -112,7 +112,7 @@ export function Tile({
         <span
           aria-hidden
           className="font-display pointer-events-none absolute -right-3 -top-8 text-[6.5rem] font-bold leading-none"
-          style={{ color: `${accent}12` }}
+          style={{ color: `${accent}1f` }}
         >
           {ghost}
         </span>
@@ -138,7 +138,7 @@ export function InkPanel({
       initial={reduce ? false : { opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.75, ease: EASE }}
-      className={`relative overflow-hidden rounded-3xl bg-[#0a0f1c] p-7 text-white shadow-[0_30px_90px_rgba(10,18,32,0.28)] md:p-8 ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-[#111827] p-7 text-white shadow-[0_30px_90px_rgba(10,18,32,0.28)] md:p-8 ${className}`}
     >
       <div
         aria-hidden
@@ -159,7 +159,7 @@ export function Label({ children, dark = false }: { children: ReactNode; dark?: 
   return (
     <p
       className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
-        dark ? "text-white/40" : "text-black/35"
+        dark ? "text-white/40" : "text-white/45"
       }`}
     >
       {children}
@@ -176,11 +176,11 @@ export function Pill({
   children: ReactNode;
 }) {
   const tones: Record<string, string> = {
-    neutral: "bg-black/[0.05] text-black/55",
-    trust: "bg-[#e7f1fe] text-[#0e3fa9]",
-    verify: "bg-[#e6f7ef] text-[#0ba860]",
-    warn: "bg-[#fdeaea] text-[#d64545]",
-    amber: "bg-[#fdf1e3] text-[#b8791a]",
+    neutral: "bg-white/[0.07] text-white/60",
+    trust: "bg-[#4d8ef7]/18 text-[#9dc2fb]",
+    verify: "bg-[#0da06e]/18 text-[#5fd6a6]",
+    warn: "bg-[#e05561]/18 text-[#f2a1a7]",
+    amber: "bg-[#b07c00]/22 text-[#e8bf63]",
     dark: "bg-white/10 text-white/70",
   };
   return (
@@ -206,7 +206,7 @@ export function PrimaryButton({
   className?: string;
   type?: "button" | "submit";
 }) {
-  const cls = `group inline-flex items-center justify-center gap-2 rounded-full bg-[#1b6df0] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(27,109,240,0.35)] transition-all hover:shadow-[0_16px_50px_rgba(27,109,240,0.5)] disabled:opacity-50 disabled:shadow-none ${className}`;
+  const cls = `group inline-flex items-center justify-center gap-2 rounded-full bg-[#4d8ef7] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(77,142,247,0.42)] transition-all hover:shadow-[0_16px_46px_rgba(77,142,247,0.58)] disabled:opacity-50 disabled:shadow-none ${className}`;
 
   if (href) {
     return (
@@ -240,7 +240,7 @@ export function GhostButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-1.5 rounded-full border border-black/[0.09] bg-white px-4 py-2 text-sm font-medium text-[#0a1220] transition-colors hover:border-black/20 disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/30 disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -259,7 +259,7 @@ export function LiveDot({ color = "#0ba860" }: { color?: string }) {
 
 /** Skeleton block matching the tile radius. */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`shimmer rounded-3xl ${className}`} />;
+  return <div className={`animate-pulse rounded-3xl bg-white/[0.045] ${className}`} />;
 }
 
 /**
@@ -267,7 +267,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
  * ring (never removed), and the same hairline the tiles use.
  */
 export const controlCls =
-  "w-full rounded-2xl border border-black/[0.09] bg-white px-4 py-3 text-sm text-[#0a1220] outline-none transition-shadow placeholder:text-black/25 focus:border-[#1b6df0] focus:ring-4 focus:ring-[#1b6df0]/12";
+  "w-full rounded-2xl border border-white/[0.12] bg-white/[0.05] px-4 py-3 text-sm text-white outline-none transition-shadow placeholder:text-white/25 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25";
 
 /** Labelled form field with optional helper text under the label. */
 export function Field({
@@ -283,10 +283,10 @@ export function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-[#0a1220]">
+      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-white">
         {label}
       </label>
-      {hint && <p className="mb-2 mt-0.5 text-[12px] leading-snug text-black/40">{hint}</p>}
+      {hint && <p className="mb-2 mt-0.5 text-[12px] leading-snug text-white/45">{hint}</p>}
       <div className={hint ? "" : "mt-2"}>{children}</div>
     </div>
   );
@@ -308,19 +308,19 @@ export function CheckCard({
     <label
       className="flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors"
       style={{
-        borderColor: checked ? "#1b6df04d" : "rgba(0,0,0,0.09)",
-        background: checked ? "#1b6df00a" : "#fff",
+        borderColor: checked ? "#4d8ef75c" : "rgba(255,255,255,0.12)",
+        background: checked ? "#4d8ef714" : "rgba(255,255,255,0.03)",
       }}
     >
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 accent-[#1b6df0]"
+        className="mt-0.5 h-4 w-4 accent-[#4d8ef7]"
       />
       <span>
-        <span className="block text-[13px] font-semibold text-[#0a1220]">{title}</span>
-        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-black/45">{sub}</span>}
+        <span className="block text-[13px] font-semibold text-white">{title}</span>
+        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-white/50">{sub}</span>}
       </span>
     </label>
   );

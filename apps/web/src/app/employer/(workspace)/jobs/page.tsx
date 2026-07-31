@@ -42,7 +42,7 @@ export default function EmployerJobsPage() {
       ) : jobs.length === 0 ? (
         <Tile accent={TRUST} className="py-14 text-center" hover={false}>
           <p className="font-display text-2xl font-bold tracking-tight">No JDs yet</p>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-black/50">
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
             Post your first job description. The moment you publish, BrowseJobs writes a job-specific
             interview and rubric for it, and every applicant is graded against that — not a CV keyword scan.
           </p>
@@ -58,7 +58,7 @@ export default function EmployerJobsPage() {
               <Link key={job.id} href={`/employer/jobs/${job.id}`} className="group block">
                 <Tile accent={accent} index={i} ghost={String(i + 1).padStart(2, "0")} className="h-full">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-display text-xl font-bold leading-tight tracking-tight transition-colors group-hover:text-[#1b6df0]">
+                    <p className="font-display text-xl font-bold leading-tight tracking-tight transition-colors group-hover:text-[#4d8ef7]">
                       {job.title}
                     </p>
                     <Pill tone={STATUS_TONE[job.status]}>{job.status}</Pill>
@@ -74,30 +74,30 @@ export default function EmployerJobsPage() {
                     {(job.skills ?? []).slice(0, 5).map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-black/50"
+                        className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-white/60"
                       >
                         {skill}
                       </span>
                     ))}
                   </div>
 
-                  <div className="mt-5 flex items-center gap-4 text-[11px] text-black/45">
+                  <div className="mt-5 flex items-center gap-4 text-[11px] text-white/55">
                     <span className="font-mono">
-                      <span className="font-semibold text-[#0a1220]">{job.openings}</span> opening
+                      <span className="font-semibold text-white">{job.openings}</span> opening
                       {job.openings === 1 ? "" : "s"}
                     </span>
                     <span className="font-mono">
-                      <span className="font-semibold text-[#0a1220]">
+                      <span className="font-semibold text-white">
                         {job.experience_min_years}–{job.experience_max_years ?? "∞"}
                       </span>{" "}
                       yrs
                     </span>
                     {job.locations?.length ? <span>{job.locations.join(", ")}</span> : null}
-                    {job.remote && <span className="text-[#0ba860]">Remote</span>}
+                    {job.remote && <span className="text-[#0da06e]">Remote</span>}
                   </div>
 
                   {job.current_mock && (
-                    <p className="mt-4 border-t border-black/[0.06] pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-black/35">
+                    <p className="mt-4 border-t border-white/[0.07] pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
                       Mock v{job.current_mock.version} · {job.current_mock.status}
                     </p>
                   )}

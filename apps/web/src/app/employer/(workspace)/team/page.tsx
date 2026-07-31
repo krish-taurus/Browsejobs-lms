@@ -111,7 +111,7 @@ export default function EmployerTeamPage() {
                 <Label dark>Invite a teammate</Label>
                 <p className="font-display mt-2.5 text-xl font-bold leading-tight md:text-2xl">
                   Add someone to{" "}
-                  <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
                     {workspace.name}
                   </span>
                 </p>
@@ -127,7 +127,7 @@ export default function EmployerTeamPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="mt-2 w-full rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none transition-shadow placeholder:text-white/25 focus:border-[#4d94ff] focus:ring-4 focus:ring-[#1b6df0]/25"
+                      className="mt-2 w-full rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none transition-shadow placeholder:text-white/25 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
                       placeholder="colleague@company.com"
                     />
                   </div>
@@ -139,7 +139,7 @@ export default function EmployerTeamPage() {
                       id="invite-role"
                       value={role}
                       onChange={(e) => setRole(e.target.value as EmployerRole)}
-                      className="mt-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none focus:border-[#4d94ff] focus:ring-4 focus:ring-[#1b6df0]/25"
+                      className="mt-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white outline-none focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
                     >
                       <option className="text-[#0a1220]" value="recruiter">Recruiter</option>
                       <option className="text-[#0a1220]" value="hiring_manager">Hiring manager</option>
@@ -157,10 +157,10 @@ export default function EmployerTeamPage() {
                   {ROLE_HINTS[role].charAt(0).toLowerCase() + ROLE_HINTS[role].slice(1)}.
                 </p>
                 {message && (
-                  <p className="mt-3 rounded-2xl bg-[#0ba860]/15 px-4 py-2.5 text-[13px] text-[#6ee7b7]">{message}</p>
+                  <p className="mt-3 rounded-2xl bg-[#0da06e]/15 px-4 py-2.5 text-[13px] text-[#6ee7b7]">{message}</p>
                 )}
                 {error && (
-                  <p className="mt-3 rounded-2xl bg-[#d64545]/15 px-4 py-2.5 text-[13px] text-[#fca5a5]">{error}</p>
+                  <p className="mt-3 rounded-2xl bg-[#e05561]/15 px-4 py-2.5 text-[13px] text-[#fca5a5]">{error}</p>
                 )}
               </form>
             </InkPanel>
@@ -175,7 +175,7 @@ export default function EmployerTeamPage() {
                 </p>
               </div>
               {!isOwner && (
-                <span className="text-[11px] text-black/40">Owners manage the team</span>
+                <span className="text-[11px] text-white/50">Owners manage the team</span>
               )}
             </div>
 
@@ -186,7 +186,7 @@ export default function EmployerTeamPage() {
                 ))}
               </div>
             ) : members.length === 0 ? (
-              <p className="mt-4 text-sm text-black/50">No members loaded.</p>
+              <p className="mt-4 text-sm text-white/60">No members loaded.</p>
             ) : (
               <ul className="mt-5 space-y-2.5">
                 {members.map((m, i) => {
@@ -197,12 +197,12 @@ export default function EmployerTeamPage() {
                       initial={reduce ? false : { opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.55, ease: EASE, delay: i * 0.05 }}
-                      className="flex items-center gap-4 rounded-2xl border border-black/[0.06] bg-white/70 p-3.5"
+                      className="flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.04] p-3.5"
                     >
                       <Avatar name={m.user?.name ?? "Member"} accent={accent} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{m.user?.name ?? "Member"}</p>
-                        <p className="truncate font-mono text-[11px] text-black/40">{m.user?.email}</p>
+                        <p className="truncate font-mono text-[11px] text-white/50">{m.user?.email}</p>
                       </div>
                       <Pill tone={m.role === "owner" ? "trust" : "neutral"}>{ROLE_LABELS[m.role]}</Pill>
                     </motion.li>
@@ -223,13 +223,13 @@ export default function EmployerTeamPage() {
                   {counts[r] ?? 0}
                 </span>
               </div>
-              <p className="mt-2 text-[13px] leading-relaxed text-black/55">{ROLE_HINTS[r]}</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/65">{ROLE_HINTS[r]}</p>
             </Tile>
           ))}
 
           <Tile accent={VERIFY} index={3} hover={false}>
             <Label>Invite security</Label>
-            <p className="mt-2 text-[13px] leading-relaxed text-black/55">
+            <p className="mt-2 text-[13px] leading-relaxed text-white/65">
               Invite links are signed, single-use and expire in 7 days. Accepting one consumes it atomically, so a
               forwarded link cannot be replayed.
             </p>

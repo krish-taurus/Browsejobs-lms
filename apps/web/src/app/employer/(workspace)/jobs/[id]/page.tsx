@@ -54,7 +54,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
 
   if (missing) {
     return (
-      <p className="rounded-3xl border border-black/[0.07] bg-white p-8 text-sm text-black/50">
+      <p className="rounded-3xl border border-white/[0.08] bg-[#0a0f1c] p-8 text-sm text-white/60">
         This JD does not exist in this workspace.
       </p>
     );
@@ -82,7 +82,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
             className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
               tab === t.id
                 ? "bg-[#0a0f1c] text-white shadow-[0_8px_24px_rgba(10,18,32,0.2)]"
-                : "border border-black/[0.08] bg-white text-black/55 hover:border-black/20 hover:text-[#0a1220]"
+                : "border border-black/[0.08] bg-[#0a0f1c] text-white/65 hover:border-white/25 hover:text-white"
             }`}
           >
             {t.label}
@@ -156,7 +156,7 @@ function ApplicationsTab({ jobId }: { jobId: number }) {
     return (
       <Tile accent={TRUST} className="py-12 text-center" hover={false}>
         <p className="font-display text-xl font-bold tracking-tight">No applications yet</p>
-        <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-black/50">
+        <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
           Candidates can see this JD and apply free. Anyone who completes the job-specific interview
           arrives graded and ranked at the top of this list. Check the talent pool for trained
           candidates you can invite directly.
@@ -167,11 +167,11 @@ function ApplicationsTab({ jobId }: { jobId: number }) {
 
   return (
     <div className="space-y-3">
-      {error && <p className="text-sm text-[#d64545]">{error}</p>}
+      {error && <p className="text-sm text-[#e05561]">{error}</p>}
       {rows.map((row, i) => (
         <ApplicationCard key={row.id} row={row} index={i} jobId={jobId} onChanged={load} onError={setError} />
       ))}
-      <p className="pt-2 font-mono text-[10px] text-black/35">
+      <p className="pt-2 font-mono text-[10px] text-white/45">
         Graded applicants rank first by interview score. Contact details unlock at Shortlisted.
       </p>
     </div>
@@ -224,7 +224,7 @@ function ApplicationCard({
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE, delay: Math.min(index, 6) * 0.05 }}
-      className="overflow-hidden rounded-3xl border border-black/[0.07] bg-white shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
+      className="overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0f1c] shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
     >
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-4 text-left" aria-expanded={open}>
@@ -234,12 +234,12 @@ function ApplicationCard({
             </Ring>
           ) : (
             <div className="grid h-[62px] w-[62px] shrink-0 place-items-center rounded-full border border-dashed border-black/15">
-              <span className="font-mono text-[8px] uppercase tracking-wider text-black/35">ungraded</span>
+              <span className="font-mono text-[8px] uppercase tracking-wider text-white/45">ungraded</span>
             </div>
           )}
           <div>
             <p className="font-display text-lg font-bold tracking-tight">{row.candidate?.name ?? "Candidate"}</p>
-            <p className="mt-0.5 text-[12px] text-black/45">
+            <p className="mt-0.5 text-[12px] text-white/55">
               {row.candidate?.email ?? "Contact unlocks at Shortlisted"} · applied{" "}
               {new Date(row.applied_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
             </p>
@@ -266,10 +266,10 @@ function ApplicationCard({
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.35, ease: EASE }}
-          className="border-t border-black/[0.06] bg-[#f6f9fe] px-5 py-5 md:px-6"
+          className="border-t border-white/[0.07] bg-[#f6f9fe] px-5 py-5 md:px-6"
         >
           {row.rejection_reason && (
-            <p className="mb-4 rounded-2xl border border-[#d64545]/20 bg-[#fdeaea] px-4 py-3 text-sm text-[#a13333]">
+            <p className="mb-4 rounded-2xl border border-[#e05561]/20 bg-[#fdeaea] px-4 py-3 text-sm text-[#a13333]">
               Rejected: {row.rejection_reason}
             </p>
           )}
@@ -277,17 +277,17 @@ function ApplicationCard({
           {interviews === null ? (
             <Skeleton className="mt-3 h-24" />
           ) : interviews.length === 0 ? (
-            <p className="mt-3 text-sm text-black/50">
+            <p className="mt-3 text-sm text-white/60">
               No interview rounds yet — advance this candidate to L1 to invite them.
             </p>
           ) : (
             <ul className="mt-3 space-y-3">
               {interviews.map((iv) => (
-                <li key={iv.id} className="rounded-2xl border border-black/[0.07] bg-white p-5">
+                <li key={iv.id} className="rounded-2xl border border-white/[0.08] bg-[#0a0f1c] p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Pill tone="dark">{iv.round}</Pill>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-black/40">{iv.status}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/50">{iv.status}</span>
                     </div>
                     {iv.overall_score !== null && (
                       <span className="font-display text-2xl font-bold tracking-tight">{iv.overall_score}</span>
@@ -295,7 +295,7 @@ function ApplicationCard({
                   </div>
 
                   {iv.grading_delayed && (
-                    <p className="mt-2 text-xs text-black/50">
+                    <p className="mt-2 text-xs text-white/60">
                       Grading is taking longer than usual. Scores appear when it completes — we never fabricate them.
                     </p>
                   )}
@@ -305,7 +305,7 @@ function ApplicationCard({
                       {Object.entries(iv.dimension_scores).map(([key, value]) => (
                         <div key={key}>
                           <div className="flex items-baseline justify-between text-[11px]">
-                            <span className="capitalize text-black/55">{key.replaceAll("_", " ")}</span>
+                            <span className="capitalize text-white/65">{key.replaceAll("_", " ")}</span>
                             <span className="font-mono font-semibold">{value}</span>
                           </div>
                           <div className="mt-1">
@@ -317,7 +317,7 @@ function ApplicationCard({
                   )}
 
                   {iv.grading_summary && (
-                    <p className="mt-4 border-l-2 border-[#1b6df0] pl-4 text-[13px] leading-relaxed text-black/60">
+                    <p className="mt-4 border-l-2 border-[#4d8ef7] pl-4 text-[13px] leading-relaxed text-white/70">
                       {iv.grading_summary}
                     </p>
                   )}
@@ -360,7 +360,7 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
         <Label dark>Trained on BrowseJobs</Label>
         <p className="font-display mt-2.5 max-w-2xl text-xl font-bold leading-tight tracking-tight md:text-2xl">
           Candidates who already finished the training,{" "}
-          <span className="bg-gradient-to-r from-[#a78bfa] to-[#4d94ff] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#9d6bf5] to-[#4d8ef7] bg-clip-text text-transparent">
             with a built CV and a mastery record.
           </span>
         </p>
@@ -375,7 +375,7 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
       ) : rows.length === 0 ? (
         <Tile accent={VIOLET} className="py-12 text-center" hover={false}>
           <p className="font-display text-xl font-bold tracking-tight">No trained matches yet</p>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-black/50">
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
             No BrowseJobs students currently match the skills on this JD, or everyone who matches has
             already applied. Add or broaden the skills on the JD to widen the pool.
           </p>
@@ -388,9 +388,9 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
                 <div>
                   <p className="font-display text-lg font-bold tracking-tight">{c.name}</p>
                   {c.training && (
-                    <p className="mt-1 text-[12px] text-black/50">
+                    <p className="mt-1 text-[12px] text-white/60">
                       {c.training.course} ·{" "}
-                      <span className={c.training.status === "completed" ? "text-[#0ba860]" : ""}>
+                      <span className={c.training.status === "completed" ? "text-[#0da06e]" : ""}>
                         {c.training.status}
                       </span>
                     </p>
@@ -399,14 +399,14 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
                 <Ring value={c.match_score} size={64} stroke={8} color={c.match_score >= 70 ? VIOLET : TRUST} track="#eef3fb">
                   <div className="text-center leading-none">
                     <span className="font-display block text-sm font-bold">{c.match_score}</span>
-                    <span className="font-mono text-[7px] uppercase tracking-wider text-black/35">match</span>
+                    <span className="font-mono text-[7px] uppercase tracking-wider text-white/45">match</span>
                   </div>
                 </Ring>
               </div>
 
               <div className="mt-4">
                 <div className="flex items-baseline justify-between text-[11px]">
-                  <span className="text-black/50">Skill coverage</span>
+                  <span className="text-white/60">Skill coverage</span>
                   <span className="font-mono font-semibold">{c.skill_match_pct}%</span>
                 </div>
                 <div className="mt-1.5">
@@ -416,18 +416,18 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {c.matched_skills.map((s) => (
-                  <span key={s} className="rounded-full bg-[#e6f7ef] px-2.5 py-1 font-mono text-[10px] text-[#0ba860]">
+                  <span key={s} className="rounded-full bg-[#e6f7ef] px-2.5 py-1 font-mono text-[10px] text-[#0da06e]">
                     {s}
                   </span>
                 ))}
                 {c.missing_skills.map((s) => (
-                  <span key={s} className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-black/40 line-through">
+                  <span key={s} className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-white/50 line-through">
                     {s}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-5 flex items-end justify-between gap-4 border-t border-black/[0.06] pt-4">
+              <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/[0.07] pt-4">
                 <div className="flex gap-5">
                   <div>
                     <p className="font-display text-lg font-bold leading-none">{c.readiness_index}</p>
@@ -441,7 +441,7 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
                   </div>
                   {c.cv_ready && (
                     <div>
-                      <p className="font-display text-lg font-bold leading-none text-[#0ba860]">✓</p>
+                      <p className="font-display text-lg font-bold leading-none text-[#0da06e]">✓</p>
                       <Label>CV ready</Label>
                     </div>
                   )}
@@ -498,7 +498,7 @@ function MockTab({ jobId }: { jobId: number }) {
   if (mock === "none") {
     return (
       <Tile accent={TRUST} hover={false} className="py-10 text-center">
-        <p className="text-sm text-black/50">
+        <p className="text-sm text-white/60">
           No interview built yet — it is generated automatically when the JD is published.
         </p>
       </Tile>
@@ -507,19 +507,19 @@ function MockTab({ jobId }: { jobId: number }) {
 
   return (
     <div className="space-y-4 md:space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-black/[0.07] bg-white px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/[0.08] bg-[#0a0f1c] px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]">
         <p className="flex items-center gap-2.5 text-sm">
           <Pill tone="trust">v{mock.version}</Pill>
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-black/45">{mock.status}</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/55">{mock.status}</span>
           {mock.source === "fallback" && (
-            <span className="text-xs text-black/45">template-based — regenerate for AI-tailored questions</span>
+            <span className="text-xs text-white/55">template-based — regenerate for AI-tailored questions</span>
           )}
         </p>
         <GhostButton disabled={busy || mock.status === "pending"} onClick={() => void regenerate()}>
           {busy ? "Queuing…" : "Regenerate as new version"}
         </GhostButton>
       </div>
-      {error && <p className="text-sm text-[#d64545]">{error}</p>}
+      {error && <p className="text-sm text-[#e05561]">{error}</p>}
 
       {mock.rubric && (
         <Tile accent={DEEP} hover={false}>
@@ -536,10 +536,10 @@ function MockTab({ jobId }: { jobId: number }) {
               >
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-semibold">{d.label}</p>
-                  <p className="font-display text-lg font-bold text-[#0e3fa9]">{d.weight}%</p>
+                  <p className="font-display text-lg font-bold text-[#4d8ef7]">{d.weight}%</p>
                 </div>
                 <div className="mt-2"><SkillMeter pct={d.weight} color={DEEP} /></div>
-                <p className="mt-2.5 text-[12px] leading-relaxed text-black/50">{d.criteria}</p>
+                <p className="mt-2.5 text-[12px] leading-relaxed text-white/60">{d.criteria}</p>
               </motion.div>
             ))}
           </div>
@@ -564,7 +564,7 @@ function MockTab({ jobId }: { jobId: number }) {
                 </span>
                 <div>
                   <p className="text-[15px] leading-snug">{q.text}</p>
-                  <p className="mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-black/35">
+                  <p className="mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/45">
                     <span>{q.skill}</span>
                     <span>·</span>
                     <span>{q.type}</span>
@@ -618,7 +618,7 @@ function AutomationTab({ jobId }: { jobId: number }) {
     }
   }
 
-  const select = "rounded-full border border-black/[0.1] bg-white px-3.5 py-2 text-sm";
+  const select = "rounded-full border border-black/[0.1] bg-[#0a0f1c] px-3.5 py-2 text-sm";
 
   return (
     <div className="space-y-5">
@@ -626,7 +626,7 @@ function AutomationTab({ jobId }: { jobId: number }) {
         <Label dark>Run it without you</Label>
         <p className="font-display mt-2.5 max-w-2xl text-xl font-bold leading-tight tracking-tight md:text-2xl">
           Set a bar once.{" "}
-          <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
             The pipeline moves itself.
           </span>
         </p>
@@ -639,7 +639,7 @@ function AutomationTab({ jobId }: { jobId: number }) {
       <Tile accent={TRUST} hover={false}>
         <Label>New rule</Label>
         <form onSubmit={create} className="mt-4 flex flex-wrap items-center gap-2.5 text-sm">
-          <span className="text-black/55">When</span>
+          <span className="text-white/65">When</span>
           <select value={trigger} onChange={(e) => setTrigger(e.target.value as typeof trigger)} className={select}>
             <option value="application_graded">the job interview is graded</option>
             <option value="interview_graded">a follow-up round is graded</option>
@@ -650,13 +650,13 @@ function AutomationTab({ jobId }: { jobId: number }) {
               <option value="l2">L2</option>
             </select>
           )}
-          <span className="text-black/55">at</span>
+          <span className="text-white/65">at</span>
           <input
             type="number" min={0} max={100} value={minScore}
             onChange={(e) => setMinScore(Number(e.target.value))}
-            className="w-20 rounded-full border border-black/[0.1] bg-white px-3.5 py-2 text-center font-mono text-sm"
+            className="w-20 rounded-full border border-black/[0.1] bg-[#0a0f1c] px-3.5 py-2 text-center font-mono text-sm"
           />
-          <span className="text-black/55">% or above, advance to</span>
+          <span className="text-white/65">% or above, advance to</span>
           <select value={targetStage} onChange={(e) => setTargetStage(e.target.value)} className={select}>
             <option value="shortlisted">Shortlisted</option>
             <option value="l1">L1</option>
@@ -664,14 +664,14 @@ function AutomationTab({ jobId }: { jobId: number }) {
           </select>
           <PrimaryButton type="submit" disabled={busy}>Add rule</PrimaryButton>
         </form>
-        {error && <p className="mt-3 text-sm text-[#d64545]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[#e05561]">{error}</p>}
       </Tile>
 
       {rules === null ? (
         <Skeleton className="h-24" />
       ) : rules.length === 0 ? (
         <Tile accent={TRUST} hover={false} className="py-10 text-center">
-          <p className="text-sm text-black/50">
+          <p className="text-sm text-white/60">
             No rules yet. Add one above — “interview ≥ 70% → auto-shortlist” — and this JD runs itself.
           </p>
         </Tile>
@@ -683,22 +683,22 @@ function AutomationTab({ jobId }: { jobId: number }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: i * 0.05 }}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-black/[0.07] bg-white px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/[0.08] bg-[#0a0f1c] px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
             >
               <p className="text-sm">
                 <span className="font-semibold">
                   {rule.trigger === "application_graded" ? "Job interview" : `Round ${rule.round?.toUpperCase()}`}
                 </span>{" "}
-                ≥ <span className="font-mono font-semibold text-[#1b6df0]">{rule.min_score}%</span> →{" "}
+                ≥ <span className="font-mono font-semibold text-[#4d8ef7]">{rule.min_score}%</span> →{" "}
                 {rule.action === "advance" ? `advance to ${rule.target_stage}` : "park for review"}
                 {typeof rule.runs_count === "number" && (
-                  <span className="ml-3 font-mono text-[11px] text-black/35">{rule.runs_count} runs</span>
+                  <span className="ml-3 font-mono text-[11px] text-white/45">{rule.runs_count} runs</span>
                 )}
               </p>
               <button
                 onClick={() => employerApi.toggleRule(workspace.id, jobId, rule.id).then(load)}
                 className={`rounded-full px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                  rule.enabled ? "bg-[#e6f7ef] text-[#0ba860]" : "bg-black/[0.05] text-black/45"
+                  rule.enabled ? "bg-[#e6f7ef] text-[#0da06e]" : "bg-white/[0.06] text-white/55"
                 }`}
               >
                 {rule.enabled ? "On" : "Off"}

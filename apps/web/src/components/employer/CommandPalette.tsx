@@ -98,7 +98,7 @@ export function CommandPalette({ workspaceId }: { workspaceId: number }) {
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: durations.base, ease }}
-            className="mx-auto mt-[10vh] w-full max-w-lg overflow-hidden rounded-panel border border-line bg-white shadow-soft"
+            className="mx-auto mt-[10vh] w-full max-w-lg overflow-hidden rounded-panel border border-line bg-[#0a0f1c] shadow-soft"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label="Command palette"

@@ -42,7 +42,7 @@ export default function EmployerLoginPage() {
     <div className="grid min-h-screen place-items-center bg-paper px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex justify-center"><Wordmark /></div>
-        <form onSubmit={login} className="rounded-panel border border-line bg-white p-8 shadow-soft">
+        <form onSubmit={login} className="rounded-panel border border-line bg-[#0a0f1c] p-8 shadow-soft">
           <p className="mono text-[11px] uppercase tracking-widest text-trust">Employer portal</p>
           <h1 className="display mt-2 text-xl text-ink">Sign in to your hiring workspace</h1>
           <label className="mt-6 block text-sm font-medium text-ink" htmlFor="email">Work email</label>

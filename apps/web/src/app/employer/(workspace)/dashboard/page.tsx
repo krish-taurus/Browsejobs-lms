@@ -22,23 +22,30 @@ import {
   PipelineBar,
   Ring,
   ScoreHistogram,
-  SKY,
+  CYAN,
   TrendChart,
   TRUST,
   VERIFY,
   VIOLET,
 } from "@/components/employer/charts";
+import { SEQUENTIAL } from "@/components/viz/tokens";
 import { employerApi, STAGE_LABELS, type DashboardData } from "@/lib/employer";
 
+/**
+ * Stage colours for the stacked pipeline bar. This is one measure split by
+ * stage — magnitude, not identity — so it steps along a single-hue
+ * sequential ramp rather than cycling categorical hues, with the terminal
+ * stages taking the reserved status green.
+ */
 const SEGMENT_COLORS: Record<string, string> = {
-  applied: "#c7d7f5",
-  graded: SKY,
-  shortlisted: TRUST,
-  l1: DEEP,
-  l2: VIOLET,
-  human_round: "#5b3fb8",
+  applied: SEQUENTIAL[0],
+  graded: SEQUENTIAL[1],
+  shortlisted: SEQUENTIAL[2],
+  l1: SEQUENTIAL[3],
+  l2: SEQUENTIAL[4],
+  human_round: VIOLET,
   offer: VERIFY,
-  hired: "#08935420",
+  hired: VERIFY,
 };
 
 export default function EmployerDashboardPage() {
@@ -55,7 +62,7 @@ export default function EmployerDashboardPage() {
 
   if (failed) {
     return (
-      <p className="rounded-3xl border border-black/[0.07] bg-white p-8 text-sm text-black/50">
+      <p className="rounded-3xl border border-white/[0.08] bg-[#0a0f1c] p-8 text-sm text-white/60">
         The command centre could not load. Refresh to try again.
       </p>
     );
@@ -99,7 +106,7 @@ export default function EmployerDashboardPage() {
               </div>
               {topJob && topJob.awaiting_review > 0 ? (
                 <p className="font-display mt-3 text-2xl font-bold leading-[1.15] tracking-tight md:text-[2.1rem]">
-                  <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
                     {topJob.awaiting_review} graded {topJob.awaiting_review === 1 ? "applicant" : "applicants"}
                   </span>
                   <br />
@@ -110,14 +117,14 @@ export default function EmployerDashboardPage() {
                   {data.active_jobs === 0 ? (
                     <>
                       Post your first JD.{" "}
-                      <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                      <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
                         The mock builds itself.
                       </span>
                     </>
                   ) : (
                     <>
                       Nothing waiting on you.{" "}
-                      <span className="bg-gradient-to-r from-[#4d94ff] to-[#a78bfa] bg-clip-text text-transparent">
+                      <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
                         Pipeline is clear.
                       </span>
                     </>
@@ -158,7 +165,7 @@ export default function EmployerDashboardPage() {
               <p className="font-display text-2xl font-bold leading-none">
                 <MonoCounter value={data.graded_applications} className="font-display" />
               </p>
-              <p className="mt-1 text-[13px] leading-snug text-black/50">
+              <p className="mt-1 text-[13px] leading-snug text-white/60">
                 of {data.total_applications} applicants arrived with a graded interview
               </p>
             </div>
@@ -169,7 +176,7 @@ export default function EmployerDashboardPage() {
       {/* Stat band -------------------------------------------------- */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
         <Stat index={0} label="Active JDs" value={data.active_jobs} accent={TRUST} ghost="01" />
-        <Stat index={1} label="Graded · last 7 days" value={data.graded_last_7d} accent={SKY} ghost="02" />
+        <Stat index={1} label="Graded · last 7 days" value={data.graded_last_7d} accent={CYAN} ghost="02" />
         <Stat index={2} label="Interviews in flight" value={data.interviews_in_flight} accent={VIOLET} ghost="03" />
         <Stat index={3} label="Offers open" value={data.offers_open} accent={VERIFY} ghost="04" />
       </div>
@@ -214,15 +221,15 @@ export default function EmployerDashboardPage() {
               <Label>Pipeline pulse</Label>
               <p className="font-display mt-1 text-lg font-bold">Live per JD</p>
             </div>
-            <span className="font-mono text-[11px] text-black/40">
+            <span className="font-mono text-[11px] text-white/50">
               {data.awaiting_review} awaiting review
             </span>
           </div>
 
           {data.pipeline.length === 0 ? (
-            <p className="mt-4 text-sm text-black/50">
+            <p className="mt-4 text-sm text-white/60">
               No published JDs yet.{" "}
-              <Link className="font-semibold text-[#1b6df0]" href="/employer/jobs/new">
+              <Link className="font-semibold text-[#4d8ef7]" href="/employer/jobs/new">
                 Post one
               </Link>{" "}
               and pre-interviewed applicants start flowing in.
@@ -235,7 +242,7 @@ export default function EmployerDashboardPage() {
                   key,
                   label: STAGE_LABELS[key as keyof typeof STAGE_LABELS] ?? key,
                   count,
-                  color: SEGMENT_COLORS[key] ?? SKY,
+                  color: SEGMENT_COLORS[key] ?? SEQUENTIAL[2],
                 }));
 
                 return (
@@ -247,12 +254,12 @@ export default function EmployerDashboardPage() {
                   >
                     <Link href={`/employer/jobs/${job.id}`} className="group block">
                       <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-sm font-semibold transition-colors group-hover:text-[#1b6df0]">
+                        <p className="text-sm font-semibold transition-colors group-hover:text-[#4d8ef7]">
                           {job.title}
                         </p>
-                        <span className="font-mono text-[11px] text-black/40">
+                        <span className="font-mono text-[11px] text-white/50">
                           {job.awaiting_review > 0 && (
-                            <span className="mr-2 font-semibold text-[#1b6df0]">
+                            <span className="mr-2 font-semibold text-[#4d8ef7]">
                               {job.awaiting_review} to review
                             </span>
                           )}
@@ -271,7 +278,7 @@ export default function EmployerDashboardPage() {
         </Tile>
       </div>
 
-      <p className="font-mono text-[10px] leading-relaxed text-black/35">
+      <p className="font-mono text-[10px] leading-relaxed text-white/45">
         Counts reflect this workspace&apos;s live pipeline. Interview grading normally completes within the hour;
         delayed gradings are shown as pending — scores are never fabricated.
       </p>

@@ -176,22 +176,41 @@ export function TimeSeries({
             transition={{ duration: DUR.slow, ease: EASE, delay: 0.3 }}
           />
 
-          {series.map((s, si) => (
-            <motion.path
-              key={s.key}
-              d={line(s.values)}
-              fill="none"
-              stroke={`url(#${uid}-stroke-${si})`}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={s.dashed ? "5 5" : undefined}
-              filter={si === 0 ? `url(#${uid}-glow)` : undefined}
-              initial={reduce ? false : { pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: DUR.draw, ease: EASE, delay: si * 0.12 }}
-            />
-          ))}
+          {series.map((s, si) =>
+            // A dashed series cannot also animate pathLength: framer drives
+            // that with strokeDasharray, which silently overrides ours and
+            // draws the line solid — collapsing the series distinction back
+            // onto colour alone. Dashed lines fade in and keep their dashes.
+            s.dashed ? (
+              <motion.path
+                key={s.key}
+                d={line(s.values)}
+                fill="none"
+                stroke={`url(#${uid}-stroke-${si})`}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="6 5"
+                initial={reduce ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: DUR.slow, ease: EASE, delay: 0.35 }}
+              />
+            ) : (
+              <motion.path
+                key={s.key}
+                d={line(s.values)}
+                fill="none"
+                stroke={`url(#${uid}-stroke-${si})`}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter={si === 0 ? `url(#${uid}-glow)` : undefined}
+                initial={reduce ? false : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: DUR.draw, ease: EASE, delay: si * 0.12 }}
+              />
+            ),
+          )}
 
           {hover !== null && (
             <g>

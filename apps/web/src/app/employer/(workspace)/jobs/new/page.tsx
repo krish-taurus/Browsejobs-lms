@@ -129,7 +129,7 @@ export default function NewJobPage() {
               </Field>
               <div className="mt-3 flex min-h-[26px] flex-wrap gap-1.5">
                 {skillList.length === 0 ? (
-                  <span className="text-[12px] text-black/30">
+                  <span className="text-[12px] text-white/35">
                     Skills appear here as you type — each one becomes a graded dimension.
                   </span>
                 ) : (
@@ -210,7 +210,7 @@ export default function NewJobPage() {
           </Tile>
 
           {error && (
-            <p className="rounded-2xl border border-[#d64545]/25 bg-[#fdeaea] px-4 py-3 text-sm text-[#d64545]">
+            <p className="rounded-2xl border border-[#e05561]/25 bg-[#fdeaea] px-4 py-3 text-sm text-[#e05561]">
               {error}
             </p>
           )}
@@ -219,7 +219,7 @@ export default function NewJobPage() {
             <PrimaryButton type="submit" disabled={busy}>
               {busy ? "Saving…" : publishNow ? "Publish JD" : "Save as draft"}
             </PrimaryButton>
-            <span className="text-[12px] text-black/40">
+            <span className="text-[12px] text-white/50">
               {publishNow
                 ? "The mock is generated in the background; the JD is live either way."
                 : "Nothing goes live until you publish."}
@@ -262,9 +262,9 @@ export default function NewJobPage() {
 
           <Tile accent={VERIFY} index={3} hover={false}>
             <Label>Already trained for you</Label>
-            <p className="mt-2 text-[13px] leading-relaxed text-black/55">
+            <p className="mt-2 text-[13px] leading-relaxed text-white/65">
               Once this JD is live, students who finished the BrowseJobs programme and match your skills appear
-              under its <span className="font-semibold text-[#0a1220]">Talent pool</span> tab, CV built and
+              under its <span className="font-semibold text-white">Talent pool</span> tab, CV built and
               readiness scored. You can invite them to apply.
             </p>
           </Tile>

@@ -125,3 +125,28 @@ export const candidateApi = {
       method: "POST",
     }),
 };
+
+export type PublicJob = {
+  id: number;
+  title: string;
+  description: string;
+  role_family: string | null;
+  skills: string[] | null;
+  experience_min_years: number | null;
+  experience_max_years: number | null;
+  locations: string[] | null;
+  remote: boolean;
+  ctc_min_paise?: number | null;
+  ctc_max_paise?: number | null;
+  openings: number | null;
+  company?: { name: string; industry: string | null; company_size: string | null };
+  published_at: string | null;
+};
+
+export const jobApi = {
+  show: (id: number) => apiJson<{ data: PublicJob }>(`${base}/me/employer-jobs/${id}`),
+  myApplications: () =>
+    apiJson<{ data: { id: number; employer_job_id: number; stage: string; mock_score: number | null }[] }>(
+      `${base}/me/employer-jobs/applications`,
+    ),
+};

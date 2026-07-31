@@ -61,8 +61,8 @@ function CreateWorkspaceCard({ onCreated }: { onCreated: () => Promise<void> }) 
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-paper px-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-panel border border-line bg-white p-8 shadow-soft">
+    <div className="grid min-h-screen place-items-center bg-[#05070d] px-4">
+      <form onSubmit={submit} className="w-full max-w-md rounded-panel border border-line bg-[#0a0f1c] p-8 shadow-soft">
         <p className="mono text-[11px] uppercase tracking-widest text-trust">Set up your workspace</p>
         <h1 className="display mt-2 text-2xl text-ink">Welcome to BrowseJobs for employers</h1>
         <p className="mt-2 text-sm text-muted">
@@ -155,7 +155,7 @@ function Guarded({ children }: { children: ReactNode }) {
       }}
     >
       <CommandPalette workspaceId={workspace.id} />
-      <div className="min-h-screen bg-white font-body text-[#0a1220] antialiased selection:bg-[#1b6df0] selection:text-white md:grid md:grid-cols-[248px_1fr]">
+      <div className="min-h-screen bg-[#05070d] font-body text-white antialiased selection:bg-[#4d8ef7] selection:text-white md:grid md:grid-cols-[248px_1fr]">
         <aside className="relative hidden overflow-hidden bg-[#0a0f1c] text-white md:flex md:flex-col">
           <div className="flex items-center gap-2 px-6 py-5">
             <Mark tone="dark" />
@@ -170,10 +170,10 @@ function Guarded({ children }: { children: ReactNode }) {
               value={workspace.id}
               onChange={(e) => setActiveId(Number(e.target.value))}
               aria-label="Switch workspace"
-              className="mx-3 mb-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+              className="mx-3 mb-3 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white"
             >
               {workspaces.map((w) => (
-                <option key={w.id} value={w.id} className="text-ink">{w.name}</option>
+                <option key={w.id} value={w.id} className="text-[#0a1220]">{w.name}</option>
               ))}
             </select>
           ) : (
@@ -189,7 +189,7 @@ function Guarded({ children }: { children: ReactNode }) {
                   href={item.href}
                   className={`group relative flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ${
                     active
-                      ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      ? "bg-[#0a0f1c]/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                       : "text-white/45 hover:bg-white/[0.04] hover:text-white"
                   }`}
                 >
@@ -211,10 +211,10 @@ function Guarded({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-black/[0.06] bg-white/80 px-5 py-3.5 backdrop-blur-xl md:px-8">
+          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.07] bg-[#05070d]/80 px-5 py-3.5 backdrop-blur-xl md:px-8">
             <p className="flex items-center gap-2.5 text-sm">
               <span className="font-semibold">{user.name}</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
                 {(workspace.my_role ?? "member").replace("_", " ")}
               </span>
             </p>
@@ -228,7 +228,7 @@ function Guarded({ children }: { children: ReactNode }) {
           </header>
 
           {menuOpen && (
-            <div className="border-b border-line bg-white px-5 py-4 md:hidden">
+            <div className="border-b border-line bg-[#0a0f1c] px-5 py-4 md:hidden">
               <div className="space-y-1">
                 {NAV.map((item) => (
                   <Link
