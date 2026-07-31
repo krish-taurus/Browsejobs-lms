@@ -26,6 +26,7 @@ import { LeadModal } from "@/components/landing/LeadModal";
 import { StickyCta } from "@/components/landing/StickyCta";
 import { openLeadModal } from "@/components/landing/leadModalBus";
 import type { CourseDetail } from "@/content/courses";
+import { SyllabusDownload } from "@/components/courses/SyllabusDownload";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -885,6 +886,13 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
       {course.hasSyllabus && (
         <section className="mx-auto max-w-6xl px-6 py-24 md:py-28">
           <InterviewIntel slug={course.slug} accent={accent} />
+
+          {/* The lead-gated syllabus download. It was dropped when this page
+              was rebuilt as the keynote layout, which quietly removed a
+              capture point from every course page. */}
+          <div className="mt-10 flex justify-center">
+            <SyllabusDownload courseSlug={course.slug} />
+          </div>
         </section>
       )}
 
