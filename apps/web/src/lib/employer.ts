@@ -94,6 +94,21 @@ export type RoleTaxonomy = {
   suggested: { core: string[]; optional: string[] } | null;
 };
 
+export type MockDesignData = {
+  design: {
+    focus_skills: string[];
+    competency_weights: Record<string, number>;
+    format_mix: Record<string, number>;
+    question_count: number | null;
+    notes: string | null;
+  };
+  normalised: { competencies: Record<string, number>; formats: Record<string, number> };
+  competencies: { key: string; label: string; hint: string }[];
+  question_formats: { key: string; label: string; hint: string }[];
+  selectable_skills: string[];
+  has_mock: boolean;
+};
+
 export type ApplicationRow = {
   id: number;
   stage: ApplicationStage;
@@ -181,6 +196,13 @@ export const employerApi = {
   roleTaxonomy: (title?: string) =>
     apiJson<{ data: RoleTaxonomy }>(
       `${base}/role-taxonomy${title ? `?title=${encodeURIComponent(title)}` : ""}`,
+    ),
+  mockDesign: (ws: number, job: number) =>
+    apiJson<{ data: MockDesignData }>(`${base}/workspaces/${ws}/jobs/${job}/mock/design`),
+  saveMockDesign: (ws: number, job: number, body: Record<string, unknown>) =>
+    apiJson<{ data: { normalised: MockDesignData["normalised"]; regenerate_required: boolean } }>(
+      `${base}/workspaces/${ws}/jobs/${job}/mock/design`,
+      { method: "PUT", body: JSON.stringify(body) },
     ),
   moveStage: (ws: number, job: number, id: number, stage: ApplicationStage, note?: string) =>
     apiJson<{ data: ApplicationRow }>(`${base}/workspaces/${ws}/jobs/${job}/applications/${id}/stage`, {
