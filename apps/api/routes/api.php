@@ -71,8 +71,10 @@ use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialControll
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
 use App\Http\Controllers\Admin\TopicController;
+use App\Http\Controllers\Admin\VerificationReviewController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\ZoomLicenseController;
+use App\Http\Controllers\Auth\EmployerAuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
@@ -85,7 +87,6 @@ use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
-use App\Http\Controllers\Auth\EmployerAuthController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
@@ -97,6 +98,7 @@ use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
+use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
@@ -106,7 +108,6 @@ use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
 use App\Http\Controllers\Me\EmployerJobBrowseController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
-use App\Http\Controllers\Me\VerificationController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
 use App\Http\Controllers\Me\MyCertificateController;
@@ -121,6 +122,7 @@ use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\Me\SalaryBenchmarkController as MeSalaryBenchmarkController;
+use App\Http\Controllers\Me\VerificationController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
@@ -133,7 +135,6 @@ use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
 use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
-use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\SalaryController;
@@ -566,6 +567,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Real Interview Intelligence (PRD §6.6) — placement team only.
     Route::middleware('can:manage-placements')->group(function () {
+        // Verification review queue (PRD-E F9). The shipped provider never
+        // self-verifies, so nothing a candidate submits settles without this.
+        Route::get('verifications', [VerificationReviewController::class, 'index']);
+        Route::post('verifications/{check}/settle', [VerificationReviewController::class, 'settle']);
         Route::get('placements', [PlacementAdminController::class, 'index']);
         Route::post('jobs', [PlacementAdminController::class, 'storeJob']);
         Route::patch('jobs/{job}', [PlacementAdminController::class, 'updateJob']);

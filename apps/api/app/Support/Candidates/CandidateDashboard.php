@@ -46,17 +46,29 @@ final readonly class CandidateDashboard
             ->latest()
             ->get();
 
+        $cohort = $this->cohort();
+        $mockHistory = $this->mockHistory();
+        $live = $applications
+            ->reject(fn (EmployerJobApplication $a): bool => in_array(
+                $a->stage instanceof EmployerApplicationStage ? $a->stage->value : (string) $a->stage,
+                [EmployerApplicationStage::Rejected->value, EmployerApplicationStage::Withdrawn->value],
+                true,
+            ))
+            ->count();
+
         return [
+            'momentum' => (new MomentumNudge($this->candidate, $this->entitlements))
+                ->build($cohort, $mockHistory, $live),
             'verification' => (new VerificationProfile($this->candidate))->summary(),
             'applications' => $this->applications($applications),
             'funnel' => $this->funnel($applications),
-            'mock_history' => $this->mockHistory(),
+            'mock_history' => $mockHistory,
             'profile_completeness' => $this->completeness(),
             'credits' => [
                 'mock' => $this->entitlements->balance($this->candidate, EntitlementFeature::VoiceMock->value),
                 'cv' => $this->entitlements->balance($this->candidate, EntitlementFeature::Cv->value),
             ],
-            'cohort' => $this->cohort(),
+            'cohort' => $cohort,
         ];
     }
 

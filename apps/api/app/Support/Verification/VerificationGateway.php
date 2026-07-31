@@ -6,6 +6,7 @@ namespace App\Support\Verification;
 
 use App\Enums\VerificationKind;
 use App\Enums\VerificationStatus;
+use App\Events\VerificationSettled;
 use App\Models\CandidateVerificationCheck;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
@@ -96,6 +97,8 @@ final class VerificationGateway
             ['kind' => $check->kind->value, 'from' => $before, 'to' => $status->value],
             $actor,
         );
+
+        VerificationSettled::dispatch($check);
 
         return $check;
     }

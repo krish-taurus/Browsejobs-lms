@@ -9,6 +9,7 @@ use App\Enums\EntitlementFeature;
 use App\Enums\VerificationKind;
 use App\Enums\VerificationStatus;
 use App\Models\CandidateVerificationCheck;
+use App\Models\Course;
 use App\Models\CvProfile;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
@@ -16,6 +17,7 @@ use App\Models\JobFeedItem;
 use App\Models\JobFeedSource;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
+use App\Models\PlacementStory;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Entitlements\EntitlementService;
@@ -76,6 +78,7 @@ final class CandidateDemoSeeder extends Seeder
             $this->seedVerification($tenant, $candidate);
             $this->seedApplications($tenant, $candidate);
             $this->seedMarketFeed($tenant);
+            $this->seedStories($tenant);
         });
     }
 
@@ -157,6 +160,44 @@ final class CandidateDemoSeeder extends Seeder
                     'mock_interview_id' => $bestInterviewId,
                     'mock_attempts' => count($scores),
                     'graded_at' => $best ? now()->subDays(2) : null,
+                ],
+            );
+        }
+    }
+
+    /**
+     * Consented placement stories for the momentum panel. Marked
+     * is_sample = false because these stand in for real rows; the panel
+     * filters samples out precisely so demo data never reaches a candidate
+     * as somebody's outcome.
+     */
+    private function seedStories(Tenant $tenant): void
+    {
+        $course = Course::query()->first();
+
+        if ($course === null) {
+            return;
+        }
+
+        $stories = [
+            ['Rahul Menon', 'Support engineer', 'Data Engineer', 'Northwind Data', 'Three rounds, offer in nine days.'],
+            ['Sneha Patil', 'Manual tester', 'Analytics Engineer', 'Kestrel Systems', 'The JD mock was the same shape as the real interview.'],
+        ];
+
+        foreach ($stories as $i => [$name, $before, $after, $company, $quote]) {
+            PlacementStory::query()->updateOrCreate(
+                ['tenant_id' => $tenant->id, 'student_name' => $name],
+                [
+                    'course_id' => $course->id,
+                    'before_label' => $before,
+                    'after_role' => $after,
+                    'company_name' => $company,
+                    'quote' => $quote,
+                    'rounds' => 3,
+                    'consent' => true,
+                    'is_published' => true,
+                    'is_sample' => false,
+                    'position' => $i + 1,
                 ],
             );
         }

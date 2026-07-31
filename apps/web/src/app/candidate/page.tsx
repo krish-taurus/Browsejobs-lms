@@ -117,6 +117,9 @@ export default function CandidateDashboardPage() {
         {/* Next best action ------------------------------------------- */}
         <NextBestAction data={data} needsMock={needsMock.length} />
 
+        {/* Momentum: the AI-written nudge + real placement stories ----- */}
+        <MomentumPanel data={data} />
+
         {/* Stat row ---------------------------------------------------- */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card index={0} accent={SERIES[0]}>
@@ -511,6 +514,111 @@ function Empty({ title, body }: { title: string; body: string }) {
       <p className="mt-1.5 max-w-md text-[13px] leading-relaxed" style={{ color: INK.muted }}>
         {body}
       </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+const CTA_HREF: Record<string, string> = {
+  mock: "/candidate/jobs",
+  verify: "/candidate/verification",
+  apply: "/candidate/jobs",
+  browse: "/candidate/jobs",
+  package: "/store",
+};
+
+/**
+ * Two channels, kept visibly apart.
+ *
+ * The nudge is written about this candidate from their own numbers — the
+ * model writes the sentence, the platform supplies every fact, and the
+ * prompt forbids inventing statistics or claiming a purchase causes an
+ * outcome. The stories beside it are real people who consented to appear.
+ *
+ * They are never blended: a model-written success story would be
+ * unfalsifiable to the reader and indefensible to whoever it was invented
+ * about. Keeping them in separate containers is what makes that visible.
+ */
+function MomentumPanel({ data }: { data: CandidateDashboardData }) {
+  const { nudge, stories, packages } = data.momentum;
+  const gap = data.cohort
+    ? data.cohort.offer_median_mock - (data.cohort.your_best_mock ?? 0)
+    : null;
+
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-3">
+      <Card index={0} className="lg:col-span-2" accent={SERIES[0]} glow>
+        <div className="flex items-center gap-2">
+          <Kicker color={SERIES[0]}>Where you stand today</Kicker>
+          {nudge.source === "ai" && (
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: INK.faint }}>
+              written for you
+            </span>
+          )}
+        </div>
+        <p className="font-display mt-2.5 text-2xl font-bold leading-tight md:text-[1.75rem]">
+          {nudge.headline}
+        </p>
+        <p className="mt-2.5 max-w-xl text-[14px] leading-relaxed" style={{ color: INK.secondary }}>
+          {nudge.body}
+        </p>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <PrimaryAction href={CTA_HREF[nudge.cta_kind] ?? "/candidate/jobs"}>
+            {nudge.cta_label}
+          </PrimaryAction>
+          {nudge.cta_kind === "package" && packages.length > 0 && (
+            <span className="font-mono text-[12px]" style={{ color: INK.muted }}>
+              from ₹{Math.round(Math.min(...packages.map((p) => p.price_paise)) / 100)}
+            </span>
+          )}
+        </div>
+
+        {gap !== null && gap > 0 && (
+          <p className="mt-4 text-[12px] leading-relaxed" style={{ color: INK.faint }}>
+            Based on your own scores and an anonymous median across candidates who reached an offer.
+            It describes a gap — it is not a prediction, and nothing here can promise an outcome.
+          </p>
+        )}
+      </Card>
+
+      <Card index={1} accent={SERIES[1]}>
+        <Kicker>People who got there</Kicker>
+        {stories.length === 0 ? (
+          <>
+            <p className="font-display mt-1 text-lg font-bold">No stories published yet</p>
+            <p className="mt-2 text-[13px] leading-relaxed" style={{ color: INK.muted }}>
+              We only show people who agreed to be named. When there are some, they appear here —
+              we do not fill this space with invented ones.
+            </p>
+          </>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {stories.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-xl border p-3.5"
+                style={{ borderColor: SURFACE.line, background: "rgba(255,255,255,0.02)" }}
+              >
+                <p className="text-[13px] font-semibold">{s.name}</p>
+                <p className="mt-0.5 text-[12px]" style={{ color: INK.secondary }}>
+                  {[s.before, s.after].filter(Boolean).join(" → ")}
+                  {s.company && ` · ${s.company}`}
+                </p>
+                {s.quote && (
+                  <p className="mt-2 text-[12px] italic leading-snug" style={{ color: INK.muted }}>
+                    “{s.quote}”
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 font-mono text-[10px]" style={{ color: INK.faint }}>
+          Real placements, shared with permission.
+        </p>
+      </Card>
     </div>
   );
 }

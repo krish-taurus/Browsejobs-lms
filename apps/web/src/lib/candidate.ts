@@ -38,7 +38,37 @@ export type CandidateApplication = {
   awaiting_candidate: boolean;
 };
 
+export type Momentum = {
+  nudge: {
+    headline: string;
+    body: string;
+    cta_label: string;
+    cta_kind: "mock" | "verify" | "apply" | "browse" | "package";
+    /** "ai" when the model wrote it, "fallback" when we did. */
+    source: "ai" | "fallback";
+  };
+  /** Real, consented placement stories. Never model-generated. */
+  stories: {
+    id: number;
+    name: string;
+    before: string | null;
+    after: string | null;
+    company: string | null;
+    company_color: string | null;
+    rounds: number | null;
+    quote: string | null;
+  }[];
+  packages: {
+    sku: string;
+    name: string;
+    feature: string;
+    price_paise: number;
+    grant_amount: number;
+  }[];
+};
+
 export type CandidateDashboardData = {
+  momentum: Momentum;
   verification: VerificationSummary;
   applications: CandidateApplication[];
   funnel: Record<string, number>;
