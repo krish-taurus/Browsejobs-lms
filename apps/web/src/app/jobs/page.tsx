@@ -229,13 +229,19 @@ export default async function PublicJobsPage() {
                     </p>
                   </div>
 
-                  <div className="mt-auto pt-4">
+                  {/* Opens the role first. Sending someone straight to
+                      registration asked them to commit to a job they had not
+                      been allowed to read. */}
+                  <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
                     <Link
-                      href="/register"
+                      href={`/jobs/${job.id}`}
                       className="inline-block rounded-full bg-trust px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-deep"
                     >
-                      Apply with a mock →
+                      View role &amp; apply →
                     </Link>
+                    <span className="mono text-[10px] uppercase tracking-widest text-muted">
+                      Free to apply
+                    </span>
                   </div>
                 </div>
               </ScrollReveal>

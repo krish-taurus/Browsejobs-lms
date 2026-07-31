@@ -92,12 +92,15 @@ export function HomeJobs() {
                     ))}
                   </div>
                 )}
+                {/* The role first, registration second — same reason as the
+                    board: nobody should be asked to sign up for a job they
+                    have not been allowed to read. */}
                 <div className="mt-auto pt-4">
                   <Link
-                    href="/register?intent=apply"
+                    href={`/jobs/${job.id}`}
                     className="inline-block rounded-full bg-trust px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-deep"
                   >
-                    Apply with a mock →
+                    View role &amp; apply →
                   </Link>
                 </div>
               </div>

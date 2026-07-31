@@ -246,6 +246,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     // aggregated market roles, kept apart because only the first can be
     // applied to here. Works signed-out; signed-in adds own-application state.
     Route::get('job-board', [JobBoardSegmentedController::class, 'index'])->middleware('throttle:60,1');
+    // One role, readable without an account — a job seeker should be able to
+    // read the description before deciding whether to register (PRD-E F10).
+    Route::get('job-board/{job}', [JobBoardSegmentedController::class, 'show'])->middleware('throttle:60,1');
 
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
