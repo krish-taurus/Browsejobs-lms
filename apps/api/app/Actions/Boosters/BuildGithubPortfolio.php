@@ -10,6 +10,7 @@ use App\Models\CodeSubmission;
 use App\Models\CodingLab;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use Throwable;
 
 /**
@@ -76,7 +77,7 @@ final readonly class BuildGithubPortfolio
                 'projects' => collect($projects)->map(fn ($p, $i) => 'PROJECT '.($i + 1)." [{$p['language']}] {$p['title']}\nBrief: {$p['brief']}\nCode:\n{$p['code']}")->implode("\n\n---\n\n"),
             ], ['max_tokens' => 1600]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
             if (is_array($decoded) && ! empty($decoded['projects'])) {
                 return [$decoded, 'ai'];
             }

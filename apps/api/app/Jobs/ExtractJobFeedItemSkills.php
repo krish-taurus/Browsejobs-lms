@@ -9,6 +9,7 @@ use App\Models\JobFeedItem;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -66,7 +67,7 @@ final class ExtractJobFeedItemSkills implements ShouldQueue
                 'jd' => mb_substr($item->description, 0, 8000),
             ], ['max_tokens' => 700]);
 
-            $data = json_decode(trim($result->text), true);
+            $data = JsonOutput::object($result->text);
             if (! is_array($data) || ! is_array($data['skills'] ?? null)) {
                 return null;
             }

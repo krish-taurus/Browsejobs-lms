@@ -9,6 +9,7 @@ use App\Models\JobFeedItem;
 use App\Models\RealInterviewQuestion;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use Throwable;
 
 /**
@@ -91,7 +92,7 @@ final readonly class GenerateJobPrepQuestions
                 'jd' => mb_substr($item->description, 0, 8000),
             ], ['max_tokens' => 1200]);
 
-            $data = json_decode(trim($result->text), true);
+            $data = JsonOutput::object($result->text);
             $rows = is_array($data) && is_array($data['questions'] ?? null) ? $data['questions'] : null;
 
             if ($rows !== null) {

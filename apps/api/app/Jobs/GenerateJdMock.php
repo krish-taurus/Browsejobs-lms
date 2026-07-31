@@ -12,6 +12,7 @@ use App\Models\JdMock;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Employers\MockDesign;
 use App\Support\Roles\RoleTaxonomy;
 use App\Support\Tenancy\TenantContext;
@@ -89,7 +90,7 @@ final class GenerateJdMock implements ShouldQueue
                 'design' => MockDesign::fromArray($job->mock_design, app(RoleTaxonomy::class))->toPromptInstruction(),
             ], ['max_tokens' => 2500]);
 
-            $data = json_decode(trim($result->text), true);
+            $data = JsonOutput::object($result->text);
             if (! is_array($data) || ! is_array($data['questions'] ?? null) || ! is_array($data['rubric'] ?? null)) {
                 return null;
             }

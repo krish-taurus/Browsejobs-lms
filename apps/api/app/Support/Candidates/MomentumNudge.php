@@ -10,6 +10,7 @@ use App\Models\PlacementStory;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Verification\VerificationProfile;
 use Throwable;
@@ -111,7 +112,7 @@ final readonly class MomentumNudge
                 ['max_tokens' => 400],
             );
 
-            $parsed = json_decode(trim($result->text), true);
+            $parsed = JsonOutput::object($result->text);
 
             if (is_array($parsed)
                 && is_string($parsed['headline'] ?? null)

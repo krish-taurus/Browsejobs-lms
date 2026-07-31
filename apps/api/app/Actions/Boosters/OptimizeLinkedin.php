@@ -8,6 +8,7 @@ use App\Enums\AiPurpose;
 use App\Models\CareerBooster;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Cv\CvProfileData;
 use Throwable;
 
@@ -55,7 +56,7 @@ final readonly class OptimizeLinkedin
                 'experience' => collect((array) $profile['experience'])->map(fn ($e) => trim(($e['title'] ?? '').' at '.($e['company'] ?? '')))->filter()->implode(' | ') ?: '(none)',
             ], ['max_tokens' => 900]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
             if (is_array($decoded) && isset($decoded['headline'], $decoded['about'])) {
                 return [$decoded, 'ai'];
             }

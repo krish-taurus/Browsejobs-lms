@@ -10,6 +10,7 @@ use App\Models\RealInterviewQuestion;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Interviews\Anonymizer;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -53,7 +54,7 @@ final class ParseInterviewTranscript implements ShouldQueue
                     'transcript' => mb_substr($transcript->raw_text, 0, 24000),
                 ], ['max_tokens' => 3000]);
 
-                $parsed = json_decode(trim($result->text), true);
+                $parsed = JsonOutput::object($result->text);
                 if (! is_array($parsed) || ! is_array($parsed['questions'] ?? null)) {
                     throw new \RuntimeException('Parser returned malformed JSON.');
                 }

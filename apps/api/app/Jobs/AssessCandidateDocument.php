@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Enums\AiPurpose;
 use App\Models\CandidateDocument;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Files\DocxExtractor;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Bus\Queueable;
@@ -80,7 +81,7 @@ final class AssessCandidateDocument implements ShouldQueue
                     'document_text' => mb_substr($text, 0, 20000),
                 ], ['max_tokens' => 1200]);
 
-                $verdict = json_decode(trim($result->text), true);
+                $verdict = JsonOutput::object($result->text);
             } catch (Throwable $e) {
                 Log::info('Document assessment unavailable', [
                     'document_id' => $document->id,

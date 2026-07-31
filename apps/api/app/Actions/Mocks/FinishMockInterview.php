@@ -11,6 +11,7 @@ use App\Enums\PointsSource;
 use App\Events\MockCompleted;
 use App\Models\MockInterview;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Points\PointsService;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -89,7 +90,7 @@ final readonly class FinishMockInterview
                 'transcript' => $this->answers->transcript($interview),
             ], ['max_tokens' => 900]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
 
             if (is_array($decoded) && $this->isValid($decoded)) {
                 $decoded['overall'] = max(0, min(100, (int) $decoded['overall']));

@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\SyllabusRecommendation;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Market\CurriculumEvidence;
 use App\Support\Tenancy\TenantContext;
 use Throwable;
@@ -67,7 +68,7 @@ final readonly class GenerateSyllabusRecommendation
                 'failure_points' => $this->fmtPairs($evidence['failure_points'], 'count'),
             ], ['max_tokens' => 1200]);
 
-            $data = json_decode(trim($result->text), true);
+            $data = JsonOutput::object($result->text);
             if (is_array($data) && is_array($data['items'] ?? null)) {
                 $items = $this->cleanItems($data['items']);
                 if ($items !== []) {

@@ -10,6 +10,7 @@ use App\Models\MockBlueprint;
 use App\Models\RealInterviewQuestion;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use Illuminate\Support\Collection;
 use Throwable;
 
@@ -71,7 +72,7 @@ final readonly class GeneratePrepPack
                 'questions' => $questions->map(fn (RealInterviewQuestion $q) => '- ['.implode(',', (array) $q->topic_tags).'] '.$q->question)->implode("\n"),
             ], ['max_tokens' => 1400]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
             if (is_array($decoded) && ! empty($decoded['focus_areas'])) {
                 return [$decoded, 'ai'];
             }

@@ -13,6 +13,7 @@ use App\Models\CvProfile;
 use App\Models\Product;
 use App\Services\AI\AiBudgetExceeded;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Cv\AtsReport;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Files\DocxExtractor;
@@ -142,7 +143,7 @@ final class CvController extends Controller
                 $result = $this->gateway->complete($request->user(), AiPurpose::Cv, 'cv_parse', 1, [
                     'cv_text' => mb_substr($text, 0, 30000),
                 ], ['max_tokens' => 2500]);
-                $parsed = json_decode(trim($result->text), true);
+                $parsed = JsonOutput::object($result->text);
             } catch (AiBudgetExceeded) {
                 return response()->json([
                     'error' => ['code' => 'ai_budget_exceeded', 'message' => 'Daily AI limit reached — try again tomorrow.'],

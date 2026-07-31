@@ -8,6 +8,7 @@ use App\Enums\AiPurpose;
 use App\Models\CvDocument;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Cv\AtsReport;
 use App\Support\Cv\CvProfileData;
 use Throwable;
@@ -79,7 +80,7 @@ final readonly class GenerateCv
                 'jd' => $jd !== null && trim($jd) !== '' ? mb_substr($jd, 0, 6000) : '(none)',
             ], ['max_tokens' => 2200]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
 
             if (is_array($decoded) && ! empty($decoded['skills']) && isset($decoded['summary'])) {
                 return [$decoded, 'ai'];

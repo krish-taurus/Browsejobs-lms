@@ -8,6 +8,7 @@ use App\Enums\AiPurpose;
 use App\Models\EmployerWorkspace;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Roles\RoleTaxonomy;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Validation\ValidationException;
@@ -62,7 +63,7 @@ final readonly class DraftJobDescription
                     'locations' => implode(', ', $context['locations'] ?? []) ?: 'not specified',
                 ], ['max_tokens' => 1400]);
 
-                $parsed = json_decode(trim($result->text), true);
+                $parsed = JsonOutput::object($result->text);
             } catch (Throwable) {
                 throw ValidationException::withMessages([
                     'title' => 'Drafting is unavailable right now — write the description yourself and publish as normal.',
