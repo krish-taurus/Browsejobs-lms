@@ -261,10 +261,10 @@ export default function NewJobPage() {
           </InkPanel>
 
           <Tile accent={VERIFY} index={3} hover={false}>
-            <Label>Already trained for you</Label>
+            <Label>Matched candidates</Label>
             <p className="mt-2 text-[13px] leading-relaxed text-white/65">
-              Once this JD is live, students who finished the BrowseJobs programme and match your skills appear
-              under its <span className="font-semibold text-white">Talent pool</span> tab, CV built and
+              Once this JD is live, candidates matching your skills appear under its{" "}
+              <span className="font-semibold text-white">Talent pool</span> tab, CV on file and
               readiness scored. You can invite them to apply.
             </p>
           </Tile>

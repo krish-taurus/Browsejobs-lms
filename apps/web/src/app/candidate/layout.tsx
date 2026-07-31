@@ -75,6 +75,13 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
           </nav>
 
           <Link
+            href="/"
+            className="hidden shrink-0 text-[13px] font-medium transition-colors hover:text-white sm:block"
+            style={{ color: INK.muted }}
+          >
+            ← Home
+          </Link>
+          <Link
             href="/portal/notifications"
             className="shrink-0 text-[13px] font-medium transition-colors hover:text-white"
             style={{ color: INK.muted }}

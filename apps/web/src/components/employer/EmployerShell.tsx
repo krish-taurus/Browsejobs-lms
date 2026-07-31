@@ -22,6 +22,7 @@ import { CommandPalette } from "@/components/employer/CommandPalette";
 const NAV = [
   { href: "/employer/dashboard", label: "Dashboard" },
   { href: "/employer/jobs", label: "Jobs" },
+  { href: "/employer/pipeline", label: "Pipeline" },
   { href: "/employer/team", label: "Team" },
 ];
 
@@ -157,13 +158,13 @@ function Guarded({ children }: { children: ReactNode }) {
       <CommandPalette workspaceId={workspace.id} />
       <div className="min-h-screen bg-[#05070d] font-body text-white antialiased selection:bg-[#4d8ef7] selection:text-white md:grid md:grid-cols-[248px_1fr]">
         <aside className="relative hidden overflow-hidden bg-[#0a0f1c] text-white md:flex md:flex-col">
-          <div className="flex items-center gap-2 px-6 py-5">
+          <Link href="/" className="flex items-center gap-2 px-6 py-5" aria-label="BrowseJobs home">
             <Mark tone="dark" />
             <div>
               <span className="display block leading-none">BrowseJobs</span>
               <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/40">Employer</span>
             </div>
-          </div>
+          </Link>
 
           {workspaces.length > 1 ? (
             <select
@@ -202,6 +203,12 @@ function Guarded({ children }: { children: ReactNode }) {
           <p className="px-6 pb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/25">
             ⌘K to jump anywhere
           </p>
+          <Link
+            href="/"
+            className="mx-3 rounded-xl px-3.5 py-2.5 text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white"
+          >
+            ← Back to browsejobs.ai
+          </Link>
           <button
             onClick={() => logout().then(() => router.replace("/employer"))}
             className="m-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white"
@@ -210,7 +217,7 @@ function Guarded({ children }: { children: ReactNode }) {
           </button>
         </aside>
 
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen min-w-0 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.07] bg-[#05070d]/80 px-5 py-3.5 backdrop-blur-xl md:px-8">
             <p className="flex items-center gap-2.5 text-sm">
               <span className="font-semibold">{user.name}</span>
@@ -240,6 +247,12 @@ function Guarded({ children }: { children: ReactNode }) {
                   </Link>
                 ))}
               </div>
+              <Link
+                href="/"
+                className="mb-3 block text-sm font-medium text-white/50 transition-colors hover:text-white"
+              >
+                ← Back to browsejobs.ai
+              </Link>
               <button
                 onClick={() => logout().then(() => router.replace("/employer"))}
                 className="mt-4 text-sm font-medium text-white/50"

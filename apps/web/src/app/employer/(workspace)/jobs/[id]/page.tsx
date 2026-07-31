@@ -158,7 +158,7 @@ function ApplicationsTab({ jobId }: { jobId: number }) {
         <p className="font-display text-xl font-bold tracking-tight">No applications yet</p>
         <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
           Candidates can see this JD and apply free. Anyone who completes the job-specific interview
-          arrives graded and ranked at the top of this list. Check the talent pool for trained
+          arrives graded and ranked at the top of this list. Check the talent pool for matched
           candidates you can invite directly.
         </p>
       </Tile>
@@ -357,15 +357,15 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
   return (
     <div className="space-y-5">
       <InkPanel glow={VIOLET}>
-        <Label dark>Trained on BrowseJobs</Label>
+        <Label dark>Matched candidates</Label>
         <p className="font-display mt-2.5 max-w-2xl text-xl font-bold leading-tight tracking-tight md:text-2xl">
-          Candidates who already finished the training,{" "}
+          Candidates who match this role,{" "}
           <span className="bg-gradient-to-r from-[#9d6bf5] to-[#4d8ef7] bg-clip-text text-transparent">
-            with a built CV and a mastery record.
+            with a CV on file and a scored history.
           </span>
         </p>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
-          Matched on the skills your JD names, weighted by placement readiness and mock history.
+          Matched on the skills your JD names, weighted by readiness and interview history.
           Inviting someone is a nudge — they still choose to apply and still sit your job-specific interview.
         </p>
       </InkPanel>
@@ -374,10 +374,10 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
         <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-32" />)}</div>
       ) : rows.length === 0 ? (
         <Tile accent={VIOLET} className="py-12 text-center" hover={false}>
-          <p className="font-display text-xl font-bold tracking-tight">No trained matches yet</p>
+          <p className="font-display text-xl font-bold tracking-tight">No matches yet</p>
           <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
-            No BrowseJobs students currently match the skills on this JD, or everyone who matches has
-            already applied. Add or broaden the skills on the JD to widen the pool.
+            Nobody currently matches the skills on this JD, or everyone who matches has already
+            applied. Add or broaden the skills on the JD to widen the pool.
           </p>
         </Tile>
       ) : (
