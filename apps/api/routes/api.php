@@ -95,6 +95,7 @@ use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
+use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
@@ -427,6 +428,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invite'])->middleware('throttle:20,1');
 
     Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
+
+    // Shared role vocabulary for title/skill pickers (PRD-E F14).
+    Route::get('role-taxonomy', [EmployerRoleTaxonomyController::class, 'index']);
 
     // JDs + JD-specific mocks (PRD-E F2).
     Route::get('workspaces/{workspace}/jobs', [EmployerJobController::class, 'index']);
