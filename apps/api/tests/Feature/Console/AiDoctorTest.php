@@ -82,3 +82,38 @@ it('passes --all when the active provider is the one that works', function (): v
 
     $this->artisan('ai:doctor --all')->assertSuccessful();
 });
+
+it('prints the reply verbatim and says whether it parses', function (): void {
+    config(['ai.provider' => 'deepseek', 'ai.providers.deepseek.api_key' => 'k']);
+
+    // A model that pads its JSON with reasoning — invisible today, because
+    // ai_events stores tokens and cost but never the reply.
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'model' => 'deepseek-v4-flash',
+        'choices' => [['message' => ['content' => "Let me think about this.\n\n{\"description\":\"A role.\"}"], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 20],
+    ])]);
+
+    $this->artisan('ai:doctor --raw --max-tokens=100')
+        ->expectsOutputToContain('--- reply begins ---')
+        ->expectsOutputToContain('Let me think about this.')
+        ->expectsOutputToContain('Parses as a JSON object: yes')
+        ->assertSuccessful();
+});
+
+it('flags a reply that hit the token ceiling', function (): void {
+    config(['ai.provider' => 'deepseek', 'ai.providers.deepseek.api_key' => 'k']);
+
+    // Truncated mid-object: the exact shape of "the model answered and the
+    // feature still did nothing".
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'model' => 'deepseek-v4-flash',
+        'choices' => [['message' => ['content' => '{"description":"A role that'], 'finish_reason' => 'length']],
+        'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 16],
+    ])]);
+
+    $this->artisan('ai:doctor --raw --max-tokens=16')
+        ->expectsOutputToContain('Parses as a JSON object: NO')
+        ->expectsOutputToContain('Re-run with a higher --max-tokens')
+        ->assertSuccessful();
+});

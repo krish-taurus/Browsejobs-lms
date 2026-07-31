@@ -8,6 +8,7 @@ use App\Models\AiEvent;
 use App\Services\AI\AiClient;
 use App\Services\AI\AiMessage;
 use App\Services\AI\AnthropicClient;
+use App\Services\AI\JsonOutput;
 use App\Services\AI\OpenAiCompatibleClient;
 use App\Support\AI\ProviderResolver;
 use Illuminate\Console\Command;
@@ -23,7 +24,7 @@ use Throwable;
  */
 final class AiDoctor extends Command
 {
-    protected $signature = 'ai:doctor {--prompt=Reply with the single word OK.} {--all : Test every configured provider, not just the active one}';
+    protected $signature = 'ai:doctor {--prompt=Reply with the single word OK.} {--all : Test every configured provider, not just the active one} {--raw : Print the reply verbatim and report whether it parses as JSON} {--max-tokens=16 : Ceiling for the test call; raise it to see a full JSON reply}';
 
     protected $description = 'Diagnose the active AI provider with a live test call.';
 
@@ -55,13 +56,22 @@ final class AiDoctor extends Command
 
         $this->line('Making a live test call…');
         try {
+            $maxTokens = max(1, (int) $this->option('max-tokens'));
+
             $result = app(AiClient::class)->complete(new AiMessage(
                 user: (string) $this->option('prompt'),
                 system: null,
-                maxTokens: 16,
+                maxTokens: $maxTokens,
             ));
 
             $this->info("SUCCESS — model {$result->model}, {$result->promptTokens}+{$result->completionTokens} tokens.");
+
+            if ($this->option('raw')) {
+                $this->reportRaw($result->text, $result->completionTokens, $maxTokens, $result->stopReason);
+
+                return self::SUCCESS;
+            }
+
             $this->line('Reply: '.trim($result->text));
 
             return self::SUCCESS;
@@ -195,6 +205,40 @@ final class AiDoctor extends Command
         }
 
         return false;
+    }
+
+    /**
+     * Show the reply exactly as it arrived, and whether our parser can read it.
+     *
+     * Structured features fail when a model wraps its JSON, pads it with
+     * reasoning, or runs out of tokens mid-object. All three look identical
+     * from the outside — "the AI did nothing" — and none of them are visible
+     * anywhere, because ai_events stores tokens and cost but not the reply.
+     */
+    private function reportRaw(string $text, int $completionTokens, int $maxTokens, string $stopReason): void
+    {
+        $this->newLine();
+        $this->line('--- reply begins ---');
+        $this->line($text);
+        $this->line('--- reply ends ---');
+        $this->newLine();
+
+        $parsed = JsonOutput::object($text);
+        $this->line('Parses as a JSON object: '.($parsed !== null ? 'yes ('.count($parsed).' keys)' : 'NO'));
+        $this->line('Stop reason: '.($stopReason ?: 'unknown'));
+
+        if ($completionTokens >= $maxTokens) {
+            $this->newLine();
+            $this->warn('The reply hit the token ceiling and is probably cut off.');
+            $this->line("Re-run with a higher --max-tokens than {$maxTokens} to see the whole thing.");
+        }
+
+        if ($parsed === null && trim($text) !== '') {
+            $this->newLine();
+            $this->line('The model answered but not in a shape we can read. If the text above is');
+            $this->line('cut off mid-object, the feature needs a higher token ceiling for this');
+            $this->line('model; if it is prose or reasoning, the model is ignoring "JSON only".');
+        }
     }
 
     private function hintFor(int $status, string $provider): void
