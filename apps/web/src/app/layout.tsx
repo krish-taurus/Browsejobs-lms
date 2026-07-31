@@ -76,10 +76,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    // Dark across the site, matching the portals. Set on <html> rather than
-    // per-page so a card never renders light inside a dark shell during
-    // navigation, and so one attribute reverts the whole thing.
-    <html lang="en" data-theme="dark">
+    <html lang="en">
       <body
         className={`${sora.variable} ${inter.variable} ${plexMono.variable} antialiased`}
       >

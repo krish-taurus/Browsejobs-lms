@@ -34,7 +34,7 @@
  * (CLAUDE.md design system). Only surfaces, foreground and lines flip, and
  * the blues lift because #1b6df0 on near-black does not clear AA.
  */
-:root[data-theme="dark"] {
+[data-theme="dark"] {
   --bj-ink: #f4f7fb;
   --bj-ink2: #c7d3e4;
   --bj-deep: #4d8ef7;
