@@ -61,6 +61,17 @@ return [
     'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
     'max_tokens' => (int) env('AI_MAX_TOKENS', 1024),
 
+    // Multiplier applied to every feature's max_tokens ceiling.
+    //
+    // The per-feature ceilings were calibrated against Claude, which answers
+    // tersely. A more verbose model spends the same budget on fewer fields
+    // and gets cut off mid-JSON, which every consumer then reads as "the
+    // model did not answer in the shape we asked for" — the feature silently
+    // does nothing. One knob is safer than re-tuning sixteen numbers per
+    // vendor. You are billed for tokens generated, not for the ceiling, so
+    // headroom costs nothing until it is used.
+    'token_headroom' => max(1.0, (float) env('AI_TOKEN_HEADROOM', 1.0)),
+
     // Seconds to wait for a provider response. Generation calls (syllabus, reports)
     // can take well over the 30s HTTP default on slower models, so allow more.
     // Keep this below the queue job timeout (see the AI jobs' $timeout) so the

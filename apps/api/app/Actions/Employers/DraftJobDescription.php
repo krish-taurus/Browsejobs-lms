@@ -71,8 +71,15 @@ final readonly class DraftJobDescription
             }
 
             if (! is_array($parsed) || ! is_string($parsed['description'] ?? null) || trim($parsed['description']) === '') {
+                // A reply cut off at the token ceiling is not a bad title, and
+                // saying so sends people off rewriting a title that was never
+                // the problem. Name the actual cause.
+                $truncated = $result->stopReason === 'length' || $result->stopReason === 'max_tokens';
+
                 throw ValidationException::withMessages([
-                    'title' => 'Could not draft that description. Try a more specific job title, or write it yourself.',
+                    'title' => $truncated
+                        ? 'The model ran out of room mid-answer. Raise AI_TOKEN_HEADROOM for this model, or write the description yourself.'
+                        : 'Could not draft that description. Try a more specific job title, or write it yourself.',
                 ]);
             }
 

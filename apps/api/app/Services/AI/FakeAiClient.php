@@ -28,6 +28,13 @@ final class FakeAiClient implements AiClient
 
     public int $completionTokens = 18;
 
+    /**
+     * Why the model stopped. Defaults to a clean finish; set to 'length' to
+     * reproduce a reply cut off at the token ceiling, which consumers must
+     * distinguish from a badly-shaped answer.
+     */
+    public string $stopReason = 'end_turn';
+
     public function complete(AiMessage $message): AiResult
     {
         $this->calls[] = $message;
@@ -39,6 +46,7 @@ final class FakeAiClient implements AiClient
             promptTokens: $this->promptTokens,
             completionTokens: $this->completionTokens,
             model: $message->model ?? 'claude-sonnet-5',
+            stopReason: $this->stopReason,
         );
     }
 }

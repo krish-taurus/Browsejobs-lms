@@ -16,6 +16,8 @@ use App\Models\User;
 use App\Services\AI\AiClient;
 use App\Services\AI\AiGateway;
 use App\Services\AI\FakeAiClient;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Structured AI features must survive a model that wraps its JSON.
@@ -125,4 +127,36 @@ it('grades an interview from a fenced reply instead of stalling it', function ()
 
     expect($interview->overall_score)->toBe(78)
         ->and($interview->status->value)->toBe('graded');
+});
+
+it('applies the configured token headroom to every feature ceiling', function (): void {
+    config([
+        'ai.provider' => 'deepseek',
+        'ai.providers.deepseek.api_key' => 'k',
+        // The per-feature ceilings were tuned against a terse model; this is
+        // the one knob that gives a wordier one room without re-tuning them.
+        'ai.token_headroom' => 2.0,
+    ]);
+    app()->forgetInstance(AiClient::class);
+
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'model' => 'deepseek-v4-flash',
+        'choices' => [['message' => ['content' => '{"description":"A role.","skills":["python"]}'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 20],
+    ])]);
+
+    app(DraftJobDescription::class)->handle($this->recruiter, $this->workspace, 'Backend Engineer');
+
+    // JD drafting asks for 1400; with headroom 2 the provider is sent 2800.
+    Http::assertSent(fn ($request) => ($request->data()['max_tokens'] ?? null) === 2800);
+});
+
+it('blames the token ceiling, not the job title, when a reply is cut off', function (): void {
+    // The old message sent people off rewriting a title that was never the
+    // problem — which is exactly what a truncated reply looks like.
+    $this->fake->reply = '{"description":"A role that';
+    $this->fake->stopReason = 'length';
+
+    expect(fn () => app(DraftJobDescription::class)->handle($this->recruiter, $this->workspace, 'Backend Engineer'))
+        ->toThrow(ValidationException::class, 'ran out of room');
 });

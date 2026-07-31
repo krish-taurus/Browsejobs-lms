@@ -43,7 +43,7 @@ final class AiGateway
                 user: $prompt,
                 system: $opts['system'] ?? null,
                 model: $model,
-                maxTokens: $opts['max_tokens'] ?? null,
+                maxTokens: $this->ceiling($opts['max_tokens'] ?? null),
             );
 
             $start = hrtime(true);
@@ -62,6 +62,21 @@ final class AiGateway
 
             return $result;
         });
+    }
+
+    /**
+     * A feature's token ceiling with the configured headroom applied.
+     *
+     * Null stays null — that means "use the provider default", and scaling a
+     * default nobody set here would be inventing a number.
+     */
+    private function ceiling(?int $requested): ?int
+    {
+        if ($requested === null) {
+            return null;
+        }
+
+        return (int) ceil($requested * (float) config('ai.token_headroom', 1.0));
     }
 
     /** The model of the provider actually in use, so each vendor gets a name it knows. */
