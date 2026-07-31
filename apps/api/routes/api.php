@@ -96,6 +96,7 @@ use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
+use App\Http\Controllers\Employer\MockDesignController as EmployerMockDesignController;
 use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
@@ -444,6 +445,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/jobs/{job}/publish', [EmployerJobController::class, 'publish']);
     Route::post('workspaces/{workspace}/jobs/{job}/status', [EmployerJobController::class, 'changeStatus']);
     Route::get('workspaces/{workspace}/jobs/{job}/mock', [EmployerJdMockController::class, 'show']);
+    // Interview designer: focus skills, competency weights, format mix.
+    Route::get('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'show']);
+    Route::put('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'update']);
     Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
 
     // Applications: graded-first ranking, evidence view, stage moves (PRD-E F3).

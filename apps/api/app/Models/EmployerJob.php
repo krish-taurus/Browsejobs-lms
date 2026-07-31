@@ -62,6 +62,7 @@ final class EmployerJob extends Model
         'ctc_visible',
         'openings',
         'knockout_questions',
+        'mock_design',
         'status',
         'published_at',
     ];
@@ -72,6 +73,7 @@ final class EmployerJob extends Model
             'skills' => 'array',
             'locations' => 'array',
             'knockout_questions' => 'array',
+            'mock_design' => 'array',
             'remote' => 'boolean',
             'ctc_visible' => 'boolean',
             'status' => EmployerJobStatus::class,

@@ -48,3 +48,13 @@ Rules:
   Always include a `communication` dimension worth no more than 20.
 - No questions that require a whiteboard, IDE, or anything non-verbal.
 - No questions about salary, personal life, or protected characteristics.
+
+## Employer's interview design
+
+{{design}}
+
+When the block above is empty, design the interview yourself from the job
+description. When it is not, follow it — the employer knows what they are
+hiring for. Never let it override the honesty rules above: no discriminatory
+questions, and no question whose answer depends on personal circumstances
+rather than the work.

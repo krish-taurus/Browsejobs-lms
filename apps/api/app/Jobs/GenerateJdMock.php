@@ -12,6 +12,8 @@ use App\Models\JdMock;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiGateway;
+use App\Support\Employers\MockDesign;
+use App\Support\Roles\RoleTaxonomy;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -82,6 +84,9 @@ final class GenerateJdMock implements ShouldQueue
                 'experience_max_years' => (string) ($job->experience_max_years ?? '10+'),
                 'skills' => implode(', ', $job->skills ?? []),
                 'description' => mb_substr($job->description, 0, 8000),
+                // The employer's design, when they set one. Empty string
+                // leaves the prompt exactly as it was for undesigned JDs.
+                'design' => MockDesign::fromArray($job->mock_design, app(RoleTaxonomy::class))->toPromptInstruction(),
             ], ['max_tokens' => 2500]);
 
             $data = json_decode(trim($result->text), true);
