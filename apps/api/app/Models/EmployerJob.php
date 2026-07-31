@@ -99,6 +99,12 @@ final class EmployerJob extends Model
         return $this->hasMany(JdMock::class);
     }
 
+    /** The interview process for this JD, in the order it runs (F18). */
+    public function rounds(): HasMany
+    {
+        return $this->hasMany(EmployerJobRound::class)->orderBy('position')->orderBy('id');
+    }
+
     /** Latest ready mock, else latest of any status. */
     public function currentMock(): ?JdMock
     {

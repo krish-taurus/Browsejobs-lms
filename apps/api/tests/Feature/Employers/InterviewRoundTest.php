@@ -57,7 +57,7 @@ it('creates an L1 invite with a question snapshot when the application enters L1
         ->where('employer_job_application_id', $this->application->id)
         ->firstOrFail();
 
-    expect($interview->round->value)->toBe('l1')
+    expect($interview->round)->toBe('l1')
         ->and($interview->status)->toBe(EmployerInterviewStatus::Invited)
         ->and($interview->question_set)->toBe($this->mock->questions);
 

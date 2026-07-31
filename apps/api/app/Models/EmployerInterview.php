@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\EmployerInterviewRound;
 use App\Enums\EmployerInterviewStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\EmployerInterviewFactory;
@@ -14,12 +13,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * One L1/L2 interview round for an application (PRD-E F5).
+ * One interview round for an application (PRD-E F5, F18).
+ *
+ * `round` holds the key of the EmployerJobRound it was sent from. It is a
+ * plain string rather than an enum because employers define their own rounds
+ * now; the two the platform ships with keep the keys `l1` and `l2`, so rows
+ * written before F18 read back unchanged.
  *
  * @property int $id
  * @property int $tenant_id
  * @property int $employer_job_application_id
- * @property EmployerInterviewRound $round
+ * @property string $round
+ * @property string|null $round_name
+ * @property int|null $employer_job_round_id
  * @property EmployerInterviewStatus $status
  * @property array<int, array<string, mixed>> $question_set
  * @property array<string, mixed> $rubric
@@ -44,7 +50,9 @@ final class EmployerInterview extends Model
     protected $fillable = [
         'tenant_id',
         'employer_job_application_id',
+        'employer_job_round_id',
         'round',
+        'round_name',
         'status',
         'question_set',
         'rubric',
@@ -63,7 +71,6 @@ final class EmployerInterview extends Model
     protected function casts(): array
     {
         return [
-            'round' => EmployerInterviewRound::class,
             'status' => EmployerInterviewStatus::class,
             'question_set' => 'array',
             'rubric' => 'array',
@@ -75,6 +82,18 @@ final class EmployerInterview extends Model
             'submitted_at' => 'datetime',
             'graded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The round definition this interview was sent from. Null for rounds
+     * created before F18 — a definition invented for them would be a record
+     * of a decision nobody made.
+     *
+     * @return BelongsTo<EmployerJobRound, $this>
+     */
+    public function roundDefinition(): BelongsTo
+    {
+        return $this->belongsTo(EmployerJobRound::class, 'employer_job_round_id');
     }
 
     /** @return BelongsTo<EmployerJobApplication, $this> */

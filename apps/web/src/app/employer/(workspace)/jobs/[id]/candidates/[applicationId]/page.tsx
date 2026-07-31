@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ApiError } from "@/lib/api";
 import { useParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { useWorkspace } from "@/components/employer/EmployerShell";
@@ -12,6 +13,7 @@ import {
   STAGE_LABELS,
   type ApplicationStage,
   type CandidateProfileData,
+  type JobRound,
 } from "@/lib/employer";
 
 /**
@@ -344,6 +346,8 @@ export default function CandidateProfilePage() {
         </>
       )}
 
+      <SendRoundPanel jobId={jobId} applicationId={applicationId} />
+
       {/* CV ------------------------------------------------------------ */}
       <Tile accent={TRUST} hover={false}>
         <Label>Background</Label>
@@ -377,6 +381,107 @@ export default function CandidateProfilePage() {
         )}
       </Tile>
     </div>
+  );
+}
+
+/**
+ * Sending a designed round to this candidate by hand (PRD-E F18).
+ *
+ * Rounds already sat are listed as sent rather than hidden, so it is obvious
+ * why a button is missing. Rounds the employer marked automatic still show a
+ * send button: a threshold is a floor, not a prohibition on judgement.
+ */
+function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId: number }) {
+  const { workspace } = useWorkspace();
+  const [rounds, setRounds] = useState<JobRound[] | null>(null);
+  const [sent, setSent] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState<number | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      employerApi.rounds(workspace.id, jobId),
+      employerApi.interviews(workspace.id, jobId, applicationId),
+    ])
+      .then(([process, interviews]) => {
+        setRounds(process.data.filter((r) => r.enabled && r.kind !== "human"));
+        setSent(Object.fromEntries(interviews.data.map((i) => [i.round, true])));
+      })
+      .catch(() => setRounds([]));
+  }, [workspace.id, jobId, applicationId]);
+
+  async function send(round: JobRound) {
+    setBusy(round.id);
+    setError(null);
+    setNote(null);
+    try {
+      await employerApi.sendRound(workspace.id, jobId, applicationId, round.id);
+      setSent((prev) => ({ ...prev, [round.key]: true }));
+      setNote(`${round.name} sent. The candidate has ${round.window_hours} hours.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not send the round.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (rounds === null) return <Skeleton className="h-32" />;
+
+  if (rounds.length === 0) {
+    return (
+      <Tile accent={TRUST} hover={false}>
+        <Label>Interview rounds</Label>
+        <p className="mt-2 text-[13px] text-white/50">
+          This role runs no platform rounds. Design them on the JD&apos;s Process tab.
+        </p>
+      </Tile>
+    );
+  }
+
+  return (
+    <Tile accent={TRUST} hover={false}>
+      <Label>Interview rounds</Label>
+      <h2 className="font-display mt-2 text-xl font-bold tracking-tight">Send a round</h2>
+      <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/50">
+        Each round asks what this candidate has not been asked yet. Sending one does not move their
+        stage — that stays a decision you make.
+      </p>
+
+      <ul className="mt-4 space-y-2.5">
+        {rounds.map((round) => (
+          <li
+            key={round.id}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4"
+          >
+            <div>
+              <p className="text-[13px] font-semibold text-white">{round.name}</p>
+              <p className="mt-0.5 font-mono text-[11px] text-white/40">
+                {round.question_count ?? "all matching"} questions · {round.window_hours}h
+                {round.dispatch === "auto" && round.auto_min_score !== null && (
+                  <> · automatic at {round.auto_min_score}%</>
+                )}
+              </p>
+            </div>
+            {sent[round.key] ? (
+              <Pill tone="verify">Sent</Pill>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void send(round)}
+                disabled={busy === round.id}
+                className="rounded-full border border-white/[0.14] px-4 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-white/30 disabled:opacity-40"
+              >
+                {busy === round.id ? "Sending…" : "Send"}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {note && <p className="mt-3 text-[13px]" style={{ color: "#6ee7b7" }}>{note}</p>}
+      {error && <p className="mt-3 text-[13px]" style={{ color: "#fca5a5" }}>{error}</p>}
+    </Tile>
   );
 }
 

@@ -33,7 +33,7 @@ final class EvaluateAutomationOnInterviewGraded implements ShouldQueue
             $rules = EmployerAutomationRule::query()
                 ->where('employer_job_id', $application->employer_job_id)
                 ->where('trigger', EmployerAutomationRule::TRIGGER_INTERVIEW_GRADED)
-                ->where('round', $interview->round->value)
+                ->where('round', $interview->round)
                 ->where('enabled', true)
                 ->get();
 

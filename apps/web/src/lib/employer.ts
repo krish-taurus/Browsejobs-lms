@@ -176,9 +176,42 @@ export type CandidateProfileData = {
   } | null;
 };
 
+export type JobRound = {
+  id: number;
+  key: string;
+  position: number;
+  name: string;
+  kind: "ai_interview" | "mcq" | "human";
+  focus_skills: string[];
+  competency_weights: Record<string, number>;
+  format_mix: Record<string, number>;
+  question_count: number | null;
+  notes: string | null;
+  window_hours: number;
+  dispatch: "manual" | "auto";
+  auto_min_score: number | null;
+  enabled: boolean;
+  /** A round already sat is evidence — it can be switched off, never deleted. */
+  has_interviews: boolean;
+};
+
+export type InterviewProcessData = {
+  data: JobRound[];
+  meta: {
+    kinds: string[];
+    competencies: { key: string; label: string; hint: string }[];
+    question_formats: { key: string; label: string; hint: string }[];
+    selectable_skills: string[];
+    default_window_hours: number;
+    has_mock: boolean;
+  };
+};
+
 export type InterviewRow = {
   id: number;
-  round: "l1" | "l2";
+  /** The round's key. Free-form since employers define their own rounds. */
+  round: string;
+  round_name?: string | null;
   status: string;
   overall_score: number | null;
   dimension_scores: Record<string, number> | null;
@@ -268,6 +301,18 @@ export const employerApi = {
       method: "POST",
       body: JSON.stringify({ stage, note }),
     }),
+  rounds: (ws: number, job: number) =>
+    apiJson<InterviewProcessData>(`${base}/workspaces/${ws}/jobs/${job}/rounds`),
+  saveRounds: (ws: number, job: number, rounds: Record<string, unknown>[]) =>
+    apiJson<{ data: JobRound[] }>(`${base}/workspaces/${ws}/jobs/${job}/rounds`, {
+      method: "PUT",
+      body: JSON.stringify({ rounds }),
+    }),
+  sendRound: (ws: number, job: number, application: number, round: number) =>
+    apiJson<{ data: InterviewRow }>(
+      `${base}/workspaces/${ws}/jobs/${job}/applications/${application}/rounds/${round}/send`,
+      { method: "POST" },
+    ),
   interviews: (ws: number, job: number, id: number) =>
     apiJson<{ data: InterviewRow[] }>(`${base}/workspaces/${ws}/jobs/${job}/applications/${id}/interviews`),
 

@@ -22,7 +22,10 @@ final class EmployerInterviewResource extends JsonResource
         return [
             'id' => $this->id,
             'application_id' => $this->employer_job_application_id,
-            'round' => $this->round->value,
+            'round' => $this->round,
+            // Snapshotted at invite time, so a later rename does not rewrite
+            // what the candidate was told they were sitting.
+            'round_name' => $this->round_name,
             'status' => $this->status->value,
             'question_set' => $this->question_set,
             'answers' => $this->answers,

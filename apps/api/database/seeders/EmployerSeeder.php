@@ -20,6 +20,7 @@ use App\Models\CvProfile;
 use App\Models\EmployerInterview;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
+use App\Models\EmployerJobRound;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
 use App\Models\JdMock;
@@ -132,6 +133,7 @@ final class EmployerSeeder extends Seeder
 
             $this->seedApplications($tenant, $job, $mock);
             $this->seedCandidateDepth($tenant, $job);
+            $this->seedInterviewProcess($tenant, $job);
             $this->seedTrainedTalent($tenant);
         });
     }
@@ -453,6 +455,45 @@ final class EmployerSeeder extends Seeder
                         ],
                     ],
                 ],
+            );
+        }
+    }
+
+    /**
+     * A three-round process so the designer demos as something an employer
+     * actually configured rather than the two rounds every JD gets by
+     * default (F18): a focused screen, an automatic depth round, and a human
+     * call the platform tracks but does not run.
+     */
+    private function seedInterviewProcess(Tenant $tenant, EmployerJob $job): void
+    {
+        $rounds = [
+            [
+                'key' => 'l1', 'name' => 'L1 — pipeline fundamentals', 'position' => 1,
+                'kind' => EmployerJobRound::KIND_AI, 'question_count' => 6,
+                'focus_skills' => ['sql', 'data modeling'],
+                'dispatch' => EmployerJobRound::DISPATCH_MANUAL, 'auto_min_score' => null,
+            ],
+            [
+                'key' => 'l2', 'name' => 'L2 — production depth', 'position' => 2,
+                'kind' => EmployerJobRound::KIND_AI, 'question_count' => 5,
+                'focus_skills' => ['airflow', 'python'],
+                // The threshold the employer chose: anyone clearing 75 on the
+                // previous round gets this without waiting for a human.
+                'dispatch' => EmployerJobRound::DISPATCH_AUTO, 'auto_min_score' => 75,
+            ],
+            [
+                'key' => 'hiring_manager', 'name' => 'Hiring manager call', 'position' => 3,
+                'kind' => EmployerJobRound::KIND_HUMAN, 'question_count' => null,
+                'focus_skills' => [],
+                'dispatch' => EmployerJobRound::DISPATCH_MANUAL, 'auto_min_score' => null,
+            ],
+        ];
+
+        foreach ($rounds as $round) {
+            EmployerJobRound::query()->updateOrCreate(
+                ['employer_job_id' => $job->id, 'key' => $round['key']],
+                $round + ['tenant_id' => $tenant->id, 'window_hours' => 48, 'enabled' => true],
             );
         }
     }

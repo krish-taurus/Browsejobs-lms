@@ -23,7 +23,10 @@ final class CandidateInterviewResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'round' => $this->round->value,
+            'round' => $this->round,
+            // Snapshotted at invite time, so a later rename does not rewrite
+            // what the candidate was told they were sitting.
+            'round_name' => $this->round_name,
             'status' => $this->status->value,
             'questions' => $this->when(
                 in_array($this->status, [EmployerInterviewStatus::Invited, EmployerInterviewStatus::InProgress], true),

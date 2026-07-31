@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ApiError } from "@/lib/api";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import { MockDesigner } from "@/components/employer/MockDesigner";
+import { ProcessDesigner } from "@/components/employer/ProcessDesigner";
 import {
   EASE,
   GhostButton,
@@ -31,11 +32,12 @@ import {
   type TalentPoolCandidate,
 } from "@/lib/employer";
 
-type Tab = "applications" | "talent" | "design" | "mock" | "automation";
+type Tab = "applications" | "talent" | "process" | "design" | "mock" | "automation";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "applications", label: "Applications" },
   { id: "talent", label: "Talent pool" },
+  { id: "process", label: "Process" },
   { id: "design", label: "Design" },
   { id: "mock", label: "JD mock" },
   { id: "automation", label: "Automation" },
@@ -95,6 +97,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
 
       {tab === "applications" && <ApplicationsTab jobId={jobId} />}
       {tab === "talent" && <TalentPoolTab jobId={jobId} />}
+      {tab === "process" && <ProcessDesigner jobId={jobId} />}
       {tab === "design" && <MockDesigner jobId={jobId} />}
       {tab === "mock" && <MockTab jobId={jobId} />}
       {tab === "automation" && <AutomationTab jobId={jobId} />}

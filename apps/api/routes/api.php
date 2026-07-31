@@ -92,6 +92,7 @@ use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomation
 use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
+use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
@@ -452,6 +453,15 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::get('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'show']);
     Route::put('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'update']);
     Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
+
+    // The designed interview process for a JD, and sending one of its rounds
+    // to a candidate by hand (PRD-E F18).
+    Route::get('workspaces/{workspace}/jobs/{job}/rounds', [EmployerInterviewProcessController::class, 'index']);
+    Route::put('workspaces/{workspace}/jobs/{job}/rounds', [EmployerInterviewProcessController::class, 'update']);
+    Route::post(
+        'workspaces/{workspace}/jobs/{job}/applications/{application}/rounds/{round}/send',
+        [EmployerInterviewProcessController::class, 'send'],
+    );
 
     // Applications: graded-first ranking, evidence view, stage moves (PRD-E F3).
     Route::get('workspaces/{workspace}/jobs/{job}/applications', [EmployerApplicationController::class, 'index']);
