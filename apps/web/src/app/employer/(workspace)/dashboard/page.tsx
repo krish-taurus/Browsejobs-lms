@@ -187,7 +187,7 @@ export default function EmployerDashboardPage() {
           <div className="flex items-baseline justify-between">
             <div>
               <Label>Applications vs gradings</Label>
-              <p className="font-display mt-1 text-lg font-bold">Last 14 days</p>
+              <h2 className="font-display mt-1 text-lg font-bold">Last 14 days</h2>
             </div>
             <Pill tone="trust">{data.total_applications} total</Pill>
           </div>
@@ -198,7 +198,7 @@ export default function EmployerDashboardPage() {
 
         <Tile accent={DEEP} className="md:col-span-2" index={1} hover={false}>
           <Label>Hiring funnel</Label>
-          <p className="font-display mt-1 text-lg font-bold">Stage by stage</p>
+          <h2 className="font-display mt-1 text-lg font-bold">Stage by stage</h2>
           <div className="mt-4">
             <Funnel stages={data.funnel} />
           </div>
@@ -208,7 +208,7 @@ export default function EmployerDashboardPage() {
       <div className="grid items-start gap-4 md:grid-cols-6 md:gap-5">
         <Tile accent={VIOLET} className="md:col-span-2" index={0} hover={false}>
           <Label>Score distribution</Label>
-          <p className="font-display mt-1 text-lg font-bold">Where your talent sits</p>
+          <h2 className="font-display mt-1 text-lg font-bold">Where your talent sits</h2>
           <div className="mt-4">
             <ScoreHistogram bands={data.score_distribution} threshold={70} />
           </div>
@@ -219,7 +219,7 @@ export default function EmployerDashboardPage() {
           <div className="flex items-baseline justify-between">
             <div>
               <Label>Pipeline pulse</Label>
-              <p className="font-display mt-1 text-lg font-bold">Live per JD</p>
+              <h2 className="font-display mt-1 text-lg font-bold">Live per JD</h2>
             </div>
             <span className="font-mono text-[11px] text-white/50">
               {data.awaiting_review} awaiting review

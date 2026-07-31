@@ -170,9 +170,9 @@ export default function EmployerTeamPage() {
             <div className="flex items-baseline justify-between">
               <div>
                 <Label>Members</Label>
-                <p className="font-display mt-1 text-lg font-bold">
+                <h2 className="font-display mt-1 text-lg font-bold">
                   {members === null ? "Loading" : `${members.length} in this workspace`}
-                </p>
+                </h2>
               </div>
               {!isOwner && (
                 <span className="text-[11px] text-white/50">Owners manage the team</span>

@@ -149,7 +149,7 @@ export default function CandidateDashboardPage() {
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
                 <Kicker>Mock score trajectory</Kicker>
-                <p className="font-display mt-1 text-lg font-bold">Every graded attempt</p>
+                <h2 className="font-display mt-1 text-lg font-bold">Every graded attempt</h2>
               </div>
               <span className="font-mono text-[11px]" style={{ color: INK.muted }}>
                 {data.mock_history.length} graded
@@ -180,7 +180,7 @@ export default function CandidateDashboardPage() {
 
           <Card index={1}>
             <Kicker>Your funnel</Kicker>
-            <p className="font-display mt-1 text-lg font-bold">Stage by stage</p>
+            <h2 className="font-display mt-1 text-lg font-bold">Stage by stage</h2>
             <div className="mt-4">
               {data.applications.length === 0 ? (
                 <Empty title="Nothing applied yet" body="Your funnel fills in as you apply." />
@@ -223,7 +223,7 @@ export default function CandidateDashboardPage() {
 
           <Card index={1} className="lg:col-span-2">
             <Kicker>Checks</Kicker>
-            <p className="font-display mt-1 text-lg font-bold">What an employer can confirm</p>
+            <h2 className="font-display mt-1 text-lg font-bold">What an employer can confirm</h2>
             <ul className="mt-4 space-y-2">
               {data.verification.checks.map((c, i) => (
                 <motion.li
@@ -272,7 +272,7 @@ export default function CandidateDashboardPage() {
 
           <Card index={1}>
             <Kicker>Score distribution</Kicker>
-            <p className="font-display mt-1 text-lg font-bold">Your attempts</p>
+            <h2 className="font-display mt-1 text-lg font-bold">Your attempts</h2>
             <div className="mt-4">
               <Histogram
                 bands={scoreBands}
@@ -288,11 +288,11 @@ export default function CandidateDashboardPage() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <Kicker>Applications</Kicker>
-              <p className="font-display mt-1 text-lg font-bold">
+              <h2 className="font-display mt-1 text-lg font-bold">
                 {data.applications.length === 0
                   ? "Nothing yet"
                   : `${data.applications.length} in flight`}
-              </p>
+              </h2>
             </div>
             <GhostAction href="/candidate/jobs">Find roles</GhostAction>
           </div>
@@ -587,7 +587,7 @@ function MomentumPanel({ data }: { data: CandidateDashboardData }) {
         <Kicker>People who got there</Kicker>
         {stories.length === 0 ? (
           <>
-            <p className="font-display mt-1 text-lg font-bold">No stories published yet</p>
+            <h2 className="font-display mt-1 text-lg font-bold">No stories published yet</h2>
             <p className="mt-2 text-[13px] leading-relaxed" style={{ color: INK.muted }}>
               We only show people who agreed to be named. When there are some, they appear here —
               we do not fill this space with invented ones.

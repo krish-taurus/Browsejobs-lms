@@ -21,11 +21,12 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
   await expect(page).toHaveURL(/\/employer\/dashboard/);
   await expect(page.getByRole("heading", { name: "Acme Technologies" })).toBeVisible();
   await expect(page.getByText("Active JDs")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Pipeline pulse" })).toBeVisible();
+  await expect(page.getByText("Pipeline pulse")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Live per JD" })).toBeVisible();
 
   // Jobs list → the seeded published JD.
   await page.getByRole("link", { name: "Jobs" }).first().click();
-  await expect(page.getByRole("heading", { name: "Your JDs" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your job descriptions" })).toBeVisible();
   await page.getByRole("link", { name: /Data Engineer/ }).first().click();
   await expect(page.getByRole("heading", { name: "Data Engineer" })).toBeVisible();
 
@@ -33,13 +34,13 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
   await page.getByRole("tab", { name: "JD mock" }).click();
   await expect(page.getByText("Grading rubric")).toBeVisible();
   await expect(page.getByText("Technical depth").first()).toBeVisible();
-  await expect(page.getByText(/Questions every applicant is asked/)).toBeVisible();
+  await expect(page.getByText(/Asked of every applicant/i)).toBeVisible();
 
   // Automation: auto-shortlist at 70%.
   await page.getByRole("tab", { name: "Automation" }).click();
   await expect(page.getByText(/Automation can advance or park candidates/)).toBeVisible();
   await page.getByRole("button", { name: "Add rule" }).click();
-  await expect(page.getByText(/JD mock ≥/)).toBeVisible();
+  await expect(page.getByText(/Job interview ≥ \d+%/).first()).toBeVisible();
 });
 
 test("command palette jumps to a JD", async ({ page }) => {
