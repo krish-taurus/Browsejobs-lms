@@ -18,6 +18,16 @@ interface WhatsAppClient
      * @param  string  $to  E.164 phone (digits)
      * @param  string  $body  the rendered body (also the template body-param when templated)
      * @param  string|null  $templateName  Meta-approved template name, or null for a session text
+     * @param  list<string>  $parameters  ordered {{1}}..{{n}} body params; empty = whole body as {{1}}
      */
-    public function sendMessage(string $to, string $body, ?string $templateName = null): string;
+    public function sendMessage(string $to, string $body, ?string $templateName = null, array $parameters = []): string;
+
+    /**
+     * Send an image card (image + caption) inside the 24h session window —
+     * the richer look for onboarding messages until an image-header template
+     * is approved.
+     *
+     * @param  string  $imageIdOrUrl  an uploaded media id, or a public https URL
+     */
+    public function sendImage(string $to, string $imageIdOrUrl, string $caption): string;
 }

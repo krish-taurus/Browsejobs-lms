@@ -77,11 +77,15 @@ final class EntitlementService
 
     public function balance(User $user, string $feature): int
     {
-        return (int) (CreditWallet::query()->withoutGlobalScopes()
+        $balance = CreditWallet::query()->withoutGlobalScopes()
             ->where('tenant_id', $user->tenant_id)
             ->where('user_id', $user->id)
             ->where('feature', $feature)
-            ->value('balance') ?? 0);
+            ->value('balance');
+
+        // No wallet yet = the free allowance is still untouched (it is seeded
+        // into the wallet the first time the feature is used).
+        return (int) ($balance ?? $this->freeGrant($feature));
     }
 
     public function grantEntitlement(User $user, string $key, string $kind, ?Carbon $expiresAt = null, ?ProductPurchase $source = null): Entitlement
@@ -168,10 +172,30 @@ final class EntitlementService
 
     private function wallet(User $user, string $feature): CreditWallet
     {
-        return CreditWallet::query()->firstOrCreate(
+        $wallet = CreditWallet::query()->firstOrCreate(
             ['tenant_id' => $user->tenant_id, 'user_id' => $user->id, 'feature' => $feature],
             ['balance' => 0],
         );
+
+        // First touch seeds the feature's free allowance (PRD §6.17 freemium
+        // guardrail): e.g. every student's first mentor booking finds 3 free
+        // sessions already in the wallet.
+        if ($wallet->wasRecentlyCreated && ($free = $this->freeGrant($feature)) > 0) {
+            $wallet->update(['balance' => $free]);
+            $this->record($user, $feature, $free, $free, 'included:free');
+        }
+
+        return $wallet;
+    }
+
+    /** The free starting allowance for a feature (0 = none). */
+    private function freeGrant(string $feature): int
+    {
+        return match ($feature) {
+            EntitlementFeature::Mentor->value => (int) config('monetization.mentor.free_grants', 3),
+            EntitlementFeature::VoiceMock->value => (int) config('monetization.voice_mock.free_grants', 3),
+            default => 0,
+        };
     }
 
     private function record(User $user, string $feature, int $delta, int $balanceAfter, string $reason, ?Model $source = null): void

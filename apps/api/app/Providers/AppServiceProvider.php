@@ -45,6 +45,11 @@ use App\Support\Razorpay\RazorpayClient;
 use App\Support\Receipts\HtmlReceiptRenderer;
 use App\Support\Receipts\ReceiptRenderer;
 use App\Support\Settings\PlatformSettings;
+use App\Support\Sms\LogSmsClient;
+use App\Support\Sms\Msg91SmsClient;
+use App\Support\Sms\SmsClient;
+use App\Support\Sms\SmsConfig;
+use App\Support\Sms\TwilioSmsClient;
 use App\Support\Syllabus\HtmlSyllabusRenderer;
 use App\Support\Syllabus\SyllabusRenderer;
 use App\Support\Tenancy\TenantContext;
@@ -150,7 +155,26 @@ class AppServiceProvider extends ServiceProvider
             /** @var array{phone_number_id: string, access_token: string, base_url: string} $config */
             $config = config('services.whatsapp');
 
+            // Templates flagged auth in the map need the copy-code button component.
+            $config['auth_templates'] = collect((array) config('whatsapp_templates', []))
+                ->filter(fn (array $map): bool => (bool) ($map['auth'] ?? false))
+                ->pluck('name')
+                ->values()
+                ->all();
+
             return new HttpWhatsAppClient($config);
+        });
+
+        // Transactional SMS (PRD §6.9). Provider-switchable via SMS_PROVIDER;
+        // no provider = log-only sender (dev). Tests bind a fake.
+        $this->app->bind(SmsClient::class, function (): SmsClient {
+            $config = config('services.sms');
+
+            return match (SmsConfig::configured() ? $config['provider'] : '') {
+                'msg91' => new Msg91SmsClient($config['msg91']),
+                'twilio' => new TwilioSmsClient($config['twilio']),
+                default => new LogSmsClient,
+            };
         });
 
         // Web push is deferred in P2.4.

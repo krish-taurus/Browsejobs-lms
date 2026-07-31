@@ -13,6 +13,8 @@ Artisan::command('inspire', function () {
 
 // Dunning ladder (PRD §6.8): daily reminders + soft/hard access blocks.
 Schedule::command('fees:run-ladder')->dailyAt('07:00');
+// Webhook safety net: settle any paid Razorpay links the webhook missed.
+Schedule::command('fees:reconcile-links')->everyFifteenMinutes();
 
 // Bootcamp-conversion nudge ladder (PRD §5 Stage 3): daily non-payer nudges.
 Schedule::command('conversions:run-nudges')->dailyAt('08:00');
@@ -20,8 +22,25 @@ Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 // Masterclass → free bootcamp auto-invite (funnel Stage 2→3): daily.
 Schedule::command('bootcamp:invite')->dailyAt('09:00');
 
+// Automated enrolment funnel: build Saturday masterclass batches from course
+// interest, roll finished masterclasses into 7-day bootcamps (with their paid
+// batch pre-linked), and convert ended bootcamps. Idempotent daily sweep.
+Schedule::command('funnel:advance')->dailyAt('05:15');
+
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
+
+// Auto-activate Meta-approved WhatsApp templates (config/whatsapp_templates.php):
+// once Meta approves, business-initiated messages leave the 24h-window regime.
+Schedule::command('whatsapp:sync-templates')->hourly();
+
+// Self-heal classes whose Zoom meeting failed to create (bad creds / outage):
+// once credentials are fixed, every pending class repairs itself in ≤1 hour.
+Schedule::command('zoom:backfill')->hourly();
+
+// Pull finished Zoom Cloud recordings for ended classes (webhook fallback for
+// installs Zoom can't call back) — absentees see them on the Recordings page.
+Schedule::command('zoom:sync-recordings')->everyThirtyMinutes();
 
 // Post-class study nudge (PRD §6 daily loop): nudge cohorts to review flashcards
 // for classes that have ended, once the flashcards exist. Idempotent.

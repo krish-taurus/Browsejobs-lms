@@ -37,12 +37,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/student" className="text-sky/80 hover:text-white">
-                  Job seeker sign in
-                </Link>
-              </li>
-              <li>
-                <Link href="/employer" className="text-sky/80 hover:text-white">
-                  Employer sign in
+                  Student sign in
                 </Link>
               </li>
               <li>

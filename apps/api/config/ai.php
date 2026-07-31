@@ -35,7 +35,10 @@ return [
             'driver' => 'openai_compatible',
             'api_key' => env('KIMI_API_KEY', ''),
             'base_url' => env('KIMI_BASE_URL', 'https://api.moonshot.ai/v1'),
-            'model' => env('KIMI_MODEL', 'kimi-k3'),
+            'model' => env('KIMI_MODEL', 'kimi-k2-turbo-preview'),
+            // Kimi k2.6+ are reasoning models; "none" turns thinking off so
+            // small-cap calls (mock follow-ups) still return content.
+            'reasoning_effort' => env('KIMI_REASONING_EFFORT', 'none'),
         ],
         'deepseek' => [
             'driver' => 'openai_compatible',

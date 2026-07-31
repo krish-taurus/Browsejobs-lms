@@ -27,6 +27,14 @@ interface RazorpayClient
     public function createPaymentLink(int $amountPaise, string $description, array $customer = [], string $reference = ''): RazorpayPaymentLink;
 
     /**
+     * Fetch a payment link's live status — the webhook-less reconciliation
+     * path (local dev, or a missed webhook in production).
+     *
+     * @return array{status: string, order_id: string|null, payment_id: string|null, method: string|null}
+     */
+    public function fetchPaymentLink(string $linkId): array;
+
+    /**
      * Verify the Razorpay Checkout handshake signature
      * (HMAC-SHA256("{orderId}|{paymentId}", key_secret)).
      */

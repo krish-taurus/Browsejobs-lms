@@ -41,6 +41,7 @@ final class SendEmailMessage implements ShouldQueue
             Mail::to($message->recipient)->send(new MessageMail(
                 $message->subject ?? 'BrowseJobs',
                 (string) $message->body,
+                $message->template_key,
             ));
 
             $message->update(['status' => MessageStatus::Sent->value, 'sent_at' => now()]);

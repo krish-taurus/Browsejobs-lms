@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AssignRoleToUser;
-use App\Actions\Auth\GrantSignupCredits;
 use App\Actions\Auth\RequestOtp;
 use App\Actions\Auth\VerifyOtp;
 use App\Enums\OtpPurpose;
@@ -15,6 +14,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
+use App\Support\Otp\OtpDebugExposure;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -38,9 +38,15 @@ final class RegisterController extends Controller
             $request->input('email'),
         );
 
-        $requestOtp->handle($tenant, $request->identifier(), $request->channel(), OtpPurpose::Login);
+        $channel = $request->channel();
+        $code = $requestOtp->handle($tenant, $request->identifier(), $channel, OtpPurpose::Login);
 
-        return response()->json(['status' => 'otp_sent']);
+        return response()->json([
+            'status' => 'otp_sent',
+            // Dev-only: present only while APP_DEBUG is on and no SMS/WhatsApp
+            // (or real mailer) integration is configured — see OtpDebugExposure.
+            ...(OtpDebugExposure::shouldExpose($channel) ? ['debug_code' => $code] : []),
+        ]);
     }
 
     public function verify(RegisterRequest $request, VerifyOtp $verifyOtp, AssignRoleToUser $assignRole): JsonResponse
@@ -68,10 +74,6 @@ final class RegisterController extends Controller
         ]);
 
         $assignRole->handle($user, 'student', actor: $user);
-
-        // Start every new account on the free tier so the first mock and CV
-        // cost nothing — the upgrade prompt then follows real usage.
-        app(GrantSignupCredits::class)->handle($user);
 
         $this->startSession($request, $user);
 

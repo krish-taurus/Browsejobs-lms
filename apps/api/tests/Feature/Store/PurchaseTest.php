@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
+    // Balances are explicit test inputs — disable the first-touch free allowance.
+    config(['monetization.voice_mock.free_grants' => 0, 'monetization.voice_mock.included_live' => 5, 'monetization.voice_mock.included_self_paced' => 2]);
     Storage::fake('s3');
     app()->instance(RazorpayClient::class, new FakeRazorpayClient);
     $this->tenant = Tenant::factory()->create();

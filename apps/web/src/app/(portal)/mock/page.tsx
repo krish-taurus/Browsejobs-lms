@@ -30,6 +30,7 @@ type MockSummary = {
   gap_report: { role_title: string | null; items: GapItem[] };
   voice: {
     credits: number;
+    provider_ready: boolean;
     max_minutes: number;
     in_progress: { id: number; join_url: string | null } | null;
     topups: VoiceTopup[];
@@ -70,15 +71,27 @@ export default function MockHubPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function start() {
+  async function start(destination: "session" | "room" = "session") {
     setError(null);
+    setVoiceError(null);
     setBusy(true);
     try {
-      const body = chosen ? JSON.stringify({ blueprint_id: Number(chosen) }) : undefined;
-      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", { method: "POST", body });
-      router.push(`/mock/${r.data.id}`);
+      const payload: Record<string, unknown> = {};
+      if (chosen) payload.blueprint_id = Number(chosen);
+      if (destination === "room") payload.room = true;
+      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", {
+        method: "POST",
+        body: Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined,
+      });
+      router.push(destination === "room" ? `/mock/${r.data.id}/room` : `/mock/${r.data.id}`);
     } catch (err) {
-      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
+      const message = err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.";
+      if (destination === "room") {
+        setVoiceError(err instanceof ApiError && err.status === 402 ? "You're out of sessions — top up below." : message);
+        load(); // refresh credits so the top-up buttons appear
+      } else {
+        setError(message);
+      }
       setBusy(false);
     }
   }
@@ -191,6 +204,10 @@ export default function MockHubPage() {
           ) : (
             <>
               <p className="mt-2 text-sm text-ink">Ready when you are — it takes about 10 minutes.</p>
+              <p className="mt-1 text-xs text-muted">
+                Prefer the real thing? Inside the interview, tap 📹 Join interview room — a video-call
+                style room where the interviewer speaks and you answer out loud, camera on.
+              </p>
               {summary.blueprints.length > 1 && (
                 <select
                   value={chosen}
@@ -205,7 +222,7 @@ export default function MockHubPage() {
               )}
               {error && <p className="mt-2 text-sm text-warn">{error}</p>}
               <button
-                onClick={start}
+                onClick={() => start()}
                 disabled={busy || (summary.blueprints.length > 1 && !chosen)}
                 className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
@@ -232,7 +249,57 @@ export default function MockHubPage() {
         {voiceError && <p className="mt-2 text-sm text-warn">{voiceError}</p>}
         {voiceNotice && <p className="mt-2 text-sm text-verify">{voiceNotice}</p>}
 
-        {summary.voice.in_progress?.join_url ? (
+        {!summary.voice.provider_ready ? (
+          <>
+            <p className="mt-2 text-sm text-ink">
+              Interview out loud in the video-style room — the interviewer speaks every question and
+              listens to your answers, camera on, right in your browser.
+            </p>
+            {summary.in_progress_id !== null ? (
+              <>
+                <Link
+                  href={`/mock/${summary.in_progress_id}/room`}
+                  className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white"
+                >
+                  📹 Return to the interview room →
+                </Link>
+                <p className="mt-2 text-xs text-muted">Rejoining your open interview is free — it&apos;s the same session.</p>
+              </>
+            ) : summary.voice.credits > 0 ? (
+              <>
+                <button
+                  onClick={() => start("room")}
+                  disabled={busy || !summary.enabled || (summary.blueprints.length > 1 && !chosen)}
+                  className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {busy ? "Opening the room…" : "📹 Start in the interview room"}
+                </button>
+                <p className="mt-2 text-xs text-muted">Each room interview uses 1 session.</p>
+                {summary.enabled && summary.blueprints.length > 1 && !chosen && (
+                  <p className="mt-1 text-xs text-muted">Pick a skill in the text practice card first.</p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-ink">You&apos;ve used your free sessions. Top up to keep going:</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {summary.voice.topups.map((t) => (
+                    <button
+                      key={t.product_id}
+                      onClick={() => buyTopup(t)}
+                      disabled={voiceBusy === t.product_id}
+                      className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
+                    >
+                      {voiceBusy === t.product_id
+                        ? "Creating order…"
+                        : `${t.sessions} session${t.sessions === 1 ? "" : "s"} · ₹${Math.round(t.price_paise / 100)}`}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : summary.voice.in_progress?.join_url ? (
           <>
             <p className="mt-2 text-sm text-ink">Your voice interview room is open.</p>
             <a

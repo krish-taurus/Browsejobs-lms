@@ -45,6 +45,15 @@ final class FakeRazorpayClient implements RazorpayClient
         return new RazorpayPaymentLink(id: $id, url: "https://rzp.test/l/{$id}");
     }
 
+    /** @var array<string, array{status: string, order_id: string|null, payment_id: string|null, method: string|null}> */
+    public array $linkStatuses = [];
+
+    public function fetchPaymentLink(string $linkId): array
+    {
+        return $this->linkStatuses[$linkId]
+            ?? ['status' => 'created', 'order_id' => null, 'payment_id' => null, 'method' => null];
+    }
+
     public function verifyPaymentSignature(string $orderId, string $paymentId, string $signature): bool
     {
         return $signature === 'valid-signature';

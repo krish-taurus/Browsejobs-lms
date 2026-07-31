@@ -11,6 +11,7 @@ use App\Enums\PointsSource;
 use App\Events\MockCompleted;
 use App\Models\MockInterview;
 use App\Services\AI\AiGateway;
+use App\Services\AI\JsonOutput;
 use App\Support\Points\PointsService;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -83,13 +84,16 @@ final readonly class FinishMockInterview
         $blueprint = $interview->blueprint;
 
         try {
+            // The full card (per-competency scores + model answers) regularly
+            // needs >900 tokens; a tight cap truncates the JSON mid-object and
+            // silently downgrades every session to the fallback card.
             $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_scorecard', 1, [
                 'role_title' => $blueprint->role_title,
                 'competencies' => implode(', ', $blueprint->competencies),
                 'transcript' => $this->answers->transcript($interview),
-            ], ['max_tokens' => 900]);
+            ], ['max_tokens' => 2000]);
 
-            $decoded = json_decode(trim($result->text), true);
+            $decoded = JsonOutput::object($result->text);
 
             if (is_array($decoded) && $this->isValid($decoded)) {
                 $decoded['overall'] = max(0, min(100, (int) $decoded['overall']));

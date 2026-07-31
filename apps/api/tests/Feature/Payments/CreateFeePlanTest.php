@@ -35,6 +35,18 @@ it('builds an EMI plan with instalments and ledger debits, and audits it', funct
         ->and(AuditLog::withoutGlobalScopes()->where('action', 'fees.plan_created')->count())->toBe(1);
 });
 
+it('uses the per-course fee when the course sets one', function () {
+    ['batch' => $batch, 'student' => $student] = reservedMemberIn($this->tenant);
+    withinTenant($this->tenant, fn () => $batch->course->update(['fee_paise' => 4_500_000])); // ₹45,000
+
+    $plan = withinTenant($this->tenant, fn () => app(CreateFeePlan::class)->handle(
+        $this->tenant, $student, $batch, FeePlanType::Emi, 3,
+    ));
+
+    expect($plan->total_paise)->toBe(4_500_000)
+        ->and($plan->instalments->sum('amount_paise'))->toBe(4_500_000);
+});
+
 it('refuses to raise a plan for a student who is not Reserved in the batch', function () {
     ['batch' => $batch] = reservedMemberIn($this->tenant);
     $stranger = User::factory()->for($this->tenant)->create(['user_type' => 'student']);

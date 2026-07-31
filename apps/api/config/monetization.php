@@ -8,30 +8,28 @@ declare(strict_types=1);
 | runtime via the monetization settings page.
 */
 return [
-    /*
-    | The free tier every new account starts on. Anyone may register as a
-    | job seeker without enrolling in a programme, so these are what makes
-    | the product usable before any purchase.
-    */
-    'signup' => [
-        'free_mocks' => (int) env('SIGNUP_FREE_MOCKS', 2),
-        'free_cvs' => (int) env('SIGNUP_FREE_CVS', 1),
-    ],
-
     'cv' => [
         'free_grants' => 3,
         'pack_price_paise' => 9_900,   // ₹99 / 3-generation pack
         'pack_size' => 3,
     ],
     'voice_mock' => [
-        'single_paise' => 24_900,      // ₹249 / session
-        'pack_price_paise' => 59_900,  // ₹599 / 3-pack
-        'pack_size' => 3,
-        'included_live' => 5,          // per paid (live) course
-        'included_self_paced' => 2,
+        // Every student's first voice/room interview finds this many free
+        // sessions in the wallet (founder pricing, 2026-07): 3 free, then packs.
+        'free_grants' => (int) env('MONETIZATION_VOICE_FREE', 3),
+        'pack3_paise' => (int) env('MONETIZATION_VOICE_PACK3', 100_000),  // ₹1,000 / 3 sessions
+        'pack6_paise' => (int) env('MONETIZATION_VOICE_PACK6', 150_000),  // ₹1,500 / 6 sessions
+        // Enrolment no longer grants extra sessions — the free allowance above
+        // is the single source of the freebie.
+        'included_live' => (int) env('MONETIZATION_VOICE_INCLUDED_LIVE', 0),
+        'included_self_paced' => (int) env('MONETIZATION_VOICE_INCLUDED_SP', 0),
     ],
     'mentor' => [
-        'extra_paise' => 49_900,       // ₹499 / extra 1:1
+        'extra_paise' => 49_900,       // ₹499 / 3-session top-up pack
+        // Every student starts with this many free 1:1 sessions — seeded into
+        // their mentor wallet on first touch; top-ups extend it after that.
+        'free_grants' => (int) env('MONETIZATION_MENTOR_FREE', 3),
+        'pack_size' => (int) env('MONETIZATION_MENTOR_PACK', 3),
     ],
     'job_kit' => [
         // Interview Kit per job posting (ADR 0048): full question paper +

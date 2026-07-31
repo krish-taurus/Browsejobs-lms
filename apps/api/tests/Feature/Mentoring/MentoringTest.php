@@ -42,6 +42,10 @@ beforeEach(function () {
     // Monday 09:00 IST (03:30 UTC) — all slot math in these tests hangs off this.
     Carbon::setTestNow(Carbon::parse('2026-07-20T03:30:00Z'));
 
+    // These tests grant credits explicitly and assert exact balances — turn
+    // off the freemium starting allowance (covered by MentorFreeCreditsTest).
+    config(['monetization.mentor.free_grants' => 0]);
+
     $this->zoom = new FakeZoomClient;
     app()->instance(ZoomClient::class, $this->zoom);
     $this->tenant = Tenant::factory()->create();
@@ -140,8 +144,10 @@ it('books a slot: consumes a credit, notifies both sides, creates NO Zoom (direc
         ->and(app(EntitlementService::class)->balance($student, 'mentor'))->toBe(0)
         ->and($this->zoom->created)->toHaveCount(0);
 
-    // Both sides told instantly; reminders armed but silent this far out.
-    expect(Message::withoutGlobalScopes()->where('template_key', 'mentor_booked')->count())->toBe(2)
+    // Both sides told instantly — the student on BOTH channels (branded
+    // WhatsApp card + email), the mentor on their preferred channel;
+    // reminders armed but silent this far out.
+    expect(Message::withoutGlobalScopes()->where('template_key', 'mentor_booked')->count())->toBe(3)
         ->and(Message::withoutGlobalScopes()->where('template_key', 'mentor_reminder')->count())->toBe(0)
         ->and($session->reminded_24h_at)->toBeNull();
 });

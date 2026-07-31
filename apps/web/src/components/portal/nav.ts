@@ -18,6 +18,7 @@ const MENTORS: NavItem = { href: "/mentors", label: "Mentors", icon: "M9 11a4 4 
 const PLACEMENT: NavItem = { href: "/placement", label: "Placement", icon: "M4 8h16v12H4zM9 8V5a3 3 0 0 1 6 0v3M4 13h16" };
 const JOBS: NavItem = { href: "/jobs-for-you", label: "Jobs for You", icon: "M4 8h16v12H4zM9 8V5a3 3 0 0 1 6 0v3M8 13h3", short: "Jobs" };
 const CV: NavItem = { href: "/cv", label: "My CV", icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h6M9 20h3" };
+const ASSIGNMENTS: NavItem = { href: "/assignments", label: "Assignments", icon: "M9 3h6l1 2h3v16H5V5h3zM9 3v3h6V3M9 12l2 2 4-4" };
 const GRADES: NavItem = { href: "/grades", label: "Grades", icon: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4" };
 const REPORTS: NavItem = { href: "/reports", label: "Reports", icon: "M4 5h16v14H4zM8 9v6M12 7v8M16 11v4" };
 const CERTIFICATES: NavItem = { href: "/certificates", label: "Certificates", icon: "M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9 2.6.9-5.5-4-3.9 5.5-.8zM8 20v-4M16 20v-4" };
@@ -31,7 +32,7 @@ const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4
 /** Grouped for the sidebar and the mobile menu sheet. */
 export const navGroups: NavGroup[] = [
   { label: "Learn", items: [DASHBOARD, CLASSES, RECORDINGS, PRACTICE, TUTOR] },
-  { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
+  { label: "Progress", items: [ASSIGNMENTS, GRADES, REPORTS, CERTIFICATES] },
   { label: "Career", items: [MOCK, MENTORS, PLACEMENT, JOBS, CV] },
   { label: "You", items: [PULSE, ALERTS, CHECKIN, STORE, SUPPORT, PROFILE] },
 ];

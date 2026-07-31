@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,6 +23,16 @@ type LiveClass = {
 // never has to convert, matching the trainer's "My teaching" board.
 const TZ = "Asia/Kolkata";
 const WEEKDAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Join unlocks this many minutes before start (mirror of the API's
+// live_classes.join_open_minutes gate) and closes when the class ends.
+const JOIN_OPEN_MS = 10 * 60 * 1000;
+const DEFAULT_CLASS_MS = 90 * 60 * 1000;
+
+function endMillis(c: LiveClass): number {
+  if (c.scheduled_end) return new Date(c.scheduled_end).getTime();
+  return new Date(c.scheduled_start!).getTime() + DEFAULT_CLASS_MS;
+}
 
 function dayKey(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "numeric" }).format(new Date(iso));
@@ -65,6 +75,13 @@ function weeklyRhythm(upcoming: LiveClass[]): { batch: string; slots: { day: str
 export default function ClassesPage() {
   const [joining, setJoining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Ticks every 30s so cards flip between "Opens at…" / "Join" / "Class over"
+  // on their own — no refresh needed.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["me", "classes"],
@@ -72,10 +89,14 @@ export default function ClassesPage() {
   });
 
   const classes = data?.data ?? [];
+  // A class stays "upcoming" only until its end time passes — after that it
+  // moves to Past (with its recording) even before Zoom marks it ended.
   const upcoming = classes
-    .filter((c) => (c.status === "scheduled" || c.status === "live") && c.scheduled_start)
+    .filter((c) => (c.status === "scheduled" || c.status === "live") && c.scheduled_start && now < endMillis(c))
     .sort((a, b) => (a.scheduled_start! < b.scheduled_start! ? -1 : 1)); // soonest first
-  const past = classes.filter((c) => c.status === "ended");
+  const past = classes
+    .filter((c) => c.status === "ended" || ((c.status === "scheduled" || c.status === "live") && c.scheduled_start && now >= endMillis(c)))
+    .sort((a, b) => ((a.scheduled_start ?? "") > (b.scheduled_start ?? "") ? -1 : 1)); // latest first
   const rhythm = weeklyRhythm(upcoming);
 
   // Group the upcoming list under day headings (Today / Tomorrow / date).
@@ -104,7 +125,7 @@ export default function ClassesPage() {
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">My Classes</p>
       <h1 className="display mt-2 text-3xl text-ink">Your class schedule</h1>
-      <p className="mt-1 text-sm text-muted">All times shown in IST. Join opens once your enrolment and fees are clear.</p>
+      <p className="mt-1 text-sm text-muted">All times shown in IST. The Join button unlocks 10 minutes before each class; finished classes move below with their recording.</p>
 
       {error && <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{error}</p>}
 
@@ -163,13 +184,22 @@ export default function ClassesPage() {
                               {c.batch}{c.topic ? ` · ${c.topic}` : ""}
                             </span>
                           </span>
-                          <button
-                            onClick={() => join(c)}
-                            disabled={joining === c.id}
-                            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
-                          >
-                            {joining === c.id ? "Opening…" : "Join"}
-                          </button>
+                          {now < new Date(c.scheduled_start!).getTime() - JOIN_OPEN_MS ? (
+                            <span
+                              className="rounded-full border border-line bg-paper px-4 py-2 text-xs font-semibold text-muted"
+                              title="The join button unlocks 10 minutes before the class"
+                            >
+                              Opens {timeLabel(new Date(new Date(c.scheduled_start!).getTime() - JOIN_OPEN_MS).toISOString())}
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => join(c)}
+                              disabled={joining === c.id}
+                              className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
+                            >
+                              {joining === c.id ? "Opening…" : "Join"}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -181,18 +211,30 @@ export default function ClassesPage() {
 
           {past.length > 0 && (
             <section>
-              <p className="mono text-[11px] uppercase tracking-widest text-muted">Past classes</p>
+              <p className="mono text-[11px] uppercase tracking-widest text-muted">Completed classes</p>
               <div className="mt-3 divide-y divide-line rounded-[14px] border border-line bg-white">
                 {past.map((c) => (
                   <div key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
                     <span className="min-w-40 flex-1">
-                      <span className="block font-semibold text-ink">{c.title}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold text-ink">{c.title}</span>
+                        <span className="rounded-full bg-paper px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">Class over</span>
+                      </span>
                       <span className="mono block text-xs text-muted">
-                        {c.scheduled_start ? `${dayHeading(c.scheduled_start)} · ` : ""}{c.batch}{c.topic ? ` · ${c.topic}` : ""}
+                        {c.scheduled_start ? `${dayHeading(c.scheduled_start)} · ${timeLabel(c.scheduled_start)} · ` : ""}{c.batch}{c.topic ? ` · ${c.topic}` : ""}
                       </span>
                     </span>
                     {c.has_recording ? (
-                      <Link href="/recordings" className="text-sm font-semibold text-trust hover:underline">Recording ready →</Link>
+                      <Link
+                        href="/recordings"
+                        className="rounded-full border border-trust px-4 py-2 text-sm font-semibold text-trust hover:bg-trust hover:text-white"
+                      >
+                        ▶ Play Recording
+                      </Link>
+                    ) : now - endMillis(c) < 24 * 60 * 60 * 1000 ? (
+                      <span className="text-xs text-muted" title="Zoom is still processing — recordings appear here shortly after class">
+                        Recording processing…
+                      </span>
                     ) : (
                       <span className="text-xs text-muted">No recording</span>
                     )}

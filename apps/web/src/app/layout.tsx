@@ -1,28 +1,16 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Sora, Inter, IBM_Plex_Mono } from "next/font/google";
+import { BrandingProvider } from "@/lib/branding";
 import "./globals.css";
 
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-  weight: ["400", "600", "800"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
+/* Fonts are self-hosted (public/fonts + fonts.css) — next/font/google needs
+ * network access at compile time and breaks offline builds. Preload the latin
+ * files used above the fold so first paint doesn't wait on CSS discovery. */
+const PRELOAD_FONTS = [
+  "/fonts/sora-latin-400.woff2",
+  "/fonts/inter-latin-400.woff2",
+  "/fonts/plex-mono-latin-500.woff2",
+];
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://browsejobs.ai";
 
@@ -67,8 +55,13 @@ export const metadata: Metadata = {
     images: ["/og.png"],
   },
   robots: { index: true, follow: true },
+  // Google Search Console ownership proofs — each renders as a
+  // google-site-verification meta tag on every page.
   verification: {
-    google: "lfmAeInA42ZA8RAzOxlyEz6A83lnwkQkgvnXlTOoL_E",
+    google: [
+      "lfmAeInA42ZA8RAzOxlyEz6A83lnwkQkgvnXlTOoL_E",
+      "QHbOv9CSjPuuSO0pOOixFp3JFqRO-u6ndy0Q9s4MijM",
+    ],
   },
 };
 
@@ -77,10 +70,18 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body
-        className={`${sora.variable} ${inter.variable} ${plexMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        {PRELOAD_FONTS.map((href) => (
+          <link
+            key={href}
+            rel="preload"
+            href={href}
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        ))}
+        <BrandingProvider>{children}</BrandingProvider>
 
         {/* Google Analytics */}
         <Script

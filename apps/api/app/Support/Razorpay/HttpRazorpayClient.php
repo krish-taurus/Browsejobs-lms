@@ -50,6 +50,20 @@ final class HttpRazorpayClient implements RazorpayClient
         );
     }
 
+    public function fetchPaymentLink(string $linkId): array
+    {
+        $response = $this->request()->get($this->config['base_url'].'/payment_links/'.$linkId)->throw()->json();
+
+        $captured = collect((array) ($response['payments'] ?? []))->firstWhere('status', 'captured');
+
+        return [
+            'status' => (string) ($response['status'] ?? ''),
+            'order_id' => isset($response['order_id']) && is_string($response['order_id']) ? $response['order_id'] : null,
+            'payment_id' => is_array($captured) && isset($captured['payment_id']) ? (string) $captured['payment_id'] : null,
+            'method' => is_array($captured) && isset($captured['method']) ? (string) $captured['method'] : null,
+        ];
+    }
+
     public function verifyPaymentSignature(string $orderId, string $paymentId, string $signature): bool
     {
         $expected = hash_hmac('sha256', "{$orderId}|{$paymentId}", $this->config['key_secret']);

@@ -18,6 +18,15 @@
         </include>
     </source>
     <php>
+        <!-- Tests never call vendors (CLAUDE.md): blank every AI key so a
+             populated developer .env cannot change provider resolution. -->
+        <env name="AI_PROVIDER" value="anthropic"/>
+        <env name="ANTHROPIC_API_KEY" value=""/>
+        <env name="OPENAI_API_KEY" value=""/>
+        <env name="KIMI_API_KEY" value=""/>
+        <env name="DEEPSEEK_API_KEY" value=""/>
+        <env name="GROK_API_KEY" value=""/>
+        <env name="CUSTOM_LLM_API_KEY" value=""/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

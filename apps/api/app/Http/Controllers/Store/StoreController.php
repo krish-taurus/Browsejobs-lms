@@ -63,12 +63,28 @@ final class StoreController extends Controller
 
             abort_if($product->kind === ProductKind::Subscription, 422, 'Use the subscribe endpoint for subscriptions.');
 
-            $purchase = $start->handle($user, $product);
+            try {
+                $purchase = $start->handle($user, $product);
+            } catch (\Illuminate\Http\Client\RequestException $e) {
+                // Razorpay refused (misconfigured/expired keys) — a student
+                // should see a human message, not a gateway error blob.
+                report($e);
+                abort(503, 'Online payment is temporarily unavailable — please contact your counselor to complete this purchase.');
+            }
 
             return response()->json(['data' => [
                 'purchase_id' => $purchase->id,
                 'razorpay_order_id' => $purchase->razorpay_order_id,
                 'amount_paise' => $purchase->amount_paise,
+                // The publishable key id — the browser needs it to open the
+                // Razorpay checkout. Never the secret.
+                'razorpay_key_id' => (string) config('services.razorpay.key_id'),
+                'name' => $product->name,
+                'prefill' => [
+                    'name' => (string) $user->name,
+                    'email' => (string) $user->email,
+                    'contact' => (string) $user->phone,
+                ],
             ]], 201);
         });
     }

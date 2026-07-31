@@ -37,11 +37,19 @@ final class SendWhatsAppMessage implements ShouldQueue
         }
 
         try {
-            $providerId = $client->sendMessage(
-                $message->recipient,
-                (string) $message->body,
-                $message->meta['wa_template'] ?? null,
-            );
+            $template = $message->meta['wa_template'] ?? null;
+            $image = $message->meta['wa_image'] ?? null;
+
+            // Image card (banner + caption) while no approved template covers
+            // this key; approved templates win once activated.
+            $providerId = $template === null && $image !== null
+                ? $client->sendImage($message->recipient, $image, (string) $message->body)
+                : $client->sendMessage(
+                    $message->recipient,
+                    (string) $message->body,
+                    $template,
+                    $message->meta['wa_params'] ?? [],
+                );
 
             $message->update([
                 'status' => MessageStatus::Sent->value,

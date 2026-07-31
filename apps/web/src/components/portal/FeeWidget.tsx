@@ -54,7 +54,7 @@ export function FeeWidget() {
             </p>
           )}
         </div>
-        {status.pay_url && (
+        {status.pay_url ? (
           <a
             href={status.pay_url}
             target="_blank"
@@ -63,6 +63,10 @@ export function FeeWidget() {
           >
             Pay now
           </a>
+        ) : (
+          <span className={`text-xs ${onDark ? "text-white/80" : "opacity-80"}`}>
+            Your payment link is being prepared — refresh shortly, or ask your counselor.
+          </span>
         )}
       </div>
     </div>

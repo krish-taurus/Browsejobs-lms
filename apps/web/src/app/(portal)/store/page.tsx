@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { formatPaise } from "@/lib/money";
+import { openCheckout, type RazorpayOrder } from "@/lib/razorpay";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 type Product = {
@@ -49,9 +50,41 @@ export default function StorePage() {
     finally { setBusy(false); }
   }
 
-  const buy = (p: Product) =>
-    act(() => apiJson("/api/v1/me/purchases", { method: "POST", body: JSON.stringify({ product_id: p.id }) }),
-      "Payment started — complete it in the Razorpay window. Your balance updates once it's confirmed.");
+  /**
+   * Create the order server-side, then actually open Razorpay Checkout. The
+   * wallet is credited by the Razorpay webhook, not here — so on success we
+   * just reload the store and tell the student it may take a moment.
+   */
+  async function buy(p: Product) {
+    setBusy(true);
+    setBanner(null);
+    try {
+      const { data } = await apiJson<{ data: RazorpayOrder }>("/api/v1/me/purchases", {
+        method: "POST",
+        body: JSON.stringify({ product_id: p.id }),
+      });
+
+      const outcome = await openCheckout(data);
+
+      if (outcome === "paid") {
+        setBanner({ kind: "ok", text: "Payment received — your balance updates as soon as Razorpay confirms it." });
+        load();
+      } else if (outcome === "dismissed") {
+        setBanner({ kind: "err", text: "Payment cancelled — nothing was charged." });
+      } else {
+        setBanner({ kind: "err", text: "That payment didn't go through. No money was taken — please try again." });
+      }
+    } catch (err) {
+      setBanner({
+        kind: "err",
+        text: err instanceof ApiError
+          ? (err.firstError ?? err.message)
+          : err instanceof Error ? err.message : "Something went wrong.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const subscribe = () =>
     act(() => apiJson("/api/v1/me/career-plus/subscribe", { method: "POST", body: JSON.stringify({}) }),

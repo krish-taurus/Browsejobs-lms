@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cmsMetadata, getSiteContent } from "@/lib/site-content";
 import { notFound } from "next/navigation";
 import { courseDetails, getCourseDetail } from "@/content/courses";
 import CourseKeynote from "@/components/courses/CourseKeynote";
@@ -20,12 +21,15 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const course = getCourseDetail((await params).slug);
+  const slug = (await params).slug;
+  const course = getCourseDetail(slug);
   if (!course) return {};
-  return {
+
+  // CRM-managed override for this course's path, else the course content.
+  return cmsMetadata(`/courses/${slug}`, {
     title: `${course.name} Course`,
     description: course.hero,
-  };
+  });
 }
 
 export default async function CoursePage({
@@ -33,8 +37,21 @@ export default async function CoursePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const course = getCourseDetail((await params).slug);
-  if (!course || !course.live) notFound();
+  const slug = (await params).slug;
+  const base = getCourseDetail(slug);
+  if (!base || !base.live) notFound();
+
+  // CRM-managed copy overrides (Website Content → Course pages): only string
+  // fields that already exist on the course are merged, so structured data
+  // (modules, tools, projects) can never be corrupted from the editor.
+  const content = await getSiteContent();
+  const override = (content[`course:${slug}`] ?? {}) as Record<string, unknown>;
+  const course = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    if (typeof value === "string" && value.trim() !== "" && typeof (base as Record<string, unknown>)[key] === "string") {
+      (course as Record<string, unknown>)[key] = value;
+    }
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",

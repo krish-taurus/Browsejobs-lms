@@ -21,6 +21,8 @@ use App\Support\Razorpay\RazorpayClient;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
+    // Balances are explicit test inputs — disable the first-touch free allowance.
+    config(['monetization.voice_mock.free_grants' => 0]);
     Storage::fake('s3');
     $this->fake = new FakeRazorpayClient;
     app()->instance(RazorpayClient::class, $this->fake);

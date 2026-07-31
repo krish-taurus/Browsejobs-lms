@@ -10,6 +10,7 @@ use App\Enums\MessageChannel;
 use App\Enums\MessageDirection;
 use App\Enums\MessageStatus;
 use App\Jobs\SendEmailMessage;
+use App\Jobs\SendSmsMessage;
 use App\Jobs\SendWhatsAppMessage;
 use App\Models\ContactTimelineEvent;
 use App\Models\InAppNotification;
@@ -54,7 +55,7 @@ final class Messenger
         $transactional = $opts['transactional'] ?? ($category === MessageCategory::Utility);
 
         $recipient = match ($channel) {
-            MessageChannel::WhatsApp => $to->phone,
+            MessageChannel::WhatsApp, MessageChannel::Sms => $to->phone,
             MessageChannel::Email => $to->email,
             MessageChannel::InApp => null,
         };
@@ -84,7 +85,7 @@ final class Messenger
             return $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Blocked, 'banned_phrase', $lead, $link);
         }
 
-        $message = $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Queued, null, $lead, $link);
+        $message = $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Queued, null, $lead, $link, $this->templateParams($channel, $template, $vars));
 
         $this->deliver($message, $to);
         $this->recordTimeline($message, $to, $lead, $body);
@@ -122,7 +123,10 @@ final class Messenger
             'recipient' => $to,
             'body' => $body,
             'status' => MessageStatus::Queued->value,
-            'meta' => $channel === MessageChannel::WhatsApp && $template->name !== null ? ['wa_template' => $template->name] : null,
+            'meta' => $channel === MessageChannel::WhatsApp && $template->name !== null ? array_filter([
+                'wa_template' => $template->name,
+                'wa_params' => $this->templateParams($channel, $template, $vars),
+            ]) : null,
         ]);
 
         $this->deliver($message, null);
@@ -165,6 +169,7 @@ final class Messenger
     {
         match ($message->channel) {
             MessageChannel::WhatsApp => SendWhatsAppMessage::dispatch($message->id),
+            MessageChannel::Sms => SendSmsMessage::dispatch($message->id),
             MessageChannel::Email => SendEmailMessage::dispatch($message->id),
             MessageChannel::InApp => $this->deliverInApp($message, $to),
         };
@@ -264,7 +269,39 @@ final class Messenger
         return strtr($template, $replacements);
     }
 
-    private function log(User $to, MessageTemplate $template, MessageChannel $channel, MessageCategory $category, ?string $recipient, ?string $subject, ?string $body, MessageStatus $status, ?string $reason, ?Lead $lead, ?string $link): Message
+    /**
+     * The ordered {{1}}..{{n}} values for this key's Meta-approved template
+     * (config/whatsapp_templates.php), or null when the key has no mapping /
+     * a mapped var is missing — the send then falls back to the whole body
+     * as a single parameter.
+     *
+     * @param  array<string, string>  $vars
+     * @return list<string>|null
+     */
+    private function templateParams(MessageChannel $channel, MessageTemplate $template, array $vars): ?array
+    {
+        if ($channel !== MessageChannel::WhatsApp || $template->name === null) {
+            return null;
+        }
+
+        $map = config("whatsapp_templates.{$template->key}");
+
+        if (! is_array($map) || ($map['name'] ?? null) !== $template->name) {
+            return null;
+        }
+
+        $params = [];
+        foreach ($map['params'] as $var) {
+            if (! isset($vars[$var]) || $vars[$var] === '') {
+                return null;
+            }
+            $params[] = (string) $vars[$var];
+        }
+
+        return $params;
+    }
+
+    private function log(User $to, MessageTemplate $template, MessageChannel $channel, MessageCategory $category, ?string $recipient, ?string $subject, ?string $body, MessageStatus $status, ?string $reason, ?Lead $lead, ?string $link, ?array $waParams = null): Message
     {
         return Message::query()->create([
             'tenant_id' => $to->tenant_id,
@@ -282,7 +319,24 @@ final class Messenger
             'meta' => array_filter([
                 'link' => $link,
                 'wa_template' => $channel === MessageChannel::WhatsApp ? $template->name : null,
+                'wa_params' => $waParams,
+                'wa_image' => $channel === MessageChannel::WhatsApp ? $this->cardImage($template->key) : null,
             ]) ?: null,
         ]);
+    }
+
+    /**
+     * The branded banner for this key's image-card send, when configured
+     * (services.whatsapp.card_image_id + card_keys).
+     */
+    private function cardImage(string $key): ?string
+    {
+        $image = (string) config('services.whatsapp.card_image_id', '');
+
+        if ($image === '' || ! in_array($key, (array) config('services.whatsapp.card_keys', []), true)) {
+            return null;
+        }
+
+        return $image;
     }
 }

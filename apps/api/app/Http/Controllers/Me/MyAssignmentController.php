@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Me;
 
 use App\Actions\Assignments\SubmitAssignment;
+use App\Enums\BatchMemberStatus;
 use App\Enums\GradeStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Me\SubmitAssignmentRequest;
 use App\Models\Assignment;
 use App\Models\AssignmentGrade;
 use App\Models\AssignmentSubmission;
+use App\Models\BatchMember;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,50 @@ use Throwable;
  */
 final class MyAssignmentController extends Controller
 {
+    /**
+     * Every assignment on the student's course(s) with their own status —
+     * the discovery surface: new work is findable, not just already-graded work.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
+            $courseIds = BatchMember::query()
+                ->where('batch_members.user_id', $request->user()->id)
+                ->whereIn('batch_members.status', array_map(fn ($s) => $s->value, BatchMemberStatus::occupying()))
+                ->join('batches', 'batches.id', '=', 'batch_members.batch_id')
+                ->pluck('batches.course_id');
+
+            $assignments = Assignment::query()
+                ->whereHas('lesson.topic.module', fn ($q) => $q->whereIn('course_id', $courseIds))
+                ->with(['lesson:id,title'])
+                ->orderByDesc('id')
+                ->get();
+
+            $submissions = AssignmentSubmission::query()
+                ->where('user_id', $request->user()->id)
+                ->whereIn('assignment_id', $assignments->pluck('id'))
+                ->with('grade')
+                ->get()
+                ->keyBy('assignment_id');
+
+            return response()->json(['data' => $assignments->map(function (Assignment $a) use ($submissions) {
+                $submission = $submissions->get($a->id);
+                $released = $submission?->grade !== null && $submission->grade->status === GradeStatus::Approved;
+
+                return [
+                    'lesson_id' => $a->lesson_id,
+                    'lesson' => $a->lesson?->title,
+                    'title' => $a->title,
+                    'max_points' => $a->max_points,
+                    // graded > submitted > open — drafts stay invisible.
+                    'status' => $released ? 'graded' : ($submission !== null ? 'submitted' : 'open'),
+                    'score' => $released ? $submission->grade->score : null,
+                    'submitted_at' => $submission?->submitted_at?->toIso8601String(),
+                ];
+            })->values()]);
+        });
+    }
+
     public function show(Request $request, int $lesson): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $lesson): JsonResponse {

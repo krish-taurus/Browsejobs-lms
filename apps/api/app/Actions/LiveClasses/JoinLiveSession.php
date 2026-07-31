@@ -45,6 +45,24 @@ final readonly class JoinLiveSession
             ]);
         }
 
+        // The door opens shortly before start and closes when the class ends —
+        // after that, the recording is the way in.
+        $openMinutes = (int) config('live_classes.join_open_minutes', 10);
+        $start = $session->scheduled_start;
+        $end = $session->scheduled_end ?? $start?->copy()->addMinutes(90);
+
+        if ($start !== null && now()->lt($start->copy()->subMinutes($openMinutes))) {
+            throw ValidationException::withMessages([
+                'session' => "Join opens {$openMinutes} minutes before the class starts (".$start->timezone(config('app.timezone'))->format('D, d M · h:i A').').',
+            ]);
+        }
+
+        if ($end !== null && now()->gt($end)) {
+            throw ValidationException::withMessages([
+                'session' => 'This class has ended — the recording will appear on your Recordings page shortly.',
+            ]);
+        }
+
         if ($session->zoom_join_url === null) {
             throw ValidationException::withMessages([
                 'session' => 'This class is not ready to join yet.',

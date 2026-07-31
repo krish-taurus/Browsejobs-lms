@@ -1,15 +1,33 @@
 import type { Metadata } from "next";
+import { cmsMetadata, getSiteContent } from "@/lib/site-content";
+import { CmsBody } from "@/components/legal/CmsBody";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export async function generateMetadata(): Promise<Metadata> {
+  return cmsMetadata("/privacy-policy", {
+    title: "Privacy Policy",
+    description:
+      "Privacy Policy — BrowseJobs.",
+  });
+}
 
 /**
  * DPDP Act 2023–aligned structure (spec §10). Placeholders in [brackets] are
  * for the founder to fill; the whole page is flagged for legal review before
  * launch.
  */
-export default function PrivacyPolicy() {
+export default async function PrivacyPolicy() {
+  const content = await getSiteContent();
+  const cms = (content["page:/privacy-policy"] as { body?: string } | undefined)?.body;
+  if (cms && cms.trim() !== "") {
+    return (
+      <LegalPage title="Privacy Policy" updated="15 July 2026">
+        <CmsBody text={cms} />
+      </LegalPage>
+    );
+  }
+
   return (
     <LegalPage title="Privacy Policy" updated="15 July 2026">
       <p>

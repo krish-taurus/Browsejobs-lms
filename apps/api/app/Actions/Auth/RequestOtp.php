@@ -29,7 +29,11 @@ final readonly class RequestOtp
 
     public function __construct(private OtpNotifier $notifier) {}
 
-    public function handle(Tenant $tenant, string $identifier, OtpChannel $channel, OtpPurpose $purpose): void
+    /**
+     * @return string the plaintext code — callers may only surface it through
+     *                the OtpDebugExposure gate (dev without a gateway).
+     */
+    public function handle(Tenant $tenant, string $identifier, OtpChannel $channel, OtpPurpose $purpose): string
     {
         $this->assertNotThrottled($tenant, $identifier);
 
@@ -45,6 +49,8 @@ final readonly class RequestOtp
         ]);
 
         $this->notifier->send($identifier, $channel, $code, $purpose);
+
+        return $code;
     }
 
     private function assertNotThrottled(Tenant $tenant, string $identifier): void

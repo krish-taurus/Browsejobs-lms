@@ -1,10 +1,15 @@
+"use client";
+
+import { useBranding } from "@/lib/branding";
+
 /**
  * BrowseJobs wordmark — "The Breakout Bar" mark + Sora display type.
  *
  * Three blue strokes rising (interviews being listened to) and a fourth that
  * breaks out as an arrow — the trajectory the rebuilt syllabus creates.
  * Brand colours only; `tone="dark"` lightens the tile so it reads on ink
- * surfaces (footer/panels). Master asset: /public/logo.svg.
+ * surfaces (footer/panels). Master asset: /public/logo.svg. Whitelabel tenants
+ * override the name/logo via BrandingProvider; the default stays BrowseJobs.
  */
 export function Mark({
   size = 32,
@@ -53,12 +58,20 @@ export function Wordmark({
 }) {
   const ink = tone === "dark" ? "#FFFFFF" : "var(--bj-ink)";
 
+  const brand = useBranding();
+  const isDefault = brand.name === "BrowseJobs";
+
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <Mark tone={tone} />
+      {brand.logo_url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- tenant logos are arbitrary remote URLs
+        <img src={brand.logo_url} alt={brand.name} className="h-8 w-8 shrink-0 rounded-[8px] object-contain" />
+      ) : (
+        <Mark tone={tone} />
+      )}
       <span className="display text-lg leading-none" style={{ color: ink }}>
-        BrowseJobs
-        {showAi && <span style={{ color: "var(--bj-trust)" }}>.ai</span>}
+        {brand.name}
+        {showAi && isDefault && <span style={{ color: "var(--bj-trust)" }}>.ai</span>}
       </span>
     </span>
   );

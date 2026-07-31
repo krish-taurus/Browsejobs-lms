@@ -6,6 +6,8 @@ use App\Models\Assignment;
 use App\Models\AssignmentGrade;
 use App\Models\AssignmentSubmission;
 use App\Models\AuditLog;
+use App\Models\Batch;
+use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Module;
@@ -38,6 +40,48 @@ function assignmentFor(Tenant $tenant): Assignment
 
     return Assignment::factory()->for($tenant)->create(['lesson_id' => $lesson->id]);
 }
+
+it('lists course assignments with the student\'s own status', function () {
+    $assignment = assignmentFor($this->tenant);
+    $courseId = $assignment->lesson->topic->module->course_id;
+    $batch = Batch::factory()->for($this->tenant)->create(['course_id' => $courseId]);
+    BatchMember::factory()->for($this->tenant)->create([
+        'batch_id' => $batch->id, 'user_id' => $this->student->id, 'status' => 'enrolled',
+    ]);
+
+    // A second assignment the student has submitted, with a released grade.
+    $graded = assignmentFor($this->tenant);
+    $gradedCourse = $graded->lesson->topic->module->course_id;
+    $batch2 = Batch::factory()->for($this->tenant)->create(['course_id' => $gradedCourse]);
+    BatchMember::factory()->for($this->tenant)->create([
+        'batch_id' => $batch2->id, 'user_id' => $this->student->id, 'status' => 'enrolled',
+    ]);
+    $submission = AssignmentSubmission::factory()->for($this->tenant)->create([
+        'assignment_id' => $graded->id, 'user_id' => $this->student->id, 'status' => 'submitted', 'submitted_at' => now(),
+    ]);
+    AssignmentGrade::factory()->for($this->tenant)->create([
+        'submission_id' => $submission->id, 'status' => 'approved', 'score' => 78, 'max_points' => 100, 'approved_at' => now(),
+    ]);
+
+    Sanctum::actingAs($this->student);
+
+    $data = getJson('/api/v1/me/assignments')->assertOk()->json('data');
+
+    $byTitle = collect($data)->keyBy('title');
+    expect($byTitle[$assignment->title]['status'])->toBe('open')
+        ->and($byTitle[$assignment->title]['score'])->toBeNull()
+        ->and($byTitle[$graded->title]['status'])->toBe('graded')
+        ->and($byTitle[$graded->title]['score'])->toBe(78);
+});
+
+it('does not list another tenant\'s assignments', function () {
+    $foreign = assignmentFor(Tenant::factory()->create());
+    Sanctum::actingAs($this->student);
+
+    $titles = getJson('/api/v1/me/assignments')->assertOk()->json('data.*.title');
+
+    expect($titles)->not->toContain($foreign->title);
+});
 
 it('accepts a submission with text, link, and a file, and queues grading', function () {
     Storage::fake('s3');

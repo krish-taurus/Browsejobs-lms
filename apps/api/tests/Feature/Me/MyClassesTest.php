@@ -25,8 +25,10 @@ beforeEach(function () {
         $batch = $course->batches()->create(['number' => 'DA-1', 'type' => BatchType::Paid->value]);
         BatchMember::query()->create(['batch_id' => $batch->id, 'user_id' => $this->student->id, 'status' => 'enrolled']);
 
+        // Inside the pre-class join window (join_open_minutes) so the join
+        // endpoint hands out the link.
         $session = LiveSession::query()->create([
-            'batch_id' => $batch->id, 'title' => 'SQL joins', 'scheduled_start' => now()->addDay(),
+            'batch_id' => $batch->id, 'title' => 'SQL joins', 'scheduled_start' => now()->addMinutes(5),
             'status' => LiveSessionStatus::Scheduled->value, 'zoom_join_url' => 'https://zoom.test/j/123',
         ]);
         $past = LiveSession::query()->create([
@@ -48,6 +50,22 @@ it('lists the student classes', function () {
 
     $this->getJson('/api/v1/me/classes')->assertOk()->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.title', 'SQL joins'); // newest first
+});
+
+it('never lists funnel masterclass sessions to enrolled students', function () {
+    // A leftover marketing masterclass on the (converted) paid batch must not
+    // resurface as the student's "next class".
+    withinTenant($this->tenant, fn () => LiveSession::query()->create([
+        'batch_id' => $this->batch->id, 'title' => 'Masterclass — Data', 'kind' => LiveSession::KIND_MASTERCLASS,
+        'scheduled_start' => now()->addDay(), 'status' => LiveSessionStatus::Scheduled->value,
+    ]));
+
+    Sanctum::actingAs($this->student);
+
+    $titles = $this->getJson('/api/v1/me/classes')->assertOk()->assertJsonCount(2, 'data')
+        ->json('data.*.title');
+
+    expect($titles)->not->toContain('Masterclass — Data');
 });
 
 it('includes the class topic for the schedule view', function () {

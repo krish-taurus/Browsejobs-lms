@@ -28,7 +28,6 @@ use App\Http\Controllers\Admin\FunnelController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\HiringPartnerFeedbackController;
 use App\Http\Controllers\Admin\InterviewBankController;
-use App\Http\Controllers\Admin\InterviewIntelController;
 use App\Http\Controllers\Admin\JobFeedController;
 use App\Http\Controllers\Admin\KnowledgeController;
 use App\Http\Controllers\Admin\LeadAdminController;
@@ -71,10 +70,8 @@ use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialControll
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TicketRouteController;
 use App\Http\Controllers\Admin\TopicController;
-use App\Http\Controllers\Admin\VerificationReviewController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\ZoomLicenseController;
-use App\Http\Controllers\Auth\EmployerAuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
@@ -87,31 +84,12 @@ use App\Http\Controllers\Courses\SocialProofController;
 use App\Http\Controllers\Courses\SuccessStoriesController;
 use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
-use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
-use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
-use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
-use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
-use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
-use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
-use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
-use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController;
-use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
-use App\Http\Controllers\Employer\JobController as EmployerJobController;
-use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
-use App\Http\Controllers\Employer\MockDesignController as EmployerMockDesignController;
-use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
-use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
-use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
-use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
-use App\Http\Controllers\Me\CandidateDashboardController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
-use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
-use App\Http\Controllers\Me\EmployerJobBrowseController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
@@ -127,7 +105,6 @@ use App\Http\Controllers\Me\MyReportController;
 use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\Me\SalaryBenchmarkController as MeSalaryBenchmarkController;
-use App\Http\Controllers\Me\VerificationController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
@@ -142,6 +119,7 @@ use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
 use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
+use App\Http\Controllers\Public\MasterclassWatchController;
 use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
@@ -188,6 +166,11 @@ Route::post('v1/ats-check', AtsCheckController::class)
 Route::get('v1/brief', DailyBriefController::class)
     ->middleware('throttle:30,1');
 
+// Daily simulated-live masterclass showing (public; the CRM WhatsApps this
+// page to interested leads). NO tenant.domain — course resolved by slug.
+Route::get('v1/masterclass/watch/{slug?}', [MasterclassWatchController::class, 'show'])
+    ->middleware('throttle:60,1');
+
 // Public hiring-partner feedback form (PRD §6.21). NO tenant.domain / NO auth —
 // companies aren't platform users; the unguessable token is the key.
 Route::get('v1/partner-feedback/{token}', [PartnerFeedbackController::class, 'show'])
@@ -197,6 +180,14 @@ Route::post('v1/partner-feedback/{token}', [PartnerFeedbackController::class, 's
 
 // Public + auth endpoints, tenant resolved by request host.
 Route::prefix('v1')->middleware('tenant.domain')->group(function () {
+    // CMS-lite: keyed JSON content blobs (hero copy, per-page SEO) edited in
+    // the CRM — the web app reads them at render time with built-in fallbacks.
+    Route::get('site-content', function () {
+        return response()->json(['data' => \App\Models\SiteContent::query()
+            ->get(['key', 'data'])
+            ->pluck('data', 'key')]);
+    });
+
     Route::get('branding', function () {
         $tenant = app(TenantContext::class)->get();
 
@@ -240,17 +231,12 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     // funnels to registration for match %, prep questions and mocks.
     Route::get('jobs', [JobBoardController::class, 'index'])->middleware('throttle:60,1');
 
-    // Segmented board (PRD-E F10): employers hiring through BrowseJobs and
-    // aggregated market roles, kept apart because only the first can be
-    // applied to here. Works signed-out; signed-in adds own-application state.
-    Route::get('job-board', [JobBoardSegmentedController::class, 'index'])->middleware('throttle:60,1');
-
     Route::prefix('auth')->group(function () {
         Route::post('otp/request', [StudentAuthController::class, 'requestOtp'])->middleware('throttle:6,1');
         Route::post('otp/verify', [StudentAuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
+        Route::post('login', [StudentAuthController::class, 'login'])->middleware('throttle:10,1');
         Route::post('register/request', [RegisterController::class, 'request'])->middleware('throttle:6,1');
         Route::post('register/verify', [RegisterController::class, 'verify'])->middleware('throttle:10,1');
-        Route::post('employer/login', [EmployerAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/2fa', [StaffAuthController::class, 'verify'])->middleware('throttle:10,1');
     });
@@ -297,24 +283,29 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/career-plus/cancel', [StoreController::class, 'cancel']);
     Route::post('me/self-paced/{batch}/upgrade', [StoreController::class, 'upgrade']);
     Route::post('me/activity', [ActivityController::class, 'store'])->middleware('throttle:60,1');
-    Route::get('me/labs', [LabController::class, 'index']);
-    Route::get('me/labs/{lesson}', [LabController::class, 'show']);
-    Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
-    Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
-    Route::get('me/mcq/{attempt}', [MyQuizController::class, 'show']);
-    Route::post('me/mcq/{attempt}/submit', [MyQuizController::class, 'submit'])->middleware('throttle:30,1');
-    Route::get('me/assignments/{lesson}', [MyAssignmentController::class, 'show']);
-    Route::post('me/assignments/{lesson}/submit', [MyAssignmentController::class, 'submit'])->middleware('throttle:20,1');
-    Route::get('me/grades', [MyAssignmentController::class, 'grades']);
+    // Course content is fee-gated server-side: a hard fee block (PRD §6.8)
+    // returns 403 here, matching the portal's FeeBlockedScreen client-side.
+    Route::middleware('fees.unblocked')->group(function () {
+        Route::get('me/labs', [LabController::class, 'index']);
+        Route::get('me/labs/{lesson}', [LabController::class, 'show']);
+        Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
+        Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
+        Route::get('me/mcq/{attempt}', [MyQuizController::class, 'show']);
+        Route::post('me/mcq/{attempt}/submit', [MyQuizController::class, 'submit'])->middleware('throttle:30,1');
+        Route::get('me/assignments', [MyAssignmentController::class, 'index']);
+        Route::get('me/assignments/{lesson}', [MyAssignmentController::class, 'show']);
+        Route::post('me/assignments/{lesson}/submit', [MyAssignmentController::class, 'submit'])->middleware('throttle:20,1');
+        Route::get('me/grades', [MyAssignmentController::class, 'grades']);
+        Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
+        Route::get('me/lessons/{lesson}/video', [MyLessonVideoController::class, 'show']);
+        Route::get('me/lessons/{lesson}/flashcards', [MyFlashcardController::class, 'deck']);
+        Route::post('me/flashcards/{flashcard}/review', [MyFlashcardController::class, 'review']);
+        Route::get('me/lessons/{lesson}/project', [MyProjectController::class, 'show']);
+        Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
+    });
     Route::get('me/certificates', [MyCertificateController::class, 'index']);
     Route::get('me/reports', [MyReportController::class, 'index']);
     Route::get('me/reports/{report}', [MyReportController::class, 'show']);
-    Route::get('me/lessons/{lesson}/notes', [MyLessonNotesController::class, 'show']);
-    Route::get('me/lessons/{lesson}/video', [MyLessonVideoController::class, 'show']);
-    Route::get('me/lessons/{lesson}/flashcards', [MyFlashcardController::class, 'deck']);
-    Route::post('me/flashcards/{flashcard}/review', [MyFlashcardController::class, 'review']);
-    Route::get('me/lessons/{lesson}/project', [MyProjectController::class, 'show']);
-    Route::get('me/courses/{course}/syllabus', [MySyllabusController::class, 'show']);
     // Review protection & retention (PRD §6.20).
     Route::get('me/checkin', [CareController::class, 'index']);
     Route::post('me/nps/{pulse}', [CareController::class, 'respond'])->middleware('throttle:10,1');
@@ -369,10 +360,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/cv/{cv}/ats', [CvController::class, 'atsCheck'])->middleware('throttle:30,1');
     Route::post('me/cv/{cv}/share', [CvController::class, 'share']);
     Route::delete('me/cv/{cv}/share', [CvController::class, 'unshare']);
-    // Mentor scheduling (PRD §6.11).
+    // Mentor scheduling (PRD §6.11). Booking a new seat is fee-gated —
+    // managing an already-booked session (cancel/reschedule/rate) is not.
     Route::get('me/mentors', [MentorBookingController::class, 'index']);
     Route::get('me/mentor-sessions', [MentorBookingController::class, 'sessions']);
-    Route::post('me/mentor-sessions', [MentorBookingController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('me/mentor-sessions', [MentorBookingController::class, 'store'])->middleware(['throttle:20,1', 'fees.unblocked']);
     Route::post('me/mentor-sessions/{session}/cancel', [MentorBookingController::class, 'destroy']);
     Route::post('me/mentor-sessions/{session}/reschedule', [MentorBookingController::class, 'move']);
     Route::post('me/mentor-sessions/{session}/rate', [MentorBookingController::class, 'rate']);
@@ -383,101 +375,22 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/mentorhub/{session}/no-show', [MentorHubController::class, 'markNoShow']);
     Route::get('me/mentorhub/availability', [MentorHubController::class, 'availability']);
     Route::put('me/mentorhub/availability', [MentorHubController::class, 'updateAvailability']);
-    Route::get('me/mocks', [MockController::class, 'index']);
-    Route::post('me/mocks', [MockController::class, 'store']);
-    Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
-    Route::get('me/mocks/{mock}', [MockController::class, 'show']);
-    Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
-    Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
-    Route::get('me/tutor', [TutorController::class, 'index']);
-    Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
-    // Employer JD board for candidates: browse, free apply, track (PRD-E F3).
-    Route::get('me/employer-jobs', [EmployerJobBrowseController::class, 'index']);
-    Route::get('me/employer-jobs/applications', [EmployerJobBrowseController::class, 'applications']);
-    Route::get('me/employer-jobs/{job}', [EmployerJobBrowseController::class, 'show']);
-    Route::post('me/employer-jobs/{job}/apply', [EmployerJobBrowseController::class, 'apply'])->middleware('throttle:20,1');
-    // The mock IS the application: retakes are unlimited while the pack holds.
-    Route::post('me/employer-jobs/{job}/mock', [EmployerJobBrowseController::class, 'mock'])->middleware('throttle:ai');
-
-    // Candidate command centre + verification (PRD-E F9/F11).
-    Route::get('me/candidate-dashboard', [CandidateDashboardController::class, 'show']);
-    Route::get('me/verification', [VerificationController::class, 'index']);
-    Route::post('me/verification/{kind}', [VerificationController::class, 'submit'])->middleware('throttle:10,1');
-
-    // Async L1/L2 rounds for candidates (PRD-E F5).
-    Route::get('me/employer-interviews', [MeEmployerInterviewController::class, 'index']);
-    Route::get('me/employer-interviews/{interview}', [MeEmployerInterviewController::class, 'show']);
-    Route::post('me/employer-interviews/{interview}/start', [MeEmployerInterviewController::class, 'start']);
-    Route::post('me/employer-interviews/{interview}/submit', [MeEmployerInterviewController::class, 'submit'])->middleware('throttle:20,1');
-
-    Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
-    Route::post('me/tutor/labs/{lesson}', [TutorController::class, 'askLab'])->middleware('throttle:ai');
+    // Career + AI features are fee-gated like course content (PRD §6.8): a
+    // hard-blocked defaulter can log in but cannot spend AI budget or seats.
+    Route::middleware('fees.unblocked')->group(function () {
+        Route::get('me/mocks', [MockController::class, 'index']);
+        Route::post('me/mocks', [MockController::class, 'store']);
+        Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
+        Route::get('me/mocks/{mock}', [MockController::class, 'show']);
+        Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
+        Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
+        Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
+        Route::get('me/tutor', [TutorController::class, 'index']);
+        Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
+        Route::post('me/tutor', [TutorController::class, 'store'])->middleware('throttle:ai');
+        Route::post('me/tutor/labs/{lesson}', [TutorController::class, 'askLab'])->middleware('throttle:ai');
+    });
     Route::post('logout', [SessionController::class, 'destroy']);
-});
-
-// Employer portal API (PRD-E, ADR 0051). Tenant resolves from the
-// authenticated user; workspace roles are membership attributes checked in
-// controllers via ResolvesMembership — not platform permission slugs.
-Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group(function () {
-    Route::get('workspaces', [EmployerWorkspaceController::class, 'index']);
-    Route::get('workspaces/{workspace}/dashboard', [EmployerDashboardController::class, 'show']);
-    Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
-    Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
-    Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);
-
-    Route::get('workspaces/{workspace}/members', [EmployerMemberController::class, 'index']);
-    Route::patch('workspaces/{workspace}/members/{member}', [EmployerMemberController::class, 'updateRole']);
-    Route::delete('workspaces/{workspace}/members/{member}', [EmployerMemberController::class, 'destroy']);
-    Route::get('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invites']);
-    Route::post('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invite'])->middleware('throttle:20,1');
-
-    Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
-
-    // Draft a JD from a job title (PRD-E F15). Returns a draft to edit.
-    Route::post('workspaces/{workspace}/jd-draft', [EmployerJdDraftController::class, 'store'])->middleware('throttle:ai');
-
-    // Shared role vocabulary for title/skill pickers (PRD-E F14).
-    Route::get('role-taxonomy', [EmployerRoleTaxonomyController::class, 'index']);
-
-    // JDs + JD-specific mocks (PRD-E F2).
-    Route::get('workspaces/{workspace}/jobs', [EmployerJobController::class, 'index']);
-    Route::post('workspaces/{workspace}/jobs', [EmployerJobController::class, 'store'])->middleware('throttle:30,1');
-    Route::get('workspaces/{workspace}/jobs/{job}', [EmployerJobController::class, 'show']);
-    Route::patch('workspaces/{workspace}/jobs/{job}', [EmployerJobController::class, 'update']);
-    Route::post('workspaces/{workspace}/jobs/{job}/publish', [EmployerJobController::class, 'publish']);
-    Route::post('workspaces/{workspace}/jobs/{job}/status', [EmployerJobController::class, 'changeStatus']);
-    Route::get('workspaces/{workspace}/jobs/{job}/mock', [EmployerJdMockController::class, 'show']);
-    // Interview designer: focus skills, competency weights, format mix.
-    // Full candidate view for one application (PRD-E F17).
-    Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}/profile', [EmployerCandidateProfileController::class, 'show']);
-    Route::get('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'show']);
-    Route::put('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'update']);
-    Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
-
-    // The designed interview process for a JD, and sending one of its rounds
-    // to a candidate by hand (PRD-E F18).
-    Route::get('workspaces/{workspace}/jobs/{job}/rounds', [EmployerInterviewProcessController::class, 'index']);
-    Route::put('workspaces/{workspace}/jobs/{job}/rounds', [EmployerInterviewProcessController::class, 'update']);
-    Route::post(
-        'workspaces/{workspace}/jobs/{job}/applications/{application}/rounds/{round}/send',
-        [EmployerInterviewProcessController::class, 'send'],
-    );
-
-    // Applications: graded-first ranking, evidence view, stage moves (PRD-E F3).
-    Route::get('workspaces/{workspace}/jobs/{job}/applications', [EmployerApplicationController::class, 'index']);
-    Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show']);
-    Route::post('workspaces/{workspace}/jobs/{job}/applications/{application}/stage', [EmployerApplicationController::class, 'moveStage']);
-    Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}/interviews', [EmployerInterviewController::class, 'index']);
-
-    // Trained LMS students matched to a JD (PRD-E F7).
-    Route::get('workspaces/{workspace}/jobs/{job}/talent-pool', [EmployerTalentPoolController::class, 'index']);
-    Route::post('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/invite', [EmployerTalentPoolController::class, 'invite'])->middleware('throttle:60,1');
-
-    // Automation rules (PRD-E F6): advance/park only, never reject/offer.
-    Route::get('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'index']);
-    Route::post('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'store']);
-    Route::post('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}/toggle', [EmployerAutomationRuleController::class, 'toggle']);
-    Route::delete('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}', [EmployerAutomationRuleController::class, 'destroy']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is
@@ -566,7 +479,6 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('syllabuses/{syllabus}/approve', [SyllabusController::class, 'approve']);
 
         // Curriculum Intelligence — syllabus recommendation reports (PRD §6.21).
-        Route::get('interview-intel', [InterviewIntelController::class, 'index']);
         Route::get('syllabus-recommendations', [SyllabusRecommendationController::class, 'index']);
         Route::post('courses/{course}/syllabus-recommendations', [SyllabusRecommendationController::class, 'generate'])->middleware('throttle:ai');
         Route::post('syllabus-recommendations/{recommendation}/approve', [SyllabusRecommendationController::class, 'approve']);
@@ -592,10 +504,6 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Real Interview Intelligence (PRD §6.6) — placement team only.
     Route::middleware('can:manage-placements')->group(function () {
-        // Verification review queue (PRD-E F9). The shipped provider never
-        // self-verifies, so nothing a candidate submits settles without this.
-        Route::get('verifications', [VerificationReviewController::class, 'index']);
-        Route::post('verifications/{check}/settle', [VerificationReviewController::class, 'settle']);
         Route::get('placements', [PlacementAdminController::class, 'index']);
         Route::post('jobs', [PlacementAdminController::class, 'storeJob']);
         Route::patch('jobs/{job}', [PlacementAdminController::class, 'updateJob']);

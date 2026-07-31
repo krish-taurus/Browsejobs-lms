@@ -46,6 +46,13 @@ class LiveSession extends Model
 
     public const KIND_MENTORING = 'mentoring';
 
+    /**
+     * Funnel marketing event (free masterclass). Lives on a batch like any
+     * class, but enrolled students never see it in My Classes — attendees are
+     * leads joining via public invite links.
+     */
+    public const KIND_MASTERCLASS = 'masterclass';
+
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'batch_id', 'topic_id', 'kind', 'host_user_id', 'title', 'scheduled_start', 'scheduled_end',

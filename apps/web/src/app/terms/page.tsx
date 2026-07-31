@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
+import { cmsMetadata, getSiteContent } from "@/lib/site-content";
+import { CmsBody } from "@/components/legal/CmsBody";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
 
-export const metadata: Metadata = { title: "Terms of Service" };
+export async function generateMetadata(): Promise<Metadata> {
+  return cmsMetadata("/terms", {
+    title: "Terms of Service",
+    description:
+      "Terms of Service — BrowseJobs.",
+  });
+}
 
 /** Structure per spec §10; flagged for legal review before launch. */
-export default function Terms() {
+export default async function Terms() {
+  const content = await getSiteContent();
+  const cms = (content["page:/terms"] as { body?: string } | undefined)?.body;
+  if (cms && cms.trim() !== "") {
+    return (
+      <LegalPage title="Terms of Service" updated="15 July 2026">
+        <CmsBody text={cms} />
+      </LegalPage>
+    );
+  }
+
   return (
     <LegalPage title="Terms of Service" updated="15 July 2026">
       <p>

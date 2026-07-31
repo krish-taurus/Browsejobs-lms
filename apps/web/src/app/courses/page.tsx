@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cmsMetadata } from "@/lib/site-content";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { Kicker } from "@/components/brand/Kicker";
@@ -6,11 +7,13 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
 
-export const metadata: Metadata = {
-  title: "Programs",
-  description:
-    "Career programs rebuilt monthly from real interviews — Data Engineering, DevOps & Cloud, Python Backend, Data Analytics, and more.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return cmsMetadata("/courses", {
+    title: "Programs",
+    description:
+      "Career programs rebuilt monthly from real interviews — Data Engineering, DevOps & Cloud, Python Backend, Data Analytics, and more.",
+  });
+}
 
 export default function CoursesPage() {
   const detailSlugs = new Set(courseDetails.filter((c) => c.live).map((c) => c.slug));

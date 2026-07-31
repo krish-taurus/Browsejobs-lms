@@ -19,12 +19,18 @@ final class MessengerSessionNotifier implements SessionNotifier
 
     public function reminder(User $student, LiveSession $session, string $magicJoinUrl, string $window): void
     {
-        $this->messenger->send($student, 'class_reminder', [
+        $vars = [
             'name' => $student->name,
             'title' => $session->title,
             'window' => $window,
             'link' => $magicJoinUrl,
-        ]);
+        ];
+
+        // The join link must reach the student wherever they look: WhatsApp
+        // AND email, not just their preferred channel.
+        foreach ([\App\Enums\MessageChannel::WhatsApp, \App\Enums\MessageChannel::Email] as $channel) {
+            $this->messenger->send($student, 'class_reminder', $vars, ['channel' => $channel]);
+        }
     }
 
     public function cancelled(User $student, LiveSession $session, string $reason): void

@@ -75,6 +75,9 @@ final class MockController extends Controller
                     'gap_report' => $this->gaps->for($request->user()),
                     'voice' => [
                         'credits' => $this->entitlements->balance($request->user(), EntitlementFeature::VoiceMock->value),
+                        // False until a voice-call provider (Vapi) is configured —
+                        // the UI then offers the in-browser interview room instead.
+                        'provider_ready' => (string) config('services.vapi.api_key') !== '',
                         'max_minutes' => intdiv((int) config('mocks.voice.max_seconds', 600), 60),
                         'in_progress' => $mocks->first(fn (MockInterview $m) => $m->mode === MockInterview::MODE_VOICE
                             && $m->status === MockInterview::STATUS_IN_PROGRESS)?->only(['id', 'join_url']),
@@ -96,10 +99,27 @@ final class MockController extends Controller
     public function store(Request $request): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
-            $interview = $this->start->handle(
-                $request->user(),
-                $request->filled('blueprint_id') ? (int) $request->integer('blueprint_id') : null,
-            );
+            try {
+                $interview = $this->start->handle(
+                    $request->user(),
+                    $request->filled('blueprint_id') ? (int) $request->integer('blueprint_id') : null,
+                    $request->boolean('room'),
+                );
+            } catch (ValidationException $e) {
+                // Empty wallet on a room start: answer with the top-up products
+                // so the UI can offer the packs in place (mirrors storeVoice).
+                if (str_contains($e->getMessage(), 'credits')) {
+                    return response()->json([
+                        'error' => [
+                            'code' => 'no_voice_credits',
+                            'message' => 'You are out of interview room sessions.',
+                            'topups' => $this->voiceTopups(),
+                        ],
+                    ], 402);
+                }
+
+                throw $e;
+            }
 
             return $this->session($interview, 201);
         });
@@ -125,6 +145,24 @@ final class MockController extends Controller
                 return $this->session($interview->refresh());
             },
         ));
+    }
+
+    /**
+     * Proctoring close: the interview room ends the session when the student
+     * repeatedly leaves the tab. No refund — the credit was spent on a session
+     * that was abandoned by cheating, mirroring a real interview walk-out.
+     */
+    public function abandon(Request $request, int $mock): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+            $interview = $this->owned($request, $mock);
+
+            if ($interview->status === MockInterview::STATUS_IN_PROGRESS) {
+                $interview->update(['status' => MockInterview::STATUS_ABANDONED, 'completed_at' => now()]);
+            }
+
+            return $this->session($interview->refresh());
+        });
     }
 
     public function finish(Request $request, int $mock): JsonResponse

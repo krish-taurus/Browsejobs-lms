@@ -26,7 +26,9 @@ use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
 beforeEach(function () {
-    config(['services.vapi.webhook_secret' => 'voice-secret']);
+    // Balances here are explicit test inputs — disable the first-touch free
+    // allowance so "given N credits" means exactly N.
+    config(['services.vapi.webhook_secret' => 'voice-secret', 'monetization.voice_mock.free_grants' => 0]);
     $this->fake = new FakeAiClient;
     app()->instance(AiClient::class, $this->fake);
     $this->voice = new FakeVoiceMockClient;

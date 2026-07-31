@@ -1,3 +1,4 @@
+@import "./fonts.css";
 @import "tailwindcss";
 
 /*
@@ -6,6 +7,11 @@
  * to Tailwind utilities (bg-ink, text-trust, font-display, ...).
  */
 :root {
+  /* Self-hosted families declared in fonts.css; fallback stacks appended at usage sites. */
+  --font-sora: "Sora";
+  --font-inter: "Inter";
+  --font-plex-mono: "IBM Plex Mono";
+
   --bj-ink: #0a1220; /* ink navy — primary text, dark panels */
   --bj-ink2: #1b2a44; /* secondary text */
   --bj-deep: #0e3fa9; /* deep navy — gradients, headings on light */

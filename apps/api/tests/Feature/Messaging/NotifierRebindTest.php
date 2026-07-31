@@ -47,6 +47,38 @@ it('sends an OTP through the messenger', function () {
         ->and($this->wa->sent[0]['body'])->toContain('Your code is');
 });
 
+it('mirrors a phone OTP to the account email so WhatsApp delivery cannot dead-end login', function () {
+    MessageTemplate::factory()->for($this->tenant)->create([
+        'key' => 'otp', 'channel' => 'whatsapp', 'body' => 'Your code is {{code}}.',
+    ]);
+    MessageTemplate::factory()->for($this->tenant)->create([
+        'key' => 'otp', 'channel' => 'email', 'subject' => 'Your code', 'body' => 'Your code is {{code}}.',
+    ]);
+    User::factory()->for($this->tenant)->create([
+        'user_type' => 'student', 'phone' => '+91 90000 55555', 'email' => 'asha@example.com',
+    ]);
+
+    withinTenant($this->tenant, fn () => app(RequestOtp::class)->handle(
+        $this->tenant, '+91 90000 55555', OtpChannel::Sms, OtpPurpose::Login,
+    ));
+
+    $channels = Message::withoutGlobalScopes()->where('template_key', 'otp')->pluck('recipient', 'channel');
+    expect($channels->get('whatsapp'))->toBe('+91 90000 55555')
+        ->and($channels->get('email'))->toBe('asha@example.com');
+});
+
+it('does not mirror a phone OTP when no account matches the phone', function () {
+    MessageTemplate::factory()->for($this->tenant)->create([
+        'key' => 'otp', 'channel' => 'whatsapp', 'body' => 'Your code is {{code}}.',
+    ]);
+
+    withinTenant($this->tenant, fn () => app(RequestOtp::class)->handle(
+        $this->tenant, '+91 90000 77777', OtpChannel::Sms, OtpPurpose::Login,
+    ));
+
+    expect(Message::withoutGlobalScopes()->where('template_key', 'otp')->where('channel', 'email')->exists())->toBeFalse();
+});
+
 it('sends a dunning reminder through the messenger with the pay link', function () {
     $student = User::factory()->for($this->tenant)->create(['user_type' => 'student', 'phone' => '+91 90000 66666']);
     MessageTemplate::factory()->for($this->tenant)->create([

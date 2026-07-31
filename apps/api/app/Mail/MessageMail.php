@@ -22,6 +22,7 @@ final class MessageMail extends Mailable
     public function __construct(
         public readonly string $subjectLine,
         public readonly string $bodyText,
+        public readonly ?string $templateKey = null,
     ) {}
 
     public function envelope(): Envelope
@@ -33,7 +34,7 @@ final class MessageMail extends Mailable
     {
         return new Content(
             view: 'emails.message',
-            with: ['bodyText' => $this->bodyText],
+            with: ['bodyText' => $this->bodyText, 'templateKey' => $this->templateKey],
         );
     }
 }

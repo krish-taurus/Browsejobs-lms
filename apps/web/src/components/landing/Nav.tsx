@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BookCta } from "@/components/landing/BookCta";
-import { LoginMenu } from "@/components/landing/LoginMenu";
 import { MobileMenu } from "@/components/landing/MobileMenu";
 import { Wordmark } from "@/components/brand/Wordmark";
 
@@ -37,7 +36,12 @@ export function Nav() {
               {l.label}
             </a>
           ))}
-          <LoginMenu />
+          <Link
+            href="/student"
+            className="text-sm font-medium text-muted transition-colors hover:text-ink"
+          >
+            Login
+          </Link>
           <Link
             href="/register"
             className="text-sm font-semibold text-trust transition-colors hover:text-deep"

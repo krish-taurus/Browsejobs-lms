@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Http;
 final class OpenAiCompatibleClient implements AiClient
 {
     /**
-     * @param  array{api_key: string, base_url: string, model: string}  $config
+     * @param  array{api_key: string, base_url: string, model: string, reasoning_effort?: string}  $config
      */
     public function __construct(private readonly array $config) {}
 
@@ -29,14 +29,23 @@ final class OpenAiCompatibleClient implements AiClient
         }
         $messages[] = ['role' => 'user', 'content' => $message->user];
 
+        $payload = [
+            'model' => $model,
+            'max_tokens' => $message->maxTokens ?? (int) config('ai.max_tokens', 1024),
+            'messages' => $messages,
+        ];
+
+        // Reasoning models (Kimi k2.6+, OpenAI o-series, …) spend the token
+        // budget thinking and can return an empty `content` at small caps —
+        // providers that need it pin an effort ("none" disables thinking).
+        if (($this->config['reasoning_effort'] ?? '') !== '') {
+            $payload['reasoning_effort'] = $this->config['reasoning_effort'];
+        }
+
         $response = Http::withToken($this->config['api_key'])
             ->timeout((int) config('ai.http_timeout', 120))
             ->acceptJson()
-            ->post(rtrim($this->config['base_url'], '/').'/chat/completions', [
-                'model' => $model,
-                'max_tokens' => $message->maxTokens ?? (int) config('ai.max_tokens', 1024),
-                'messages' => $messages,
-            ])->throw()->json();
+            ->post(rtrim($this->config['base_url'], '/').'/chat/completions', $payload)->throw()->json();
 
         return new AiResult(
             text: (string) data_get($response, 'choices.0.message.content', ''),

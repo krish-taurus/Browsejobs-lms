@@ -234,10 +234,14 @@ it('settles the kit+mentor bundle: one job_kit credit plus one mentor credit', f
         'kind' => ProductKind::Pack->value, 'price_paise' => 29_900, 'grant_amount' => 1,
     ]));
 
+    $svc = app(EntitlementService::class);
+    // The mentor wallet seeds its free allowance on first touch, so assert the
+    // bundle's own contribution as a delta rather than an absolute balance.
+    $mentorBefore = $svc->balance($this->student, 'mentor');
+
     $purchase = withinTenant($this->tenant, fn () => app(StartPurchase::class)->handle($this->student, $product));
     withinTenant($this->tenant, fn () => app(SettlePurchase::class)->handle($purchase, 'pay_TEST1'));
 
-    $svc = app(EntitlementService::class);
     expect($svc->balance($this->student, 'job_kit'))->toBe(1)
-        ->and($svc->balance($this->student, 'mentor'))->toBe(1);
+        ->and($svc->balance($this->student, 'mentor'))->toBe($mentorBefore + 1);
 });

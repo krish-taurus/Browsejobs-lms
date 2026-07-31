@@ -69,6 +69,20 @@ export default function MonetizationPage() {
     onError,
   });
 
+  // Inline edit: reprice a product / change its credit grant / reactivate it.
+  const [editing, setEditing] = useState<{ id: number; rupees: string; grant: string } | null>(null);
+
+  const updateProduct = useMutation({
+    mutationFn: (input: { id: number; body: Record<string, unknown> }) =>
+      apiJson(`/api/v1/admin/products/${input.id}`, { method: "PUT", body: JSON.stringify(input.body) }),
+    onSuccess: () => {
+      setEditing(null);
+      setError(null);
+      void qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError,
+  });
+
   return (
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">Revenue engine</p>
@@ -129,8 +143,49 @@ export default function MonetizationPage() {
               <span className="block font-semibold text-ink">{p.name}</span>
               <span className="mono block text-xs text-muted">{p.sku} · {describeKind(p)}</span>
             </span>
-            <span className={`mono rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-widest ${p.active ? "bg-sky text-deep" : "bg-paper text-muted"}`}>{p.active ? "active" : "inactive"}</span>
-            {p.active && <button onClick={() => deactivate.mutate(p.id)} className="text-xs font-semibold text-warn hover:underline">Deactivate</button>}
+
+            {editing?.id === p.id ? (
+              <span className="flex items-center gap-2">
+                <input
+                  type="number" min="0" value={editing.rupees}
+                  onChange={(e) => setEditing({ ...editing, rupees: e.target.value })}
+                  placeholder="Price (₹)" className={`${inputCls} w-28`}
+                />
+                {p.kind === "pack" && (
+                  <input
+                    type="number" min="0" value={editing.grant}
+                    onChange={(e) => setEditing({ ...editing, grant: e.target.value })}
+                    placeholder="Credits" className={`${inputCls} w-24`}
+                  />
+                )}
+                <button
+                  onClick={() => updateProduct.mutate({ id: p.id, body: {
+                    price_paise: Math.round(Number(editing.rupees) * 100),
+                    ...(p.kind === "pack" ? { grant_amount: Number(editing.grant) || 0 } : {}),
+                  } })}
+                  disabled={updateProduct.isPending || editing.rupees === ""}
+                  className="rounded-full bg-trust px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button onClick={() => setEditing(null)} className="text-xs text-muted hover:underline">Cancel</button>
+              </span>
+            ) : (
+              <>
+                <span className={`mono rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-widest ${p.active ? "bg-sky text-deep" : "bg-paper text-muted"}`}>{p.active ? "active" : "inactive"}</span>
+                <button
+                  onClick={() => setEditing({ id: p.id, rupees: String(p.price_paise / 100), grant: String(p.grant_amount) })}
+                  className="text-xs font-semibold text-trust hover:underline"
+                >
+                  Edit price
+                </button>
+                {p.active ? (
+                  <button onClick={() => deactivate.mutate(p.id)} className="text-xs font-semibold text-warn hover:underline">Deactivate</button>
+                ) : (
+                  <button onClick={() => updateProduct.mutate({ id: p.id, body: { active: true } })} className="text-xs font-semibold text-verify hover:underline">Reactivate</button>
+                )}
+              </>
+            )}
           </div>
         ))}
       </div>

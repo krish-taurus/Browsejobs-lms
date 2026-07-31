@@ -61,7 +61,9 @@ final readonly class CreateFeePlan
             throw ValidationException::withMessages(['emi_count' => 'Unsupported EMI count.']);
         }
 
-        $total = (int) config('fees.registration_paise');
+        // Per-course fee wins when set; the tenant-wide registration fee is
+        // the fallback. Either way the amount is server-owned, never client-sent.
+        $total = (int) ($batch->course?->fee_paise ?? config('fees.registration_paise'));
         $discountPaise = max(0, min($discountPaise, $total));
 
         return DB::transaction(function () use ($tenant, $student, $batch, $type, $emiCount, $discountPaise, $total, $actor): FeePlan {

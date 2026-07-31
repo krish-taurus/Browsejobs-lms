@@ -21,15 +21,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 20m
-          envs: KIMI_API_KEY
-          # Sync the web app's LLM env from the Actions secret before the build
-          # (idempotent: rewrites the two lines each deploy), then run the update.
-          script: |
-            if [ -n "$KIMI_API_KEY" ]; then
-              sudo touch /var/www/browsejobs/apps/web/.env.local
-              sudo sed -i '/^KIMI_API_KEY=/d;/^KIMI_MODEL=/d' /var/www/browsejobs/apps/web/.env.local
-              printf 'KIMI_API_KEY=%s\nKIMI_MODEL=kimi-k3\n' "$KIMI_API_KEY" | sudo tee -a /var/www/browsejobs/apps/web/.env.local >/dev/null
-            fi
-            sudo bash /var/www/browsejobs/deploy/deploy.sh update
-        env:
-          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          script: sudo bash /var/www/browsejobs/deploy/deploy.sh update

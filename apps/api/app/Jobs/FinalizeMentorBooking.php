@@ -56,12 +56,16 @@ final class FinalizeMentorBooking implements ShouldQueue
             $frontend = rtrim((string) config('app.frontend_url', ''), '/');
 
             if ($student !== null) {
-                $messenger->send($student, 'mentor_booked', [
-                    'name' => $student->name,
-                    'with' => (string) $mentorUser?->name,
-                    'when' => $when,
-                    'link' => "{$frontend}/mentors",
-                ]);
+                // Confirmation must land wherever the student looks — the
+                // branded WhatsApp card AND the email, not just one channel.
+                foreach ([\App\Enums\MessageChannel::WhatsApp, \App\Enums\MessageChannel::Email] as $channel) {
+                    $messenger->send($student, 'mentor_booked', [
+                        'name' => $student->name,
+                        'with' => (string) $mentorUser?->name,
+                        'when' => $when,
+                        'link' => "{$frontend}/mentors",
+                    ], ['channel' => $channel]);
+                }
 
                 InAppNotification::query()->create([
                     'tenant_id' => $session->tenant_id,

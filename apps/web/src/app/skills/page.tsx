@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+import { cmsMetadata } from "@/lib/site-content";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Kicker } from "@/components/brand/Kicker";
 import { skillPages } from "@/content/skills";
 
-export const metadata: Metadata = {
-  title: "Tech Skills in Demand in India — What Interviews Ask",
-  description:
-    "Which skills Indian tech interviews test right now — demand direction, real interview questions, hiring cities and the salaries behind SQL, Python, Spark, Kubernetes and more.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return cmsMetadata("/skills", {
+    title: "Tech Skills in Demand in India — What Interviews Ask",
+    description:
+      "Which skills Indian tech interviews test right now — demand direction, real interview questions, hiring cities and the salaries behind SQL, Python, Spark, Kubernetes and more.",
+  });
+}
 
 /** /skills index — the engine's tracked skills as a browsable set. */
 export default function SkillsIndex() {

@@ -44,7 +44,7 @@ class MockInterview extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'status',
+        'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'is_room', 'status',
         'overall_score', 'scorecard', 'scorecard_source', 'started_at', 'completed_at',
         'provider_session_id', 'join_url', 'duration_seconds', 'cost_micros',
     ];
@@ -90,6 +90,7 @@ class MockInterview extends Model
     {
         return [
             'scorecard' => 'array',
+            'is_room' => 'boolean',
             'overall_score' => 'integer',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',

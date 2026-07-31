@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { DevOtpModal } from "@/components/auth/DevOtpModal";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const payload = () => ({
     name,
@@ -31,11 +33,17 @@ export default function RegisterPage() {
     setError(null);
     setBusy(true);
     try {
-      await apiJson("/api/v1/auth/register/request", {
-        method: "POST",
-        body: JSON.stringify(payload()),
-      });
+      const res = await apiJson<{ status: string; debug_code?: string }>(
+        "/api/v1/auth/register/request",
+        {
+          method: "POST",
+          body: JSON.stringify(payload()),
+        },
+      );
       setStep("code");
+      // Dev-only: the API includes the code only while no messaging
+      // integration is configured — the modal hides itself in real setups.
+      setDevCode(res.debug_code ?? null);
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
     } finally {
@@ -131,6 +139,15 @@ export default function RegisterPage() {
             </form>
           )}
         </div>
+
+        <DevOtpModal
+          code={devCode}
+          onUse={(c) => {
+            setCode(c);
+            setDevCode(null);
+          }}
+          onClose={() => setDevCode(null)}
+        />
 
         <p className="mt-6 text-center text-xs text-muted">
           Already have an account?{" "}

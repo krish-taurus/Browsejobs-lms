@@ -61,30 +61,34 @@ it('speaks the OpenAI chat-completions dialect and parses the reply', function (
     });
 });
 
-it('sends kimi-k3 to the Moonshot endpoint by default', function () {
-    Http::fake([
-        'api.moonshot.ai/*' => Http::response([
-            'model' => 'kimi-k3',
-            'choices' => [[
-                'message' => ['role' => 'assistant', 'content' => 'Hello from Kimi'],
-                'finish_reason' => 'stop',
-            ]],
-            'usage' => ['prompt_tokens' => 12, 'completion_tokens' => 4],
-        ]),
+it('pins reasoning_effort when the provider configures one', function () {
+    Http::fake(['api.moonshot.ai/*' => Http::response([
+        'choices' => [['message' => ['content' => 'Next question'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 5, 'completion_tokens' => 3],
+    ])]);
+
+    config([
+        'ai.provider' => 'kimi',
+        'ai.providers.kimi.api_key' => 'sk-kimi-test',
+        'ai.providers.kimi.reasoning_effort' => 'none',
     ]);
 
-    config(['ai.provider' => 'kimi', 'ai.providers.kimi.api_key' => 'sk-kimi-test']);
+    app(AiClient::class)->complete(new AiMessage(user: 'hi'));
 
-    $result = app(AiClient::class)->complete(new AiMessage(user: 'Say hello'));
+    Http::assertSent(fn ($request) => $request['reasoning_effort'] === 'none');
+});
 
-    expect($result->text)->toBe('Hello from Kimi')
-        ->and($result->model)->toBe('kimi-k3');
+it('omits reasoning_effort when the provider does not set one', function () {
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'choices' => [['message' => ['content' => 'ok'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+    ])]);
 
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://api.moonshot.ai/v1/chat/completions'
-            && $request->hasHeader('Authorization', 'Bearer sk-kimi-test')
-            && $request['model'] === 'kimi-k3';
-    });
+    config(['ai.provider' => 'deepseek', 'ai.providers.deepseek.api_key' => 'sk-test']);
+
+    app(AiClient::class)->complete(new AiMessage(user: 'hi'));
+
+    Http::assertSent(fn ($request) => ! array_key_exists('reasoning_effort', $request->data()));
 });
 
 it('honours a per-call model override on the openai-compatible driver', function () {

@@ -12,6 +12,13 @@ use App\Support\Entitlements\EntitlementService;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
+    // Balances are explicit inputs here — disable voice_mock's first-touch
+    // free allowance and pin the pre-2026-07 included quotas.
+    config([
+        'monetization.voice_mock.free_grants' => 0,
+        'monetization.voice_mock.included_live' => 5,
+        'monetization.voice_mock.included_self_paced' => 2,
+    ]);
     $this->tenant = Tenant::factory()->create();
     $this->student = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
     $this->svc = app(EntitlementService::class);

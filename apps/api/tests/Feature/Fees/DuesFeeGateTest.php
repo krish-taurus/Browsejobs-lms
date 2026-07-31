@@ -7,6 +7,7 @@ use App\Models\Batch;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Fees\DuesFeeGate;
+use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
@@ -44,4 +45,24 @@ it('does not leak a block across tenants', function () {
 
     // A block on a different tenant's student must not block ours.
     expect($this->gate->allowsLiveAccess($this->student, $this->batch))->toBeTrue();
+});
+
+it('hard-locks mocks, tutor, and mentor booking server-side', function () {
+    AccessBlock::factory()->for($this->tenant)->hard()->create(['user_id' => $this->student->id]);
+    Sanctum::actingAs($this->student);
+
+    $this->getJson('/api/v1/me/mocks')->assertForbidden();
+    $this->postJson('/api/v1/me/mocks', ['room' => true])->assertForbidden();
+    $this->getJson('/api/v1/me/tutor')->assertForbidden();
+    $this->postJson('/api/v1/me/mentor-sessions', ['mentor_id' => 1, 'starts_at' => now()->addDay()->toIso8601String()])->assertForbidden();
+});
+
+it('leaves mocks and tutor open under a soft block', function () {
+    // Soft blocks only lock live classes + recordings; practice keeps working
+    // so a student inside the grace window is nudged, not paralysed.
+    AccessBlock::factory()->for($this->tenant)->create(['user_id' => $this->student->id]);
+    Sanctum::actingAs($this->student);
+
+    $this->getJson('/api/v1/me/mocks')->assertOk();
+    $this->getJson('/api/v1/me/tutor')->assertOk();
 });

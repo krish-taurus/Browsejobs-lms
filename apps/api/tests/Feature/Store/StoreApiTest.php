@@ -26,9 +26,15 @@ it('student lists the store and starts a purchase', function () {
 
     $this->getJson('/api/v1/me/store')->assertOk()->assertJsonPath('data.products.0.sku', 'voice-3pack');
 
+    // The browser needs the order id AND the publishable key to open Razorpay
+    // Checkout — without them the Buy button silently leaves a pending purchase.
+    config(['services.razorpay.key_id' => 'rzp_test_visible']);
+
     $this->postJson('/api/v1/me/purchases', ['product_id' => $this->pack->id])
         ->assertCreated()
-        ->assertJsonPath('data.amount_paise', 59_900);
+        ->assertJsonPath('data.amount_paise', 59_900)
+        ->assertJsonPath('data.razorpay_key_id', 'rzp_test_visible')
+        ->assertJsonStructure(['data' => ['purchase_id', 'razorpay_order_id', 'amount_paise', 'razorpay_key_id', 'prefill']]);
 
     expect(ProductPurchase::withoutGlobalScopes()->where('user_id', $this->student->id)->count())->toBe(1);
 });

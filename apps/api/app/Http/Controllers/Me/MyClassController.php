@@ -27,6 +27,10 @@ final class MyClassController extends Controller
 
             $sessions = LiveSession::query()
                 ->whereIn('batch_id', $batchIds)
+                // Masterclasses are funnel marketing events for leads — an
+                // enrolled student's class list must never resurface them
+                // (they linger on batches converted from the funnel).
+                ->where('kind', '!=', LiveSession::KIND_MASTERCLASS)
                 ->with(['batch:id,number', 'topic:id,name', 'recordings' => fn ($q) => $q->where('status', 'stored')])
                 ->orderByDesc('scheduled_start')
                 ->get();

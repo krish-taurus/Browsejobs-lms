@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
+import { useBranding } from "@/lib/branding";
 import { useFeeStatus } from "@/lib/fee-status";
 import { Mark } from "@/components/brand/Wordmark";
 import { navGroups, primaryTabs } from "@/components/portal/nav";
@@ -32,6 +33,7 @@ function NavIcon({ path, active }: { path: string; active: boolean }) {
 }
 
 function PortalShellInner({ children }: { children: ReactNode }) {
+  const brand = useBranding();
   const { user, loading, logout } = useAuth();
   const { status: fee } = useFeeStatus();
   const pathname = usePathname();
@@ -65,8 +67,13 @@ function PortalShellInner({ children }: { children: ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden border-r border-line bg-white md:flex md:flex-col">
         <div className="flex items-center gap-2 px-6 py-5">
-          <Mark />
-          <span className="display text-ink">BrowseJobs</span>
+          {brand.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- tenant logos are arbitrary remote URLs
+            <img src={brand.logo_url} alt={brand.name} className="h-8 w-8 shrink-0 rounded-[8px] object-contain" />
+          ) : (
+            <Mark />
+          )}
+          <span className="display text-ink">{brand.name}</span>
         </div>
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
           {navGroups.map((group) => (

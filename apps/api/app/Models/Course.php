@@ -24,7 +24,7 @@ class Course extends Model
     use HasFactory;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'program_id', 'code', 'name', 'slug', 'status', 'tagline', 'description', 'position'];
+    protected $fillable = ['tenant_id', 'program_id', 'code', 'name', 'slug', 'status', 'fee_paise', 'tagline', 'description', 'position'];
 
     /**
      * @return BelongsTo<Program, $this>

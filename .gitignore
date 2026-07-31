@@ -28,7 +28,3 @@ Thumbs.db
 .env.*
 !.env.example
 !**/.env.example
-
-# python bytecode (skill scripts)
-__pycache__/
-*.pyc

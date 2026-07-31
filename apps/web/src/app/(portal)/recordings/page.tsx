@@ -34,6 +34,7 @@ export default function RecordingsPage() {
   const [opening, setOpening] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [player, setPlayer] = useState<{ title: string; url: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["me", "recordings"],
@@ -45,17 +46,24 @@ export default function RecordingsPage() {
     setNotice(null);
     setOpening(r.id);
     try {
-      const res = await apiJson<{ data: { watch_url: string | null; passcode: string | null } }>(`/api/v1/me/recordings/${r.id}/download`);
-      if (res.data.watch_url) {
-        // Zoom cloud recordings can be passcode-protected — surface it so the student can paste it.
-        if (res.data.passcode) {
-          await navigator.clipboard?.writeText(res.data.passcode).catch(() => {});
-          setNotice(`Passcode ${res.data.passcode} (copied to clipboard) — paste it on the Zoom page if it asks.`);
-        }
-        window.open(res.data.watch_url, "_blank", "noopener");
-      } else {
+      const res = await apiJson<{ data: { watch_url: string | null; passcode: string | null; embedded?: boolean } }>(`/api/v1/me/recordings/${r.id}/download`);
+      if (!res.data.watch_url) {
         setError("This recording is still being prepared — check back shortly.");
+        return;
       }
+
+      // Self-hosted copies play right here in the portal.
+      if (res.data.embedded || /\.mp4($|\?)/.test(res.data.watch_url)) {
+        setPlayer({ title: r.class ?? r.title, url: res.data.watch_url });
+        return;
+      }
+
+      // Zoom cloud recordings can be passcode-protected — surface it so the student can paste it.
+      if (res.data.passcode) {
+        await navigator.clipboard?.writeText(res.data.passcode).catch(() => {});
+        setNotice(`Passcode ${res.data.passcode} (copied to clipboard) — paste it on the Zoom page if it asks.`);
+      }
+      window.open(res.data.watch_url, "_blank", "noopener");
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not open the recording.");
     } finally {
@@ -76,6 +84,24 @@ export default function RecordingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      {player && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setPlayer(null)}>
+          <div className="w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 pb-2">
+              <p className="truncate text-sm font-semibold text-white">{player.title}</p>
+              <button
+                onClick={() => setPlayer(null)}
+                className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white hover:bg-white/20"
+                aria-label="Close player"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <video src={player.url} controls autoPlay playsInline className="aspect-video w-full rounded-xl bg-black" />
+          </div>
+        </div>
+      )}
+
       <p className="kicker text-trust">Recordings</p>
       <h1 className="display mt-2 text-3xl text-ink">Class recordings</h1>
       <p className="mt-2 text-sm text-muted">Every class you attend is recorded here — available while your fees are clear.</p>

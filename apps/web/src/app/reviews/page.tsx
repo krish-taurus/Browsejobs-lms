@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cmsMetadata } from "@/lib/site-content";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { BookCta } from "@/components/landing/BookCta";
 import { Disclaimer } from "@/components/brand/Disclaimer";
@@ -7,11 +8,13 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ReviewWall } from "@/components/reviews/ReviewWall";
 import { reviewAggregates } from "@/content/landing";
 
-export const metadata: Metadata = {
-  title: "Reviews",
-  description:
-    "Real stories. Real people. Real success. Reviews from BrowseJobs students on Google and WhatsApp.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return cmsMetadata("/reviews", {
+    title: "Reviews",
+    description:
+      "Real stories. Real people. Real success. Reviews from BrowseJobs students on Google and WhatsApp.",
+  });
+}
 
 export default function ReviewsPage() {
   return (

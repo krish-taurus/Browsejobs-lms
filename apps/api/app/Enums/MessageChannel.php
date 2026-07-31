@@ -7,6 +7,7 @@ namespace App\Enums;
 enum MessageChannel: string
 {
     case WhatsApp = 'whatsapp';
+    case Sms = 'sms';
     case Email = 'email';
     case InApp = 'inapp';
 }

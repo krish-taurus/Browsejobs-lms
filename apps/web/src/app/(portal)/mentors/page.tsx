@@ -124,9 +124,15 @@ export default function MentorsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="display text-2xl text-ink">Mentors</h1>
-        <span className="mono text-xs text-muted">{data.credits} session{data.credits === 1 ? "" : "s"} left</span>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            data.credits > 0 ? "bg-verify/10 text-verify" : "bg-warn/10 text-warn"
+          }`}
+        >
+          {data.credits > 0 ? `● ${data.credits} session${data.credits === 1 ? "" : "s"} left` : "● Out of sessions"}
+        </span>
       </div>
       <p className="mt-1 text-sm text-muted">
         Book a 1:1 with a mentor — pick any open slot below (times in IST). Your mentor connects
@@ -158,45 +164,78 @@ export default function MentorsPage() {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {data.mentors.map((m) => (
-          <div key={m.id} className="rounded-[14px] border border-line bg-white p-4">
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-semibold text-ink">{m.name}</p>
-              {m.rating !== null && <span className="mono text-xs text-amber">★ {m.rating}</span>}
+          <div key={m.id} className="rounded-[14px] border border-line bg-white p-4 transition-shadow hover:shadow-md">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-trust/10 text-sm font-bold text-trust">
+                {(m.name ?? "?")
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join("")
+                  .toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="truncate text-sm font-semibold text-ink">{m.name}</p>
+                  {m.rating !== null && (
+                    <span className="shrink-0 rounded-full bg-amber/10 px-2 py-0.5 text-xs font-semibold text-amber">★ {m.rating}</span>
+                  )}
+                </div>
+                <p className="mt-0.5 truncate text-xs text-muted">{m.headline ?? "1:1 Mentoring"}</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {m.expertise.slice(0, 4).map((tagName) => (
+                    <span key={tagName} className="rounded-full bg-sky px-2 py-0.5 text-[10px] font-semibold text-deep">
+                      {tagName}
+                    </span>
+                  ))}
+                  {m.expertise.length > 4 && (
+                    <span className="rounded-full bg-paper px-2 py-0.5 text-[10px] font-semibold text-muted">+{m.expertise.length - 4}</span>
+                  )}
+                </div>
+              </div>
             </div>
-            {m.headline && <p className="mt-0.5 text-xs text-muted">{m.headline}</p>}
-            <p className="mono mt-1 text-[10px] uppercase tracking-widest text-muted">{m.expertise.join(" · ")}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted">Open slots · IST</h2>
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted">Pick a slot · IST</h2>
       {byDay.length === 0 ? (
         <p className="mt-3 text-sm text-muted">No open slots{tag ? ` for ${tag}` : ""} in the next two weeks.</p>
       ) : (
-        <div className="mt-3 space-y-4">
+        <div className="mt-3 space-y-3">
           {byDay.map(([day, times]) => (
-            <div key={day}>
-              <p className="text-xs font-semibold text-ink">{day}</p>
-              <div className="mt-1.5 space-y-1.5">
-                {Array.from(times.entries()).map(([time, mentorSlots]) => (
-                  <div key={time} className="flex flex-wrap items-center gap-2">
-                    <span className="mono w-20 shrink-0 text-xs text-muted">{time}</span>
-                    {mentorSlots.map((slot) => {
-                      const key = `${slot.mentor_profile_id}-${slot.starts_at}`;
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => book(slot)}
-                          disabled={busySlot === key}
-                          title={`Book ${slot.mentor} at ${time}`}
-                          className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink hover:border-trust disabled:opacity-50"
-                        >
-                          {busySlot === key ? "Booking…" : slot.mentor}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+            <div key={day} className="rounded-[14px] border border-line bg-white p-4">
+              <div className="flex items-baseline gap-2">
+                <p className="text-sm font-bold text-ink">{day}</p>
+                <span className="text-[11px] text-muted">
+                  {Array.from(times.values()).reduce((n, s) => n + s.length, 0)} slot
+                  {Array.from(times.values()).reduce((n, s) => n + s.length, 0) === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                {Array.from(times.entries()).flatMap(([time, mentorSlots]) =>
+                  mentorSlots.map((slot) => {
+                    const key = `${slot.mentor_profile_id}-${slot.starts_at}`;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => book(slot)}
+                        disabled={busySlot === key}
+                        title={`Book ${slot.mentor} at ${time}`}
+                        className="group rounded-xl border border-line bg-white px-2 py-2.5 text-center transition-colors hover:border-trust hover:bg-trust disabled:opacity-50"
+                      >
+                        <span className="block text-sm font-semibold text-ink group-hover:text-white">
+                          {busySlot === key ? "Booking…" : time}
+                        </span>
+                        {data.mentors.length > 1 && (
+                          <span className="mt-0.5 block truncate text-[10px] text-muted group-hover:text-white/80">
+                            {slot.mentor.split(" ")[0]}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  }),
+                )}
               </div>
             </div>
           ))}
@@ -204,14 +243,15 @@ export default function MentorsPage() {
       )}
 
       {data.credits === 0 && data.topups.length > 0 && (
-        <div className="mt-6 rounded-[14px] border border-line bg-white p-4">
-          <p className="text-sm text-ink">Out of sessions? Top up:</p>
-          <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-6 rounded-[14px] border border-trust/30 bg-sky/40 p-5">
+          <p className="text-sm font-semibold text-ink">Out of sessions?</p>
+          <p className="mt-0.5 text-xs text-muted">Top up once and keep the momentum — sessions land instantly after payment.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
             {data.topups.map((t) => (
               <button
                 key={t.product_id}
                 onClick={() => buyTopup(t)}
-                className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:border-trust"
+                className="rounded-xl bg-trust px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-deep"
               >
                 {t.sessions} session{t.sessions === 1 ? "" : "s"} · ₹{Math.round(t.price_paise / 100)}
               </button>

@@ -56,6 +56,26 @@ return [
         'base_url' => env('RAZORPAY_BASE_URL', 'https://api.razorpay.com/v1'),
     ],
 
+    'sms' => [
+        // Transactional SMS gateway (PRD §6.9). Provider-switchable behind
+        // SmsClient: 'msg91' (Indian DLT flows) or 'twilio'. Blank = no gateway:
+        // sends log-only and, with APP_DEBUG on, the OTP endpoint exposes the
+        // code to the dev UI (OtpDebugExposure). Tests fake the client.
+        'provider' => env('SMS_PROVIDER', ''),
+        'msg91' => [
+            'authkey' => env('MSG91_AUTHKEY', ''),
+            'flow_id' => env('MSG91_FLOW_ID', ''),
+            'sender' => env('MSG91_SENDER', ''),
+            'base_url' => env('MSG91_BASE_URL', 'https://control.msg91.com'),
+        ],
+        'twilio' => [
+            'account_sid' => env('TWILIO_ACCOUNT_SID', ''),
+            'auth_token' => env('TWILIO_AUTH_TOKEN', ''),
+            'from' => env('TWILIO_FROM', ''),
+            'base_url' => env('TWILIO_BASE_URL', 'https://api.twilio.com'),
+        ],
+    ],
+
     'whatsapp' => [
         // WhatsApp Cloud API (PRD §6.9). `app_secret` signs the inbound webhook
         // (X-Hub-Signature-256); `verify_token` guards the GET handshake. Tests
@@ -66,6 +86,13 @@ return [
         'verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN', ''),
         'app_secret' => env('WHATSAPP_APP_SECRET', ''),
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v21.0'),
+        // Prefixed to bare 10-digit numbers before sending (Meta needs E.164).
+        'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '91'),
+        // Branded banner for image-card messages (uploaded media id, or a
+        // public https URL). Keys listed in card_keys send image + caption
+        // inside the session window; empty id = plain text.
+        'card_image_id' => env('WHATSAPP_CARD_IMAGE_ID', ''),
+        'card_keys' => ['batch_credentials', 'mentor_booked'],
         // Maps the connected WABA to a tenant slug (single-business P2.4).
         'tenant_slug' => env('WHATSAPP_TENANT_SLUG', ''),
     ],

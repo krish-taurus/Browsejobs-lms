@@ -11,6 +11,8 @@ use App\Support\Fees\DunningStatus;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Student-facing fee status (PRD §6.8 dashboard-native awareness). Backs the fee
@@ -41,11 +43,20 @@ final class FeeStatusController extends Controller
                 return response()->json(['data' => ['has_plan' => false]]);
             }
 
-            // Ensure the next unpaid instalment has a payable link.
+            // Ensure the next unpaid instalment has a payable link. A gateway
+            // failure (bad keys, Razorpay outage) must not take the whole fee
+            // widget down — the student still sees the amount and due date,
+            // just without a one-tap link until the gateway recovers.
             $next = $plan->instalments->firstWhere('status', InstalmentStatus::Pending);
             if ($next !== null && ($next->payment_link_url === null || $next->payment_link_url === '')) {
-                $link->handle($next);
-                $plan->load(['instalments' => fn ($q) => $q->orderBy('seq')]);
+                try {
+                    $link->handle($next);
+                    $plan->load(['instalments' => fn ($q) => $q->orderBy('seq')]);
+                } catch (Throwable $e) {
+                    Log::warning('fee-status: payment link creation failed', [
+                        'instalment_id' => $next->id, 'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             $snapshot = $dunning->for($plan);

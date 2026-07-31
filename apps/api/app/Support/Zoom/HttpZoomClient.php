@@ -72,6 +72,18 @@ final class HttpZoomClient implements ZoomClient
         return $this->request()->get($downloadUrl)->throw()->body();
     }
 
+    public function meetingRecordings(string $meetingId): ?array
+    {
+        $response = $this->request()->get($this->config['base_url']."/meetings/{$meetingId}/recordings");
+
+        // 404 = never recorded (or still processing) — a normal outcome.
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        return $response->throw()->json();
+    }
+
     private function request(): PendingRequest
     {
         return Http::withToken($this->accessToken())->acceptJson();

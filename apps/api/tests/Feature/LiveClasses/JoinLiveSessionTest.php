@@ -58,6 +58,42 @@ it('rejects a dropped member', function () {
         ->toThrow(ValidationException::class);
 });
 
+it('refuses to hand out the link before the join window opens', function () {
+    enrol($this->batch->id, $this->student->id, $this->tenant->id);
+
+    withinTenant($this->tenant, function (): void {
+        $this->session->update(['scheduled_start' => now()->addHours(3)]);
+    });
+
+    expect(fn () => app(JoinLiveSession::class)->handle($this->session->fresh(), $this->student))
+        ->toThrow(ValidationException::class, 'Join opens 10 minutes before the class starts');
+});
+
+it('lets the student in within the pre-class window', function () {
+    enrol($this->batch->id, $this->student->id, $this->tenant->id);
+
+    withinTenant($this->tenant, function (): void {
+        $this->session->update(['scheduled_start' => now()->addMinutes(8)]);
+    });
+
+    expect(app(JoinLiveSession::class)->handle($this->session->fresh(), $this->student))
+        ->toBe('https://zoom.test/j/900000001');
+});
+
+it('points to the recording once the class has ended', function () {
+    enrol($this->batch->id, $this->student->id, $this->tenant->id);
+
+    withinTenant($this->tenant, function (): void {
+        $this->session->update([
+            'scheduled_start' => now()->subHours(3),
+            'scheduled_end' => now()->subHours(2),
+        ]);
+    });
+
+    expect(fn () => app(JoinLiveSession::class)->handle($this->session->fresh(), $this->student))
+        ->toThrow(ValidationException::class, 'This class has ended');
+});
+
 it('blocks access when the fee gate denies it', function () {
     enrol($this->batch->id, $this->student->id, $this->tenant->id);
 
