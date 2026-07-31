@@ -227,6 +227,32 @@ final class AiDoctor extends Command
         $this->line('Parses as a JSON object: '.($parsed !== null ? 'yes ('.count($parsed).' keys)' : 'NO'));
         $this->line('Stop reason: '.($stopReason ?: 'unknown'));
 
+        // A reasoning model bills thinking tokens against the same ceiling but
+        // never returns them, so the visible reply is a fraction of what was
+        // spent. That ratio is what decides AI_TOKEN_HEADROOM, and there is no
+        // other way to see it — the tokens simply vanish.
+        $visible = (int) ceil(mb_strlen($text) / 4);
+        if ($completionTokens > 0 && $visible > 0) {
+            $ratio = $completionTokens / $visible;
+            $this->line(sprintf(
+                'Tokens billed vs visible: %d vs ~%d (%.1fx)',
+                $completionTokens,
+                $visible,
+                $ratio,
+            ));
+
+            if ($ratio >= 1.6) {
+                $this->newLine();
+                $this->line(sprintf(
+                    'Most of this reply was reasoning you never see, billed against the',
+                ));
+                $this->line(sprintf(
+                    'same ceiling. Set AI_TOKEN_HEADROOM to about %d for this model.',
+                    max(2, (int) ceil($ratio)),
+                ));
+            }
+        }
+
         if ($completionTokens >= $maxTokens) {
             $this->newLine();
             $this->warn('The reply hit the token ceiling and is probably cut off.');

@@ -117,3 +117,21 @@ it('flags a reply that hit the token ceiling', function (): void {
         ->expectsOutputToContain('Re-run with a higher --max-tokens')
         ->assertSuccessful();
 });
+
+it('names the headroom a reasoning model needs', function (): void {
+    config(['ai.provider' => 'deepseek', 'ai.providers.deepseek.api_key' => 'k']);
+
+    // A short visible reply billed at three times its length: the tokens went
+    // on reasoning that is never returned but counts against the ceiling. That
+    // ratio is invisible everywhere else, and it is what sets the headroom.
+    Http::fake(['api.deepseek.com/*' => Http::response([
+        'model' => 'deepseek-v4-flash',
+        'choices' => [['message' => ['content' => '{"a":1}'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 60],
+    ])]);
+
+    $this->artisan('ai:doctor --raw --max-tokens=500')
+        ->expectsOutputToContain('Tokens billed vs visible')
+        ->expectsOutputToContain('Set AI_TOKEN_HEADROOM')
+        ->assertSuccessful();
+});
