@@ -10,6 +10,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
+import { LoginMenu } from "@/components/landing/LoginMenu";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Footer } from "@/components/landing/Footer";
 import { LeadModal } from "@/components/landing/LeadModal";
@@ -219,9 +220,7 @@ function SiteNav() {
               {l.label}
             </a>
           ))}
-          <Link href="/student" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
-            Student sign in
-          </Link>
+          <LoginMenu />
         </nav>
 
         {/* Hamburger (mobile only) */}
@@ -280,6 +279,13 @@ function SiteNav() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.06 + NAV_LINKS.length * 0.05, duration: 0.3, ease: EASE }}
               >
+                <Link
+                  href="/employer"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                >
+                  Employer sign in
+                </Link>
                 <Link
                   href="/student"
                   onClick={() => setOpen(false)}

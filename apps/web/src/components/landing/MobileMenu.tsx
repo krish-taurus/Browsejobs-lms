@@ -69,12 +69,21 @@ export function MobileMenu({ links }: { links: NavLink[] }) {
               </a>
             ))}
             <div className="my-1 border-t border-line" />
+            {/* Both audiences named rather than one generic "Login" — an
+                employer should not have to guess which door is theirs. */}
             <Link
               href="/student"
               onClick={() => setOpen(false)}
               className="block rounded-[14px] px-4 py-3 text-[15px] font-medium text-muted transition-colors hover:bg-paper"
             >
-              Login
+              Job seeker login
+            </Link>
+            <Link
+              href="/employer"
+              onClick={() => setOpen(false)}
+              className="block rounded-[14px] px-4 py-3 text-[15px] font-medium text-muted transition-colors hover:bg-paper"
+            >
+              Employer login
             </Link>
             <Link
               href="/register"
