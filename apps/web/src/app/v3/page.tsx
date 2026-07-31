@@ -10,6 +10,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
+import { HomeJobs } from "@/components/landing/HomeJobs";
 import { LoginMenu } from "@/components/landing/LoginMenu";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Footer } from "@/components/landing/Footer";
@@ -220,6 +221,9 @@ function SiteNav() {
               {l.label}
             </a>
           ))}
+          <Link href="/jobs" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+            Jobs
+          </Link>
           <LoginMenu />
         </nav>
 
@@ -279,6 +283,13 @@ function SiteNav() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.06 + NAV_LINKS.length * 0.05, duration: 0.3, ease: EASE }}
               >
+                <Link
+                  href="/jobs"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-black/50 transition-colors hover:bg-[#f6f9fe]"
+                >
+                  Jobs
+                </Link>
                 <Link
                   href="/employer"
                   onClick={() => setOpen(false)}
@@ -2439,6 +2450,9 @@ export default function V3Landing() {
 
       {/* ------------------------------- programs ----------------------------- */}
       <ProgramsSection />
+
+      {/* ------------------------------ open roles ---------------------------- */}
+      <HomeJobs />
 
       {/* ---------------------------- career report --------------------------- */}
       <CareerReportSection />

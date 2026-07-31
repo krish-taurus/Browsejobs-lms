@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AssignRoleToUser;
+use App\Actions\Auth\GrantSignupCredits;
 use App\Actions\Auth\RequestOtp;
 use App\Actions\Auth\VerifyOtp;
 use App\Enums\OtpPurpose;
@@ -67,6 +68,10 @@ final class RegisterController extends Controller
         ]);
 
         $assignRole->handle($user, 'student', actor: $user);
+
+        // Start every new account on the free tier so the first mock and CV
+        // cost nothing — the upgrade prompt then follows real usage.
+        app(GrantSignupCredits::class)->handle($user);
 
         $this->startSession($request, $user);
 

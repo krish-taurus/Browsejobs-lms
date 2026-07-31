@@ -8,6 +8,16 @@ declare(strict_types=1);
 | runtime via the monetization settings page.
 */
 return [
+    /*
+    | The free tier every new account starts on. Anyone may register as a
+    | job seeker without enrolling in a programme, so these are what makes
+    | the product usable before any purchase.
+    */
+    'signup' => [
+        'free_mocks' => (int) env('SIGNUP_FREE_MOCKS', 2),
+        'free_cvs' => (int) env('SIGNUP_FREE_CVS', 1),
+    ],
+
     'cv' => [
         'free_grants' => 3,
         'pack_price_paise' => 9_900,   // ₹99 / 3-generation pack
