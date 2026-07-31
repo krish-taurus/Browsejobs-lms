@@ -15,6 +15,7 @@ import {
 import { DUR, EASE, INK, SERIES, SURFACE } from "@/components/viz/tokens";
 import { ApiError, apiJson } from "@/lib/api";
 import { candidateApi, type VerificationCheck, type VerificationSummary } from "@/lib/candidate";
+import { DocumentVault } from "@/components/candidate/DocumentVault";
 
 const TONE: Record<VerificationCheck["status"], "good" | "warning" | "critical" | "neutral"> = {
   verified: "good",
@@ -63,6 +64,7 @@ export default function VerificationPage() {
           <>
             <BadgePanel summary={summary} />
             <ResumeCard />
+            <DocumentVault />
             <div className="space-y-3">
               {summary.checks.map((check, i) => (
                 <CheckRow key={check.kind} check={check} index={i} onDone={load} />

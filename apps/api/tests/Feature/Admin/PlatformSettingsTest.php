@@ -119,3 +119,45 @@ it('denies a student', function () {
 
     $this->getJson('/api/v1/admin/settings')->assertForbidden();
 });
+
+it('exposes the BGV segment so a super-admin can route each check and store its credentials', function () {
+    Sanctum::actingAs($this->super);
+
+    $bgv = collect($this->getJson('/api/v1/admin/settings')->assertOk()->json('data'))
+        ->firstWhere('key', 'bgv');
+
+    expect($bgv)->not->toBeNull()
+        ->and($bgv['label'])->toBe('Background verification (BGV)');
+
+    $identity = collect($bgv['fields'])->firstWhere('key', 'identity_provider');
+    $secret = collect($bgv['fields'])->firstWhere('key', 'digilocker_client_secret');
+
+    expect($identity['type'])->toBe('select')
+        ->and($identity['options'])->toBe(['manual', 'digilocker'])
+        // BrowseJobs holds this, not the employer — and it never leaves the server.
+        ->and($secret['type'])->toBe('secret')
+        ->and($secret['value'])->toBeNull();
+});
+
+it('applies a stored BGV routing choice over config', function () {
+    PlatformSetting::query()->create(['group' => 'bgv', 'key' => 'identity_provider', 'value' => 'digilocker']);
+
+    app(PlatformSettings::class)->refresh();
+
+    expect(config('verification.routing.identity'))->toBe('digilocker');
+});
+
+it('refuses a select value outside its declared options', function () {
+    Sanctum::actingAs($this->super);
+
+    // The form is a <select>, but the endpoint takes arbitrary JSON. Storing
+    // this would route every identity check at a provider that does not
+    // exist, surfacing as a failure on a candidate's submission instead.
+    $this->putJson('/api/v1/admin/settings', [
+        'settings' => ['bgv' => ['identity_provider' => 'definitely-not-a-provider']],
+    ])->assertOk();
+
+    expect(PlatformSetting::query()->where('group', 'bgv')->where('key', 'identity_provider')->exists())
+        ->toBeFalse()
+        ->and(config('verification.routing.identity'))->toBe('manual');
+});

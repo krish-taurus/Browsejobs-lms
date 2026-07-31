@@ -133,6 +133,18 @@ final class PlatformSettings
                 continue;
             }
 
+            // A select may only hold one of its declared options. The form is a
+            // <select> so this cannot happen by hand, but the endpoint takes
+            // arbitrary JSON, and an unrecognised value here would land in a
+            // config path that something else resolves later — a bad provider
+            // name would surface as a 500 on a candidate's submission, far from
+            // the setting that caused it.
+            if (($field['type'] ?? 'text') === 'select'
+                && $field['options'] !== []
+                && ! in_array($value, $field['options'], true)) {
+                continue;
+            }
+
             PlatformSetting::query()->updateOrCreate(
                 ['group' => $group, 'key' => $key],
                 ['value' => $value, 'updated_by' => $actor?->id],
@@ -170,7 +182,7 @@ final class PlatformSettings
     /**
      * Flattened whitelist: each field with its group and config path.
      *
-     * @return list<array{group: string, key: string, type: string, config: string}>
+     * @return list<array{group: string, key: string, type: string, config: string, options: list<string>}>
      */
     private function fields(): array
     {
@@ -182,6 +194,7 @@ final class PlatformSettings
                     'key' => $field['key'],
                     'type' => $field['type'] ?? 'text',
                     'config' => $field['config'],
+                    'options' => array_values((array) ($field['options'] ?? [])),
                 ];
             }
         }

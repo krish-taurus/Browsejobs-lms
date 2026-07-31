@@ -94,6 +94,43 @@ return [
                 ['key' => 'service_account_json', 'label' => 'Service account JSON', 'type' => 'secret', 'config' => 'services.google_drive.service_account_json'],
             ],
         ],
+        /*
+        | Background verification (PRD-E F9). BrowseJobs holds these
+        | credentials, not the employer: an employer buys the outcome of a
+        | check, never the ability to run one against a candidate directly.
+        |
+        | Each kind can be routed independently, so identity can go to
+        | DigiLocker while employment still sits with a human reviewer.
+        | Leaving a kind on "manual" is always safe — nothing is fabricated,
+        | the check simply waits for the ops queue.
+        */
+        'bgv' => [
+            'label' => 'Background verification (BGV)',
+            'help' => 'BrowseJobs runs these checks on candidates — employers only ever see the result. Route each check to a provider and give that provider its credentials. Anything left on "Manual review" goes to your ops queue instead, which is the safe default: no check is ever auto-passed without a source behind it.',
+            'fields' => [
+                ['key' => 'identity_provider', 'label' => 'Identity — checked by', 'type' => 'select',
+                    'options' => ['manual', 'digilocker'], 'config' => 'verification.routing.identity'],
+                ['key' => 'education_provider', 'label' => 'Education — checked by', 'type' => 'select',
+                    'options' => ['manual', 'digilocker'], 'config' => 'verification.routing.education'],
+                ['key' => 'employment_provider', 'label' => 'Employment — checked by', 'type' => 'select',
+                    'options' => ['manual', 'epfo'], 'config' => 'verification.routing.employment'],
+                ['key' => 'documents_provider', 'label' => 'Documents — checked by', 'type' => 'select',
+                    'options' => ['manual', 'ai_documents'], 'config' => 'verification.routing.documents'],
+
+                ['key' => 'digilocker_base_url', 'label' => 'DigiLocker — base URL', 'type' => 'text',
+                    'config' => 'services.digilocker.base_url'],
+                ['key' => 'digilocker_client_id', 'label' => 'DigiLocker — client ID', 'type' => 'text',
+                    'config' => 'services.digilocker.client_id'],
+                ['key' => 'digilocker_client_secret', 'label' => 'DigiLocker — client secret', 'type' => 'secret',
+                    'config' => 'services.digilocker.client_secret'],
+
+                ['key' => 'epfo_base_url', 'label' => 'EPFO / BGV vendor — base URL', 'type' => 'text',
+                    'config' => 'services.epfo.base_url'],
+                ['key' => 'epfo_api_key', 'label' => 'EPFO / BGV vendor — API key', 'type' => 'secret',
+                    'config' => 'services.epfo.api_key'],
+            ],
+        ],
+
         'social' => [
             'label' => 'Reviews & social links',
             'help' => 'Where a 4★+ candidate is sent to post their review and follow you. Paste your Google "write a review" link and your Instagram / YouTube URLs — they appear on the review page after a candidate rates 4 stars or more.',

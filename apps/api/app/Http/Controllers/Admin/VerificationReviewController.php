@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\VerificationKind;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
+use App\Models\CandidateDocument;
 use App\Models\CandidateVerificationCheck;
 use App\Support\Verification\VerificationGateway;
 use Illuminate\Http\JsonResponse;
@@ -68,6 +69,11 @@ final class VerificationReviewController extends Controller
                     'name' => $c->candidate?->name,
                     'email' => $c->candidate?->email,
                 ],
+                // Per-document triage for the documents check, so a reviewer
+                // opens four files knowing which one to start with.
+                'documents' => $c->kind === VerificationKind::Documents
+                    ? $this->documentsFor($c->user_id)
+                    : [],
             ])->all(),
             'meta' => [
                 'total' => $checks->total(),
@@ -78,6 +84,37 @@ final class VerificationReviewController extends Controller
                     ->count(),
             ],
         ]);
+    }
+
+    /**
+     * What the AI read in each uploaded document.
+     *
+     * This is advice, and the payload says so: `is_advice_only` rides along
+     * with every verdict, and an unreadable file reports that rather than
+     * going quiet — silence would let "no concerns" be read as "checked and
+     * clean" when nothing was read at all.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function documentsFor(int $userId): array
+    {
+        return CandidateDocument::query()
+            ->where('user_id', $userId)
+            ->orderBy('id')
+            ->get()
+            ->map(fn (CandidateDocument $d): array => [
+                'id' => $d->id,
+                'kind' => $d->kind,
+                'label' => $d->label(),
+                'original_name' => $d->original_name,
+                'machine_readable' => $d->extract_status !== CandidateDocument::EXTRACT_UNREADABLE,
+                'assessed' => $d->assessed_at !== null,
+                'assessment_summary' => $d->assessmentSummary(),
+                'verdict' => $d->ai_verdict,
+                'review_status' => $d->review_status,
+                'uploaded_at' => $d->created_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     public function settle(

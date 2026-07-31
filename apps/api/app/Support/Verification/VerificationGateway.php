@@ -10,8 +10,10 @@ use App\Events\VerificationSettled;
 use App\Models\CandidateVerificationCheck;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
+use App\Support\Verification\Providers\ManualReviewProvider;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
@@ -112,26 +114,54 @@ final class VerificationGateway
         );
     }
 
+    /**
+     * The provider a kind is routed to, falling back to manual review when
+     * the routing is wrong.
+     *
+     * Routing is admin-editable, so a bad value is a configuration mistake —
+     * and it would otherwise surface as a 500 on a *candidate* pressing
+     * submit, nowhere near the setting that caused it. Falling back sends the
+     * check to a human, which is where it would have gone anyway, and logs
+     * loudly enough for ops to find. Nothing is auto-passed either way.
+     */
     private function providerFor(VerificationKind $kind): VerificationProvider
     {
         $name = (string) config("verification.routing.{$kind->value}", 'manual');
         $class = config("verification.providers.{$name}");
 
         if (! is_string($class) || $class === '') {
-            throw new InvalidArgumentException("No verification provider registered as [{$name}].");
+            return $this->fallback($kind, "No verification provider registered as [{$name}].");
         }
 
         $provider = $this->container->make($class);
 
         if (! $provider instanceof VerificationProvider) {
-            throw new InvalidArgumentException("[{$class}] is not a verification provider.");
+            return $this->fallback($kind, "[{$class}] is not a verification provider.");
         }
 
         if (! $provider->supports($kind)) {
-            throw new InvalidArgumentException("Provider [{$name}] does not support [{$kind->value}].");
+            return $this->fallback($kind, "Provider [{$name}] does not support [{$kind->value}].");
         }
 
         return $provider;
+    }
+
+    private function fallback(VerificationKind $kind, string $reason): VerificationProvider
+    {
+        Log::error('Verification routing is misconfigured; falling back to manual review.', [
+            'kind' => $kind->value,
+            'reason' => $reason,
+        ]);
+
+        $manual = $this->container->make(ManualReviewProvider::class);
+
+        if (! $manual instanceof VerificationProvider) {
+            // The default provider itself is broken — there is no safe way to
+            // continue, and pretending otherwise would strand the check.
+            throw new InvalidArgumentException($reason);
+        }
+
+        return $manual;
     }
 
     private function expiryFor(VerificationKind $kind, VerificationStatus $status): ?Carbon

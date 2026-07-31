@@ -109,6 +109,7 @@ use App\Http\Controllers\Leads\LeadController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\CandidateDashboardController;
+use App\Http\Controllers\Me\CandidateDocumentController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
 use App\Http\Controllers\Me\EmployerJobBrowseController;
@@ -403,6 +404,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/candidate-dashboard', [CandidateDashboardController::class, 'show']);
     Route::get('me/verification', [VerificationController::class, 'index']);
     Route::post('me/verification/{kind}', [VerificationController::class, 'submit'])->middleware('throttle:10,1');
+
+    // Documents towards the verification checks, assessed one at a time.
+    Route::get('me/verification-documents', [CandidateDocumentController::class, 'index']);
+    Route::post('me/verification-documents', [CandidateDocumentController::class, 'store'])->middleware('throttle:20,1');
+    Route::delete('me/verification-documents/{document}', [CandidateDocumentController::class, 'destroy']);
 
     // Async L1/L2 rounds for candidates (PRD-E F5).
     Route::get('me/employer-interviews', [MeEmployerInterviewController::class, 'index']);

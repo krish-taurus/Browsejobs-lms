@@ -141,4 +141,21 @@ return [
         'youtube_url' => env('SOCIAL_YOUTUBE_URL', ''),
     ],
 
+    /*
+    | Background verification sources (PRD-E F9). Platform-owned, entered in
+    | Admin → Settings → BGV; env holds only placeholders so nothing real is
+    | ever committed. Empty credentials are not an error — the provider
+    | reports that it cannot run and the check falls to a human reviewer.
+    */
+    'digilocker' => [
+        'base_url' => env('DIGILOCKER_BASE_URL', ''),
+        'client_id' => env('DIGILOCKER_CLIENT_ID', ''),
+        'client_secret' => env('DIGILOCKER_CLIENT_SECRET', ''),
+    ],
+
+    'epfo' => [
+        'base_url' => env('EPFO_BASE_URL', ''),
+        'api_key' => env('EPFO_API_KEY', ''),
+    ],
+
 ];

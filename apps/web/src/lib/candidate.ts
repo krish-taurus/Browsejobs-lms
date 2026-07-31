@@ -138,6 +138,28 @@ export const STAGE_LABELS: Record<string, string> = {
 
 const base = "/api/v1";
 
+/** A document the candidate uploaded towards a check (PRD-E F9). */
+export type CandidateDocumentRow = {
+  id: number;
+  kind: string;
+  label: string;
+  original_name: string;
+  size_bytes: number;
+  review_status: "pending" | "accepted" | "rejected";
+  /**
+   * False for a PDF or a photo: we hold the file but cannot read its text,
+   * so it waits on a person rather than an assessment.
+   */
+  machine_readable: boolean;
+  uploaded_at: string | null;
+  reviewed_at: string | null;
+};
+
+export type CandidateDocumentList = {
+  data: CandidateDocumentRow[];
+  meta: { kinds: { key: string; label: string }[]; max_kilobytes: number };
+};
+
 export const candidateApi = {
   dashboard: () => apiJson<{ data: CandidateDashboardData }>(`${base}/me/candidate-dashboard`),
   board: (q?: string) =>
@@ -148,6 +170,9 @@ export const candidateApi = {
       `${base}/me/verification/${kind}`,
       { method: "POST", body: JSON.stringify(body) },
     ),
+  documents: () => apiJson<CandidateDocumentList>(`${base}/me/verification-documents`),
+  deleteDocument: (id: number) =>
+    apiJson<null>(`${base}/me/verification-documents/${id}`, { method: "DELETE" }),
   applyToJob: (jobId: number) =>
     apiJson<{ data: { id: number } }>(`${base}/me/employer-jobs/${jobId}/apply`, { method: "POST" }),
   startMock: (jobId: number) =>

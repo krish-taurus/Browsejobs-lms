@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Enums\VerificationKind;
+use App\Support\Verification\Providers\AiDocumentProvider;
+use App\Support\Verification\Providers\DigiLockerProvider;
+use App\Support\Verification\Providers\EpfoProvider;
 use App\Support\Verification\Providers\ManualReviewProvider;
 
 return [
@@ -11,11 +14,15 @@ return [
     |--------------------------------------------------------------------------
     | Provider routing
     |--------------------------------------------------------------------------
-    | Which transport services each check. `manual` ships today and needs no
-    | credentials. A real issuer aggregator (DigiLocker) or a PF/BGV vendor is
-    | added by registering its class in `providers` and pointing the kind at
-    | it here — no consumer changes. Credentials come from the environment and
-    | are never committed.
+    | Which transport services each check. `manual` needs no credentials and
+    | is the safe default: the check waits for an ops reviewer, and nothing is
+    | ever auto-passed without a source behind it.
+    |
+    | These values are normally set in Admin → Settings → Background
+    | verification (super-admin only) and applied over this config at boot,
+    | with the env names below as a fallback. BrowseJobs owns the credentials,
+    | not the employer — an employer buys the outcome of a check, never the
+    | ability to run one against a candidate.
     */
 
     'routing' => [
@@ -27,6 +34,9 @@ return [
 
     'providers' => [
         'manual' => ManualReviewProvider::class,
+        'digilocker' => DigiLockerProvider::class,
+        'epfo' => EpfoProvider::class,
+        'ai_documents' => AiDocumentProvider::class,
     ],
 
     /*
