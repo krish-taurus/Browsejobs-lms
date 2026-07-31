@@ -11,11 +11,19 @@ import { test, expect } from "@playwright/test";
  */
 test.use({ baseURL: "http://localhost:3000" });
 
-test("employer reviews a JD, its mock, and adds an automation rule", async ({ page }) => {
+// The employer sign-in fields are addressed by their visible labels, not by
+// placeholder text: the placeholders are examples ("you@company.com"), and a
+// field whose only label is its placeholder loses that label the moment
+// someone types into it.
+async function signIn(page: import("@playwright/test").Page) {
   await page.goto("/employer");
-  await page.getByPlaceholder("Work email").fill("employer@example.com");
-  await page.getByPlaceholder("Password").fill("password");
+  await page.getByLabel("Work email").fill("employer@example.com");
+  await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Sign in" }).click();
+}
+
+test("employer reviews a JD, its mock, and adds an automation rule", async ({ page }) => {
+  await signIn(page);
 
   // Command centre: stat band + pipeline pulse.
   await expect(page).toHaveURL(/\/employer\/dashboard/);
@@ -25,7 +33,10 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
   await expect(page.getByRole("heading", { name: "Live per JD" })).toBeVisible();
 
   // Jobs list → the seeded published JD.
-  await page.getByRole("link", { name: "Jobs" }).first().click();
+  // `exact` matters: without it "Jobs" also matches the wordmark's
+  // "BrowseJobs home", which sits earlier in the DOM and would send
+  // `.first()` to the marketing site instead of the jobs list.
+  await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Your job descriptions" })).toBeVisible();
   await page.getByRole("link", { name: /Data Engineer/ }).first().click();
   await expect(page.getByRole("heading", { name: "Data Engineer" })).toBeVisible();
@@ -44,10 +55,7 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
 });
 
 test("command palette jumps to a JD", async ({ page }) => {
-  await page.goto("/employer");
-  await page.getByPlaceholder("Work email").fill("employer@example.com");
-  await page.getByPlaceholder("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await signIn(page);
   await expect(page).toHaveURL(/\/employer\/dashboard/);
 
   await page.keyboard.press("ControlOrMeta+k");
