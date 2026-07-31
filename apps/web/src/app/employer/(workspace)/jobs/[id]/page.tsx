@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ApiError } from "@/lib/api";
@@ -232,7 +233,7 @@ function ApplicationCard({
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-4 text-left" aria-expanded={open}>
           {row.is_graded && row.mock_score !== null ? (
-            <Ring value={row.mock_score} size={62} stroke={8} color={strong ? TRUST : "#94a9c9"} track="#eef3fb">
+            <Ring value={row.mock_score} size={62} stroke={8} color={strong ? TRUST : "#94a9c9"}>
               <span className="font-display text-sm font-bold">{row.mock_score}</span>
             </Ring>
           ) : (
@@ -251,6 +252,12 @@ function ApplicationCard({
 
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={terminal ? "neutral" : "trust"}>{STAGE_LABELS[row.stage]}</Pill>
+          <Link
+            href={`/employer/jobs/${jobId}/candidates/${row.id}`}
+            className="rounded-full border border-white/[0.14] px-3.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
+          >
+            Full profile
+          </Link>
           {!terminal && forward && (
             <PrimaryButton disabled={busy} onClick={() => void move(forward)} className="!px-4 !py-2 !text-xs">
               Advance to {STAGE_LABELS[forward]}
@@ -269,10 +276,12 @@ function ApplicationCard({
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.35, ease: EASE }}
-          className="border-t border-white/[0.07] bg-[#f6f9fe] px-5 py-5 md:px-6"
+          // Was a paper-white panel left over from the light theme, with
+          // white text inside it — the detail was there and unreadable.
+          className="border-t border-white/[0.07] bg-white/[0.02] px-5 py-5 md:px-6"
         >
           {row.rejection_reason && (
-            <p className="mb-4 rounded-2xl border border-[#e05561]/20 bg-[#fdeaea] px-4 py-3 text-sm text-[#a13333]">
+            <p className="mb-4 rounded-2xl border border-[#e0556155] bg-[#e055611f] px-4 py-3 text-sm text-[#f2a1a7]">
               Rejected: {row.rejection_reason}
             </p>
           )}
@@ -399,7 +408,7 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
                     </p>
                   )}
                 </div>
-                <Ring value={c.match_score} size={64} stroke={8} color={c.match_score >= 70 ? VIOLET : TRUST} track="#eef3fb">
+                <Ring value={c.match_score} size={64} stroke={8} color={c.match_score >= 70 ? VIOLET : TRUST}>
                   <div className="text-center leading-none">
                     <span className="font-display block text-sm font-bold">{c.match_score}</span>
                     <span className="font-mono text-[7px] uppercase tracking-wider text-white/45">match</span>
@@ -535,7 +544,7 @@ function MockTab({ jobId }: { jobId: number }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: EASE, delay: i * 0.06 }}
-                className="rounded-2xl bg-[#f6f9fe] p-4"
+                className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4"
               >
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-semibold">{d.label}</p>

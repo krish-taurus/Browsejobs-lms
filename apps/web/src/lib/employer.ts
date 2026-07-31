@@ -121,6 +121,61 @@ export type ApplicationRow = {
   applied_at: string;
 };
 
+/**
+ * The full candidate view behind one application (PRD-E F17).
+ *
+ * `verification` carries outcomes only — the API never returns the document,
+ * the provider reference, or the evidence payload, so there is nothing here
+ * to accidentally render.
+ */
+export type CandidateProfileData = {
+  application: {
+    id: number;
+    stage: ApplicationStage;
+    mock_score: number | null;
+    mock_attempts: number;
+    applied_at: string | null;
+    graded_at: string | null;
+  };
+  candidate: {
+    id: number | null;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    contact_visible: boolean;
+  };
+  cv: {
+    summary: string | null;
+    skills: string[];
+    experience: Record<string, unknown>[];
+    education: Record<string, unknown>[];
+  } | null;
+  verification: {
+    badge: boolean;
+    checks: {
+      kind: string;
+      label: string;
+      status: string;
+      status_label: string;
+      verified_at: string | null;
+    }[];
+  };
+  interview: {
+    overall: number | null;
+    graded_by: string | null;
+    competencies: { name: string; score: number | null }[];
+    strengths: string[];
+    concerns: string[];
+    session: {
+      mode: string | null;
+      duration_seconds: number | null;
+      status: string | null;
+      completed_at: string | null;
+      proctoring_captured: boolean;
+    };
+  } | null;
+};
+
 export type InterviewRow = {
   id: number;
   round: "l1" | "l2";
@@ -188,6 +243,10 @@ export const employerApi = {
     apiJson<{ data: ApplicationRow[] }>(`${base}/workspaces/${ws}/jobs/${job}/applications`),
   application: (ws: number, job: number, id: number) =>
     apiJson<{ data: ApplicationRow }>(`${base}/workspaces/${ws}/jobs/${job}/applications/${id}`),
+  candidateProfile: (ws: number, job: number, id: number) =>
+    apiJson<{ data: CandidateProfileData }>(
+      `${base}/workspaces/${ws}/jobs/${job}/applications/${id}/profile`,
+    ),
   draftJd: (ws: number, body: { title: string; notes?: string; experience_min_years?: number; experience_max_years?: number; locations?: string[] }) =>
     apiJson<{ data: JdDraft }>(`${base}/workspaces/${ws}/jd-draft`, {
       method: "POST",

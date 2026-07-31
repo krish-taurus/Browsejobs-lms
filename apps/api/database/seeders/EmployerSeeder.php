@@ -11,8 +11,10 @@ use App\Enums\EmployerInterviewStatus;
 use App\Enums\EmployerJobStatus;
 use App\Enums\EmployerRole;
 use App\Enums\JdMockStatus;
+use App\Enums\VerificationStatus;
 use App\Models\Batch;
 use App\Models\BatchMember;
+use App\Models\CandidateVerificationCheck;
 use App\Models\Course;
 use App\Models\CvProfile;
 use App\Models\EmployerInterview;
@@ -21,6 +23,8 @@ use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
 use App\Models\JdMock;
+use App\Models\MockBlueprint;
+use App\Models\MockInterview;
 use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
@@ -127,6 +131,7 @@ final class EmployerSeeder extends Seeder
             );
 
             $this->seedApplications($tenant, $job, $mock);
+            $this->seedCandidateDepth($tenant, $job);
             $this->seedTrainedTalent($tenant);
         });
     }
@@ -270,6 +275,183 @@ final class EmployerSeeder extends Seeder
                     'started_at' => now()->subDays(4),
                     'submitted_at' => now()->subDays(4),
                     'graded_at' => now()->subDays(4),
+                ],
+            );
+        }
+    }
+
+    /**
+     * Everything the full candidate profile (PRD-E F17) reads: the JD-specific
+     * interview with its scorecard, the verification checks behind the badge,
+     * and a parsed CV.
+     *
+     * Without this the profile screen renders four honest empty states and
+     * nothing else, which demos as "the feature does not work". Three
+     * candidates are given deliberately different shapes — badge earned,
+     * badge pending, and a failed check — because the interesting question
+     * on that screen is what an employer does with partial verification.
+     */
+    private function seedCandidateDepth(Tenant $tenant, EmployerJob $job): void
+    {
+        // One hidden blueprint per JD, matching StartEmployerJobMock so the
+        // seeded interviews sit on the same rail as real ones.
+        $blueprint = MockBlueprint::query()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'employer_job_id' => $job->id],
+            [
+                'role_title' => mb_substr($job->title, 0, 255),
+                'skill' => null,
+                'competencies' => $job->skills ?? [],
+                'opening_question' => 'Walk me through a data pipeline you owned end to end.',
+                'is_active' => true,
+            ],
+        );
+
+        /** @var list<array{email: string, overall: int, competencies: array<string, int>, strengths: list<string>, concerns: list<string>, minutes: int, checks: array<string, string>}> */
+        $depth = [
+            [
+                'email' => 'ananya.iyer@example.com',
+                'overall' => 91,
+                'competencies' => [
+                    'Technical depth' => 92, 'Problem solving' => 89,
+                    'Evidence of experience' => 94, 'Communication' => 78, 'Ownership' => 88,
+                ],
+                'strengths' => [
+                    'Named the exact mechanism behind the incremental rebuild — a 48-hour lookback on updated_at — rather than describing the outcome only.',
+                    'Volunteered the trade-off she accepted (reprocessing cost) without being asked for it.',
+                    'Debugging answer started by separating DAG failure from source failure, which is the right first cut.',
+                ],
+                'concerns' => [
+                    'Explanations assume the listener already knows the stack; skipped context a non-technical stakeholder would need.',
+                    'Gave no example of a decision she got wrong and later reversed.',
+                ],
+                'minutes' => 27,
+                'checks' => [
+                    'identity' => 'verified',
+                    'employment' => 'verified',
+                    'education' => 'verified',
+                    'documents' => 'pending',
+                ],
+            ],
+            [
+                'email' => 'rahul.verma@example.com',
+                'overall' => 84,
+                'competencies' => [
+                    'Technical depth' => 86, 'Problem solving' => 81,
+                    'Evidence of experience' => 79, 'Communication' => 88, 'Ownership' => 80,
+                ],
+                'strengths' => [
+                    'Clearest communicator in the pipeline — structured every answer before answering it.',
+                    'Correctly identified partition skew as the cause in the performance scenario.',
+                ],
+                'concerns' => [
+                    'Examples were mostly from work he observed rather than owned.',
+                    'Could not describe how he verified the fix actually held.',
+                ],
+                'minutes' => 24,
+                // Badge not earned: employment is still in review.
+                'checks' => ['identity' => 'verified', 'employment' => 'pending'],
+            ],
+            [
+                'email' => 'sneha.nair@example.com',
+                'overall' => 78,
+                'competencies' => [
+                    'Technical depth' => 74, 'Problem solving' => 80,
+                    'Evidence of experience' => 71, 'Communication' => 84, 'Ownership' => 79,
+                ],
+                'strengths' => [
+                    'Strong grasp of modelling fundamentals — explained slowly changing dimensions without prompting.',
+                ],
+                'concerns' => [
+                    'Orchestration answers stayed theoretical; no production incident to draw on.',
+                    'Underestimated the cost of a full refresh at the volumes described.',
+                ],
+                'minutes' => 22,
+                // A failed check is part of the demo: the screen has to be
+                // usable when verification does not come back clean.
+                'checks' => ['identity' => 'verified', 'employment' => 'failed'],
+            ],
+        ];
+
+        foreach ($depth as $entry) {
+            $candidate = User::query()->where('email', $entry['email'])->first();
+
+            if ($candidate === null) {
+                continue;
+            }
+
+            $application = EmployerJobApplication::query()
+                ->where('employer_job_id', $job->id)
+                ->where('candidate_id', $candidate->id)
+                ->first();
+
+            if ($application === null) {
+                continue;
+            }
+
+            $competencies = [];
+            foreach ($entry['competencies'] as $name => $score) {
+                $competencies[] = ['name' => $name, 'score' => $score];
+            }
+
+            $interview = MockInterview::query()->updateOrCreate(
+                ['user_id' => $candidate->id, 'mock_blueprint_id' => $blueprint->id],
+                [
+                    'tenant_id' => $tenant->id,
+                    'mode' => MockInterview::MODE_TEXT,
+                    'status' => MockInterview::STATUS_COMPLETED,
+                    'overall_score' => $entry['overall'],
+                    'scorecard' => [
+                        'competencies' => $competencies,
+                        'strong_moments' => $entry['strengths'],
+                        'weak_moments' => $entry['concerns'],
+                    ],
+                    'scorecard_source' => 'ai',
+                    'started_at' => now()->subDays(3),
+                    'completed_at' => now()->subDays(3),
+                    'duration_seconds' => $entry['minutes'] * 60,
+                ],
+            );
+
+            $application->forceFill(['mock_interview_id' => $interview->id])->save();
+
+            foreach ($entry['checks'] as $kind => $status) {
+                $verified = $status === VerificationStatus::Verified->value;
+
+                CandidateVerificationCheck::query()->updateOrCreate(
+                    ['user_id' => $candidate->id, 'kind' => $kind],
+                    [
+                        'tenant_id' => $tenant->id,
+                        'status' => $status,
+                        'provider' => 'manual',
+                        // No provider_ref and no evidence: the demo must not
+                        // model a shape the employer view is forbidden to show.
+                        'submitted_at' => now()->subDays(5),
+                        'verified_at' => $verified ? now()->subDays(4) : null,
+                        'expires_at' => $verified ? now()->addYear() : null,
+                        'failure_reason' => $status === VerificationStatus::Failed->value
+                            ? 'Employer of record could not confirm the stated dates.'
+                            : null,
+                    ],
+                );
+            }
+
+            CvProfile::query()->updateOrCreate(
+                ['user_id' => $candidate->id],
+                [
+                    'tenant_id' => $tenant->id,
+                    'data' => [
+                        'summary' => 'Data engineer with production ownership of batch and streaming pipelines.',
+                        'skills' => $job->skills ?? ['sql', 'python', 'airflow'],
+                        'experience' => [
+                            ['title' => 'Data Engineer', 'company' => 'Zeta Systems', 'dates' => '2022 — present',
+                                'detail' => 'Owned the orders pipeline and its dbt models.'],
+                            ['title' => 'Analyst', 'company' => 'Northwind Retail', 'dates' => '2020 — 2022',
+                                'detail' => 'Reporting and ad-hoc SQL for the category team.'],
+                        ],
+                        'education' => [
+                            ['degree' => 'B.E. Computer Science', 'institution' => 'VTU', 'year' => '2020'],
+                        ],
+                    ],
                 ],
             );
         }

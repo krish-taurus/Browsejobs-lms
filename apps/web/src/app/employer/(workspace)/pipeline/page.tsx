@@ -213,7 +213,7 @@ export default function PipelineBoardPage() {
 
                             <div className="mt-2.5 flex items-center gap-2">
                               <Link
-                                href={`/employer/jobs/${row.jobId}`}
+                                href={`/employer/jobs/${row.jobId}/candidates/${row.id}`}
                                 className="text-[11px] font-medium text-white/50 underline-offset-4 hover:text-white hover:underline"
                               >
                                 Open
