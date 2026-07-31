@@ -89,6 +89,7 @@ use App\Http\Controllers\Courses\SyllabusDownloadController;
 use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
+use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
@@ -446,6 +447,8 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/jobs/{job}/status', [EmployerJobController::class, 'changeStatus']);
     Route::get('workspaces/{workspace}/jobs/{job}/mock', [EmployerJdMockController::class, 'show']);
     // Interview designer: focus skills, competency weights, format mix.
+    // Full candidate view for one application (PRD-E F17).
+    Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}/profile', [EmployerCandidateProfileController::class, 'show']);
     Route::get('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'show']);
     Route::put('workspaces/{workspace}/jobs/{job}/mock/design', [EmployerMockDesignController::class, 'update']);
     Route::post('workspaces/{workspace}/jobs/{job}/mock/regenerate', [EmployerJdMockController::class, 'regenerate'])->middleware('throttle:ai');
