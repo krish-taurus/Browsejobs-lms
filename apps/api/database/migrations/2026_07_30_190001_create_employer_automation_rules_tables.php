@@ -35,7 +35,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('tenant_id');
-            $table->index(['tenant_id', 'employer_job_id', 'enabled']);
+            $table->index(['tenant_id', 'employer_job_id', 'enabled'], 'ear_tenant_job_enabled_idx');
         });
 
         Schema::create('employer_automation_runs', function (Blueprint $table): void {
@@ -50,8 +50,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('tenant_id');
-            $table->index(['tenant_id', 'employer_automation_rule_id']);
-            $table->index(['tenant_id', 'employer_job_application_id']);
+            $table->index(['tenant_id', 'employer_automation_rule_id'], 'earun_tenant_rule_idx');
+            $table->index(['tenant_id', 'employer_job_application_id'], 'earun_tenant_application_idx');
         });
     }
 
