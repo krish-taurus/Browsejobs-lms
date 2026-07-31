@@ -9,8 +9,21 @@ export const metadata: Metadata = {
     "Roles hiring directly through BrowseJobs, where you apply by taking that job's mock interview, plus fresh openings from the wider market. Free account to see your match.",
 };
 
-// Refreshes with the morning feed sync — re-render at most every 30 min.
-export const revalidate = 1800;
+/**
+ * Two data rhythms share this page, and the slower one used to set the pace.
+ *
+ * Market roles arrive on a morning sync, so half an hour of staleness costs
+ * nothing. Employer postings do not: someone publishes a role in the portal
+ * and looks at this page straight away. At 1800s they saw the snapshot taken
+ * before their job existed — the board said nobody was hiring while the API
+ * was returning their role. A published job that is invisible for half an
+ * hour reads as a broken product, and there is no way to tell from the page
+ * that it is merely old.
+ *
+ * A minute keeps the page static and SEO-indexable while making a publish
+ * feel immediate.
+ */
+export const revalidate = 60;
 
 type InternalJob = {
   id: number;
@@ -49,7 +62,10 @@ const EMPTY: Board = { internal: [], external: [], counts: { internal: 0, extern
 async function fetchBoard(): Promise<Board> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
   try {
-    const res = await fetch(`${base}/api/v1/job-board`, { next: { revalidate: 1800 } });
+    // Must match the page's window. Next caches the fetch independently, so
+    // a shorter page revalidate alone changes nothing — the re-render just
+    // re-reads the same half-hour-old response.
+    const res = await fetch(`${base}/api/v1/job-board`, { next: { revalidate: 60 } });
     if (!res.ok) return EMPTY;
     const body = (await res.json()) as { data: Board };
     return body.data ?? EMPTY;
