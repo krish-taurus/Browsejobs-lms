@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import {
   CheckCard,
+  GhostButton,
   Field,
   InkPanel,
   Label,
@@ -32,6 +33,41 @@ export default function NewJobPage() {
   const [publishNow, setPublishNow] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [titles, setTitles] = useState<string[]>([]);
+  const [suggested, setSuggested] = useState<string[]>([]);
+
+  // One call fills the title datalist; asking again with a title returns the
+  // skills for it, so the picker narrows as the employer types.
+  useEffect(() => {
+    employerApi
+      .roleTaxonomy(title || undefined)
+      .then((r) => {
+        setTitles(r.data.titles.map((t) => t.title));
+        setSuggested(r.data.suggested ? [...r.data.suggested.core, ...r.data.suggested.optional] : []);
+      })
+      .catch(() => undefined);
+  }, [title]);
+
+  async function draft() {
+    setDrafting(true);
+    setError(null);
+    try {
+      const res = await employerApi.draftJd(workspace.id, {
+        title,
+        experience_min_years: expMin,
+        experience_max_years: expMax,
+        locations: locationList,
+      });
+      // A draft, never a publish — it lands in the form to be edited.
+      setDescription(res.data.description);
+      if (res.data.skills.length > 0) setSkills(res.data.skills.join(", "));
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not draft that description.");
+    } finally {
+      setDrafting(false);
+    }
+  }
 
   const skillList = useMemo(
     () => skills.split(",").map((s) => s.trim()).filter(Boolean),
@@ -90,7 +126,12 @@ export default function NewJobPage() {
                   maxLength={160}
                   className={controlCls}
                   placeholder="Data Engineer"
+                  list="role-titles"
+                  autoComplete="off"
                 />
+                <datalist id="role-titles">
+                  {titles.map((t) => <option key={t} value={t} />)}
+                </datalist>
               </Field>
 
               <Field
@@ -98,6 +139,16 @@ export default function NewJobPage() {
                 htmlFor="job-description"
                 hint="Responsibilities, must-haves and working context. This is what candidates read — and what the grader reads."
               >
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <GhostButton onClick={draft} disabled={drafting || title.trim() === ""}>
+                    {drafting ? "Drafting…" : "Draft with AI"}
+                  </GhostButton>
+                  <span className="text-[12px] text-white/45">
+                    {title.trim() === ""
+                      ? "Add a job title first."
+                      : "Fills this box and the skills below. Edit anything before you publish."}
+                  </span>
+                </div>
                 <textarea
                   id="job-description"
                   value={description}
@@ -127,6 +178,27 @@ export default function NewJobPage() {
                   placeholder="python, sql, airflow, aws"
                 />
               </Field>
+              {suggested.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-[11px] text-white/40">Common for this role — click to add</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {suggested
+                      .filter((sk) => !skillList.includes(sk))
+                      .slice(0, 14)
+                      .map((sk) => (
+                        <button
+                          key={sk}
+                          type="button"
+                          onClick={() => setSkills(skillList.concat(sk).join(", "))}
+                          className="rounded-full border border-white/[0.14] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-white/60 transition-colors hover:border-white/30 hover:text-white"
+                        >
+                          + {sk}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-3 flex min-h-[26px] flex-wrap gap-1.5">
                 {skillList.length === 0 ? (
                   <span className="text-[12px] text-white/35">

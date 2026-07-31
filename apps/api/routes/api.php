@@ -92,6 +92,7 @@ use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomation
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
+use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
@@ -428,6 +429,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/invites', [EmployerMemberController::class, 'invite'])->middleware('throttle:20,1');
 
     Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
+
+    // Draft a JD from a job title (PRD-E F15). Returns a draft to edit.
+    Route::post('workspaces/{workspace}/jd-draft', [EmployerJdDraftController::class, 'store'])->middleware('throttle:ai');
 
     // Shared role vocabulary for title/skill pickers (PRD-E F14).
     Route::get('role-taxonomy', [EmployerRoleTaxonomyController::class, 'index']);

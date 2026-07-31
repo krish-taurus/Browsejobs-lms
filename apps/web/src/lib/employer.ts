@@ -77,6 +77,23 @@ export type ApplicationStage =
   | "applied" | "graded" | "shortlisted" | "l1" | "l2"
   | "human_round" | "offer" | "hired" | "rejected" | "withdrawn";
 
+export type JdDraft = {
+  description: string;
+  skills: string[];
+  role_family: string | null;
+  responsibilities: string[];
+  must_haves: string[];
+  source: string;
+};
+
+export type RoleTaxonomy = {
+  families: { key: string; label: string; sector: string; titles: string[]; core: string[]; optional: string[] }[];
+  titles: { title: string; family: string; sector: string }[];
+  competencies: { key: string; label: string; hint: string }[];
+  question_formats: { key: string; label: string; hint: string }[];
+  suggested: { core: string[]; optional: string[] } | null;
+};
+
 export type ApplicationRow = {
   id: number;
   stage: ApplicationStage;
@@ -156,6 +173,15 @@ export const employerApi = {
     apiJson<{ data: ApplicationRow[] }>(`${base}/workspaces/${ws}/jobs/${job}/applications`),
   application: (ws: number, job: number, id: number) =>
     apiJson<{ data: ApplicationRow }>(`${base}/workspaces/${ws}/jobs/${job}/applications/${id}`),
+  draftJd: (ws: number, body: { title: string; notes?: string; experience_min_years?: number; experience_max_years?: number; locations?: string[] }) =>
+    apiJson<{ data: JdDraft }>(`${base}/workspaces/${ws}/jd-draft`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  roleTaxonomy: (title?: string) =>
+    apiJson<{ data: RoleTaxonomy }>(
+      `${base}/role-taxonomy${title ? `?title=${encodeURIComponent(title)}` : ""}`,
+    ),
   moveStage: (ws: number, job: number, id: number, stage: ApplicationStage, note?: string) =>
     apiJson<{ data: ApplicationRow }>(`${base}/workspaces/${ws}/jobs/${job}/applications/${id}/stage`, {
       method: "POST",
