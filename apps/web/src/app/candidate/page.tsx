@@ -108,7 +108,7 @@ export default function CandidateDashboardPage() {
           sub="Every application, every check, and the one thing most worth doing next. Nothing here is a prediction — it is what employers can actually see."
           action={
             <div className="flex gap-2">
-              <GhostAction href="/jobs">Browse jobs</GhostAction>
+              <GhostAction href="/candidate/jobs">Browse jobs</GhostAction>
               <PrimaryAction href="/candidate/verification">Verify profile</PrimaryAction>
             </div>
           }
@@ -294,7 +294,7 @@ export default function CandidateDashboardPage() {
                   : `${data.applications.length} in flight`}
               </p>
             </div>
-            <GhostAction href="/jobs">Find roles</GhostAction>
+            <GhostAction href="/candidate/jobs">Find roles</GhostAction>
           </div>
 
           {data.applications.length === 0 ? (
@@ -314,7 +314,7 @@ export default function CandidateDashboardPage() {
                   transition={{ duration: DUR.base, ease: EASE, delay: Math.min(i, 8) * 0.04 }}
                 >
                   <Link
-                    href={`/jobs/${a.job_id}`}
+                    href={`/candidate/jobs/${a.job_id}`}
                     className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border px-4 py-3.5 transition-colors hover:border-white/20"
                     style={{ borderColor: SURFACE.line, background: "rgba(255,255,255,0.02)" }}
                   >

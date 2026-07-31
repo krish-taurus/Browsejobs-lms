@@ -309,7 +309,7 @@ function ExternalList({ jobs }: { jobs: ExternalJob[] }) {
             )}
 
             <div className="mt-auto flex items-center gap-3 pt-4">
-              <GhostAction href={`/jobs`}>Prep for this role</GhostAction>
+              <GhostAction href="/jobs-for-you">Prep for this role</GhostAction>
               {job.question_count > 0 && (
                 <span className="font-mono text-[11px]" style={{ color: INK.faint }}>
                   {job.question_count} likely questions
