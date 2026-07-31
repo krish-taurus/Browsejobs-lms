@@ -174,9 +174,12 @@ final class AiDoctor extends Command
 
             return ['OK', "{$result->promptTokens}+{$result->completionTokens} tokens"];
         } catch (RequestException $e) {
-            return ['FAILED', 'HTTP '.$e->response->status().' '.mb_substr(trim($e->response->body()), 0, 80)];
+            // Generous truncation: a provider's rejection usually *names*
+            // the fix ("supported model names are …"), and cutting it at a
+            // tidy width threw away the one sentence worth reading.
+            return ['FAILED', 'HTTP '.$e->response->status().' '.mb_substr(trim($e->response->body()), 0, 300)];
         } catch (Throwable $e) {
-            return ['FAILED', class_basename($e).': '.mb_substr($e->getMessage(), 0, 80)];
+            return ['FAILED', class_basename($e).': '.mb_substr($e->getMessage(), 0, 300)];
         }
     }
 
