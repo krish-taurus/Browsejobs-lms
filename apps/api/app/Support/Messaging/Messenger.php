@@ -122,7 +122,7 @@ final class Messenger
             'recipient' => $to,
             'body' => $body,
             'status' => MessageStatus::Queued->value,
-            'meta' => $channel === MessageChannel::WhatsApp && $template->name !== null ? ['wa_template' => $template->name] : null,
+            'meta' => $channel === MessageChannel::WhatsApp ? $this->whatsAppMeta($key, $template->name, $vars) : null,
         ]);
 
         $this->deliver($message, null);
@@ -132,6 +132,42 @@ final class Messenger
         }
 
         return $message;
+    }
+
+    /**
+     * Meta payload hints for a templated WhatsApp send: which approved template
+     * carries this key, its ordered {{n}} values, and whether it is an
+     * AUTHENTICATION template (copy-code button). A free-form text is accepted
+     * by Meta and then dropped outside the 24-hour window, so anything
+     * business-initiated must resolve to a template here.
+     *
+     * @param  array<string, string>  $vars
+     * @return array<string, mixed>|null
+     */
+    private function whatsAppMeta(string $key, ?string $fallbackName, array $vars): ?array
+    {
+        /** @var array{name?: string, params?: list<string>, auth?: bool}|null $map */
+        $map = config('whatsapp_templates.'.$key);
+        $name = $map['name'] ?? $fallbackName;
+
+        if ($name === null) {
+            return null;
+        }
+
+        $meta = ['wa_template' => $name];
+
+        if (isset($map['params'])) {
+            $meta['wa_params'] = array_values(array_map(
+                static fn (string $var): string => (string) ($vars[$var] ?? ''),
+                $map['params'],
+            ));
+        }
+
+        if ($map['auth'] ?? false) {
+            $meta['wa_auth'] = true;
+        }
+
+        return $meta;
     }
 
     private function guard(User $to, MessageCategory $category): ?string

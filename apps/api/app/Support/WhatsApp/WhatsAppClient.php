@@ -16,8 +16,16 @@ interface WhatsAppClient
      * Send a message and return the provider message id (wamid).
      *
      * @param  string  $to  E.164 phone (digits)
-     * @param  string  $body  the rendered body (also the template body-param when templated)
+     * @param  string  $body  the rendered body (also the template body-param when templated and no $parameters given)
      * @param  string|null  $templateName  Meta-approved template name, or null for a session text
+     * @param  list<string>  $parameters  ordered {{1}}, {{2}}, … values; falls back to [$body]
+     * @param  bool  $authTemplate  AUTHENTICATION template — repeat the code in the copy-code button
      */
-    public function sendMessage(string $to, string $body, ?string $templateName = null): string;
+    public function sendMessage(
+        string $to,
+        string $body,
+        ?string $templateName = null,
+        array $parameters = [],
+        bool $authTemplate = false,
+    ): string;
 }

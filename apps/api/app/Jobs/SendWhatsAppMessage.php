@@ -41,6 +41,8 @@ final class SendWhatsAppMessage implements ShouldQueue
                 $message->recipient,
                 (string) $message->body,
                 $message->meta['wa_template'] ?? null,
+                $message->meta['wa_params'] ?? [],
+                (bool) ($message->meta['wa_auth'] ?? false),
             );
 
             $message->update([

@@ -10,15 +10,26 @@ namespace App\Support\WhatsApp;
  */
 final class FakeWhatsAppClient implements WhatsAppClient
 {
-    /** @var list<array{to: string, body: string, template: string|null}> */
+    /** @var list<array{to: string, body: string, template: string|null, parameters: list<string>, auth: bool}> */
     public array $sent = [];
 
     private int $sequence = 0;
 
-    public function sendMessage(string $to, string $body, ?string $templateName = null): string
-    {
+    public function sendMessage(
+        string $to,
+        string $body,
+        ?string $templateName = null,
+        array $parameters = [],
+        bool $authTemplate = false,
+    ): string {
         $this->sequence++;
-        $this->sent[] = ['to' => $to, 'body' => $body, 'template' => $templateName];
+        $this->sent[] = [
+            'to' => $to,
+            'body' => $body,
+            'template' => $templateName,
+            'parameters' => $parameters,
+            'auth' => $authTemplate,
+        ];
 
         return 'wamid.TEST'.str_pad((string) $this->sequence, 8, '0', STR_PAD_LEFT);
     }
