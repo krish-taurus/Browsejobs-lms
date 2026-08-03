@@ -32,12 +32,24 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-let csrfReady = false;
+let csrfRequest: Promise<void> | null = null;
 
-async function ensureCsrf(): Promise<void> {
-  if (csrfReady) return;
-  await fetch(`${API_BASE}/sanctum/csrf-cookie`, { credentials: "include" });
-  csrfReady = true;
+/**
+ * Make sure a usable XSRF-TOKEN cookie exists. The cookie — not a memoised
+ * flag — is the source of truth: it expires with the session (SESSION_LIFETIME),
+ * so a tab left open long enough would otherwise POST without a token and get
+ * "CSRF token mismatch." forever until a manual reload.
+ */
+async function ensureCsrf(force = false): Promise<void> {
+  if (!force && getCookie("XSRF-TOKEN")) return;
+  csrfRequest ??= fetch(`${API_BASE}/sanctum/csrf-cookie`, {
+    credentials: "include",
+  })
+    .then(() => undefined)
+    .finally(() => {
+      csrfRequest = null;
+    });
+  await csrfRequest;
 }
 
 export async function apiJson<T = unknown>(
@@ -45,24 +57,37 @@ export async function apiJson<T = unknown>(
   options: RequestInit = {},
 ): Promise<T> {
   const method = (options.method ?? "GET").toUpperCase();
-  const headers = new Headers(options.headers);
-  headers.set("Accept", "application/json");
+  const unsafe = method !== "GET" && method !== "HEAD";
 
-  const isForm = options.body instanceof FormData;
+  const send = async (refresh: boolean): Promise<Response> => {
+    const headers = new Headers(options.headers);
+    headers.set("Accept", "application/json");
 
-  if (method !== "GET" && method !== "HEAD") {
-    await ensureCsrf();
-    // Let the browser set the multipart boundary for FormData bodies.
-    if (!isForm) headers.set("Content-Type", "application/json");
-    const xsrf = getCookie("XSRF-TOKEN");
-    if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+    if (unsafe) {
+      await ensureCsrf(refresh);
+      // Let the browser set the multipart boundary for FormData bodies.
+      if (!(options.body instanceof FormData)) {
+        headers.set("Content-Type", "application/json");
+      }
+      const xsrf = getCookie("XSRF-TOKEN");
+      if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+    }
+
+    return fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+  };
+
+  let res = await send(false);
+
+  // 419 = token expired or rotated (e.g. the API was redeployed with a new
+  // APP_KEY, invalidating the encrypted cookie). Take a fresh token and retry
+  // once so the student never sees a CSRF error for a recoverable cause.
+  if (res.status === 419 && unsafe) {
+    res = await send(true);
   }
-
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-    credentials: "include",
-  });
 
   const body =
     res.status === 204 ? null : await res.json().catch(() => null);
