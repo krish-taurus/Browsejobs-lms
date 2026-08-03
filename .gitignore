@@ -28,3 +28,8 @@ Thumbs.db
 .env.*
 !.env.example
 !**/.env.example
+
+# Full database dumps hold student records, payments and password hashes.
+# Never commit one — this repository is public. Use apps/api/database/schema.sql
+# (structure + reference data) and move real data to the server out-of-band.
+*_full.sql
