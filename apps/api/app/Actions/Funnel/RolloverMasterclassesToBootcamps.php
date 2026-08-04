@@ -4,32 +4,35 @@ declare(strict_types=1);
 
 namespace App\Actions\Funnel;
 
-use App\Actions\Batches\CreateBatch;
-use App\Actions\Conversion\CompleteMasterclass;
 use App\Actions\LiveClasses\ScheduleBatchSeries;
-use App\Actions\Roster\AddStudentToBatch;
 use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
 use App\Models\Batch;
+use App\Support\Audit\AuditLogger;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Weekly funnel stage 2 (runs within a tenant context): every masterclass batch
- * whose Saturday has passed is completed, and its attendees flow straight into a
- * fresh 7-day bootcamp (Monday → Sunday). The linked paid batch is created up
- * front so that CompleteBootcamp can convert attendees the moment the bootcamp
- * ends. Idempotent: completing the masterclass removes it from the query.
+ * Funnel stage 2: a cohort's masterclass day is over, so the SAME batch becomes
+ * its 7-day bootcamp.
+ *
+ * The cohort keeps one batch number for its whole life — masterclass →
+ * bootcamp → paid — so DE-202608-01 is a cohort, not a stage. Nothing is
+ * copied between batches: members, attendance and history stay attached to the
+ * one row, and only `type` (plus the end date) moves on.
+ *
+ * `starts_on` deliberately stays on the masterclass date: it is the cohort's
+ * start, and the masterclass session keeps its own date in `live_sessions`.
+ *
+ * Idempotent: changing the type removes the batch from the query below.
  */
 final readonly class RolloverMasterclassesToBootcamps
 {
     public function __construct(
-        private CompleteMasterclass $completeMasterclass,
-        private CreateBatch $createBatch,
-        private AddStudentToBatch $addStudent,
         private ScheduleBatchSeries $scheduleSeries,
         private SendBatchCredentials $credentials,
+        private AuditLogger $audit,
     ) {}
 
     /**
@@ -58,68 +61,52 @@ final readonly class RolloverMasterclassesToBootcamps
     }
 
     /**
-     * Roll one masterclass into its bootcamp, whatever its date.
+     * Turn one masterclass batch into its bootcamp, whatever the date.
      *
-     * The sweep above only picks up masterclasses whose day has passed. This is
-     * the same work for a single named batch, so the CRM can move a batch on
+     * The sweep only picks up cohorts whose masterclass day has passed; this is
+     * the same work for a single named batch, so the CRM can move a cohort on
      * early instead of waiting for the daily run.
      *
      * @return array{rolled: int, enrolled: int}
      */
-    public function rollOne(Batch $masterclass): array
+    public function rollOne(Batch $batch): array
     {
-        $rolled = 0;
-        $enrolled = 0;
-
-        $occupying = array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying());
-        $members = $masterclass->members()->whereIn('status', $occupying)->with('student')->get();
-
-        $this->completeMasterclass->handle($masterclass);
-        $rolled++;
-
-        if ($members->isEmpty() || $masterclass->course === null) {
-            return ['rolled' => $rolled, 'enrolled' => $enrolled];
+        if ($batch->type !== BatchType::Masterclass) {
+            throw ValidationException::withMessages([
+                'batch' => 'Only a masterclass batch can move to bootcamp.',
+            ]);
         }
 
-        $bootcampStart = Carbon::parse($masterclass->starts_on)->next(Carbon::MONDAY); // the Monday after (Sat or Sun masterclass)
-        $bootcampEnd = $bootcampStart->copy()->addDays(6);                             // 7 days inclusive
+        $start = Carbon::parse($batch->starts_on ?? Carbon::today());
 
-        // linked_source_batch_id records the full chain: bootcamp → its
-        // masterclass, and (below) paid batch → its bootcamp.
-        $bootcamp = $this->createBatch->handle($masterclass->course, BatchType::Bootcamp, [
-            'starts_on' => $bootcampStart->toDateString(),
+        // The bootcamp opens the Monday after the masterclass (Sat or Sun) and
+        // runs 7 days inclusive.
+        $bootcampStart = $start->copy()->next(Carbon::MONDAY);
+        $bootcampEnd = $bootcampStart->copy()->addDays(6);
+
+        $batch->forceFill([
+            'type' => BatchType::Bootcamp->value,
             'ends_on' => $bootcampEnd->toDateString(),
-            'linked_source_batch_id' => $masterclass->id,
-        ]);
+        ])->save();
 
-        // Created now so CompleteBootcamp finds its conversion target later.
-        $this->createBatch->handle($masterclass->course, BatchType::Paid, [
-            'linked_source_batch_id' => $bootcamp->id,
-            'starts_on' => $bootcampEnd->copy()->addDay()->toDateString(),
-        ]);
+        $occupying = array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying());
+        $members = $batch->members()->whereIn('status', $occupying)->with('student')->get();
+
+        $enrolled = 0;
 
         foreach ($members as $member) {
             if ($member->student === null) {
                 continue;
             }
 
-            try {
-                $this->addStudent->handle($bootcamp, $member->student, BatchMemberStatus::Enrolled);
-                $enrolled++;
-
-                // "You're in the bootcamp" — batch number + how to sign in
-                // (OTP to this number/email; no passwords are sent).
-                $this->credentials->handle($member->student, $bootcamp);
-            } catch (ValidationException) {
-                // duplicate / capacity — skip
-            }
+            // Nobody is re-enrolled — they were already seated for the
+            // masterclass — but they are told the bootcamp is starting.
+            $this->credentials->handle($member->student, $batch);
+            $enrolled++;
         }
 
-        // Fully automatic: the bootcamp's 7 daily classes are scheduled up
-        // front (topic-titled from the syllabus when it has topics), each
-        // with its own Zoom meeting and student reminder ladder.
         $this->scheduleSeries->handle(
-            $bootcamp,
+            $batch,
             weekdays: [1, 2, 3, 4, 5, 6, 7],
             time: (string) config('funnel.class_time', '19:00'),
             durationMinutes: (int) config('funnel.class_duration_minutes', 90),
@@ -129,6 +116,12 @@ final readonly class RolloverMasterclassesToBootcamps
             mapTopics: true,
         );
 
-        return ['rolled' => $rolled, 'enrolled' => $enrolled];
+        $this->audit->log(
+            action: 'batch.stage_advanced',
+            target: $batch,
+            metadata: ['from' => 'masterclass', 'to' => 'bootcamp', 'members' => $enrolled],
+        );
+
+        return ['rolled' => 1, 'enrolled' => $enrolled];
     }
 }
