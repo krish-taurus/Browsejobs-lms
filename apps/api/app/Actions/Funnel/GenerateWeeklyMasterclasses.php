@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Funnel;
 
 use App\Actions\Batches\CreateBatch;
+use App\Actions\Crm\MoveLeadStage;
 use App\Actions\LiveClasses\ScheduleLiveSession;
 use App\Actions\Roster\AddStudentToBatch;
 use App\Enums\BatchMemberStatus;
@@ -13,10 +14,12 @@ use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\Lead;
+use App\Models\LeadStage;
 use App\Models\User;
 use App\Support\Crm\PhoneNormalizer;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -42,6 +45,7 @@ final readonly class GenerateWeeklyMasterclasses
         private EnsureStudentAccount $ensureAccount,
         private ScheduleLiveSession $scheduleSession,
         private SendBatchWelcome $welcome,
+        private MoveLeadStage $moveStage,
     ) {}
 
     /**
@@ -159,12 +163,14 @@ final readonly class GenerateWeeklyMasterclasses
                 continue;
             }
 
-            // A student who already sat (or is seated) in a masterclass for this
-            // course is not invited again — but a CANCELLED masterclass doesn't
-            // count: its attendees are re-invited to the next one.
+            // A student already in ANY cohort for this course is not invited
+            // again. Matching on masterclass-type batches alone is not enough:
+            // a cohort keeps its batch and only changes type, so someone who
+            // has moved on to the bootcamp or paid stage would otherwise be
+            // pulled back into a fresh masterclass. A CANCELLED batch doesn't
+            // count — its attendees are re-invited to the next one.
             $masterclassIds = Batch::query()
                 ->where('course_id', $course->id)
-                ->where('type', BatchType::Masterclass->value)
                 ->where('status', '!=', 'cancelled')
                 ->pluck('id');
 
@@ -225,6 +231,10 @@ final readonly class GenerateWeeklyMasterclasses
                     // the dashboard link. The magic Zoom join link follows in
                     // the 12h/2h/5min reminders once the meeting exists.
                     $this->welcome->handle($student, $batch, $classDay->format('D, d M Y').' at '.config('funnel.masterclass_time', '11:00'));
+
+                    // Reflect the seating on the lead itself, so the CRM shows
+                    // the person as registered rather than still open interest.
+                    $this->markLeadRegistered($leads, $student);
                 } catch (ValidationException) {
                     // capacity / duplicate — skip, the next Saturday batch picks them up
                 }
@@ -232,5 +242,35 @@ final readonly class GenerateWeeklyMasterclasses
         }
 
         return ['batches' => $batches, 'enrolled' => $enrolled];
+    }
+
+    /**
+     * Move the lead behind a freshly seated student to "Masterclass Registered".
+     * Without this the lead keeps looking like untouched interest even though
+     * its owner already has a seat.
+     *
+     * @param  Collection<int, Lead>  $leads
+     */
+    private function markLeadRegistered(Collection $leads, User $student): void
+    {
+        $phone = $student->phone !== null ? PhoneNormalizer::normalize($student->phone) : null;
+        $email = $student->email !== null ? mb_strtolower($student->email) : null;
+
+        $lead = $leads->first(function (Lead $lead) use ($phone, $email): bool {
+            $leadPhone = $lead->phone_normalized ?: PhoneNormalizer::normalize((string) $lead->phone);
+
+            return ($phone !== null && $phone !== '' && $leadPhone === $phone)
+                || ($email !== null && $lead->email !== null && mb_strtolower($lead->email) === $email);
+        });
+
+        if ($lead === null) {
+            return;
+        }
+
+        $stage = LeadStage::query()->where('slug', 'masterclass-registered')->first();
+
+        if ($stage !== null && $lead->lead_stage_id !== $stage->id) {
+            $this->moveStage->handle($lead, $stage);
+        }
     }
 }

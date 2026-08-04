@@ -44,6 +44,9 @@ final readonly class CreateBatch
         ]);
     }
 
+    /** Cohort numbers begin here: {COURSE}-{YYYYMM}-100. */
+    private const FIRST_SEQUENCE = 100;
+
     private function generateNumber(Course $course): string
     {
         $prefix = strtoupper($course->code).'-'.now()->format('Ym').'-';
@@ -54,9 +57,14 @@ final readonly class CreateBatch
             ->where('number', 'like', $prefix.'%')
             ->count();
 
+        // Cohort numbering starts at 100 (DE-202608-100), so a batch number is
+        // never confused with a sequence position and there is room to insert
+        // manually created batches below the automated range.
+        $seq = max($seq, self::FIRST_SEQUENCE - 1);
+
         do {
             $seq++;
-            $candidate = $prefix.str_pad((string) $seq, 2, '0', STR_PAD_LEFT);
+            $candidate = $prefix.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
         } while ($this->numberExists($course->tenant_id, $candidate));
 
         return $candidate;
