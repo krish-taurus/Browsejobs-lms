@@ -20,6 +20,12 @@ Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 // Masterclass → free bootcamp auto-invite (funnel Stage 2→3): daily.
 Schedule::command('bootcamp:invite')->dailyAt('09:00');
 
+// Automated enrolment funnel: build the weekend masterclass batch per course
+// from lead interest, roll each finished masterclass into a 7-day bootcamp
+// (with its paid batch pre-linked), and convert ended bootcamps to paid.
+// Idempotent daily sweep.
+Schedule::command('funnel:advance')->dailyAt('05:15');
+
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
 
