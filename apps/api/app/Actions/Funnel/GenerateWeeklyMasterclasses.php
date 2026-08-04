@@ -56,6 +56,49 @@ final readonly class GenerateWeeklyMasterclasses
         return $courseIndex % 2 === 0 ? CarbonInterface::SATURDAY : CarbonInterface::SUNDAY;
     }
 
+    /**
+     * The date this course's next masterclass should sit on.
+     *
+     * At the default 7-day cadence this is simply the coming weekend day, which
+     * is the behaviour this action has always had. A longer cycle
+     * (funnel.masterclass_interval_days — settable from the CRM) counts forward
+     * from the course's last masterclass instead and then snaps to that course's
+     * weekend day, so a course keeps its fixed day and every lead arriving
+     * during the cycle collects into that one upcoming batch.
+     */
+    private function nextClassDay(Course $course, CarbonInterface $reference, int $day): CarbonInterface
+    {
+        $targetIso = $day === CarbonInterface::SUNDAY ? 7 : 6;
+
+        $snap = static function (CarbonInterface $date) use ($day, $targetIso): CarbonInterface {
+            return $date->dayOfWeekIso === $targetIso ? $date : $date->next($day);
+        };
+
+        $upcoming = $snap(Carbon::parse($reference)->copy());
+
+        $interval = (int) config('funnel.masterclass_interval_days', 7);
+
+        if ($interval <= 7) {
+            return $upcoming;
+        }
+
+        $last = Batch::query()
+            ->where('course_id', $course->id)
+            ->where('type', BatchType::Masterclass->value)
+            ->where('status', '!=', 'cancelled')
+            ->max('starts_on');
+
+        if ($last === null) {
+            return $upcoming;
+        }
+
+        $due = $snap(Carbon::parse($last)->addDays($interval));
+
+        // Never schedule into the past: a long-idle course catches up on the
+        // coming weekend rather than backdating a batch nobody can attend.
+        return $due->lessThan($upcoming) ? $upcoming : $due;
+    }
+
     public function handle(?CarbonInterface $reference = null): array
     {
         $reference = Carbon::parse($reference ?? now());
@@ -73,10 +116,7 @@ final readonly class GenerateWeeklyMasterclasses
 
         foreach ($courses as $courseIndex => $course) {
             $day = self::weekendDayFor($courseIndex);
-            $classDay = $reference->copy();
-            if ($classDay->dayOfWeekIso !== ($day === CarbonInterface::SUNDAY ? 7 : 6)) {
-                $classDay = $classDay->next($day);
-            }
+            $classDay = $this->nextClassDay($course, $reference, $day);
             $leads = Lead::query()
                 ->where('lead_type', 'masterclass')
                 ->whereNull('merged_into_id')

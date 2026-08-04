@@ -23,6 +23,13 @@ return [
     'masterclass_time' => env('FUNNEL_MASTERCLASS_TIME', '11:00'),
     'masterclass_duration_minutes' => (int) env('FUNNEL_MASTERCLASS_DURATION', 90),
 
+    // How often a course runs its masterclass. 7 keeps the original weekly
+    // cadence (every course on its fixed weekend day). A longer interval dates
+    // the next masterclass from the last one and still lands it on that
+    // course's weekend day, so leads accumulate into one batch per cycle.
+    // Changeable from the CRM without a deploy — see config/platform_settings.php.
+    'masterclass_interval_days' => (int) env('FUNNEL_MASTERCLASS_INTERVAL_DAYS', 7),
+
     // Bootcamp: one class every day for its 7 days.
     'class_time' => env('FUNNEL_CLASS_TIME', '19:00'),
     'class_duration_minutes' => (int) env('FUNNEL_CLASS_DURATION', 90),

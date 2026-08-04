@@ -131,6 +131,20 @@ return [
             ],
         ],
 
+        'funnel' => [
+            'label' => 'Enrolment funnel',
+            'help' => 'How often each course runs its masterclass. Weekly keeps every course on its fixed weekend day; a longer cycle dates the next masterclass from the last one, so leads collect into a single batch per cycle. Bootcamp stays 7 days either way.',
+            'fields' => [
+                [
+                    'key' => 'masterclass_interval_days',
+                    'label' => 'Masterclass frequency (days)',
+                    'type' => 'select',
+                    'options' => ['7', '14', '20', '25', '30'],
+                    'config' => 'funnel.masterclass_interval_days',
+                ],
+            ],
+        ],
+
         'social' => [
             'label' => 'Reviews & social links',
             'help' => 'Where a 4★+ candidate is sent to post their review and follow you. Paste your Google "write a review" link and your Instagram / YouTube URLs — they appear on the review page after a candidate rates 4 stars or more.',
