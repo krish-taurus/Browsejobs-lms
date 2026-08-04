@@ -84,7 +84,7 @@ final class Messenger
             return $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Blocked, 'banned_phrase', $lead, $link);
         }
 
-        $message = $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Queued, null, $lead, $link);
+        $message = $this->log($to, $template, $channel, $category, $recipient, $subject, $body, MessageStatus::Queued, null, $lead, $link, $vars);
 
         $this->deliver($message, $to);
         $this->recordTimeline($message, $to, $lead, $body);
@@ -300,7 +300,10 @@ final class Messenger
         return strtr($template, $replacements);
     }
 
-    private function log(User $to, MessageTemplate $template, MessageChannel $channel, MessageCategory $category, ?string $recipient, ?string $subject, ?string $body, MessageStatus $status, ?string $reason, ?Lead $lead, ?string $link): Message
+    /**
+     * @param  array<string, string>  $vars
+     */
+    private function log(User $to, MessageTemplate $template, MessageChannel $channel, MessageCategory $category, ?string $recipient, ?string $subject, ?string $body, MessageStatus $status, ?string $reason, ?Lead $lead, ?string $link, array $vars = []): Message
     {
         return Message::query()->create([
             'tenant_id' => $to->tenant_id,
@@ -315,10 +318,12 @@ final class Messenger
             'body' => $body,
             'status' => $status->value,
             'suppressed_reason' => in_array($status, [MessageStatus::Suppressed, MessageStatus::Blocked], true) ? $reason : null,
-            'meta' => array_filter([
-                'link' => $link,
-                'wa_template' => $channel === MessageChannel::WhatsApp ? $template->name : null,
-            ]) ?: null,
+            'meta' => array_filter(array_merge(
+                ['link' => $link],
+                $channel === MessageChannel::WhatsApp
+                    ? ($this->whatsAppMeta($template->key, $template->name, $vars) ?? [])
+                    : [],
+            )) ?: null,
         ]);
     }
 }

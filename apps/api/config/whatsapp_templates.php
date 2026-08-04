@@ -13,6 +13,14 @@ declare(strict_types=1);
  *         so the payload needs a button component as well as the body.
  */
 return [
+    // Seated in a cohort: "your seat is confirmed, sign in with this WhatsApp
+    // number". bj_batch_joined takes name, batch and the start label — it has no
+    // link parameter, its body points at the student portal itself.
+    'batch_welcome' => [
+        'name' => env('WHATSAPP_BATCH_WELCOME_TEMPLATE', 'bj_batch_joined'),
+        'params' => ['name', 'batch', 'starts'],
+    ],
+
     'otp' => [
         'name' => env('WHATSAPP_OTP_TEMPLATE', 'bj_otp'),
         'params' => ['code'],
