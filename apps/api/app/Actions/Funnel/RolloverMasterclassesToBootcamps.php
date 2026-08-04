@@ -49,64 +49,85 @@ final readonly class RolloverMasterclassesToBootcamps
             ->get();
 
         foreach ($masterclasses as $masterclass) {
-            $occupying = array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying());
-            $members = $masterclass->members()->whereIn('status', $occupying)->with('student')->get();
+            $result = $this->rollOne($masterclass);
+            $rolled += $result['rolled'];
+            $enrolled += $result['enrolled'];
+        }
 
-            $this->completeMasterclass->handle($masterclass);
-            $rolled++;
+        return ['rolled' => $rolled, 'enrolled' => $enrolled];
+    }
 
-            if ($members->isEmpty() || $masterclass->course === null) {
+    /**
+     * Roll one masterclass into its bootcamp, whatever its date.
+     *
+     * The sweep above only picks up masterclasses whose day has passed. This is
+     * the same work for a single named batch, so the CRM can move a batch on
+     * early instead of waiting for the daily run.
+     *
+     * @return array{rolled: int, enrolled: int}
+     */
+    public function rollOne(Batch $masterclass): array
+    {
+        $rolled = 0;
+        $enrolled = 0;
+
+        $occupying = array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying());
+        $members = $masterclass->members()->whereIn('status', $occupying)->with('student')->get();
+
+        $this->completeMasterclass->handle($masterclass);
+        $rolled++;
+
+        if ($members->isEmpty() || $masterclass->course === null) {
+            return ['rolled' => $rolled, 'enrolled' => $enrolled];
+        }
+
+        $bootcampStart = Carbon::parse($masterclass->starts_on)->next(Carbon::MONDAY); // the Monday after (Sat or Sun masterclass)
+        $bootcampEnd = $bootcampStart->copy()->addDays(6);                             // 7 days inclusive
+
+        // linked_source_batch_id records the full chain: bootcamp → its
+        // masterclass, and (below) paid batch → its bootcamp.
+        $bootcamp = $this->createBatch->handle($masterclass->course, BatchType::Bootcamp, [
+            'starts_on' => $bootcampStart->toDateString(),
+            'ends_on' => $bootcampEnd->toDateString(),
+            'linked_source_batch_id' => $masterclass->id,
+        ]);
+
+        // Created now so CompleteBootcamp finds its conversion target later.
+        $this->createBatch->handle($masterclass->course, BatchType::Paid, [
+            'linked_source_batch_id' => $bootcamp->id,
+            'starts_on' => $bootcampEnd->copy()->addDay()->toDateString(),
+        ]);
+
+        foreach ($members as $member) {
+            if ($member->student === null) {
                 continue;
             }
 
-            $bootcampStart = Carbon::parse($masterclass->starts_on)->next(Carbon::MONDAY); // the Monday after (Sat or Sun masterclass)
-            $bootcampEnd = $bootcampStart->copy()->addDays(6);                             // 7 days inclusive
+            try {
+                $this->addStudent->handle($bootcamp, $member->student, BatchMemberStatus::Enrolled);
+                $enrolled++;
 
-            // linked_source_batch_id records the full chain: bootcamp → its
-            // masterclass, and (below) paid batch → its bootcamp.
-            $bootcamp = $this->createBatch->handle($masterclass->course, BatchType::Bootcamp, [
-                'starts_on' => $bootcampStart->toDateString(),
-                'ends_on' => $bootcampEnd->toDateString(),
-                'linked_source_batch_id' => $masterclass->id,
-            ]);
-
-            // Created now so CompleteBootcamp finds its conversion target later.
-            $this->createBatch->handle($masterclass->course, BatchType::Paid, [
-                'linked_source_batch_id' => $bootcamp->id,
-                'starts_on' => $bootcampEnd->copy()->addDay()->toDateString(),
-            ]);
-
-            foreach ($members as $member) {
-                if ($member->student === null) {
-                    continue;
-                }
-
-                try {
-                    $this->addStudent->handle($bootcamp, $member->student, BatchMemberStatus::Enrolled);
-                    $enrolled++;
-
-                    // "You're in the bootcamp" — batch number + how to sign in
-                    // (OTP to this number/email; no passwords are sent).
-                    $this->credentials->handle($member->student, $bootcamp);
-                } catch (ValidationException) {
-                    // duplicate / capacity — skip
-                }
+                // "You're in the bootcamp" — batch number + how to sign in
+                // (OTP to this number/email; no passwords are sent).
+                $this->credentials->handle($member->student, $bootcamp);
+            } catch (ValidationException) {
+                // duplicate / capacity — skip
             }
-
-            // Fully automatic: the bootcamp's 7 daily classes are scheduled up
-            // front (topic-titled from the syllabus when it has topics), each
-            // with its own Zoom meeting and student reminder ladder.
-            $this->scheduleSeries->handle(
-                $bootcamp,
-                weekdays: [1, 2, 3, 4, 5, 6, 7],
-                time: (string) config('funnel.class_time', '19:00'),
-                durationMinutes: (int) config('funnel.class_duration_minutes', 90),
-                count: 7,
-                startDate: CarbonImmutable::parse($bootcampStart->toDateString()),
-                titlePrefix: 'Bootcamp Day',
-                mapTopics: true,
-            );
         }
+
+        // Fully automatic: the bootcamp's 7 daily classes are scheduled up
+        // front (topic-titled from the syllabus when it has topics), each
+        // with its own Zoom meeting and student reminder ladder.
+        $this->scheduleSeries->handle(
+            $bootcamp,
+            weekdays: [1, 2, 3, 4, 5, 6, 7],
+            time: (string) config('funnel.class_time', '19:00'),
+            durationMinutes: (int) config('funnel.class_duration_minutes', 90),
+            count: 7,
+            startDate: CarbonImmutable::parse($bootcampStart->toDateString()),
+            titlePrefix: 'Bootcamp Day',
+            mapTopics: true,
+        );
 
         return ['rolled' => $rolled, 'enrolled' => $enrolled];
     }
