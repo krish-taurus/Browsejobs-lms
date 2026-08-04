@@ -45,6 +45,14 @@ final readonly class JoinLiveSession
             ]);
         }
 
+        $opensAt = $session->joinOpensAt();
+
+        if ($opensAt !== null && now()->lessThan($opensAt)) {
+            throw ValidationException::withMessages([
+                'session' => 'Joining opens at '.$opensAt->timezone(config('app.timezone'))->format('g:i a').'.',
+            ]);
+        }
+
         if ($session->zoom_join_url === null) {
             throw ValidationException::withMessages([
                 'session' => 'This class is not ready to join yet.',

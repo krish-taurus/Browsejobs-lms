@@ -131,6 +131,34 @@ return [
             ],
         ],
 
+        'classes' => [
+            'label' => 'Classes & fees',
+            'help' => 'How long before a class the Join button opens, and how long a student may keep attending after a fee falls due before live classes lock.',
+            'fields' => [
+                [
+                    'key' => 'join_opens_minutes_before',
+                    'label' => 'Join opens (minutes before class)',
+                    'type' => 'select',
+                    'options' => ['1', '5', '10', '15', '30', '60'],
+                    'config' => 'classes.join_opens_minutes_before',
+                ],
+                [
+                    'key' => 'fee_grace_days',
+                    'label' => 'Attend without paying (days after due)',
+                    'type' => 'select',
+                    'options' => ['0', '3', '5', '7', '10', '14', '21', '30'],
+                    'config' => 'fees.ladder.grace_days',
+                ],
+                [
+                    'key' => 'fee_hard_block_after_days',
+                    'label' => 'Days before a full lockout',
+                    'type' => 'select',
+                    'options' => ['3', '5', '7', '10', '14', '21', '30'],
+                    'config' => 'fees.ladder.hard_block_after_days',
+                ],
+            ],
+        ],
+
         'funnel' => [
             'label' => 'Enrolment funnel',
             'help' => 'How often each course runs its masterclass. Weekly keeps every course on its fixed weekend day; a longer cycle dates the next masterclass from the last one, so leads collect into a single batch per cycle. Bootcamp stays 7 days either way.',

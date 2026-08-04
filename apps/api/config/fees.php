@@ -28,8 +28,11 @@ return [
     */
     'ladder' => [
         'reminder_days' => [7, 3, 1, 0],
-        'grace_days' => 5,
-        'hard_block_after_days' => 7,
+        // Days a student may keep attending after a due date before live classes
+        // and recordings lock (SOFT block). Raised from the CRM.
+        'grace_days' => (int) env('FEE_GRACE_DAYS', 5),
+        // Further days before the SOFT block promotes to a HARD block.
+        'hard_block_after_days' => (int) env('FEE_HARD_BLOCK_AFTER_DAYS', 7),
     ],
 
     /*
