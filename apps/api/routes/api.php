@@ -306,6 +306,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/labs/{lesson}', [LabController::class, 'show']);
     Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
     Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
+    Route::get('me/quizzes', [MyQuizController::class, 'index']);
     Route::get('me/mcq/{attempt}', [MyQuizController::class, 'show']);
     Route::post('me/mcq/{attempt}/submit', [MyQuizController::class, 'submit'])->middleware('throttle:30,1');
     Route::get('me/assignments/{lesson}', [MyAssignmentController::class, 'show']);

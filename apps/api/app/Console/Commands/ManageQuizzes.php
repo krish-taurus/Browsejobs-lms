@@ -37,6 +37,7 @@ final class ManageQuizzes extends Command
         {action : list, save, delete or approve}
         {--quiz= : quiz id for save, delete or approve}
         {--course= : course id or slug for a NEW quiz}
+        {--module= : module id for a NEW quiz, so it files under the module taught}
         {--topic= : topic id, if you want a specific one}
         {--title= : quiz title}
         {--instructions-file= : path to a UTF-8 text file}
@@ -195,15 +196,23 @@ final class ManageQuizzes extends Command
     /**
      * Where to hang the quiz lesson.
      *
-     * A quiz belongs to a course as far as anyone using the CRM is concerned,
-     * but the syllabus stores lessons under topics. Three courses have no
-     * modules at all, so an "Assessments" module and topic are created on
-     * demand rather than making those courses unusable.
+     * A quiz belongs to a module as far as anyone using the CRM is concerned
+     * ("the Python test", "the SQL test"), but the syllabus stores lessons under
+     * topics. So a module is resolved to one of its topics — a new "Assessments"
+     * topic when it has none — which keeps the quiz reportable as that module's.
+     * A bare course still works, and courses with no modules at all get an
+     * "Assessments" module on demand rather than being unusable.
      */
     private function resolveTopic(Tenant $tenant): ?Topic
     {
         if ($this->option('topic') !== null) {
             return Topic::query()->find((int) $this->option('topic'));
+        }
+
+        if ($this->option('module') !== null) {
+            $module = Module::query()->find((int) $this->option('module'));
+
+            return $module === null ? null : $this->topicFor($module, $tenant);
         }
 
         $reference = trim((string) $this->option('course'));
@@ -237,6 +246,18 @@ final class ManageQuizzes extends Command
             ['course_id' => $course->id, 'name' => 'Assessments'],
             ['tenant_id' => $tenant->id, 'position' => 99],
         );
+
+        return $this->topicFor($module, $tenant);
+    }
+
+    /** A module's own topic to hang the quiz lesson under, created if it has none. */
+    private function topicFor(Module $module, Tenant $tenant): Topic
+    {
+        $existing = Topic::query()->where('module_id', $module->id)->orderBy('position')->orderBy('id')->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
 
         return Topic::query()->firstOrCreate(
             ['module_id' => $module->id, 'name' => 'Assessments'],

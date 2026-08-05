@@ -22,6 +22,57 @@ use Illuminate\Http\Request;
  */
 final class MyQuizController extends Controller
 {
+    /**
+     * Every quiz the student has been given — the portal's Quizzes page.
+     *
+     * An attempt row IS the assignment: it is created when a trainer opens the
+     * quiz for the batch, so listing attempts lists exactly what this student
+     * may sit. Without this the only way in was the WhatsApp/email magic link,
+     * which is lost the moment that message is missed.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
+            $rows = QuizAttempt::query()
+                ->where('user_id', $request->user()->id)
+                ->with(['quiz' => fn ($q) => $q->withCount('questions')->with('lesson.topic.module.course')])
+                ->get()
+                ->filter(fn (QuizAttempt $attempt): bool => $attempt->quiz !== null)
+                ->map(function (QuizAttempt $attempt): array {
+                    $quiz = $attempt->quiz;
+                    $module = $quiz->lesson?->topic?->module;
+
+                    return [
+                        'attempt_id' => $attempt->id,
+                        'title' => $quiz->title,
+                        'course' => $module?->course?->name,
+                        'module' => $module?->name,
+                        'questions' => $quiz->questions_count,
+                        'minutes' => (int) round($quiz->time_limit_sec / 60),
+                        'pass_pct' => $quiz->pass_pct,
+                        'status' => $this->displayStatus($attempt),
+                        'due_at' => $attempt->due_at?->toIso8601String(),
+                        'deadline_at' => $attempt->deadline_at?->toIso8601String(),
+                        'score_pct' => $attempt->score_pct,
+                        'passed' => $attempt->score_pct === null ? null : $attempt->score_pct >= $quiz->pass_pct,
+                        'submitted_at' => $attempt->submitted_at?->toIso8601String(),
+                    ];
+                });
+
+            // Anything still to sit comes first, soonest due date at the top;
+            // the finished ones follow, most recently submitted first.
+            $open = $rows->whereIn('status', ['pending', 'in_progress'])
+                ->sortBy(fn (array $row): string => $row['due_at'] ?? '9999')
+                ->values();
+
+            $done = $rows->whereNotIn('status', ['pending', 'in_progress'])
+                ->sortByDesc(fn (array $row): string => $row['submitted_at'] ?? '')
+                ->values();
+
+            return response()->json(['data' => $open->concat($done)->all()]);
+        });
+    }
+
     public function show(Request $request, int $attempt): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $attempt): JsonResponse {
@@ -73,6 +124,20 @@ final class MyQuizController extends Controller
                 'review' => $this->reviewPayload($graded),
             ]]);
         });
+    }
+
+    /**
+     * What the list should say. An in-progress attempt whose timer has run out
+     * is really expired — `show()` is what writes that state, so this only
+     * reports it and loading the list never mutates an attempt.
+     */
+    private function displayStatus(QuizAttempt $attempt): string
+    {
+        if ($attempt->status === QuizAttemptStatus::InProgress && $attempt->isLate()) {
+            return QuizAttemptStatus::Expired->value;
+        }
+
+        return $attempt->status->value;
     }
 
     private function ownedAttempt(Request $request, int $attemptId): QuizAttempt

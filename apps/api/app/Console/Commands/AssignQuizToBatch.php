@@ -10,6 +10,7 @@ use App\Models\Batch;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\Messaging\Messenger;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Console\Command;
@@ -25,7 +26,8 @@ use Throwable;
  * to sit it, and the usual reminder and flag jobs.
  *
  * Idempotent — a student who already has an attempt is skipped, so re-running
- * never duplicates or re-notifies.
+ * after adding students to the batch only reaches the new ones. Pass --remind
+ * to also chase everyone who has the quiz but has not finished it.
  */
 final class AssignQuizToBatch extends Command
 {
@@ -33,6 +35,7 @@ final class AssignQuizToBatch extends Command
         {quiz : quiz id}
         {batch : batch id or number}
         {--due-days=3 : days the students have to finish}
+        {--remind : also re-send the link to students who already have it and have not finished}
         {--tenant=1}';
 
     protected $description = 'Assign a quiz to every student in a batch';
@@ -87,9 +90,13 @@ final class AssignQuizToBatch extends Command
                 return self::FAILURE;
             }
 
-            $deadline = now()->addDays(max(1, (int) $this->option('due-days')));
+            // The due date lives in its own column: `deadline_at` is the sitting
+            // timer and gets overwritten the moment the student opens the quiz.
+            $due = now()->addDays(max(1, (int) $this->option('due-days')))->endOfDay();
+            $remind = (bool) $this->option('remind');
 
             $assigned = 0;
+            $reminded = 0;
             $skipped = 0;
 
             foreach ($members as $member) {
@@ -101,31 +108,25 @@ final class AssignQuizToBatch extends Command
 
                 $attempt = QuizAttempt::query()->firstOrCreate(
                     ['quiz_id' => $quiz->id, 'user_id' => $student->id],
-                    ['tenant_id' => $student->tenant_id, 'status' => 'pending', 'deadline_at' => $deadline],
+                    ['tenant_id' => $student->tenant_id, 'status' => 'pending', 'due_at' => $due],
                 );
 
                 if (! $attempt->wasRecentlyCreated) {
-                    $skipped++;
+                    // Already sat it — nothing to chase.
+                    if (! $remind || ! in_array($attempt->status->value, ['pending', 'in_progress'], true)) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $attempt->update(['due_at' => $due]);
+                    $this->notify($messenger, $student, $quiz, $attempt);
+                    $reminded++;
 
                     continue;
                 }
 
-                $redirect = rtrim((string) config('app.frontend_url', ''), '/')."/mcq/{$attempt->id}";
-
-                try {
-                    $messenger->send($student, 'mcq_dispatch', [
-                        'name' => $student->name,
-                        'module' => $quiz->title,
-                    ], [
-                        'magic' => [
-                            'action' => 'mcq.attempt',
-                            'payload' => ['attempt_id' => $attempt->id, 'redirect' => $redirect],
-                        ],
-                    ]);
-                } catch (Throwable $e) {
-                    // A messaging failure must not cost the student their attempt.
-                    report($e);
-                }
+                $this->notify($messenger, $student, $quiz, $attempt);
 
                 CheckQuizCompletion::dispatch($attempt->id, 'reminder')->delay(now()->addHours(48));
                 CheckQuizCompletion::dispatch($attempt->id, 'flag')->delay(now()->addHours(96));
@@ -137,11 +138,36 @@ final class AssignQuizToBatch extends Command
                 'quiz' => $quiz->title,
                 'batch' => $batch->number,
                 'assigned' => $assigned,
+                'reminded' => $reminded,
                 'already_had_it' => $skipped,
-                'due' => $deadline->toDateString(),
+                'due' => $due->toDateString(),
             ], JSON_UNESCAPED_SLASHES));
 
             return self::SUCCESS;
         });
+    }
+
+    /**
+     * WhatsApp + email the student a magic link straight into the sitting. The
+     * quiz also shows on their Quizzes page, so a messaging failure is a missed
+     * nudge, never a lost test — it must not cost them the attempt.
+     */
+    private function notify(Messenger $messenger, User $student, Quiz $quiz, QuizAttempt $attempt): void
+    {
+        $redirect = rtrim((string) config('app.frontend_url', ''), '/')."/mcq/{$attempt->id}";
+
+        try {
+            $messenger->send($student, 'mcq_dispatch', [
+                'name' => $student->name,
+                'module' => $quiz->title,
+            ], [
+                'magic' => [
+                    'action' => 'mcq.attempt',
+                    'payload' => ['attempt_id' => $attempt->id, 'redirect' => $redirect],
+                ],
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 }
