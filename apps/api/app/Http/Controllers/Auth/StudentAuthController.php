@@ -14,6 +14,7 @@ use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
+use App\Support\Crm\PhoneNormalizer;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -43,10 +44,25 @@ final class StudentAuthController extends Controller
 
         $verifyOtp->handle($tenant, $identifier, OtpPurpose::Login, $request->string('code')->toString());
 
+        // Match the phone on its last 10 digits: the same person is stored as
+        // "8114637479" when they self-register and "+918114637479" when the
+        // funnel creates their account, and an exact match made those two
+        // different logins. Oldest account wins so the result is stable.
+        $last10 = substr(PhoneNormalizer::normalize($identifier), -10);
+
         $user = User::query()
             ->withoutGlobalScope(TenantScope::class)
             ->where('tenant_id', $tenant->id)
-            ->where(fn ($q) => $q->where('email', $identifier)->orWhere('phone', $identifier))
+            ->where(function ($q) use ($identifier, $last10) {
+                $q->where('email', $identifier);
+
+                if (strlen($last10) === 10) {
+                    $q->orWhereRaw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '') LIKE ?", ['%'.$last10]);
+                } else {
+                    $q->orWhere('phone', $identifier);
+                }
+            })
+            ->orderBy('id')
             ->first();
 
         if ($user === null) {

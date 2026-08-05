@@ -7,6 +7,7 @@ namespace App\Actions\Funnel;
 use App\Actions\Auth\AssignRoleToUser;
 use App\Models\Lead;
 use App\Models\User;
+use App\Support\Crm\PhoneNormalizer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
@@ -24,6 +25,29 @@ final readonly class EnsureStudentAccount
     {
         if (blank($lead->phone)) {
             return null; // OTP login needs a reachable contact
+        }
+
+        // Reuse the account this person already has. Without this the funnel
+        // created a second student for someone who had self-registered, and
+        // their batch seat landed on an account they never log in to.
+        $last10 = substr(PhoneNormalizer::normalize((string) $lead->phone), -10);
+
+        $existing = User::query()
+            ->where('tenant_id', $lead->tenant_id)
+            ->where(function ($q) use ($lead, $last10) {
+                if (strlen($last10) === 10) {
+                    $q->whereRaw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '') LIKE ?", ['%'.$last10]);
+                }
+
+                if (filled($lead->email)) {
+                    $q->orWhere('email', $lead->email);
+                }
+            })
+            ->orderBy('id')
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
         }
 
         $user = User::query()->create([
