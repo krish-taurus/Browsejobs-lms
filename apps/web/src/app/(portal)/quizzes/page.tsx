@@ -72,10 +72,9 @@ export default function QuizzesPage() {
                 const due = dueLabel(q.due_at);
                 const overdue = due === "Overdue";
                 return (
-                  <Link
+                  <div
                     key={q.attempt_id}
-                    href={`/mcq/${q.attempt_id}`}
-                    className="block rounded-[14px] border border-trust/30 bg-white p-5 transition-colors hover:bg-paper"
+                    className="rounded-[14px] border border-trust/30 bg-white p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -90,15 +89,22 @@ export default function QuizzesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-muted">
-                        {q.questions} question{q.questions === 1 ? "" : "s"} · {q.minutes} min · pass {q.pass_pct}%
-                      </span>
-                      <span className="text-sm font-semibold text-trust">
-                        {q.status === "in_progress" ? "Resume →" : "Start →"}
-                      </span>
+                    <p className="mt-3 text-xs text-muted">
+                      {q.questions} question{q.questions === 1 ? "" : "s"} · {q.minutes} min · pass {q.pass_pct}%
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      <Link
+                        href={`/mcq/${q.attempt_id}`}
+                        className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+                      >
+                        {q.status === "in_progress" ? "Resume quiz" : "Start quiz"}
+                      </Link>
+                      {/* Seeing the mark to beat before you sit it is the point. */}
+                      <Link href={`/quizzes/${q.attempt_id}/leaderboard`} className="text-sm font-semibold text-trust">
+                        Batch leaderboard →
+                      </Link>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

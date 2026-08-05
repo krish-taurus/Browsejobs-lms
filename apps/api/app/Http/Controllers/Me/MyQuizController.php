@@ -137,17 +137,16 @@ final class MyQuizController extends Controller
      * a fair comparison, and a school-wide table is just noise. Same anti-
      * toxicity rules as the points leaderboard: the top ten are named unless
      * they opted out, and your own row is always named to you.
+     *
+     * Open before the student has sat it as well — seeing where the batch got
+     * to is the motivation to do better, and a board of names and percentages
+     * gives away no questions or answers.
      */
     public function leaderboard(Request $request, int $attempt, PointsService $points): JsonResponse
     {
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $attempt, $points): JsonResponse {
             $user = $request->user();
             $mine = $this->ownedAttempt($request, $attempt);
-
-            // No peeking at how the batch scored while your own attempt is open.
-            if (! in_array($mine->status, [QuizAttemptStatus::Submitted, QuizAttemptStatus::Expired], true)) {
-                return response()->json(['message' => 'Finish the quiz to see how your batch did.'], 403);
-            }
 
             $batchId = $points->activeBatchId($user);
 
@@ -183,19 +182,51 @@ final class MyQuizController extends Controller
                 ];
             });
 
+            $me = null;
+            if ($myIndex !== false) {
+                $myScore = (int) ($ranked[$myIndex]->score_pct ?? 0);
+                $toNext = $myIndex === 0 ? 0 : max(0, (int) $ranked[$myIndex - 1]->score_pct - $myScore);
+
+                $me = [
+                    'rank' => $myIndex + 1,
+                    'score_pct' => $ranked[$myIndex]->score_pct,
+                    'passed' => $myScore >= ($mine->quiz?->pass_pct ?? 0),
+                    'to_next' => $toNext,
+                    'coach_line' => $this->coachLine($myIndex, $toNext, $ranked->count()),
+                ];
+            }
+
             return response()->json(['data' => [
                 'quiz' => $mine->quiz?->title,
                 'pass_pct' => $mine->quiz?->pass_pct,
                 'batch' => $batchId === null ? null : Batch::query()->whereKey($batchId)->value('number'),
                 'participants' => $ranked->count(),
                 'top' => $top->all(),
-                'me' => $myIndex === false ? null : [
-                    'rank' => $myIndex + 1,
-                    'score_pct' => $ranked[$myIndex]->score_pct,
-                    'passed' => ($ranked[$myIndex]->score_pct ?? 0) >= ($mine->quiz?->pass_pct ?? 0),
-                ],
+                // Lets the page offer Start / Resume when the quiz is still open.
+                'my_status' => $this->displayStatus($mine),
+                'best_score' => $ranked->first()?->score_pct,
+                'me' => $me,
             ]]);
         });
+    }
+
+    /**
+     * One line of encouragement, pointed at the next rank up rather than at the
+     * top — a gap you could actually close is what makes a board motivating.
+     */
+    private function coachLine(int $index, int $toNext, int $participants): string
+    {
+        if ($index === 0) {
+            return $participants > 1
+                ? 'You top your batch on this one — hold it on the next quiz.'
+                : 'First one in. See how the rest of your batch does.';
+        }
+
+        if ($toNext === 0) {
+            return sprintf('Level with #%d — finish faster next time and the place is yours.', $index);
+        }
+
+        return sprintf('%d%% from #%d. One more correct answer next time closes most of that.', $toNext, $index);
     }
 
     /**

@@ -20,7 +20,15 @@ type Board = {
   batch: string | null;
   participants: number;
   top: Row[];
-  me: { rank: number; score_pct: number | null; passed: boolean } | null;
+  my_status: "pending" | "in_progress" | "submitted" | "expired";
+  best_score: number | null;
+  me: {
+    rank: number;
+    score_pct: number | null;
+    passed: boolean;
+    to_next: number;
+    coach_line: string;
+  } | null;
 };
 
 export default function QuizLeaderboardPage({ params }: { params: Promise<{ attempt: string }> }) {
@@ -48,6 +56,7 @@ export default function QuizLeaderboardPage({ params }: { params: Promise<{ atte
   if (!board) return <div className="mx-auto max-w-2xl"><div className="shimmer h-64 rounded-[14px]" /></div>;
 
   const podium = board.top.slice(0, 3);
+  const notSatYet = board.my_status === "pending" || board.my_status === "in_progress";
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -59,13 +68,47 @@ export default function QuizLeaderboardPage({ params }: { params: Promise<{ atte
         {board.pass_pct !== null && ` · pass ${board.pass_pct}%`}
       </p>
 
-      {board.top.length === 0 ? (
-        <div className="mt-6">
-          <EmptyState
-            title="Nobody has finished yet"
-            body="As your batch mates submit this quiz, their scores appear here. Only your own batch is ranked."
-          />
+      {/* Still to sit it: the board is the reason to go and do it. */}
+      {notSatYet && (
+        <div className="mt-5 rounded-2xl border border-trust/30 bg-sky/40 p-5">
+          <p className="text-sm font-semibold text-ink">
+            {board.best_score !== null
+              ? `Your batch's best so far is ${board.best_score}%. Beat it.`
+              : "Nobody in your batch has finished this yet — set the mark."}
+          </p>
+          <Link
+            href={`/mcq/${attempt}`}
+            className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+          >
+            {board.my_status === "in_progress" ? "Resume quiz" : "Start quiz"}
+          </Link>
         </div>
+      )}
+
+      {/* Sat it: one line on the gap that is actually closable. */}
+      {board.me && (
+        <div className="mt-5 rounded-2xl border border-line bg-white p-5">
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <span className="mono text-3xl font-bold text-ink">#{board.me.rank}</span>
+            <span className={`mono text-sm font-semibold ${board.me.passed ? "text-verify" : "text-warn"}`}>
+              {board.me.score_pct}%
+            </span>
+            <span className="text-xs text-muted">of {board.participants} finished</span>
+          </div>
+          <p className="mt-2 text-sm text-muted">{board.me.coach_line}</p>
+        </div>
+      )}
+
+      {board.top.length === 0 ? (
+        // The Beat-it card above already says this when the quiz is still open.
+        notSatYet ? null : (
+          <div className="mt-6">
+            <EmptyState
+              title="Nobody has finished yet"
+              body="As your batch mates submit this quiz, their scores appear here. Only your own batch is ranked."
+            />
+          </div>
+        )
       ) : (
         <>
           {podium.length > 1 && (
@@ -107,16 +150,11 @@ export default function QuizLeaderboardPage({ params }: { params: Promise<{ atte
         </>
       )}
 
-      {board.me === null ? (
+      {board.me === null && board.my_status === "expired" && (
         <p className="mt-4 text-sm text-muted">
-          You did not submit this one, so you are not ranked. Your batch mates&apos; scores are above.
+          You did not submit this one, so you are not ranked. Watch the next quiz land on your
+          dashboard and sit it early.
         </p>
-      ) : (
-        board.me.rank > 10 && (
-          <p className="mt-4 text-sm text-muted">
-            You are #{board.me.rank} of {board.participants} with {board.me.score_pct}%.
-          </p>
-        )
       )}
     </div>
   );
