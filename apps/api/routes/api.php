@@ -271,6 +271,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/pulse/celebrations/{celebration}/guidance', [PulsePageController::class, 'guidance'])->middleware('throttle:ai');
     Route::post('me/pulse/content/{item}/viewed', [PulsePageController::class, 'contentViewed'])->middleware('throttle:60,1');
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
+    Route::get('me/fee-offer', [FeeStatusController::class, 'offer']);
+    Route::post('me/fee-plan', [FeeStatusController::class, 'choose'])->middleware('throttle:10,1');
     Route::get('me/notifications', [NotificationController::class, 'index']);
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
     Route::get('me/message-preferences', [MessagePreferenceController::class, 'show']);
