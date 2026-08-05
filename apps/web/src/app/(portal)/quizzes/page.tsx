@@ -109,10 +109,16 @@ export default function QuizzesPage() {
               <p className="mono mt-8 text-[10px] uppercase tracking-widest text-muted">Completed</p>
               <div className="mt-2 divide-y divide-line rounded-[14px] border border-line bg-white">
                 {done.map((q) => (
-                  <div key={q.attempt_id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <Link
+                    key={q.attempt_id}
+                    href={`/quizzes/${q.attempt_id}/leaderboard`}
+                    className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-paper"
+                  >
                     <div className="min-w-0">
                       <p className="truncate text-sm text-ink">{q.title}</p>
-                      <p className="text-xs text-muted">{q.module ?? q.course ?? "Assessment"}</p>
+                      <p className="text-xs text-muted">
+                        {q.module ?? q.course ?? "Assessment"} · see how your batch did
+                      </p>
                     </div>
                     {q.status === "expired" && q.score_pct === null ? (
                       <span className="mono text-xs text-muted">Missed</span>
@@ -121,7 +127,7 @@ export default function QuizzesPage() {
                         {q.score_pct}%
                       </span>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             </>

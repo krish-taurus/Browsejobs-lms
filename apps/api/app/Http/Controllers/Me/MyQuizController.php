@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Me;
 
 use App\Actions\Quizzes\SubmitQuizAttempt;
+use App\Enums\BatchMemberStatus;
 use App\Enums\QuizAttemptStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Me\SubmitQuizRequest;
+use App\Models\Batch;
+use App\Models\BatchMember;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
+use App\Support\Points\PointsService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -122,6 +126,74 @@ final class MyQuizController extends Controller
                 'total_count' => $graded->total_count,
                 'passed' => ($graded->score_pct ?? 0) >= $graded->quiz->pass_pct,
                 'review' => $this->reviewPayload($graded),
+            ]]);
+        });
+    }
+
+    /**
+     * How this student's batch did on one quiz (PRD §6.16 leaderboard rules).
+     *
+     * Ranked against their own batch only — a cohort taught weeks apart is not
+     * a fair comparison, and a school-wide table is just noise. Same anti-
+     * toxicity rules as the points leaderboard: the top ten are named unless
+     * they opted out, and your own row is always named to you.
+     */
+    public function leaderboard(Request $request, int $attempt, PointsService $points): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $attempt, $points): JsonResponse {
+            $user = $request->user();
+            $mine = $this->ownedAttempt($request, $attempt);
+
+            // No peeking at how the batch scored while your own attempt is open.
+            if (! in_array($mine->status, [QuizAttemptStatus::Submitted, QuizAttemptStatus::Expired], true)) {
+                return response()->json(['message' => 'Finish the quiz to see how your batch did.'], 403);
+            }
+
+            $batchId = $points->activeBatchId($user);
+
+            $mateIds = $batchId === null ? [$user->id] : BatchMember::query()
+                ->where('batch_id', $batchId)
+                ->whereIn('status', array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying()))
+                ->pluck('user_id')
+                ->all();
+
+            $ranked = QuizAttempt::query()
+                ->where('quiz_id', $mine->quiz_id)
+                ->whereIn('user_id', $mateIds)
+                ->where('status', QuizAttemptStatus::Submitted->value)
+                ->with('student:id,name,leaderboard_opt_out')
+                // Highest score first; among equal scores, whoever finished first.
+                ->orderByDesc('score_pct')
+                ->orderBy('submitted_at')
+                ->get();
+
+            $myIndex = $ranked->search(fn (QuizAttempt $row): bool => $row->user_id === $user->id);
+
+            $top = $ranked->take(10)->values()->map(function (QuizAttempt $row, int $i) use ($user): array {
+                $isMe = $row->user_id === $user->id;
+                $named = $row->student !== null && ! $row->student->leaderboard_opt_out;
+
+                return [
+                    'rank' => $i + 1,
+                    'name' => $isMe ? $user->name : ($named ? $row->student->name : 'Student'),
+                    'score_pct' => $row->score_pct,
+                    'correct_count' => $row->correct_count,
+                    'total_count' => $row->total_count,
+                    'is_me' => $isMe,
+                ];
+            });
+
+            return response()->json(['data' => [
+                'quiz' => $mine->quiz?->title,
+                'pass_pct' => $mine->quiz?->pass_pct,
+                'batch' => $batchId === null ? null : Batch::query()->whereKey($batchId)->value('number'),
+                'participants' => $ranked->count(),
+                'top' => $top->all(),
+                'me' => $myIndex === false ? null : [
+                    'rank' => $myIndex + 1,
+                    'score_pct' => $ranked[$myIndex]->score_pct,
+                    'passed' => ($ranked[$myIndex]->score_pct ?? 0) >= ($mine->quiz?->pass_pct ?? 0),
+                ],
             ]]);
         });
     }
