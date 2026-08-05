@@ -79,6 +79,11 @@ final class MockController extends Controller
                         'in_progress' => $mocks->first(fn (MockInterview $m) => $m->mode === MockInterview::MODE_VOICE
                             && $m->status === MockInterview::STATUS_IN_PROGRESS)?->only(['id', 'join_url']),
                         'topups' => $this->voiceTopups(),
+                        // Whether the telephony provider can actually place a
+                        // call. Without it the portal offers the in-browser
+                        // spoken interview instead of a button that only ever
+                        // fails and refunds the credit.
+                        'provider_ready' => (string) config('services.vapi.api_key', '') !== '',
                     ],
                     'mocks' => $mocks
                         ->where('status', MockInterview::STATUS_COMPLETED)
