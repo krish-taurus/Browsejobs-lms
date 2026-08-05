@@ -6,7 +6,9 @@ namespace App\Console\Commands;
 
 use App\Enums\LessonType;
 use App\Enums\QuizStatus;
+use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\Module;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\Tenant;
@@ -34,7 +36,8 @@ final class ManageQuizzes extends Command
     protected $signature = 'quiz:manage
         {action : list, save, delete or approve}
         {--quiz= : quiz id for save, delete or approve}
-        {--topic= : topic id to file a NEW quiz under}
+        {--course= : course id or slug for a NEW quiz}
+        {--topic= : topic id, if you want a specific one}
         {--title= : quiz title}
         {--instructions-file= : path to a UTF-8 text file}
         {--questions-file= : path to a JSON array of {prompt, options[], correct_index, explanation?}}
@@ -129,10 +132,10 @@ final class ManageQuizzes extends Command
                 return self::FAILURE;
             }
 
-            $topic = Topic::query()->find((int) $this->option('topic'));
+            $topic = $this->resolveTopic($tenant);
 
             if ($topic === null) {
-                $this->error('Pick the topic this quiz belongs to.');
+                $this->error('Pick the course this quiz belongs to.');
 
                 return self::FAILURE;
             }
@@ -187,6 +190,58 @@ final class ManageQuizzes extends Command
         ], JSON_UNESCAPED_SLASHES));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Where to hang the quiz lesson.
+     *
+     * A quiz belongs to a course as far as anyone using the CRM is concerned,
+     * but the syllabus stores lessons under topics. Three courses have no
+     * modules at all, so an "Assessments" module and topic are created on
+     * demand rather than making those courses unusable.
+     */
+    private function resolveTopic(Tenant $tenant): ?Topic
+    {
+        if ($this->option('topic') !== null) {
+            return Topic::query()->find((int) $this->option('topic'));
+        }
+
+        $reference = trim((string) $this->option('course'));
+
+        if ($reference === '') {
+            return null;
+        }
+
+        $course = Course::query()
+            ->when(
+                is_numeric($reference),
+                fn ($q) => $q->whereKey((int) $reference),
+                fn ($q) => $q->where('slug', $reference),
+            )
+            ->first();
+
+        if ($course === null) {
+            return null;
+        }
+
+        $existing = Topic::query()
+            ->whereHas('module', fn ($q) => $q->where('course_id', $course->id))
+            ->orderBy('id')
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $module = Module::query()->firstOrCreate(
+            ['course_id' => $course->id, 'name' => 'Assessments'],
+            ['tenant_id' => $tenant->id, 'position' => 99],
+        );
+
+        return Topic::query()->firstOrCreate(
+            ['module_id' => $module->id, 'name' => 'Assessments'],
+            ['tenant_id' => $tenant->id, 'position' => 0],
+        );
     }
 
     /** @return int|null number of questions stored, or null on a bad file */
