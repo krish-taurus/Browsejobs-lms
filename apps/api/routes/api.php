@@ -394,6 +394,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/mocks/{mock}', [MockController::class, 'show']);
     Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
+    // Proctoring close from the interview room — no refund, like walking out.
+    Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     // Employer JD board for candidates: browse, free apply, track (PRD-E F3).

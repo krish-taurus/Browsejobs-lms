@@ -127,6 +127,24 @@ final class MockController extends Controller
         ));
     }
 
+    /**
+     * Proctoring close: the interview room ends the session when the student
+     * repeatedly leaves the tab. No refund — the credit was spent on a session
+     * abandoned by cheating, mirroring a real interview walk-out.
+     */
+    public function abandon(Request $request, int $mock): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+            $interview = $this->owned($request, $mock);
+
+            if ($interview->status === MockInterview::STATUS_IN_PROGRESS) {
+                $interview->update(['status' => MockInterview::STATUS_ABANDONED, 'completed_at' => now()]);
+            }
+
+            return $this->session($interview->refresh());
+        });
+    }
+
     public function finish(Request $request, int $mock): JsonResponse
     {
         return $this->guardBudget(fn (): JsonResponse => app(TenantContext::class)->run(
