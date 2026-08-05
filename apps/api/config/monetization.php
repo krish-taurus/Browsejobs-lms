@@ -51,5 +51,6 @@ return [
     'self_paced' => [
         'pct_bps' => 5_000,            // 50% of the live fee
     ],
-    'text_practice_enabled' => false,  // free unmetered text practice — off by default (founder)
+    // Free unmetered text practice. Off by default (founder); CRM-editable.
+    'text_practice_enabled' => (bool) env('TEXT_PRACTICE_ENABLED', false),
 ];
