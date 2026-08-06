@@ -1,6 +1,6 @@
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { EmployerCta } from "@/components/employers/EmployerCta";
-import { InkLabel, InkPanel, SampleStamp, Section } from "@/components/employers/ui";
+import { Aurora, InkLabel, InkPanel, SampleStamp, Section } from "@/components/employers/ui";
 import { sampleTalentPool } from "@/content/employers";
 
 /**
@@ -15,8 +15,9 @@ import { sampleTalentPool } from "@/content/employers";
  */
 export function TalentPool() {
   return (
-    <Section id="talent-pool" className="bg-white">
-      <div className="rounded-[22px] bg-deck p-6 md:p-12">
+    <Section id="talent-pool" className="overflow-hidden">
+      <Aurora />
+      <div>
         <ScrollReveal>
           <p className="kicker text-employer">Trained candidates</p>
           <h2 className="display mt-3 max-w-3xl text-3xl text-white md:text-[2.75rem]">
@@ -112,7 +113,7 @@ export function TalentPool() {
         <ScrollReveal delay={0.14}>
           <div className="mt-8 flex flex-col items-start gap-4 border-t border-white/[0.07] pt-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3">
-              <SampleStamp onInk />
+              <SampleStamp />
               <p className="text-[12px] text-white/40">
                 Real pool depth depends on the role and the cohort in training.
               </p>

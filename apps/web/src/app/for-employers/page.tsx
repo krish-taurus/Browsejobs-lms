@@ -6,17 +6,20 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Capabilities } from "@/components/employers/Capabilities";
 import { EmployerHero } from "@/components/employers/EmployerHero";
 import { EmployerLeadForm } from "@/components/employers/EmployerLeadForm";
+import { FreeOffer } from "@/components/employers/FreeOffer";
+import { Proctoring } from "@/components/employers/Proctoring";
+import { RoleTicker } from "@/components/employers/RoleTicker";
 import { SampleReport } from "@/components/employers/SampleReport";
 import { TalentPool } from "@/components/employers/TalentPool";
 import { TradeOffs } from "@/components/employers/TradeOffs";
 import { UseCases } from "@/components/employers/UseCases";
 import { Walkthrough } from "@/components/employers/Walkthrough";
-import { Section, SectionHead } from "@/components/employers/ui";
-import { employerFaq } from "@/content/employers";
+import { Aurora, Section, SectionHead } from "@/components/employers/ui";
+import { employerFaq, freeOffer } from "@/content/employers";
 
-const TITLE = "For employers — hire from candidates who have already interviewed";
+const TITLE = "For employers — free for 6 months, and every applicant is already interviewed";
 const DESCRIPTION =
-  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed. Scored candidates, verified credentials from DigiLocker and EPFO, and the evidence behind every decision.";
+  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed in a proctored session. Scored candidates, credentials verified against DigiLocker and EPFO, ₹0 for your first six months.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -34,43 +37,53 @@ export const metadata: Metadata = {
 /**
  * /for-employers — the employer landing page.
  *
- * A server component: everything here is static content, and only the three
- * genuinely interactive pieces (the walkthrough tabs, the animated report,
- * the enquiry form) are client components. That keeps the page statically
- * renderable and inside the landing performance budget.
+ * A server component: everything here is static content, and only the pieces
+ * that genuinely move (the hero pipeline, the self-playing walkthrough, the
+ * session monitor, the animated report, the enquiry form) are client
+ * components. That keeps the page statically renderable and inside the
+ * landing performance budget.
  *
- * It is graded like the employer portal — trust blue paired with the module's
- * violet, ink panels wherever the page shows product — so the workspace an
- * employer signs into looks like the page that sold it.
+ * It runs on the employer portal's own dark surfaces and blue→violet accent,
+ * so the workspace an employer signs into is the page that sold it. The
+ * shell's `employer` variant carries that through the nav and swaps the
+ * sticky CTA, which otherwise offers a hiring manager a free masterclass.
  */
 export default function ForEmployersPage() {
   return (
-    <MarketingShell>
+    <MarketingShell variant="employer">
       <EmployerHero />
+
+      <RoleTicker />
+
+      <FreeOffer />
 
       <UseCases />
 
       {/* Step by step ------------------------------------------------- */}
-      <Section id="how-it-works" className="bg-white">
+      <Section id="how-it-works" className="overflow-hidden">
+        <Aurora />
         <SectionHead
           kicker="Step by step"
           title="From an empty workspace to"
           highlight="a signed offer"
-          sub="Seven steps. The first four are you designing your process; after that the pipeline runs and you read what comes back."
+          sub="Seven steps. The first four are you designing your process; after that the pipeline runs and you read what comes back. It plays itself — click any step to take over."
           tone="employer"
         />
         <Walkthrough />
       </Section>
 
+      <Proctoring />
+
       <Capabilities />
 
       {/* Sample report ------------------------------------------------ */}
-      <Section id="sample-report" className="bg-white">
+      <Section id="sample-report" className="overflow-hidden">
+        <Aurora />
         <SectionHead
           kicker="The report you open"
           title="A candidate, in"
           highlight="full"
-          sub="This is the screen an employer lands on after the assessment is graded — rebuilt here with a fictional candidate. Nothing has been tidied for the page: one check is still pending, one has not started, contact details are locked, and the session panel admits what was not observed."
+          sub="This is the screen an employer lands on after the assessment is graded — rebuilt here with a fictional candidate. Nothing has been tidied for the page: one check is still pending, one has not started, and contact details are locked until you shortlist."
         />
         <SampleReport />
       </Section>
@@ -84,16 +97,20 @@ export default function ForEmployersPage() {
         kicker="Employer questions"
         title="Asked before every pilot"
         id="employer-faq"
+        tone="dark"
       />
 
       {/* Enquiry ------------------------------------------------------ */}
-      <section id="hire" className="scroll-mt-24 bg-deck px-5 py-16 md:py-24">
-        <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[1fr_0.95fr]">
+      <section id="hire" className="relative overflow-hidden scroll-mt-24 px-5 py-16 md:py-24">
+        <Aurora />
+        <div className="relative mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[1fr_0.95fr]">
           <ScrollReveal>
-            <p className="kicker text-employer">Hire from BrowseJobs</p>
+            <p className="kicker text-verify">
+              Free for {freeOffer.months} months · ₹{freeOffer.price}
+            </p>
             <h2 className="display mt-3 text-3xl text-white md:text-[2.75rem]">
               Bring us one role you are{" "}
-              <span className="bg-gradient-to-r from-trust to-employer bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-trust via-sky to-employer bg-clip-text text-transparent">
                 struggling to fill
               </span>
             </h2>
@@ -105,6 +122,7 @@ export default function ForEmployersPage() {
 
             <ul className="mt-8 space-y-3 border-t border-white/[0.07] pt-8">
               {[
+                `Six months of the full workspace at ₹${freeOffer.price}`,
                 "One role, designed end to end with you",
                 "The matched talent pool for it, before you commit",
                 "An honest read on whether this fits how you hire",
@@ -120,8 +138,8 @@ export default function ForEmployersPage() {
 
             <p className="mt-8 text-[13px] leading-relaxed text-white/40">
               Nobody can guarantee a hire — the market decides that. What we put in writing is the
-              process: a designed assessment, consistent grading, checked credentials, and
-              evidence you can audit.
+              process: a designed assessment, proctored sessions, consistent grading, checked
+              credentials, and evidence you can audit.
             </p>
 
             <p className="mono mt-6 text-[11px] uppercase tracking-[0.14em] text-white/35">

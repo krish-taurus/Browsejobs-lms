@@ -1,5 +1,5 @@
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { Section, SectionHead } from "@/components/employers/ui";
+import { Aurora, InkPanel, Section, SectionHead } from "@/components/employers/ui";
 import { advantages, limits, notForYou } from "@/content/employers";
 
 /**
@@ -14,7 +14,9 @@ import { advantages, limits, notForYou } from "@/content/employers";
  */
 export function TradeOffs() {
   return (
-    <Section id="trade-offs" className="bg-white">
+    <Section id="trade-offs" className="overflow-hidden">
+      <Aurora />
+
       <SectionHead
         kicker="Straight answers"
         title="What you get, and"
@@ -22,57 +24,54 @@ export function TradeOffs() {
         sub="Every hiring product has a shape. Here is ours, including the parts that will not suit you — stated before you spend a call finding out."
       />
 
-      <div className="mt-12 grid gap-5 lg:grid-cols-2">
-        {/* Advantages ------------------------------------------------- */}
+      <div className="mt-12 grid gap-4 lg:grid-cols-2">
         <ScrollReveal>
-          <div className="h-full rounded-[22px] border border-line bg-paper p-6 md:p-8">
+          <InkPanel accent="trust" className="h-full p-6 md:p-8">
             <p className="mono text-[10px] uppercase tracking-[0.16em] text-trust">
               What the platform gives you
             </p>
             <ul className="mt-6 space-y-6">
               {advantages.map((a) => (
                 <li key={a.title} className="border-l-2 border-trust pl-4">
-                  <h3 className="text-[15px] font-semibold text-ink">{a.title}</h3>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-ink2/70">{a.body}</p>
+                  <h3 className="text-[15px] font-semibold text-white">{a.title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-white/55">{a.body}</p>
                 </li>
               ))}
             </ul>
-          </div>
+          </InkPanel>
         </ScrollReveal>
 
-        {/* Limits ----------------------------------------------------- */}
         <ScrollReveal delay={0.06}>
-          <div className="h-full rounded-[22px] border border-line bg-paper p-6 md:p-8">
-            <p className="mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          <InkPanel accent="employer" glow={false} className="h-full p-6 md:p-8">
+            <p className="mono text-[10px] uppercase tracking-[0.16em] text-white/45">
               Where it falls short
             </p>
             <ul className="mt-6 space-y-6">
               {limits.map((l) => (
-                <li key={l.title} className="border-l-2 border-line pl-4">
-                  <h3 className="text-[15px] font-semibold text-ink">{l.title}</h3>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-ink2/70">{l.body}</p>
+                <li key={l.title} className="border-l-2 border-white/15 pl-4">
+                  <h3 className="text-[15px] font-semibold text-white">{l.title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-white/55">{l.body}</p>
                 </li>
               ))}
             </ul>
-          </div>
+          </InkPanel>
         </ScrollReveal>
       </div>
 
-      {/* Disqualifiers ------------------------------------------------ */}
       <ScrollReveal delay={0.1}>
-        <div className="mt-5 rounded-[22px] border border-line bg-paper p-6 md:p-8">
-          <p className="mono text-[10px] uppercase tracking-[0.16em] text-muted">
+        <InkPanel accent="trust" glow={false} className="mt-4 p-6 md:p-8">
+          <p className="mono text-[10px] uppercase tracking-[0.16em] text-white/45">
             Do not start here if
           </p>
           <ul className="mt-5 grid gap-3 md:grid-cols-2">
             {notForYou.map((n) => (
-              <li key={n} className="flex gap-3 text-[14px] leading-relaxed text-ink2/75">
-                <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted" />
+              <li key={n} className="flex gap-3 text-[14px] leading-relaxed text-white/60">
+                <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
                 {n}
               </li>
             ))}
           </ul>
-        </div>
+        </InkPanel>
       </ScrollReveal>
     </Section>
   );

@@ -18,8 +18,8 @@ export function EmployerCta({
   className?: string;
 }) {
   const skin = ghost
-    ? "rounded-full border border-line bg-white px-6 py-3 font-semibold text-ink transition-colors hover:border-trust hover:text-trust"
-    : "group inline-flex items-center justify-center gap-2.5 rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-all duration-300 hover:bg-deep hover:shadow-[0_8px_32px_rgba(27,109,240,0.45)] active:scale-[0.98]";
+    ? "rounded-full border border-white/12 bg-white/[0.04] px-6 py-3 font-semibold text-white/85 transition-colors hover:border-white/30 hover:text-white"
+    : "group inline-flex items-center justify-center gap-2.5 rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_28px_rgba(27,109,240,0.45)] transition-all duration-300 hover:bg-deep hover:shadow-[0_10px_40px_rgba(27,109,240,0.6)] active:scale-[0.98]";
 
   const go = () => {
     const el = document.getElementById("hire");

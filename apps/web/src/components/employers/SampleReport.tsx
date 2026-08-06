@@ -2,8 +2,13 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
-import { InkLabel, InkPanel, SampleStamp } from "@/components/employers/ui";
-import { sampleDistribution, sampleReport, sampleThreshold } from "@/content/employers";
+import { InkLabel, InkPanel, LiveDot, SampleStamp } from "@/components/employers/ui";
+import {
+  sampleDistribution,
+  sampleIntegrity,
+  sampleReport,
+  sampleThreshold,
+} from "@/content/employers";
 
 /**
  * The candidate report an employer opens, rebuilt from the same
@@ -12,7 +17,6 @@ import { sampleDistribution, sampleReport, sampleThreshold } from "@/content/emp
  *
  *  - contact details are withheld, because the sample is at Graded
  *  - one verification check is pending and one has not started
- *  - the session panel says proctoring was not captured
  *
  * A preview that showed a fully verified, fully green candidate would be
  * selling a screen that does not exist.
@@ -137,7 +141,7 @@ export function SampleReport() {
             <span className="mono inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-white/55">
               <span aria-hidden>○</span> Not fully verified
             </span>
-            <SampleStamp onInk />
+            <SampleStamp />
           </div>
         </div>
 
@@ -260,13 +264,44 @@ export function SampleReport() {
                 </dd>
               </div>
             </dl>
-            {!interview.session.proctoring_captured && (
-              <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[12px] leading-relaxed text-white/55">
-                Proctoring signals were not captured for this session. Read the score as an
-                unsupervised assessment — we are not reporting a clean session, we are saying we
-                did not watch one.
+            {/* Session integrity. Present because the session was proctored;
+                if it had not been, this panel would say that instead of
+                quietly omitting the row. */}
+            <div className="mt-6 border-t border-white/[0.07] pt-5">
+              <p className="mono flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-verify">
+                <LiveDot />
+                {interview.session.proctoring_captured ? "Proctored" : "Not observed"}
               </p>
-            )}
+
+              <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                {sampleIntegrity.signals.map((sig, i) => (
+                  <motion.li
+                    key={sig.label}
+                    initial={reduce ? false : { opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{ duration: durations.slow, ease, delay: i * 0.05 }}
+                    className={`flex items-baseline justify-between gap-3 rounded-2xl border px-4 py-3 ${
+                      sig.clean ? "border-verify/30 bg-verify/[0.07]" : "border-amber/40 bg-amber/10"
+                    }`}
+                  >
+                    <span className="text-[12px] text-white/70">{sig.label}</span>
+                    <span
+                      className={`mono shrink-0 text-[12px] ${
+                        sig.clean ? "text-verify" : "text-amber"
+                      }`}
+                    >
+                      {sig.value}
+                    </span>
+                  </motion.li>
+                ))}
+              </ul>
+
+              <p className="mt-4 text-[12px] leading-relaxed text-white/45">
+                A session that had raised flags would show them here, in the same place, rather
+                than being averaged into the score above.
+              </p>
+            </div>
           </InkPanel>
         </>
       )}

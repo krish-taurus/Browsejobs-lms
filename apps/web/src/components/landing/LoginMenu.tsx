@@ -26,7 +26,8 @@ const OPTIONS = [
   },
 ];
 
-export function LoginMenu() {
+export function LoginMenu({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
+  const dark = tone === "dark";
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +56,9 @@ export function LoginMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
+        className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+          dark ? "text-white/60 hover:text-white" : "text-muted hover:text-ink"
+        }`}
       >
         Login
         <span
@@ -69,7 +72,9 @@ export function LoginMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-3 w-64 overflow-hidden rounded-[14px] border border-line bg-white shadow-soft"
+          className={`absolute right-0 top-full z-50 mt-3 w-64 overflow-hidden rounded-[14px] border shadow-soft ${
+            dark ? "border-white/10 bg-deck-card" : "border-line bg-white"
+          }`}
         >
           {OPTIONS.map((o) => (
             <Link
@@ -77,13 +82,23 @@ export function LoginMenu() {
               href={o.href}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block px-4 py-3 transition-colors hover:bg-paper"
+              className={`block px-4 py-3 transition-colors ${
+                dark ? "hover:bg-white/[0.06]" : "hover:bg-paper"
+              }`}
             >
-              <span className="block text-sm font-semibold text-ink">{o.label}</span>
-              <span className="mt-0.5 block text-xs text-muted">{o.hint}</span>
+              <span
+                className={`block text-sm font-semibold ${dark ? "text-white" : "text-ink"}`}
+              >
+                {o.label}
+              </span>
+              <span
+                className={`mt-0.5 block text-xs ${dark ? "text-white/45" : "text-muted"}`}
+              >
+                {o.hint}
+              </span>
             </Link>
           ))}
-          <div className="border-t border-line px-4 py-3">
+          <div className={`border-t px-4 py-3 ${dark ? "border-white/10" : "border-line"}`}>
             <Link
               href="/register"
               onClick={() => setOpen(false)}

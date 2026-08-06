@@ -21,9 +21,30 @@ export const employerHero = {
   kicker: "For employers",
   title: "Every applicant arrives",
   highlight: "already interviewed.",
-  sub: "BrowseJobs is a hiring workspace where you design the interview once — the skills, the rubric, the rounds — and every candidate who applies has already sat it. You open a shortlist with scores, evidence and verified credentials, not a folder of CVs.",
-  primary: "Talk to us about hiring",
+  sub: "Design the interview once — the skills, the rubric, the rounds — and every candidate who applies has already sat it, proctored. You open a shortlist with scores, evidence and verified credentials, not a folder of CVs.",
+  primary: "Start free for 6 months",
   secondary: "Sign in to your workspace",
+} as const;
+
+/**
+ * The launch offer. Figures are the ones the business set; the page states
+ * them plainly and does not dress them up with an urgency countdown or a
+ * struck-through "was" price that never existed.
+ */
+export const freeOffer = {
+  kicker: "Launch offer",
+  title: "Six months.",
+  highlight: "₹0.",
+  sub: "Vetted candidates, the full hiring workspace, and every report on this page — free for your first six months. No fee per hire, no fee per shortlist, no charge for the assessments your applicants sit.",
+  months: 6,
+  price: 0,
+  included: [
+    { title: "Vetted candidates", body: "Assessed, proctored and credential-checked before they reach your pipeline." },
+    { title: "Unlimited roles", body: "Post as many JDs as you are hiring for. The assessment designer comes with each." },
+    { title: "Every report", body: "Scores, per-competency breakdowns, session integrity and verification outcomes." },
+    { title: "Your whole team", body: "Recruiters and hiring managers on the same workspace, at no extra seat cost." },
+  ],
+  closer: "Nothing to lose: if the pool is wrong for your roles, you will know inside a week and it will have cost you nothing.",
 } as const;
 
 /* ------------------------------------------------------------- use cases */
@@ -152,6 +173,44 @@ export const steps: Step[] = [
   },
 ];
 
+/* ------------------------------------------------------------- proctoring */
+
+/**
+ * Session integrity. Employers discount an unsupervised online assessment,
+ * and they are right to — so the page states what is watched rather than
+ * asking for the benefit of the doubt.
+ */
+export const proctoring = {
+  kicker: "Session integrity",
+  title: "Every interview is",
+  highlight: "proctored",
+  sub: "The assessment is not a link someone opens in one tab with the answers in another. Sessions are monitored for cheating and misconduct, the signals are recorded against the attempt, and what was observed is on the report you read.",
+  signals: [
+    {
+      key: "focus",
+      label: "Leaving the session",
+      body: "Switching tabs or away from the window is counted and timestamped, not merely noticed.",
+    },
+    {
+      key: "paste",
+      label: "Pasted answers",
+      body: "Text arriving by paste rather than by typing is recorded, so a perfect answer that was never written shows as one.",
+    },
+    {
+      key: "timing",
+      label: "Answer timing",
+      body: "How long each answer took is kept. A hard question answered instantly reads differently from one worked through.",
+    },
+    {
+      key: "review",
+      label: "Flagged for review",
+      body: "A session carrying misconduct signals is flagged on the candidate report instead of being quietly averaged into a score.",
+    },
+  ],
+  closer:
+    "You are not asked to trust the score. You are shown the session it came from — and if we did not observe something, the report says so rather than leaving a gap you would read as clean.",
+} as const;
+
 /* ------------------------------------------------------------------ bento */
 
 export type Capability = { title: string; body: string; tone: "trust" | "employer" | "verify" };
@@ -188,6 +247,11 @@ export const capabilities: Capability[] = [
     tone: "verify",
   },
   {
+    title: "Proctored sessions",
+    body: "Focus loss, pasted text and answer timing recorded against every attempt, with misconduct flagged on the report.",
+    tone: "verify",
+  },
+  {
     title: "Verified profiles",
     body: "Identity and education from DigiLocker, employment against the EPFO record. Outcomes only — we hold the documents, you see the result.",
     tone: "verify",
@@ -214,6 +278,10 @@ export const advantages: { title: string; body: string }[] = [
   {
     title: "The screen is consistent",
     body: "Every applicant meets the same rubric, in the same format, whether they applied first or four hundredth.",
+  },
+  {
+    title: "The score came from a watched session",
+    body: "Interviews are proctored. Tab switches, pasted answers and answer timing are recorded against the attempt and shown to you.",
   },
   {
     title: "Credentials are checked before the interview",
@@ -243,8 +311,8 @@ export const limits: { title: string; body: string }[] = [
     body: "Checks depend on DigiLocker and EPFO. A candidate who has not submitted, or a record that has not been issued, shows as pending — and we report pending as pending rather than dressing it up.",
   },
   {
-    title: "Sessions are not proctored today",
-    body: "Camera and window-switch signals are not captured. Where that is true, the candidate report says so in as many words. Read the score as an unsupervised assessment.",
+    title: "Proctoring flags, it does not judge",
+    body: "Integrity signals tell you a session left the window or an answer was pasted. They do not prove intent, and we do not reject anyone on a signal alone — the flag is on the report for you to weigh.",
   },
   {
     title: "A rubric you write badly grades badly",
@@ -267,10 +335,10 @@ export const notForYou = [
 
 /**
  * A fictional candidate, in the exact shape the employer portal renders
- * (`CandidateProfileData`). Every field a real report can be missing is
- * missing here too — the employment check is still pending, contact is
- * withheld because the stage is Graded, and proctoring was not captured —
- * because a preview that only shows the happy path is a sales lie.
+ * (`CandidateProfileData`). Fields a real report can be missing are missing
+ * here too — the employment check is still pending, the document check has
+ * not started, and contact is withheld because the stage is Graded. A
+ * preview that only showed the happy path would be a sales lie.
  */
 export const sampleReport: CandidateProfileData = {
   application: {
@@ -332,10 +400,30 @@ export const sampleReport: CandidateProfileData = {
       duration_seconds: 2_640,
       status: "completed",
       completed_at: "2026-07-14T10:52:00Z",
-      proctoring_captured: false,
+      proctoring_captured: true,
     },
   },
 };
+
+/**
+ * The integrity signals shown alongside the sample session.
+ *
+ * These sit outside `CandidateProfileData` because the employer profile
+ * payload does not carry them yet — `CandidateProfile::session()` still
+ * returns a flat `proctoring_captured` and nothing else. Keeping the fixture
+ * separate means this page is not pretending the API shape already has a
+ * field it does not, and whoever wires the signals through has one list to
+ * match.
+ */
+export const sampleIntegrity = {
+  clean: true,
+  signals: [
+    { label: "Left the session window", value: "0 times", clean: true },
+    { label: "Answers arriving by paste", value: "0 of 12", clean: true },
+    { label: "Fastest answer", value: "1 min 24 s", clean: true },
+    { label: "Flagged for review", value: "No", clean: true },
+  ],
+} as const;
 
 /** The threshold drawn on the sample distribution — an employer's own bar. */
 export const sampleThreshold = 70;
@@ -404,6 +492,14 @@ export const employerFaq: { q: string; a: string }[] = [
   {
     q: "Can we see how a score was reached?",
     a: "Yes. Every graded round shows the questions, the candidate's answers, the per-dimension scores and the rubric they were graded against. If a score is wrong, you can see where it went wrong.",
+  },
+  {
+    q: "How do you know a candidate did not cheat?",
+    a: "Sessions are proctored. Leaving the window, pasting answers and per-answer timing are recorded against the attempt, and anything that looks like misconduct is flagged on the report rather than averaged away. We show you the signals and let you weigh them — a flag is evidence, not a verdict.",
+  },
+  {
+    q: "What does the free six months cover?",
+    a: "The whole workspace: unlimited roles, the assessment and round designers, the talent pool, every candidate report, and your full team on it. ₹0 for six months — no fee per shortlist and no fee per hire during that period.",
   },
   {
     q: "When do we get contact details?",
