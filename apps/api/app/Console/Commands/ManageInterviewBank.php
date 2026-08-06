@@ -26,7 +26,7 @@ use Throwable;
 final class ManageInterviewBank extends Command
 {
     protected $signature = 'interview:bank
-        {action : list, save, delete, approve or reject}
+        {action : list, save, import, delete, approve or reject}
         {--id= : question id for save, delete, approve, reject}
         {--course= : course id or slug}
         {--role= : role title, e.g. Data Engineer}
@@ -35,6 +35,7 @@ final class ManageInterviewBank extends Command
         {--difficulty= : easy, medium or hard}
         {--round= : screening, technical, system_design, hr or managerial}
         {--status= : pending, approved or rejected}
+        {--rows-file= : path to a JSON array of rows, for import}
         {--tenant=1}';
 
     protected $description = 'List, add, edit or approve questions in the real-interview bank';
@@ -54,6 +55,7 @@ final class ManageInterviewBank extends Command
                 return match ($this->argument('action')) {
                     'list' => $this->listQuestions(),
                     'save' => $this->save($tenant),
+                    'import' => $this->importRows($tenant),
                     'delete' => $this->deleteQuestion(),
                     'approve' => $this->setStatus(RealInterviewQuestion::STATUS_APPROVED),
                     'reject' => $this->setStatus(RealInterviewQuestion::STATUS_REJECTED),
@@ -197,6 +199,109 @@ final class ManageInterviewBank extends Command
         $this->line((string) json_encode(['deleted' => true], JSON_UNESCAPED_SLASHES));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Bulk-load a spreadsheet the CRM has already parsed into rows.
+     *
+     * Each row: {row, question, answer?, course?, role?, difficulty?, round?, status?}.
+     * Deduped on the same fingerprint the transcript parser uses, so re-uploading
+     * a sheet after fixing three lines re-imports only what is genuinely new.
+     */
+    private function importRows(Tenant $tenant): int
+    {
+        $path = $this->option('rows-file');
+
+        if ($path === null || ! is_readable((string) $path)) {
+            $this->error('Rows file not readable.');
+
+            return self::FAILURE;
+        }
+
+        $decoded = json_decode((string) file_get_contents((string) $path), true);
+
+        if (! is_array($decoded)) {
+            $this->error('Rows must be a JSON array.');
+
+            return self::FAILURE;
+        }
+
+        $imported = 0;
+        $duplicates = 0;
+        $invalid = [];
+
+        foreach ($decoded as $index => $row) {
+            $line = (int) ($row['row'] ?? $index + 1);
+            $text = trim((string) ($row['question'] ?? ''));
+
+            if ($text === '') {
+                $invalid[] = "Row {$line}: no question text";
+
+                continue;
+            }
+
+            $normalized = mb_strtolower(trim(preg_replace('/\s+/', ' ', $text) ?? $text));
+            $fingerprint = hash('sha256', $normalized);
+
+            if (RealInterviewQuestion::query()->where('fingerprint', $fingerprint)->exists()) {
+                $duplicates++;
+
+                continue;
+            }
+
+            $status = $this->allowed((string) ($row['status'] ?? ''), ['pending', 'approved', 'rejected'])
+                ?? RealInterviewQuestion::STATUS_APPROVED;
+
+            RealInterviewQuestion::query()->create([
+                'tenant_id' => $tenant->id,
+                'course_id' => $this->courseIdFor((string) ($row['course'] ?? '')),
+                'role_title' => trim((string) ($row['role'] ?? '')) ?: 'General',
+                'question' => $text,
+                'normalized_question' => $normalized,
+                'fingerprint' => $fingerprint,
+                'strong_answer' => trim((string) ($row['answer'] ?? '')) ?: null,
+                'difficulty' => $this->allowed((string) ($row['difficulty'] ?? ''), ['easy', 'medium', 'hard']),
+                'round_type' => $this->allowed((string) ($row['round'] ?? ''), ['screening', 'technical', 'system_design', 'hr', 'managerial']),
+                'topic_tags' => [],
+                'follow_ups' => [],
+                'status' => $status,
+                'asked_count' => 0,
+                'approved_at' => $status === RealInterviewQuestion::STATUS_APPROVED ? now() : null,
+            ]);
+
+            $imported++;
+        }
+
+        $this->line((string) json_encode([
+            'imported' => $imported,
+            'duplicates' => $duplicates,
+            'invalid' => $invalid,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+        return self::SUCCESS;
+    }
+
+    /** A spreadsheet cell only wins if it is one of the values the column accepts. */
+    private function allowed(string $value, array $allowed): ?string
+    {
+        $clean = mb_strtolower(trim($value));
+
+        return in_array($clean, $allowed, true) ? $clean : null;
+    }
+
+    /** Sheets carry a course name ("Data Engineering") far more often than a slug. */
+    private function courseIdFor(string $reference): ?int
+    {
+        $reference = trim($reference);
+
+        if ($reference === '') {
+            return null;
+        }
+
+        return Course::query()
+            ->where('slug', $reference)
+            ->orWhere('name', $reference)
+            ->value('id');
     }
 
     private function resolveCourseId(): ?int

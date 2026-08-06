@@ -34,7 +34,7 @@ use Throwable;
 final class ManageQuizzes extends Command
 {
     protected $signature = 'quiz:manage
-        {action : list, save, delete or approve}
+        {action : list, save, import, delete or approve}
         {--quiz= : quiz id for save, delete or approve}
         {--course= : course id or slug for a NEW quiz}
         {--module= : module id for a NEW quiz, so it files under the module taught}
@@ -45,6 +45,7 @@ final class ManageQuizzes extends Command
         {--minutes= : time limit in minutes}
         {--pass= : pass percentage, 1-100}
         {--shuffle=1 : 1 or 0}
+        {--rows-file= : path to a JSON array of question rows, for import}
         {--tenant=1}';
 
     protected $description = 'List, save, approve or delete quizzes';
@@ -64,6 +65,7 @@ final class ManageQuizzes extends Command
                 return match ($this->argument('action')) {
                     'list' => $this->listQuizzes(),
                     'save' => $this->save($tenant),
+                    'import' => $this->importRows($tenant),
                     'delete' => $this->deleteQuiz(),
                     'approve' => $this->approve(),
                     default => $this->unknownAction(),
@@ -191,6 +193,203 @@ final class ManageQuizzes extends Command
         ], JSON_UNESCAPED_SLASHES));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Bulk-load quizzes from a spreadsheet the CRM has already parsed.
+     *
+     * One sheet row is one QUESTION, grouped into quizzes by the `quiz` column —
+     * that is the shape a trainer actually types, rather than one row per quiz
+     * with the options crammed into a cell. A quiz whose title already exists in
+     * the same course is skipped whole, so re-uploading a corrected sheet does
+     * not silently duplicate a test students may already be sitting.
+     *
+     * Row: {row, quiz, course, module?, question, option_a..option_f, correct,
+     *       explanation?, minutes?, pass_pct?}
+     */
+    private function importRows(Tenant $tenant): int
+    {
+        $path = $this->option('rows-file');
+
+        if ($path === null || ! is_readable((string) $path)) {
+            $this->error('Rows file not readable.');
+
+            return self::FAILURE;
+        }
+
+        $decoded = json_decode((string) file_get_contents((string) $path), true);
+
+        if (! is_array($decoded)) {
+            $this->error('Rows must be a JSON array.');
+
+            return self::FAILURE;
+        }
+
+        // Group the flat sheet into quizzes, preserving the order they appear in.
+        $groups = [];
+        $invalid = [];
+
+        foreach ($decoded as $index => $row) {
+            $line = (int) ($row['row'] ?? $index + 2);
+            $title = trim((string) ($row['quiz'] ?? ''));
+            $prompt = trim((string) ($row['question'] ?? ''));
+
+            if ($title === '' || $prompt === '') {
+                $invalid[] = "Row {$line}: needs both a quiz name and a question";
+
+                continue;
+            }
+
+            $options = [];
+            foreach (['a', 'b', 'c', 'd', 'e', 'f'] as $letter) {
+                $value = trim((string) ($row['option_'.$letter] ?? ''));
+                if ($value !== '') {
+                    $options[$letter] = $value;
+                }
+            }
+
+            if (count($options) < 2) {
+                $invalid[] = "Row {$line}: needs at least two options";
+
+                continue;
+            }
+
+            $correct = mb_strtolower(trim((string) ($row['correct'] ?? '')));
+            $letters = array_keys($options);
+            $correctIndex = array_search($correct, $letters, true);
+
+            if ($correctIndex === false) {
+                $invalid[] = "Row {$line}: correct answer \"{$correct}\" is not one of ".implode('/', $letters);
+
+                continue;
+            }
+
+            $groups[$title] ??= [
+                'course' => trim((string) ($row['course'] ?? '')),
+                'module' => trim((string) ($row['module'] ?? '')),
+                'minutes' => (int) ($row['minutes'] ?? 0),
+                'pass_pct' => (int) ($row['pass_pct'] ?? 0),
+                'questions' => [],
+            ];
+
+            $groups[$title]['questions'][] = [
+                'prompt' => $prompt,
+                'options' => array_values($options),
+                'correct_index' => (int) $correctIndex,
+                'explanation' => trim((string) ($row['explanation'] ?? '')) ?: null,
+            ];
+        }
+
+        $created = 0;
+        $skipped = 0;
+
+        foreach ($groups as $title => $group) {
+            $topic = $this->topicForImport($group, $tenant);
+
+            if ($topic === null) {
+                $invalid[] = "Quiz \"{$title}\": course \"{$group['course']}\" not found";
+
+                continue;
+            }
+
+            $exists = Quiz::query()
+                ->where('title', $title)
+                ->whereHas('lesson.topic.module', fn ($q) => $q->where('course_id', $topic->module->course_id))
+                ->exists();
+
+            if ($exists) {
+                $skipped++;
+
+                continue;
+            }
+
+            $lesson = Lesson::query()->create([
+                'tenant_id' => $tenant->id,
+                'topic_id' => $topic->id,
+                'title' => $title,
+                'type' => LessonType::Quiz->value,
+                'position' => (int) Lesson::query()->where('topic_id', $topic->id)->max('position') + 1,
+            ]);
+
+            $quiz = Quiz::query()->create([
+                'tenant_id' => $tenant->id,
+                'lesson_id' => $lesson->id,
+                'title' => $title,
+                'time_limit_sec' => max(60, ($group['minutes'] ?: 10) * 60),
+                'pass_pct' => min(100, max(1, $group['pass_pct'] ?: 60)),
+                'shuffle' => true,
+                // Imported quizzes land as drafts: nobody has read them yet, and
+                // approval is what lets a quiz reach a student.
+                'status' => QuizStatus::Draft,
+            ]);
+
+            foreach ($group['questions'] as $position => $question) {
+                QuizQuestion::query()->create([
+                    'tenant_id' => $tenant->id,
+                    'quiz_id' => $quiz->id,
+                    'prompt' => $question['prompt'],
+                    'options' => $question['options'],
+                    'correct_index' => $question['correct_index'],
+                    'explanation' => $question['explanation'],
+                    'position' => $position,
+                ]);
+            }
+
+            $created++;
+        }
+
+        $this->line((string) json_encode([
+            'created' => $created,
+            'skipped_existing' => $skipped,
+            'invalid' => $invalid,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Where an imported quiz hangs: the named module when the sheet gives one,
+     * otherwise the course's own fallback.
+     *
+     * @param  array<string, mixed>  $group
+     */
+    private function topicForImport(array $group, Tenant $tenant): ?Topic
+    {
+        $course = Course::query()
+            ->where('slug', $group['course'])
+            ->orWhere('name', $group['course'])
+            ->first();
+
+        if ($course === null) {
+            return null;
+        }
+
+        if ($group['module'] !== '') {
+            $module = Module::query()
+                ->where('course_id', $course->id)
+                ->where('name', $group['module'])
+                ->first();
+
+            if ($module !== null) {
+                return $this->topicFor($module, $tenant);
+            }
+        }
+
+        $existing = Topic::query()
+            ->whereHas('module', fn ($q) => $q->where('course_id', $course->id))
+            ->orderBy('id')
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $module = Module::query()->firstOrCreate(
+            ['course_id' => $course->id, 'name' => 'Assessments'],
+            ['tenant_id' => $tenant->id, 'position' => 99],
+        );
+
+        return $this->topicFor($module, $tenant);
     }
 
     /**
