@@ -13,8 +13,15 @@ use App\Models\Lead;
  */
 final class RuleBasedLeadScorer implements LeadScorer
 {
-    /** @var list<string> High-intent lead types (the free funnel spine). */
-    private const HOT_TYPES = ['masterclass', 'counselling'];
+    /**
+     * High-intent lead types: the free funnel spine, plus employer hiring
+     * enquiries — a company asking to hire is the highest-intent form the
+     * site captures, and it must not sit in the inbox behind a brochure
+     * download because it scored zero.
+     *
+     * @var list<string>
+     */
+    private const HOT_TYPES = ['masterclass', 'counselling', 'employer'];
 
     /** @var list<string> Courses currently accepting cohorts (PRD §14.5). */
     private const LIVE_COURSES = ['data-engineering', 'devops-cloud', 'python-backend', 'data-analytics'];

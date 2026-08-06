@@ -12,7 +12,7 @@ import {
 } from "@/lib/crm";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const LEAD_TYPES = ["masterclass", "counselling", "bootcamp", "contact", "waitlist"];
+const LEAD_TYPES = ["masterclass", "counselling", "bootcamp", "contact", "waitlist", "syllabus", "employer"];
 const COURSES = ["data-engineering", "devops-cloud", "python-backend", "data-analytics"];
 
 const inputCls =

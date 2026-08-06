@@ -26,6 +26,24 @@
      pages just were not using them. */
   --bj-surface: #ffffff;
   --bj-fg: #0a1220;
+
+  /*
+   * Employer module accent. The employer portal grades itself blue → violet
+   * (its validated chart palette pairs SERIES blue with SERIES violet), so
+   * the employer-facing marketing page carries the same two hues and an
+   * employer arriving in the workspace sees the page they were sold.
+   *
+   * Violet is a MODULE accent, never a state: it never means verified,
+   * never means error, and never replaces blue as the primary action. The
+   * light-theme value is darkened from the portal's #9d6bf5 so it clears AA
+   * on paper (6.0:1); the dark theme restores the portal's own hue.
+   */
+  --bj-employer: #6d3fd4;
+  --bj-employer-soft: #f0ebfe;
+  /* The portal's own two surfaces, so ink panels on this page are literally
+     the colour of the product they are showing. */
+  --bj-deck: #05070d;
+  --bj-deck-card: #0a0f1c;
 }
 
 /*
@@ -50,6 +68,12 @@
   --bj-white: #0a0f1c;
   --bj-surface: #0a0f1c;
   --bj-fg: #f4f7fb;
+
+  /* On ink, the portal's validated violet is already in the dark lightness
+     band — use it unchanged. The deck surfaces do not move: they are the
+     product's canvas in either theme. */
+  --bj-employer: #9d6bf5;
+  --bj-employer-soft: #191338;
 }
 
 @theme inline {
@@ -67,6 +91,10 @@
   --color-muted: var(--bj-muted);
   --color-surface: var(--bj-surface);
   --color-fg: var(--bj-fg);
+  --color-employer: var(--bj-employer);
+  --color-employer-soft: var(--bj-employer-soft);
+  --color-deck: var(--bj-deck);
+  --color-deck-card: var(--bj-deck-card);
 
   /* Spec §2.4: soft shadow only. */
   --shadow-soft: 0 10px 40px rgba(10, 18, 32, 0.1);

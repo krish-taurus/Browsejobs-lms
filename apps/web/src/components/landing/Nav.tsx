@@ -11,6 +11,7 @@ const links = [
   { href: "/#verify", label: "Verify us" },
   { href: "/#fees", label: "Fees" },
   { href: "/reviews", label: "Reviews" },
+  { href: "/for-employers", label: "For employers" },
 ];
 
 export function Nav() {
@@ -22,17 +23,17 @@ export function Nav() {
         className="pointer-events-none absolute inset-x-0 -top-4 -z-10 h-24 bg-gradient-to-b from-paper via-paper/80 to-transparent"
       />
       {/* Floating glass island — detached from the top, blur only on this sticky element. */}
-      <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-full border border-line/70 bg-white/70 py-2 pl-4 pr-2 shadow-soft backdrop-blur-xl">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line/70 bg-white/70 py-2 pl-4 pr-2 shadow-soft backdrop-blur-xl">
         <Link href="/" aria-label="BrowseJobs home" className="shrink-0">
           <Wordmark />
         </Link>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 lg:flex xl:gap-6">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-muted transition-colors hover:text-ink"
+              className="whitespace-nowrap text-sm font-medium text-muted transition-colors hover:text-ink"
             >
               {l.label}
             </a>
@@ -40,21 +41,21 @@ export function Nav() {
           <LoginMenu />
           <Link
             href="/register"
-            className="text-sm font-semibold text-trust transition-colors hover:text-deep"
+            className="whitespace-nowrap text-sm font-semibold text-trust transition-colors hover:text-deep"
           >
             Sign up
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Desktop keeps the primary CTA; on mobile the hero + sticky bottom bar
-              carry it, so the header gives the menu room to breathe. */}
-          <div className="hidden md:block">
+          {/* Desktop keeps the primary CTA; on smaller screens the hero + sticky
+              bottom bar carry it, so the header gives the menu room to breathe. */}
+          <div className="hidden lg:block">
             <BookCta className="whitespace-nowrap px-4 py-2 text-sm">
               Book Free Masterclass
             </BookCta>
           </div>
-          {/* Mobile only: labelled menu button opens every destination + Login/Sign up */}
+          {/* Below lg: labelled menu button opens every destination + Login/Sign up */}
           <MobileMenu links={links} />
         </div>
       </nav>

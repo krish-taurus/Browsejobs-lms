@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 type NavLink = { href: string; label: string };
 
 /**
- * Public-site mobile menu (md:hidden). The desktop nav links are hidden on small
- * screens, so this hamburger surfaces every destination + Login/Sign up. Closes
- * on Escape, on backdrop tap, and on navigation.
+ * Public-site mobile menu (lg:hidden). The desktop nav links are hidden below
+ * lg — seven destinations plus the CTA no longer fit the island at md — so this
+ * hamburger surfaces every destination + Login/Sign up. Closes on Escape, on
+ * backdrop tap, and on navigation.
  */
 export function MobileMenu({ links }: { links: NavLink[] }) {
   const [open, setOpen] = useState(false);
@@ -25,7 +26,7 @@ export function MobileMenu({ links }: { links: NavLink[] }) {
   }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
