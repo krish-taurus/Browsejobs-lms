@@ -155,6 +155,20 @@ export const courseDetails: CourseDetail[] = [
         ],
       },
       {
+        title: "Git, GitHub & GitHub Actions for Data Engineering",
+        hook: "Version control and CI/CD — what separates an engineer from someone who writes scripts.",
+        topics: [
+          "Git fundamentals & version control",
+          "GitHub repositories, branching, merging & pull requests",
+          "Git workflow for Data Engineering projects",
+          "GitHub Actions fundamentals",
+          "Creating workflows using YAML",
+          "Automating Python-based API data extraction",
+          "CI/CD for data pipelines",
+          "Loading data into Azure Blob Storage / AWS S3 using GitHub Actions",
+        ],
+      },
+      {
         title: "Interview Engineering",
         hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
         topics: [
@@ -255,7 +269,6 @@ export const courseDetails: CourseDetail[] = [
           "Images and layers",
           "Containers: run, manage, interact",
           "Dockerfile & multi-stage builds",
-          "Docker Compose for multi-container apps",
           "Docker Hub & registries",
         ],
       },
@@ -272,22 +285,15 @@ export const courseDetails: CourseDetail[] = [
         ],
       },
       {
-        title: "Terraform — Infrastructure as Code",
-        hook: "Provision real cloud infrastructure, reproducibly.",
+        title: "IaC & Configuration Management",
+        hook: "Terraform in depth, Ansible to the level roles actually ask for.",
         topics: [
-          "Providers: interacting with cloud platforms",
-          "Modules: reusable infrastructure components",
+          "Terraform providers: interacting with cloud platforms",
+          "Terraform modules: reusable infrastructure components",
           "Variables for dynamic configuration",
           "State file management and remote state",
-        ],
-      },
-      {
-        title: "Ansible",
-        hook: "Configuration management and automation at scale.",
-        topics: [
-          "Inventory: defining and managing hosts",
-          "Roles: organizing reusable tasks",
-          "Playbooks: automating configuration with YAML",
+          "Ansible inventory, roles and playbooks",
+          "Where configuration management still fits alongside Terraform",
         ],
       },
       {
@@ -346,7 +352,7 @@ export const courseDetails: CourseDetail[] = [
       {
         title: "Docker deployment",
         body: "Containerize real applications and ship them.",
-        points: ["Create Docker images", "Docker Compose", "Push to Docker Hub", "Run multi-container apps"],
+        points: ["Create Docker images", "Multi-stage builds", "Push to Docker Hub", "Run multi-container apps on Kubernetes"],
       },
       {
         title: "Terraform infrastructure",
