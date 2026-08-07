@@ -94,11 +94,21 @@ final class MyRecordingController extends Controller
                 throw new NotFoundHttpException;
             }
 
-            $watchUrl = $model->play_url ?? ($model->storage_path !== null ? $this->signedUrl($model->storage_path) : null);
+            // A self-hosted copy wins: it plays INSIDE the portal (no Zoom
+            // page, no passcode). Served through the ranged media route —
+            // browsers need HTTP Range support to play MP4s. Zoom's play page
+            // and S3 are the fallbacks.
+            $localUrl = null;
+            if ($model->storage_path !== null && Storage::disk('public')->exists($model->storage_path)) {
+                $localUrl = rtrim((string) config('app.url'), '/').'/media/'.$model->storage_path;
+            }
+
+            $watchUrl = $localUrl ?? $model->play_url ?? ($model->storage_path !== null ? $this->signedUrl($model->storage_path) : null);
 
             return response()->json(['data' => [
                 'watch_url' => $watchUrl,
-                'passcode' => $model->passcode,
+                'passcode' => $localUrl !== null ? null : $model->passcode,
+                'embedded' => $localUrl !== null,
             ]]);
         });
     }
