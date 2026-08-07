@@ -2477,6 +2477,9 @@ export default function V3Landing() {
         </div>
       </section>
 
+      {/* ----------------------------- for employers -------------------------- */}
+      <EmployersHomeBand />
+
       {/* ------------------------------- programs ----------------------------- */}
       <ProgramsSection />
 
@@ -2500,9 +2503,6 @@ export default function V3Landing() {
 
       {/* ----------------------------- market intel --------------------------- */}
       <IntelSection />
-
-      {/* ----------------------------- for employers -------------------------- */}
-      <EmployersHomeBand />
 
       {/* ------------------------------- numbers ------------------------------ */}
       <section className="mx-auto max-w-6xl px-6 py-32 text-center md:py-44">
