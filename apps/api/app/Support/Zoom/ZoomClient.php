@@ -32,4 +32,13 @@ interface ZoomClient
      * Download a recording file and return its raw bytes.
      */
     public function downloadRecording(string $downloadUrl): string;
+
+    /**
+     * The meeting's cloud-recording info, or null when Zoom has none (not
+     * recorded / still processing). Shape mirrors Zoom's response:
+     * {share_url, password?, recording_files: [{file_type, status, ...}]}.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function meetingRecordings(string $meetingId): ?array;
 }

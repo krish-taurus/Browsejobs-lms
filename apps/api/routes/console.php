@@ -33,6 +33,15 @@ Schedule::command('support:check-sla')->hourly();
 // for classes that have ended, once the flashcards exist. Idempotent.
 Schedule::command('class:wrapup')->hourly();
 
+// Any future class missing its Zoom meeting gets one — self-heals the fallout
+// from a credentials outage without anybody re-creating classes by hand.
+Schedule::command('zoom:backfill')->hourly();
+
+// Pull finished Zoom Cloud recordings for classes that have run. This is the
+// webhook fallback, and the only route that works at all while Zoom cannot
+// reach this host: without it a recording never appears in the portal.
+Schedule::command('zoom:sync-recordings')->everyThirtyMinutes();
+
 // Google Drive review intake (Platform Spec §3): pull new review images from the
 // configured folder into the triage queue. Weekly; a no-op until a service account
 // is configured. Idempotent (dedup by Drive file id).

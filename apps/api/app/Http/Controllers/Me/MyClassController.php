@@ -80,6 +80,13 @@ final class MyClassController extends Controller
             return 'too_early';
         }
 
+        // Nothing used to close the window: a class whose slot had passed kept
+        // offering Join for good, because a session only leaves `scheduled` if
+        // someone marks it, and an early finish in Zoom never reaches us.
+        if ($session->scheduled_end !== null && now()->greaterThan($session->scheduled_end)) {
+            return 'ended';
+        }
+
         if ($session->zoom_join_url === null) {
             return 'not_ready';
         }
