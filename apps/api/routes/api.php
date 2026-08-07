@@ -170,6 +170,11 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 
 // Public certificate verification (PRD §6.5). NO tenant.domain — a printed QR must
 // verify from any host, so the lookup is by the globally-unique code (withoutGlobalScopes).
+// Daily simulated-live masterclass showing (public; the CRM WhatsApps this
+// page to interested leads). NO tenant.domain — course resolved by slug.
+Route::get('v1/masterclass/watch/{slug?}', [\App\Http\Controllers\Public\MasterclassWatchController::class, 'show'])
+    ->middleware('throttle:60,1');
+
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('certificates.verify');
