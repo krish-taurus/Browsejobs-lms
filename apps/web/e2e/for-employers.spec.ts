@@ -37,9 +37,15 @@ test("an employer walks the landing page and sends an enquiry", async ({ page })
 
   // Proctoring is claimed, and the page shows what is actually recorded.
   await expect(
-    page.getByRole("heading", { name: /Every interview is proctored/i }),
+    page.getByRole("heading", { name: /Every interview is video-proctored/i }),
   ).toBeVisible();
-  await expect(page.getByText("Left the session window")).toBeVisible();
+  await expect(page.getByText("On camera, start to submit")).toBeVisible();
+  await expect(page.getByText("Movement through the session")).toBeVisible();
+
+  // Phase-2 detections must read as unbuilt, not as capability. If this
+  // assertion ever fails the page is claiming something that does not run.
+  await expect(page.getByText("In build · not live yet")).toBeVisible();
+  await expect(page.getByText(/not running on your interviews today/i)).toBeVisible();
 
   // The sample report shows the states a sales page would hide.
   await expect(page.getByText("Contact details unlock at Shortlisted.")).toBeVisible();

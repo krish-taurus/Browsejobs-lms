@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { durations, ease } from "@/lib/motion";
 import { Aurora, InkLabel, InkPanel, LiveDot, Section, SectionHead } from "@/components/employers/ui";
-import { proctoring } from "@/content/employers";
+import { proctoring, proctoringNext } from "@/content/employers";
 
 /**
  * Session integrity.
@@ -17,13 +17,15 @@ import { proctoring } from "@/content/employers";
 
 const EVENTS = [
   { t: "00:00", label: "Session opened", tone: "muted" },
+  { t: "00:00", label: "Camera on · recording started", tone: "verify" },
   { t: "00:00", label: "Window focus locked", tone: "verify" },
   { t: "04:12", label: "Q3 answered · typed, 2 min 41 s", tone: "muted" },
   { t: "09:38", label: "Focus lost · 4 s", tone: "amber" },
   { t: "09:42", label: "Focus returned", tone: "verify" },
   { t: "17:05", label: "Paste blocked · Q7", tone: "amber" },
+  { t: "22:40", label: "Out of frame · 2 s", tone: "amber" },
   { t: "28:19", label: "Q11 answered · typed, 3 min 08 s", tone: "muted" },
-  { t: "44:00", label: "Session submitted · no flags raised", tone: "verify" },
+  { t: "44:00", label: "Session submitted · recording stored", tone: "verify" },
 ];
 
 const TONE: Record<string, string> = {
@@ -32,7 +34,7 @@ const TONE: Record<string, string> = {
   muted: "text-white/40",
 };
 
-const WINDOW = 5;
+const WINDOW = 7;
 
 export function Proctoring() {
   const reduce = useReducedMotion();
@@ -64,7 +66,7 @@ export function Proctoring() {
       />
 
       <div className="mt-12 grid gap-4 lg:grid-cols-[1.05fr_1fr]">
-        {/* The four signals ------------------------------------------- */}
+        {/* What is recorded ------------------------------------------- */}
         <div className="grid gap-3 sm:grid-cols-2">
           {proctoring.signals.map((s, i) => (
             <motion.div
@@ -88,7 +90,9 @@ export function Proctoring() {
         </div>
 
         {/* The monitor ------------------------------------------------- */}
-        <InkPanel accent="verify" live className="p-5 md:p-6">
+        {/* Stretches to the signal grid beside it rather than sitting short
+            at the top of a tall column. */}
+        <InkPanel accent="verify" live className="flex h-full flex-col p-5 md:p-6">
           <div className="flex items-center justify-between">
             <InkLabel>Session monitor</InkLabel>
             <span className="mono inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-white/40">
@@ -97,7 +101,7 @@ export function Proctoring() {
             </span>
           </div>
 
-          <div className="relative mt-5 h-[228px] overflow-hidden">
+          <div className="relative mt-5 min-h-[228px] flex-1 overflow-hidden">
             <AnimatePresence initial={false} mode="popLayout">
               {shown.map((e, i) => (
                 <motion.div
@@ -120,7 +124,7 @@ export function Proctoring() {
             />
           </div>
 
-          <p className="mt-4 border-t border-white/[0.07] pt-4 text-[11px] leading-relaxed text-white/35">
+          <p className="mt-4 shrink-0 border-t border-white/[0.07] pt-4 text-[11px] leading-relaxed text-white/35">
             Illustrative event stream from a fictional session.
           </p>
         </InkPanel>
@@ -135,6 +139,41 @@ export function Proctoring() {
       >
         {proctoring.closer}
       </motion.p>
+
+      {/* In build. Deliberately not green and deliberately not mixed in with
+          the live signals above — an employer must be able to tell at a
+          glance what runs on their next interview. */}
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: durations.slow, ease }}
+        className="mt-4"
+      >
+        <InkPanel accent="employer" glow={false} className="border-dashed p-6 md:p-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <p className="mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+              {proctoringNext.kicker}
+            </p>
+            <span className="mono rounded-full border border-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
+              Phase 2
+            </span>
+          </div>
+          <h3 className="display mt-3 text-xl text-white">{proctoringNext.title}</h3>
+          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-white/50">
+            {proctoringNext.sub}
+          </p>
+
+          <ul className="mt-6 grid gap-4 md:grid-cols-2">
+            {proctoringNext.items.map((item) => (
+              <li key={item.label} className="border-l-2 border-white/15 pl-4">
+                <h4 className="text-[15px] font-semibold text-white/80">{item.label}</h4>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-white/50">{item.body}</p>
+              </li>
+            ))}
+          </ul>
+        </InkPanel>
+      </motion.div>
     </Section>
   );
 }

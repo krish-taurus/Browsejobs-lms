@@ -57,7 +57,7 @@ export function EmployerHero() {
               </Link>
             </div>
             <p className="mono mt-5 text-[11px] uppercase tracking-[0.14em] text-white/35">
-              Design the interview once · every applicant sits it, proctored · you read the evidence
+              Design the interview once · every applicant sits it, video-proctored · you read the evidence
             </p>
           </ScrollReveal>
         </div>

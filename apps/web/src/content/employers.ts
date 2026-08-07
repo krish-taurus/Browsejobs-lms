@@ -21,7 +21,7 @@ export const employerHero = {
   kicker: "For employers",
   title: "Every applicant arrives",
   highlight: "already interviewed.",
-  sub: "Design the interview once — the skills, the rubric, the rounds — and every candidate who applies has already sat it, proctored. You open a shortlist with scores, evidence and verified credentials, not a folder of CVs.",
+  sub: "Design the interview once — the skills, the rubric, the rounds — and every candidate who applies has already sat it, on camera. You open a shortlist with scores, evidence and verified credentials, not a folder of CVs.",
   primary: "Start free for 6 months",
   secondary: "Sign in to your workspace",
 } as const;
@@ -237,13 +237,23 @@ export const pricing = {
 export const proctoring = {
   kicker: "Session integrity",
   title: "Every interview is",
-  highlight: "proctored",
-  sub: "The assessment is not a link someone opens in one tab with the answers in another. Sessions are monitored for cheating and misconduct, the signals are recorded against the attempt, and what was observed is on the report you read.",
+  highlight: "video-proctored",
+  sub: "The assessment is not a link someone opens in one tab with the answers in another. The session runs on camera, movement and screen changes are captured against the attempt, and what was observed is on the report you read.",
   signals: [
     {
-      key: "focus",
-      label: "Leaving the session",
-      body: "Switching tabs or away from the window is counted and timestamped, not merely noticed.",
+      key: "video",
+      label: "On camera, start to submit",
+      body: "The session is recorded for its whole length, not sampled at the start. The recording is held against that attempt.",
+    },
+    {
+      key: "movement",
+      label: "Movement through the session",
+      body: "How the candidate moves while answering is captured — including leaving frame, and for how long.",
+    },
+    {
+      key: "screen",
+      label: "Screen and window changes",
+      body: "Switching away from the interview is counted and timestamped, not merely noticed.",
     },
     {
       key: "paste",
@@ -263,6 +273,32 @@ export const proctoring = {
   ],
   closer:
     "You are not asked to trust the score. You are shown the session it came from — and if we did not observe something, the report says so rather than leaving a gap you would read as clean.",
+} as const;
+
+/**
+ * Detections that are built but not shipped.
+ *
+ * They sit in their own block, under their own heading, in neutral rather
+ * than green — green is the kept-promise colour and a roadmap item has not
+ * kept anything yet. An employer reading this page has to be able to tell in
+ * one glance what runs on their next interview and what does not, because
+ * "coming soon" printed alongside live capability is how a roadmap becomes a
+ * claim nobody made on purpose.
+ */
+export const proctoringNext = {
+  kicker: "In build · not live yet",
+  title: "What the next phase catches",
+  sub: "Two detections are in development. They are not running on your interviews today, and this page will say so until they are.",
+  items: [
+    {
+      label: "Real-time answer assistants",
+      body: "The overlay tools candidates run beside an interview — Parakeet and the ones that follow it — detected during the session rather than guessed at afterwards.",
+    },
+    {
+      label: "Lip-sync anomaly",
+      body: "Audio that does not match the mouth on camera, flagged — the signal that someone off-screen is answering.",
+    },
+  ],
 } as const;
 
 /* ------------------------------------------------------------------ bento */
@@ -301,8 +337,8 @@ export const capabilities: Capability[] = [
     tone: "verify",
   },
   {
-    title: "Proctored sessions",
-    body: "Focus loss, pasted text and answer timing recorded against every attempt, with misconduct flagged on the report.",
+    title: "Video-proctored sessions",
+    body: "Camera for the full session, plus movement, screen changes, pasted text and answer timing recorded against every attempt.",
     tone: "verify",
   },
   {
@@ -335,7 +371,7 @@ export const advantages: { title: string; body: string }[] = [
   },
   {
     title: "The score came from a watched session",
-    body: "Interviews are proctored. Tab switches, pasted answers and answer timing are recorded against the attempt and shown to you.",
+    body: "Interviews run on camera. Movement, screen changes, pasted answers and answer timing are recorded against the attempt and shown to you.",
   },
   {
     title: "Credentials are checked before the interview",
@@ -450,7 +486,7 @@ export const sampleReport: CandidateProfileData = {
       "Cost was not mentioned once across the pipeline design questions.",
     ],
     session: {
-      mode: "text",
+      mode: "video",
       duration_seconds: 2_640,
       status: "completed",
       completed_at: "2026-07-14T10:52:00Z",
@@ -472,6 +508,8 @@ export const sampleReport: CandidateProfileData = {
 export const sampleIntegrity = {
   clean: true,
   signals: [
+    { label: "Camera, whole session", value: "44 min", clean: true },
+    { label: "Out of frame", value: "0 times", clean: true },
     { label: "Left the session window", value: "0 times", clean: true },
     { label: "Answers arriving by paste", value: "0 of 12", clean: true },
     { label: "Fastest answer", value: "1 min 24 s", clean: true },
@@ -549,7 +587,7 @@ export const employerFaq: { q: string; a: string }[] = [
   },
   {
     q: "How do you know a candidate did not cheat?",
-    a: "Sessions are proctored. Leaving the window, pasting answers and per-answer timing are recorded against the attempt, and anything that looks like misconduct is flagged on the report rather than averaged away. We show you the signals and let you weigh them — a flag is evidence, not a verdict.",
+    a: "Sessions are video-proctored. The interview runs on camera from start to submit, and movement, screen changes, pasted answers and per-answer timing are recorded against the attempt; anything that looks like misconduct is flagged on the report rather than averaged away. Detection of real-time answer assistants and lip-sync anomaly is in build and is not running yet — the page marks it as such. We show you the signals and let you weigh them: a flag is evidence, not a verdict.",
   },
   {
     q: "What does the free six months cover?",

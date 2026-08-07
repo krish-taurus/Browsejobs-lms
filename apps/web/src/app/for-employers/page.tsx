@@ -20,7 +20,7 @@ import { employerFaq, freeOffer } from "@/content/employers";
 
 const TITLE = "For employers — free for 6 months, and every applicant is already interviewed";
 const DESCRIPTION =
-  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed in a proctored session. Free for six months, then ₹200 an interview or a flat 8% of CTC on a hire — you choose.";
+  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed in a video-proctored session. Free for six months, then ₹200 an interview or a flat 8% of CTC on a hire — you choose.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -142,7 +142,7 @@ export default function ForEmployersPage() {
 
             <p className="mt-8 text-[13px] leading-relaxed text-white/40">
               Nobody can guarantee a hire — the market decides that. What we put in writing is the
-              process: a designed assessment, proctored sessions, consistent grading, checked
+              process: a designed assessment, video-proctored sessions, consistent grading, checked
               credentials, and evidence you can audit.
             </p>
 
