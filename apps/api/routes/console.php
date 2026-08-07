@@ -35,6 +35,12 @@ Schedule::command('class:wrapup')->hourly();
 
 // Any future class missing its Zoom meeting gets one — self-heals the fallout
 // from a credentials outage without anybody re-creating classes by hand.
+// Activate a WhatsApp mapping the moment Meta approves the template. Until a
+// key is linked its messages go out as free text, which Meta accepts and then
+// silently drops outside the 24h window — a message nobody receives and no log
+// complains about.
+Schedule::command('whatsapp:sync-templates')->hourly();
+
 Schedule::command('zoom:backfill')->hourly();
 
 // Pull finished Zoom Cloud recordings for classes that have run. This is the
