@@ -7,6 +7,7 @@ import { Capabilities } from "@/components/employers/Capabilities";
 import { EmployerHero } from "@/components/employers/EmployerHero";
 import { EmployerLeadForm } from "@/components/employers/EmployerLeadForm";
 import { FreeOffer } from "@/components/employers/FreeOffer";
+import { Pricing } from "@/components/employers/Pricing";
 import { Proctoring } from "@/components/employers/Proctoring";
 import { RoleTicker } from "@/components/employers/RoleTicker";
 import { SampleReport } from "@/components/employers/SampleReport";
@@ -19,7 +20,7 @@ import { employerFaq, freeOffer } from "@/content/employers";
 
 const TITLE = "For employers — free for 6 months, and every applicant is already interviewed";
 const DESCRIPTION =
-  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed in a proctored session. Scored candidates, credentials verified against DigiLocker and EPFO, ₹0 for your first six months.";
+  "Design the interview once — skills, rubric and rounds — and every applicant arrives already assessed in a proctored session. Free for six months, then ₹200 an interview or a flat 8% of CTC on a hire — you choose.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -90,6 +91,8 @@ export default function ForEmployersPage() {
 
       <TalentPool />
 
+      <Pricing />
+
       <TradeOffs />
 
       <Faq
@@ -123,6 +126,7 @@ export default function ForEmployersPage() {
             <ul className="mt-8 space-y-3 border-t border-white/[0.07] pt-8">
               {[
                 `Six months of the full workspace at ₹${freeOffer.price}`,
+                "Then ₹200 an interview, or 8% of CTC on a hire — your choice",
                 "One role, designed end to end with you",
                 "The matched talent pool for it, before you commit",
                 "An honest read on whether this fits how you hire",

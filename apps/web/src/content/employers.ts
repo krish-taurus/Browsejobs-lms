@@ -44,7 +44,7 @@ export const freeOffer = {
     { title: "Every report", body: "Scores, per-competency breakdowns, session integrity and verification outcomes." },
     { title: "Your whole team", body: "Recruiters and hiring managers on the same workspace, at no extra seat cost." },
   ],
-  closer: "Nothing to lose: if the pool is wrong for your roles, you will know inside a week and it will have cost you nothing.",
+  closer: "Nothing to lose: if the pool is wrong for your roles, you will know inside a week and it will have cost you nothing. When the six months end you choose a paid model — ₹200 an interview, or 8% of CTC on a hire — and neither starts on its own.",
 } as const;
 
 /* ------------------------------------------------------------- use cases */
@@ -172,6 +172,60 @@ export const steps: Step[] = [
     visual: "decide",
   },
 ];
+
+/* ---------------------------------------------------------------- pricing */
+
+/**
+ * What happens when the free six months end.
+ *
+ * Two models, stated in full with their real numbers, because "contact us
+ * for pricing" after a free trial is how a launch offer turns into a
+ * surprise. Which one is cheaper genuinely depends on how a company hires —
+ * so the page says that outright and gives them a comparator rather than
+ * steering them at the more expensive one.
+ */
+export const pricing = {
+  kicker: "After the free six months",
+  title: "Two models. Pick the one that",
+  highlight: "fits how you hire",
+  sub: "No auto-upgrade and no per-seat creep. When the six months are up you choose how to pay — by the interview, or by the hire.",
+  models: [
+    {
+      key: "saas",
+      name: "Per interview",
+      tag: "SaaS",
+      amount: 200,
+      unit: "per end-to-end interview",
+      body: "You pay for the interviews you actually run — designed, sat, proctored and graded, from invite to report. Nothing is charged on a hire.",
+      good: "Almost always the cheaper of the two, and by a wide margin — at ₹200 a session it takes hundreds of interviews to reach what one hire costs on the percentage.",
+      risk: "You pay whether or not anyone joins.",
+      accent: "trust" as const,
+    },
+    {
+      key: "agency",
+      name: "Per hire",
+      tag: "Agency",
+      amount: 8,
+      unit: "% of CTC, flat",
+      body: "You pay only when someone joins — a flat 8% of their CTC. Interviews, assessments and reports cost nothing along the way.",
+      good: "Rarely the cheaper option. You choose it to move the risk: if nobody joins, you pay nothing at all, however many people you interviewed.",
+      risk: "Costs nothing until someone actually starts.",
+      accent: "employer" as const,
+    },
+  ],
+  /** Sensible starting position for the comparator. */
+  defaults: { hires: 3, interviewsPerHire: 20, ctcLakh: 12 },
+  perInterview: 200,
+  hirePct: 8,
+  note: "An estimate on your own numbers, not a quote. What you actually pay depends on the roles you run and how many people sit each one.",
+  /**
+   * Said out loud because the comparator makes it obvious anyway, and an
+   * employer who works it out for themselves after being nudged the other way
+   * has learned something about us we would rather they did not.
+   */
+  honesty:
+    "On cost alone the per-interview model wins at almost any volume — a single ₹12L hire on the percentage is the same money as roughly 480 interviews. The reason to take the percentage is not price, it is risk: it costs nothing until someone starts.",
+} as const;
 
 /* ------------------------------------------------------------- proctoring */
 
@@ -500,6 +554,10 @@ export const employerFaq: { q: string; a: string }[] = [
   {
     q: "What does the free six months cover?",
     a: "The whole workspace: unlimited roles, the assessment and round designers, the talent pool, every candidate report, and your full team on it. ₹0 for six months — no fee per shortlist and no fee per hire during that period.",
+  },
+  {
+    q: "What happens when the six months end?",
+    a: "You pick one of two models. Per interview: ₹200 for each end-to-end interview you run — invite to graded report — and nothing on a hire. Per hire: a flat 8% of the joiner's CTC, with the interviews costing nothing. Which is cheaper depends on how many people you interview per hire, and the comparator on this page works it out on your numbers.",
   },
   {
     q: "When do we get contact details?",

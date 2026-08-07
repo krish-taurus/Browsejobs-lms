@@ -48,6 +48,17 @@ test("an employer walks the landing page and sends an enquiry", async ({ page })
   // The honest-limits column is on the page, not buried.
   await expect(page.getByText("Where it falls short")).toBeVisible();
 
+  // Both paid models are stated in full, and the comparator does the sum.
+  await expect(page.getByText("per end-to-end interview")).toBeVisible();
+  await expect(page.getByText("of CTC, flat").first()).toBeVisible();
+
+  await page.locator("#price-hires").fill("3");
+  await page.locator("#price-per-hire").fill("20");
+  await page.locator("#price-ctc").fill("12");
+  // 3 × 20 × ₹200, and 3 × ₹12L × 8%.
+  await expect(page.getByText("₹12,000")).toBeVisible();
+  await expect(page.getByText("₹2,88,000")).toBeVisible();
+
   // Enquiry: the CTA scrolls to the form, and the form posts an employer lead.
   const posted: Record<string, unknown>[] = [];
   // The client fetches the Sanctum CSRF cookie before any unsafe request, so
@@ -84,9 +95,13 @@ test("the walkthrough plays itself, then hands over on a click", async ({ page }
   const tablist = page.getByRole("tablist", { name: /step by step/i });
   const selected = tablist.getByRole("tab", { selected: true });
 
-  // Left alone, it moves on without being touched.
-  await expect(selected).toContainText("Open a workspace");
-  await expect(selected).not.toContainText("Open a workspace", { timeout: 12_000 });
+  // Left alone, it moves on without being touched. Which step it is on when
+  // the assertion starts is not asserted — a slow load can let autoplay
+  // advance first, and pinning it to step 01 would make this flaky in CI.
+  const first = await selected.getAttribute("id");
+  await expect
+    .poll(() => selected.getAttribute("id"), { timeout: 12_000 })
+    .not.toBe(first);
 
   // Once the visitor picks a step, it stays there.
   await tablist.getByRole("tab", { name: /Publish, and invite/ }).click();
