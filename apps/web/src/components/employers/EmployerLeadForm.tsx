@@ -95,7 +95,8 @@ export function EmployerLeadForm() {
         <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">
           Someone will come back to you on the details of the roles. If it is faster for you,
           reach us on <span className="mono text-white/80">hello@browsejobs.ai</span> or{" "}
-          <span className="mono text-white/80">+91 86185 19825</span>.
+          <span className="mono text-white/80">+91 79756 66665</span> or{" "}
+          <span className="mono text-white/80">+91 63634 02404</span>.
         </p>
       </motion.div>
     );

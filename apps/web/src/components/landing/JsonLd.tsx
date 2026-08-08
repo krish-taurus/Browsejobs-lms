@@ -12,7 +12,7 @@ export function JsonLd() {
         name: "BrowseJobs",
         legalName: contact.entity,
         url: "https://browsejobs.ai",
-        telephone: contact.phone,
+        telephone: [contact.phone, contact.phoneAlt],
         email: contact.email,
         address: {
           "@type": "PostalAddress",

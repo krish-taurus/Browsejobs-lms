@@ -8,7 +8,7 @@
     <hr style="border:none; border-top:1px solid #DCE6F5; margin:24px 0;">
     <div style="font-size:11px; color:#5A6B85;">
       Every promise in writing · Every call recorded &amp; AI-monitored.<br>
-      +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru
+      +91 79756 66665 · +91 63634 02404 · hello@browsejobs.ai · Whitefield, Bengaluru
     </div>
   </div>
 </body>

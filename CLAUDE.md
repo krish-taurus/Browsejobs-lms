@@ -50,7 +50,7 @@ Signature patterns: mono uppercase kicker (blue; green when the section is about
 - **Mandatory disclaimer** immediately after ANY stat (98%, ~90%, 50/day, salary figures, 5,000+, 4.9/5), in muted mono, stored ONCE as `DISCLAIMER` and rendered via the shared `<Disclaimer/>` component: `Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring depends on the live market and your performance.`
 - Fee model (render exactly; all figures server-owned, never client-sent): Registration ₹30,000 payable only AFTER the free masterclass + bootcamp; EMI 3×₹10,000. Placement fee = first 3 months' CTC, due only after the student accepts an offer, 6 monthly EMIs, with the ₹30,000 adjusted inside it. 30-day money-back guarantee, any reason, in writing.
 - Funnel spine (three free steps → paid): free counselling + written Career Analysis Report → free live Masterclass (primary conversion) → free 7-hour Python Bootcamp → paid registration. Every marketing CTA funnels to "Book Free Masterclass".
-- Contact (footer/contact surfaces): +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST.
+- Contact (footer/contact surfaces): +91 79756 66665 · +91 63634 02404 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST.
 - Stack note: Platform Spec §5 recommends Next+Postgres; the stack remains Laravel 11 + MySQL per ADR 0005 — do not "migrate" to the spec stack.
 
 ## Multi-Tenancy Rules (non-negotiable)

@@ -15,6 +15,7 @@ export function Footer() {
           <div>
             <p className="kicker text-sky/60">Talk to us</p>
             <p className="mono mt-3 text-sm">{contact.phone}</p>
+            <p className="mono mt-1 text-sm">{contact.phoneAlt}</p>
             <p className="mono mt-1 text-sm">{contact.email}</p>
             <p className="mt-2 text-sm text-sky/60">{contact.hours}</p>
           </div>

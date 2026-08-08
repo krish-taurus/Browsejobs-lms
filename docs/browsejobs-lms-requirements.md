@@ -382,7 +382,7 @@ Source: `docs/BrowseJobs_Platform_Spec_v1.pdf` (Master Build Specification v1.0,
 - BrowseJobs.ai — AI-driven IT skilling & placement platform. Founded London 2013, India 2020; office Whitefield, Bengaluru. Entity: IBrowseJobs Technologies Pvt Ltd. Domain browsejobs.ai (browsejobs.in 301s to it).
 - Core differentiator: **the syllabus is reverse-engineered** — AI monitors up to ~50 real & mock interviews/day and the syllabus is rebuilt monthly around live demand.
 - Positioning line: "This syllabus was not written. It was reverse-engineered." Primary tagline: "Built from real interviews."
-- Contact: +91 86185 19825 · hello@browsejobs.ai · Mon–Sat 9:00–19:00 IST.
+- Contact: +91 79756 66665 · +91 63634 02404 · hello@browsejobs.ai · Mon–Sat 9:00–19:00 IST.
 
 ### 14.2 Design system deltas (see CLAUDE.md for the full binding set)
 - New tokens: `--ink-2 #1B2A44`, `--green-bg #E6F7EF`.
