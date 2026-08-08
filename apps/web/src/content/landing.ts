@@ -22,7 +22,8 @@ export const FOOTER_LINE =
 export const MASTERCLASS_RECORDING_URL: string | null = null;
 
 export const contact = {
-  phone: "+91 86185 19825",
+  phone: "+91 79756 66665",
+  phoneAlt: "+91 63634 02404",
   email: "hello@browsejobs.ai",
   address: "Whitefield, Bengaluru, Karnataka 560066",
   hours: "Mon–Sat, 9:00 AM – 7:00 PM IST",

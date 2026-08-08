@@ -26,6 +26,24 @@
      pages just were not using them. */
   --bj-surface: #ffffff;
   --bj-fg: #0a1220;
+
+  /*
+   * Employer module accent. The employer portal grades itself blue → violet
+   * (its validated chart palette pairs SERIES blue with SERIES violet), so
+   * the employer-facing marketing page carries the same two hues and an
+   * employer arriving in the workspace sees the page they were sold.
+   *
+   * Violet is a MODULE accent, never a state: it never means verified,
+   * never means error, and never replaces blue as the primary action. The
+   * light-theme value is darkened from the portal's #9d6bf5 so it clears AA
+   * on paper (6.0:1); the dark theme restores the portal's own hue.
+   */
+  --bj-employer: #6d3fd4;
+  --bj-employer-soft: #f0ebfe;
+  /* The portal's own two surfaces, so ink panels on this page are literally
+     the colour of the product they are showing. */
+  --bj-deck: #05070d;
+  --bj-deck-card: #0a0f1c;
 }
 
 /*
@@ -50,6 +68,12 @@
   --bj-white: #0a0f1c;
   --bj-surface: #0a0f1c;
   --bj-fg: #f4f7fb;
+
+  /* On ink, the portal's validated violet is already in the dark lightness
+     band — use it unchanged. The deck surfaces do not move: they are the
+     product's canvas in either theme. */
+  --bj-employer: #9d6bf5;
+  --bj-employer-soft: #191338;
 }
 
 @theme inline {
@@ -67,6 +91,10 @@
   --color-muted: var(--bj-muted);
   --color-surface: var(--bj-surface);
   --color-fg: var(--bj-fg);
+  --color-employer: var(--bj-employer);
+  --color-employer-soft: var(--bj-employer-soft);
+  --color-deck: var(--bj-deck);
+  --color-deck-card: var(--bj-deck-card);
 
   /* Spec §2.4: soft shadow only. */
   --shadow-soft: 0 10px 40px rgba(10, 18, 32, 0.1);
@@ -191,7 +219,98 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/*
+ * Employer page motion. Three long, transform/opacity-only loops: two aurora
+ * blobs drifting behind the dark sections, and a slow sheen that crosses an
+ * ink panel to say "this is live" without a spinner. All are decorative and
+ * all stop under reduced motion (below).
+ */
+.aurora-a {
+  animation: aurora-a 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-a {
+  from {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6%, 4%, 0) scale(1.15);
+  }
+}
+
+.aurora-b {
+  animation: aurora-b 34s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-b {
+  from {
+    transform: translate3d(5%, 3%, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-6%, -3%, 0) scale(1);
+  }
+}
+
+/* Slow highlight crossing a panel — the "running" tell on the live frames. */
+.sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  animation: sheen 7s ease-in-out infinite;
+}
+@keyframes sheen {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+/* Signal dot on the proctoring panel: a ring that expands out and fades. */
+.ping::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  animation: ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .aurora-a,
+  .aurora-b {
+    animation: none;
+  }
+  .sheen::before,
+  .ping::after {
+    animation: none;
+  }
+  .sheen::before {
+    display: none;
+  }
+  .ping::after {
+    display: none;
+  }
   html {
     scroll-behavior: auto;
   }

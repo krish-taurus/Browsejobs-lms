@@ -13,7 +13,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * A marketing lead captured from the public site (masterclass, counselling,
- * bootcamp, contact, waitlist). The P2.1 CRM works it through the pipeline:
+ * bootcamp, contact, waitlist, employer). The P2.1 CRM works it through the
+ * pipeline:
  * stage, counselor assignment, rule-based score, dedupe/merge, contact
  * timeline, tasks, and the speed-to-lead SLA.
  *
@@ -42,7 +43,7 @@ class Lead extends Model
     use BelongsToTenant;
     use HasFactory;
 
-    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist', 'syllabus'];
+    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist', 'syllabus', 'employer'];
 
     /** @var list<string> */
     protected $fillable = [

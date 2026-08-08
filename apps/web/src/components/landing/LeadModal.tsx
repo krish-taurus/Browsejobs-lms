@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { ApiError, apiJson } from "@/lib/api";
+import { captureUtm } from "@/lib/utm";
 import { durations, ease } from "@/lib/motion";
 import { courses } from "@/content/landing";
 import {
@@ -29,24 +30,6 @@ const COPY: Record<LeadVariant, { title: string; body: string; cta: string }> = 
     cta: "Join the waitlist",
   },
 };
-
-/** First-touch UTM capture, persisted for attribution (spec §6.1). */
-function captureUtm(): Record<string, string> {
-  try {
-    const stored = sessionStorage.getItem("bj_utm");
-    if (stored) return JSON.parse(stored) as Record<string, string>;
-    const params = new URLSearchParams(window.location.search);
-    const utm: Record<string, string> = {};
-    for (const key of ["utm_source", "utm_medium", "utm_campaign"]) {
-      const v = params.get(key);
-      if (v) utm[key] = v;
-    }
-    if (Object.keys(utm).length) sessionStorage.setItem("bj_utm", JSON.stringify(utm));
-    return utm;
-  } catch {
-    return {};
-  }
-}
 
 export function LeadModal() {
   const reduce = useReducedMotion();

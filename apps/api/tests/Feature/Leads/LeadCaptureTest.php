@@ -47,6 +47,24 @@ it('rejects an invalid lead type', function () {
     postLead(['lead_type' => 'spam'])->assertStatus(422);
 });
 
+it('captures an employer hiring enquiry and scores it as high intent', function () {
+    postLead([
+        'lead_type' => 'employer',
+        'name' => 'Divya Prasad',
+        'email' => 'divya@meridian.test',
+        'course_slug' => null,
+        'message' => "Company: Meridian Logistics\nRoles: Data engineer\nOpenings: 3–5\nTimeline: Hiring now",
+    ])->assertCreated();
+
+    $lead = Lead::withoutGlobalScopes()->first();
+
+    expect($lead->lead_type)->toBe('employer')
+        ->and($lead->message)->toContain('Meridian Logistics')
+        // The employer type is a HOT_TYPE, so the enquiry must not land in the
+        // inbox scoring zero behind a brochure download.
+        ->and($lead->score)->toBeGreaterThanOrEqual(40);
+});
+
 it('requires name and phone', function () {
     postLead(['name' => '', 'phone' => ''])->assertStatus(422);
 });

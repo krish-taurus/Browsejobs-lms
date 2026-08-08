@@ -130,7 +130,7 @@ class SupportCorpusSeeder extends Seeder
                 'title' => 'How to reach a human',
                 'category' => TicketCategory::Other->value,
                 'body' => "Support hours are Monday to Saturday, 9:00 to 19:00 IST.\n\n"
-                    ."Phone: +91 86185 19825. Email: hello@browsejobs.ai. Office: Whitefield, Bengaluru.\n\n"
+                    ."Phone: +91 79756 66665 or +91 63634 02404. Email: hello@browsejobs.ai. Office: Whitefield, Bengaluru.\n\n"
                     .'Raising a ticket here reaches the right team directly, and you can see who it was assigned to.',
             ],
         ];

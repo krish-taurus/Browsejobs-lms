@@ -175,7 +175,17 @@ final readonly class CandidateProfile
                 'duration_seconds' => $interview->duration_seconds,
                 'status' => $interview->status,
                 'completed_at' => $interview->completed_at?->toIso8601String(),
-                // Stated so nobody reads silence as a clean proctoring report.
+                // Interviews are video-proctored operationally, but no
+                // integrity signal reaches this payload yet: employer_interviews
+                // has no column for the recording, out-of-frame time, focus
+                // loss, pasted answers or per-answer timing, and
+                // quiz_attempts.integrity covers LMS quizzes only. Until those
+                // are recorded against an employer round and returned here,
+                // this stays false — reporting a clean session we never
+                // measured is the one thing the trust firewall exists to
+                // prevent. /for-employers describes the proctoring an employer
+                // is promised; this screen must not claim it until the data
+                // backs it up.
                 'proctoring_captured' => false,
             ],
         ];
