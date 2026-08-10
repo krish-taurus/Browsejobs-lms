@@ -74,11 +74,22 @@ it('does not leak the raw join url in the list', function () {
     expect($body->getContent())->not->toContain('zoom.test/j/123');
 });
 
-it('hands out the join url to an enrolled student', function () {
+it('hands out the join url to an enrolled student once the window opens', function () {
     Sanctum::actingAs($this->student);
+
+    // Joining now opens only just before the class (server commit 0172bd5), and
+    // the seeded class is a day out — so bring it to now first.
+    withinTenant($this->tenant, fn () => $this->session->update(['scheduled_start' => now()]));
 
     $this->postJson("/api/v1/me/classes/{$this->session->id}/join")
         ->assertOk()->assertJsonPath('data.join_url', 'https://zoom.test/j/123');
+});
+
+it('refuses to open the join url before the window', function () {
+    Sanctum::actingAs($this->student);
+
+    // The seeded class is a day out: too early to join.
+    $this->postJson("/api/v1/me/classes/{$this->session->id}/join")->assertStatus(422);
 });
 
 it('refuses to let a non-member join', function () {

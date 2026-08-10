@@ -119,6 +119,12 @@ it('surfaces the Zoom error when meeting creation fails', function () {
         {
             return '';
         }
+
+        /** @return array<string, mixed>|null */
+        public function meetingRecordings(string $meetingId): ?array
+        {
+            return null;
+        }
     });
     Sanctum::actingAs($this->admin);
     withinTenant($this->tenant, fn () => $this->session->update(['zoom_meeting_id' => null]));
