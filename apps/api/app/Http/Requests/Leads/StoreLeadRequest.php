@@ -26,6 +26,8 @@ final class StoreLeadRequest extends FormRequest
             'phone' => ['required', 'string', 'min:8', 'max:20'],
             'email' => ['nullable', 'email', 'max:191'],
             'course_slug' => ['nullable', 'string', 'max:120'],
+            // Employer enquiries (lead_type=employer) name the hiring company.
+            'company' => ['nullable', 'string', 'max:190'],
             'message' => ['nullable', 'string', 'max:2000'],
             'utm_source' => ['nullable', 'string', 'max:120'],
             'utm_medium' => ['nullable', 'string', 'max:120'],

@@ -225,6 +225,9 @@ function SiteNav() {
           <Link href="/jobs" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
             Jobs
           </Link>
+          <Link href="/employers" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
+            For employers
+          </Link>
           <LoginMenu />
         </nav>
 
@@ -290,6 +293,13 @@ function SiteNav() {
                   className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
                 >
                   Jobs
+                </Link>
+                <Link
+                  href="/employers"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
+                >
+                  For employers
                 </Link>
                 <Link
                   href="/employer"
