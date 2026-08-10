@@ -13,7 +13,9 @@ use Illuminate\Support\Carbon;
 
 /**
  * A marketing lead captured from the public site (masterclass, counselling,
- * bootcamp, contact, waitlist). The P2.1 CRM works it through the pipeline:
+ * bootcamp, contact, waitlist, syllabus) or from the employer landing page
+ * (`employer` — a hiring company enquiry, which carries `company`). The P2.1
+ * CRM works every type through the same pipeline:
  * stage, counselor assignment, rule-based score, dedupe/merge, contact
  * timeline, tasks, and the speed-to-lead SLA.
  *
@@ -25,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $phone_normalized
  * @property string|null $email
  * @property string|null $course_slug
+ * @property string|null $company
  * @property string|null $utm_source
  * @property string|null $utm_medium
  * @property string|null $utm_campaign
@@ -42,11 +45,11 @@ class Lead extends Model
     use BelongsToTenant;
     use HasFactory;
 
-    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist', 'syllabus'];
+    public const TYPES = ['masterclass', 'counselling', 'bootcamp', 'contact', 'waitlist', 'syllabus', 'employer'];
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'lead_type', 'name', 'phone', 'phone_normalized', 'email', 'course_slug', 'message',
+        'tenant_id', 'lead_type', 'name', 'phone', 'phone_normalized', 'email', 'course_slug', 'company', 'message',
         'utm_source', 'utm_medium', 'utm_campaign', 'page', 'ip',
         'consented_at', 'consent_version', 'crm_synced',
         'lead_stage_id', 'assigned_to', 'score',

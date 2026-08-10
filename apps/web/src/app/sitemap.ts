@@ -17,5 +17,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/skills`, priority: 0.8 },
   ...skillPages.map((p) => ({ url: `${BASE}/skills/${p.slug}`, priority: 0.7 })),
   { url: `${BASE}/reviews`, priority: 0.6 },
+  { url: `${BASE}/employers`, priority: 0.9 },
   ];
 }

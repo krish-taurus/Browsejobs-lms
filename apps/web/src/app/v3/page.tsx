@@ -219,6 +219,9 @@ function SiteNav() {
               {l.label}
             </a>
           ))}
+          <Link href="/employers" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
+            For employers
+          </Link>
           <Link href="/student" className="text-sm font-medium text-black/50 transition-colors hover:text-[#0a1220]">
             Student sign in
           </Link>
@@ -280,6 +283,13 @@ function SiteNav() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.06 + NAV_LINKS.length * 0.05, duration: 0.3, ease: EASE }}
               >
+                <Link
+                  href="/employers"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-[#0a1220] transition-colors hover:bg-[#f6f9fe]"
+                >
+                  For employers
+                </Link>
                 <Link
                   href="/student"
                   onClick={() => setOpen(false)}
