@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
 import { durations, ease } from "@/lib/motion";
+import { thankYouPath } from "@/lib/thankYou";
 import { courses } from "@/content/landing";
 import {
   LEAD_MODAL_EVENT,
@@ -57,15 +59,14 @@ export function LeadModal() {
   const [courseSlug, setCourseSlug] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function onOpen(e: Event) {
       const d = (e as CustomEvent<LeadModalDetail>).detail;
       setDetail(d);
       setCourseSlug(d.courseSlug ?? "");
-      setDone(false);
       setError(null);
     }
     window.addEventListener(LEAD_MODAL_EVENT, onOpen);
@@ -102,14 +103,17 @@ export function LeadModal() {
           consent,
         }),
       });
-      setDone(true);
+      // Hand the person a real confirmation page rather than a modal that
+      // vanishes: it names what they asked for and what happens next. `busy`
+      // deliberately stays true so the button can't be pressed twice while the
+      // navigation is in flight.
+      router.push(thankYouPath(detail.variant, courseSlug || null));
     } catch (err) {
       setError(
         err instanceof ApiError
           ? (err.firstError ?? err.message)
           : "Something went wrong. Please try again or call us.",
       );
-    } finally {
       setBusy(false);
     }
   }
@@ -138,27 +142,9 @@ export function LeadModal() {
             transition={{ duration: durations.base, ease }}
             onClick={(e) => e.stopPropagation()}
           >
-            {done ? (
-              <div className="p-8 text-center">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-verify-bg">
-                  <svg viewBox="0 0 24 24" className="h-7 w-7 text-verify" fill="none">
-                    <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <h2 className="display mt-4 text-xl text-ink">You&apos;re in.</h2>
-                <p className="mt-2 text-sm text-muted">
-                  We&apos;ll confirm on WhatsApp shortly. Reminders arrive before
-                  the session — nothing to remember.
-                </p>
-                <button
-                  onClick={close}
-                  className="mt-6 rounded-full border border-line px-6 py-2.5 text-sm font-semibold text-ink hover:border-trust"
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={submit} className="p-7">
+            {/* No inline success state — a submitted form navigates to
+                /thank-you, which carries the course recap and next steps. */}
+            <form onSubmit={submit} className="p-7">
                 <p className="kicker text-verify">Free · no card required</p>
                 <h2 className="display mt-2 text-xl text-ink">{copy.title}</h2>
                 <p className="mt-1.5 text-sm text-muted">{copy.body}</p>
@@ -229,7 +215,6 @@ export function LeadModal() {
                   {busy ? "Sending…" : copy.cta}
                 </button>
               </form>
-            )}
           </motion.div>
         </motion.div>
       )}

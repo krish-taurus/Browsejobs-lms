@@ -107,7 +107,10 @@ test("employer enquiry form captures a lead", async ({ page }) => {
 
   await submit.click();
 
-  await expect(page.locator("#start")).toContainText("Thanks — we have it.");
+  // Success navigates to the shared confirmation page, not an inline state.
+  await expect(page).toHaveURL(/\/thank-you\?type=employer$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("hiring enquiry");
+
   expect(payloads).toHaveLength(1);
   expect(payloads[0]).toMatchObject({
     lead_type: "employer",

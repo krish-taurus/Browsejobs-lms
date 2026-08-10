@@ -11,9 +11,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
-import { durations, ease } from "@/lib/motion";
+import { thankYouPath } from "@/lib/thankYou";
 import { HIRING_VOLUMES } from "@/content/employers";
 
 /** First-touch UTM capture, persisted for attribution (spec §6.1). */
@@ -46,8 +46,8 @@ export function EmployerLeadForm() {
   const [roles, setRoles] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,46 +73,20 @@ export function EmployerLeadForm() {
           consent,
         }),
       });
-      setDone(true);
+      // `busy` stays true through the navigation so the form can't double-submit.
+      router.push(thankYouPath("employer"));
     } catch (err) {
       setError(
         err instanceof ApiError
           ? (err.firstError ?? err.message)
           : "Something went wrong. Please try again, or email hello@browsejobs.ai.",
       );
-    } finally {
       setBusy(false);
     }
   }
 
-  if (done) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: durations.slow, ease }}
-        className="rounded-panel border border-verify/40 bg-verify/10 p-8 text-center"
-      >
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-verify/20">
-          <svg viewBox="0 0 24 24" className="h-7 w-7 text-verify" fill="none">
-            <path
-              d="M5 12.5l4.5 4.5L19 7.5"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <h3 className="display mt-4 text-2xl text-white">Thanks — we have it.</h3>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/60">
-          Someone from the team will reach out to set up the onboarding call, walk through the pipeline on one of your
-          live roles, and put the commercials in writing before anything starts.
-        </p>
-      </motion.div>
-    );
-  }
-
+  // No inline success state — a submitted enquiry navigates to /thank-you,
+  // which carries the onboarding steps.
   return (
     <form onSubmit={submit} className="rounded-panel border border-white/12 bg-white/[0.04] p-6 md:p-8">
       {error && (
