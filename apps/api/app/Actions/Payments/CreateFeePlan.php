@@ -32,6 +32,20 @@ final readonly class CreateFeePlan
         private AuditLogger $audit,
     ) {}
 
+    /**
+     * What this batch costs: the course's own registration fee when one is set
+     * (the CRM owns that number), otherwise the platform default. Read here and
+     * nowhere else, so a quote and the plan it becomes can never disagree.
+     */
+    public static function totalFor(Batch $batch): int
+    {
+        $courseFee = $batch->course?->fee_paise;
+
+        return $courseFee !== null && $courseFee > 0
+            ? (int) $courseFee
+            : (int) config('fees.registration_paise');
+    }
+
     public function handle(
         Tenant $tenant,
         User $student,
@@ -61,7 +75,7 @@ final readonly class CreateFeePlan
             throw ValidationException::withMessages(['emi_count' => 'Unsupported EMI count.']);
         }
 
-        $total = (int) config('fees.registration_paise');
+        $total = self::totalFor($batch);
         $discountPaise = max(0, min($discountPaise, $total));
 
         return DB::transaction(function () use ($tenant, $student, $batch, $type, $emiCount, $discountPaise, $total, $actor): FeePlan {

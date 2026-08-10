@@ -12,6 +12,7 @@ const DASHBOARD: NavItem = { href: "/dashboard", label: "Dashboard", icon: "M3 1
 const CLASSES: NavItem = { href: "/classes", label: "My Classes", icon: "M4 5h16v12H4zM8 20h8M12 17v3", primary: true, short: "Classes" };
 const RECORDINGS: NavItem = { href: "/recordings", label: "Recordings", icon: "M4 6h16v12H4zM10 9l5 3-5 3z" };
 const PRACTICE: NavItem = { href: "/labs", label: "Practice", icon: "M8 6 3 12l5 6M16 6l5 6-5 6M13 4l-2 16", primary: true };
+const QUIZZES: NavItem = { href: "/quizzes", label: "Quizzes", icon: "M9 5h6M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM9 11l2 2 4-4" };
 const TUTOR: NavItem = { href: "/tutor", label: "AI Tutor", icon: "M12 3a7 7 0 0 0-7 7c0 2.4 1.2 4.1 3 5.3V18h8v-2.7c1.8-1.2 3-2.9 3-5.3a7 7 0 0 0-7-7ZM9 21h6" };
 const MOCK: NavItem = { href: "/mock", label: "Mock Interviews", icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8", primary: true, short: "Mock" };
 const MENTORS: NavItem = { href: "/mentors", label: "Mentors", icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7M17 14.5a7 7 0 0 1 5 6.5" };
@@ -30,7 +31,7 @@ const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4
 
 /** Grouped for the sidebar and the mobile menu sheet. */
 export const navGroups: NavGroup[] = [
-  { label: "Learn", items: [DASHBOARD, CLASSES, RECORDINGS, PRACTICE, TUTOR] },
+  { label: "Learn", items: [DASHBOARD, CLASSES, RECORDINGS, PRACTICE, QUIZZES, TUTOR] },
   { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
   { label: "Career", items: [MOCK, MENTORS, PLACEMENT, JOBS, CV] },
   { label: "You", items: [PULSE, ALERTS, CHECKIN, STORE, SUPPORT, PROFILE] },

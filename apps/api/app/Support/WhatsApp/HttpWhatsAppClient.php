@@ -19,22 +19,15 @@ final class HttpWhatsAppClient implements WhatsAppClient
      */
     public function __construct(private readonly array $config) {}
 
-    public function sendMessage(string $to, string $body, ?string $templateName = null): string
-    {
+    public function sendMessage(
+        string $to,
+        string $body,
+        ?string $templateName = null,
+        array $parameters = [],
+        bool $authTemplate = false,
+    ): string {
         $payload = $templateName !== null
-            ? [
-                'messaging_product' => 'whatsapp',
-                'to' => PhoneNormalizer::normalize($to),
-                'type' => 'template',
-                'template' => [
-                    'name' => $templateName,
-                    'language' => ['code' => 'en'],
-                    'components' => [[
-                        'type' => 'body',
-                        'parameters' => [['type' => 'text', 'text' => $body]],
-                    ]],
-                ],
-            ]
+            ? $this->templatePayload($to, $body, $templateName, $parameters, $authTemplate)
             : [
                 'messaging_product' => 'whatsapp',
                 'to' => PhoneNormalizer::normalize($to),
@@ -54,5 +47,49 @@ final class HttpWhatsAppClient implements WhatsAppClient
         }
 
         return $id;
+    }
+
+    /**
+     * @param  list<string>  $parameters
+     * @return array<string, mixed>
+     */
+    private function templatePayload(
+        string $to,
+        string $body,
+        string $templateName,
+        array $parameters,
+        bool $authTemplate,
+    ): array {
+        $values = $parameters !== [] ? array_values($parameters) : [$body];
+
+        $components = [[
+            'type' => 'body',
+            'parameters' => array_map(
+                static fn (string $value): array => ['type' => 'text', 'text' => $value],
+                $values,
+            ),
+        ]];
+
+        // An AUTHENTICATION template carries the code again in its copy-code
+        // button; Meta rejects the send outright if that component is missing.
+        if ($authTemplate) {
+            $components[] = [
+                'type' => 'button',
+                'sub_type' => 'url',
+                'index' => '0',
+                'parameters' => [['type' => 'text', 'text' => $values[0]]],
+            ];
+        }
+
+        return [
+            'messaging_product' => 'whatsapp',
+            'to' => PhoneNormalizer::normalize($to),
+            'type' => 'template',
+            'template' => [
+                'name' => $templateName,
+                'language' => ['code' => 'en'],
+                'components' => $components,
+            ],
+        ];
     }
 }

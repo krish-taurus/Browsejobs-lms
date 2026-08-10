@@ -17,6 +17,9 @@ type LiveClass = {
   status: string;
   has_recording: boolean;
   recording_id: number | null;
+  join_opens_at: string | null;
+  can_join: boolean;
+  blocked_reason: "fees" | "too_early" | "not_ready" | null;
 };
 
 // The platform runs on IST — show every class time in Asia/Kolkata so a student
@@ -104,7 +107,7 @@ export default function ClassesPage() {
     <div className="mx-auto max-w-3xl">
       <p className="kicker text-trust">My Classes</p>
       <h1 className="display mt-2 text-3xl text-ink">Your class schedule</h1>
-      <p className="mt-1 text-sm text-muted">All times shown in IST. Join opens once your enrolment and fees are clear.</p>
+      <p className="mt-1 text-sm text-muted">All times shown in IST. Join opens just before each class, once your fees are clear.</p>
 
       {error && <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{error}</p>}
 
@@ -163,13 +166,31 @@ export default function ClassesPage() {
                               {c.batch}{c.topic ? ` · ${c.topic}` : ""}
                             </span>
                           </span>
-                          <button
-                            onClick={() => join(c)}
-                            disabled={joining === c.id}
-                            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
-                          >
-                            {joining === c.id ? "Opening…" : "Join"}
-                          </button>
+                          {/* The server decides: unpaid dues come first, then the
+                              join window, then whether the room exists. Showing a
+                              Join button that only fails on click helps nobody. */}
+                          {c.blocked_reason === "fees" ? (
+                            <span
+                              title="Your fee dues are past the grace period, so live classes are locked."
+                              className="rounded-full bg-warn px-4 py-2 text-xs font-semibold text-white"
+                            >
+                              Pay fees to unlock
+                            </span>
+                          ) : c.can_join ? (
+                            <button
+                              onClick={() => join(c)}
+                              disabled={joining === c.id}
+                              className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
+                            >
+                              {joining === c.id ? "Opening…" : "Join"}
+                            </button>
+                          ) : (
+                            <span className="rounded-full bg-paper px-4 py-2 text-xs text-muted">
+                              {c.blocked_reason === "too_early" && c.join_opens_at
+                                ? `Opens ${timeLabel(c.join_opens_at)}`
+                                : "Not ready yet"}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

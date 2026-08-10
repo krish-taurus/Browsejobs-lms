@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int $quiz_id
  * @property int $user_id
  * @property QuizAttemptStatus $status
+ * @property Carbon|null $due_at
  * @property Carbon|null $deadline_at
  * @property Carbon|null $started_at
  * @property Carbon|null $submitted_at
@@ -38,7 +39,7 @@ class QuizAttempt extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'quiz_id', 'user_id', 'status', 'deadline_at', 'started_at', 'submitted_at',
+        'tenant_id', 'quiz_id', 'user_id', 'status', 'due_at', 'deadline_at', 'started_at', 'submitted_at',
         'score_pct', 'correct_count', 'total_count', 'answers', 'integrity', 'reminded_at', 'flagged_at',
     ];
 
@@ -49,6 +50,7 @@ class QuizAttempt extends Model
     {
         return [
             'status' => QuizAttemptStatus::class,
+            'due_at' => 'datetime',
             'deadline_at' => 'datetime',
             'started_at' => 'datetime',
             'submitted_at' => 'datetime',

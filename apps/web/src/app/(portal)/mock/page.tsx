@@ -33,6 +33,7 @@ type MockSummary = {
     max_minutes: number;
     in_progress: { id: number; join_url: string | null } | null;
     topups: VoiceTopup[];
+      provider_ready: boolean;
   };
   mocks: { id: number; overall_score: number | null; completed_at: string | null }[];
 };
@@ -93,6 +94,21 @@ export default function MockHubPage() {
     } catch (err) {
       setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
     } finally {
+      setVoiceBusy(null);
+    }
+  }
+
+  // No telephony provider configured: run the spoken interview in the browser
+  // instead — same interviewer and scorecard, using the browser's own speech
+  // engine, and it costs no credit.
+  async function startBrowserVoice() {
+    setVoiceError(null);
+    setVoiceBusy("start");
+    try {
+      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", { method: "POST" });
+      window.location.href = `/mock/${r.data.id}/room`;
+    } catch (err) {
+      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
       setVoiceBusy(null);
     }
   }
@@ -243,6 +259,24 @@ export default function MockHubPage() {
             >
               Rejoin the call →
             </a>
+          </>
+        ) : !summary.voice.provider_ready ? (
+          <>
+            <p className="mt-2 text-sm text-ink">
+              A spoken interview with the AI interviewer — questions are read aloud and your answers
+              are transcribed as you speak. You get the same scorecard afterwards.
+            </p>
+            <button
+              onClick={startBrowserVoice}
+              disabled={voiceBusy === "start"}
+              className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {voiceBusy === "start" ? "Opening the room…" : "Start a voice interview"}
+            </button>
+            <p className="mt-2 text-xs text-muted">
+              Runs in your browser — no credit is used. Works best in Chrome or Edge, with your
+              microphone and camera allowed.
+            </p>
           </>
         ) : summary.voice.credits > 0 ? (
           <>

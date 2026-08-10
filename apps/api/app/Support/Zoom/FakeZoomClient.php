@@ -60,4 +60,12 @@ final class FakeZoomClient implements ZoomClient
     {
         return $this->recordingBytes;
     }
+
+    /** @var array<string, array<string, mixed>> keyed by meeting id */
+    public array $recordings = [];
+
+    public function meetingRecordings(string $meetingId): ?array
+    {
+        return $this->recordings[$meetingId] ?? null;
+    }
 }

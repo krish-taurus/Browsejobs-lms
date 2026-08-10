@@ -79,6 +79,11 @@ final class MockController extends Controller
                         'in_progress' => $mocks->first(fn (MockInterview $m) => $m->mode === MockInterview::MODE_VOICE
                             && $m->status === MockInterview::STATUS_IN_PROGRESS)?->only(['id', 'join_url']),
                         'topups' => $this->voiceTopups(),
+                        // Whether the telephony provider can actually place a
+                        // call. Without it the portal offers the in-browser
+                        // spoken interview instead of a button that only ever
+                        // fails and refunds the credit.
+                        'provider_ready' => (string) config('services.vapi.api_key', '') !== '',
                     ],
                     'mocks' => $mocks
                         ->where('status', MockInterview::STATUS_COMPLETED)
@@ -125,6 +130,24 @@ final class MockController extends Controller
                 return $this->session($interview->refresh());
             },
         ));
+    }
+
+    /**
+     * Proctoring close: the interview room ends the session when the student
+     * repeatedly leaves the tab. No refund — the credit was spent on a session
+     * abandoned by cheating, mirroring a real interview walk-out.
+     */
+    public function abandon(Request $request, int $mock): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+            $interview = $this->owned($request, $mock);
+
+            if ($interview->status === MockInterview::STATUS_IN_PROGRESS) {
+                $interview->update(['status' => MockInterview::STATUS_ABANDONED, 'completed_at' => now()]);
+            }
+
+            return $this->session($interview->refresh());
+        });
     }
 
     public function finish(Request $request, int $mock): JsonResponse

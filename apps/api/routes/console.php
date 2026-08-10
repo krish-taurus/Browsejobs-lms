@@ -20,12 +20,33 @@ Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 // Masterclass → free bootcamp auto-invite (funnel Stage 2→3): daily.
 Schedule::command('bootcamp:invite')->dailyAt('09:00');
 
+// Automated enrolment funnel: build the weekend masterclass batch per course
+// from lead interest, roll each finished masterclass into a 7-day bootcamp
+// (with its paid batch pre-linked), and convert ended bootcamps to paid.
+// Idempotent daily sweep.
+Schedule::command('funnel:advance')->dailyAt('05:15');
+
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
 
 // Post-class study nudge (PRD §6 daily loop): nudge cohorts to review flashcards
 // for classes that have ended, once the flashcards exist. Idempotent.
 Schedule::command('class:wrapup')->hourly();
+
+// Any future class missing its Zoom meeting gets one — self-heals the fallout
+// from a credentials outage without anybody re-creating classes by hand.
+// Activate a WhatsApp mapping the moment Meta approves the template. Until a
+// key is linked its messages go out as free text, which Meta accepts and then
+// silently drops outside the 24h window — a message nobody receives and no log
+// complains about.
+Schedule::command('whatsapp:sync-templates')->hourly();
+
+Schedule::command('zoom:backfill')->hourly();
+
+// Pull finished Zoom Cloud recordings for classes that have run. This is the
+// webhook fallback, and the only route that works at all while Zoom cannot
+// reach this host: without it a recording never appears in the portal.
+Schedule::command('zoom:sync-recordings')->everyThirtyMinutes();
 
 // Google Drive review intake (Platform Spec §3): pull new review images from the
 // configured folder into the triage queue. Weekly; a no-op until a service account

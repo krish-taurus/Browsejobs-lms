@@ -100,9 +100,12 @@ export default function McqPage({ params }: { params: Promise<{ attempt: string 
             </div>
           ))}
         </div>
-        <Link href="/dashboard" className="mt-6 inline-block rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white">
-          Back to dashboard
-        </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Link href={`/quizzes/${attempt}/leaderboard`} className="rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white">
+            See how your batch did
+          </Link>
+          <Link href="/quizzes" className="text-sm font-semibold text-trust">My quizzes</Link>
+        </div>
       </div>
     );
   }
@@ -112,8 +115,8 @@ export default function McqPage({ params }: { params: Promise<{ attempt: string 
     return (
       <div className="mx-auto max-w-2xl">
         <h1 className="display text-2xl text-ink">{quiz.title}</h1>
-        <p className="mt-3 text-sm text-muted">You&apos;ve already completed this quiz. Your score is on your dashboard.</p>
-        <Link href="/dashboard" className="mt-5 inline-block rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white">Back to dashboard</Link>
+        <p className="mt-3 text-sm text-muted">You&apos;ve already completed this quiz.</p>
+        <Link href={`/quizzes/${attempt}/leaderboard`} className="mt-5 inline-block rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white">See how your batch did</Link>
       </div>
     );
   }

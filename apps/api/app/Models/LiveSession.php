@@ -172,4 +172,20 @@ class LiveSession extends Model
             'wrapped_up_at' => 'datetime',
         ];
     }
+
+    /**
+     * When the Join button opens: a short window before the class starts, so
+     * students cannot sit in an empty room hours early. Null when the session
+     * has no scheduled start.
+     */
+    public function joinOpensAt(): ?\Illuminate\Support\Carbon
+    {
+        if ($this->scheduled_start === null) {
+            return null;
+        }
+
+        return $this->scheduled_start
+            ->copy()
+            ->subMinutes((int) config('classes.join_opens_minutes_before', 1));
+    }
 }

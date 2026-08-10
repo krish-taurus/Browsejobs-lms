@@ -170,6 +170,11 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 
 // Public certificate verification (PRD §6.5). NO tenant.domain — a printed QR must
 // verify from any host, so the lookup is by the globally-unique code (withoutGlobalScopes).
+// Daily simulated-live masterclass showing (public; the CRM WhatsApps this
+// page to interested leads). NO tenant.domain — course resolved by slug.
+Route::get('v1/masterclass/watch/{slug?}', [\App\Http\Controllers\Public\MasterclassWatchController::class, 'show'])
+    ->middleware('throttle:60,1');
+
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('certificates.verify');
@@ -271,6 +276,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/pulse/celebrations/{celebration}/guidance', [PulsePageController::class, 'guidance'])->middleware('throttle:ai');
     Route::post('me/pulse/content/{item}/viewed', [PulsePageController::class, 'contentViewed'])->middleware('throttle:60,1');
     Route::get('me/fee-status', [FeeStatusController::class, 'show']);
+    Route::get('me/fee-offer', [FeeStatusController::class, 'offer']);
+    Route::post('me/fee-plan', [FeeStatusController::class, 'choose'])->middleware('throttle:10,1');
     Route::get('me/notifications', [NotificationController::class, 'index']);
     Route::post('me/notifications/read', [NotificationController::class, 'markRead']);
     Route::get('me/message-preferences', [MessagePreferenceController::class, 'show']);
@@ -306,6 +313,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/labs/{lesson}', [LabController::class, 'show']);
     Route::post('me/labs/{lesson}/run', [LabController::class, 'run'])->middleware('throttle:ai');
     Route::post('me/labs/{lesson}/submit', [LabController::class, 'submit'])->middleware('throttle:ai');
+    Route::get('me/quizzes', [MyQuizController::class, 'index']);
+    Route::get('me/quizzes/{attempt}/leaderboard', [MyQuizController::class, 'leaderboard']);
     Route::get('me/mcq/{attempt}', [MyQuizController::class, 'show']);
     Route::post('me/mcq/{attempt}/submit', [MyQuizController::class, 'submit'])->middleware('throttle:30,1');
     Route::get('me/assignments/{lesson}', [MyAssignmentController::class, 'show']);
@@ -394,6 +403,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/mocks/{mock}', [MockController::class, 'show']);
     Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
+    // Proctoring close from the interview room — no refund, like walking out.
+    Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     // Employer JD board for candidates: browse, free apply, track (PRD-E F3).

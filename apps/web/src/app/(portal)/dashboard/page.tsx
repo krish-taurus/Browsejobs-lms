@@ -2,7 +2,9 @@
 
 import { useAuth } from "@/lib/auth";
 import { FeeWidget } from "@/components/portal/FeeWidget";
+import { FeeChoiceCard } from "@/components/portal/FeeChoiceCard";
 import { NextClassCard } from "@/components/portal/NextClassCard";
+import { QuizDueCard } from "@/components/portal/QuizDueCard";
 import { CoachPanel } from "@/components/portal/CoachPanel";
 import { LeaderboardCard } from "@/components/portal/LeaderboardCard";
 import { MarketBriefCard } from "@/components/portal/MarketBriefCard";
@@ -19,8 +21,16 @@ export default function DashboardPage() {
 
       <FeeWidget />
 
+      {/* Seat held but nothing agreed yet — pick full payment or an EMI plan.
+          Renders nothing once a plan exists; FeeWidget above takes over. */}
+      <FeeChoiceCard />
+
       {/* Next live class — time-sensitive, so it sits high with a one-tap gated join. */}
       <NextClassCard />
+
+      {/* An open quiz is deadline-bound, so it sits with the class card rather
+          than waiting to be found on the Quizzes page. */}
+      <QuizDueCard />
 
       {/* Today's market brief — the daily signal, one tap from the dashboard. */}
       <MarketBriefCard />
