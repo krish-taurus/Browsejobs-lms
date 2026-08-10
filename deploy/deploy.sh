@@ -40,19 +40,42 @@ need_root(){ [ "$(id -u)" = "0" ] || die "Run with sudo: sudo ./deploy.sh $1"; }
 # 2026-07-31 to 2026-08-10: every deploy in between died on
 # "fatal: Not possible to fast-forward, aborting." before building anything.
 #
-# The droplet is a deploy target, not a place to author code, so origin wins.
-# Any local-only commit is printed before it is discarded, which keeps it
-# recoverable from the deploy log. Untracked files are left alone — `reset`
-# does not touch them, and `clean` is deliberately NOT run here because the
-# .env files holding every production secret are untracked.
+# The droplet is a deploy target, not a place to author code, so origin wins —
+# but it never wins by destroying work. When this was first written we assumed
+# the server's extra commit was a stray; it turned out to be ~30 commits of real
+# production work that existed nowhere else. So local-only commits are ALWAYS
+# preserved on a rescue branch before the reset:
+#
+#   1. `git branch` them locally. Needs no credentials, cannot fail, and keeps
+#      them reachable on disk (a bare reset would leave them only in the reflog,
+#      which `gc` eventually eats).
+#   2. Best-effort push of that branch to origin, so they survive the droplet.
+#      A read-only deploy key is normal, so a failed push warns and continues
+#      rather than blocking the deploy.
+#
+# Untracked files are left alone — `reset` does not touch them, and `clean` is
+# deliberately NOT run because the .env files holding every production secret
+# are untracked.
 sync_to_origin(){
   say "Syncing ${APP_DIR} to origin/main…"
   git -C "${APP_DIR}" fetch --prune origin
 
-  local ahead
+  local ahead rescue
   ahead="$(git -C "${APP_DIR}" log --oneline origin/main..HEAD 2>/dev/null || true)"
+
   if [ -n "${ahead}" ]; then
-    printf "\033[1;33m! Discarding commits that exist only on this server:\033[0m\n%s\n" "${ahead}"
+    rescue="rescue/server-$(git -C "${APP_DIR}" rev-parse --short HEAD)"
+    printf "\033[1;33m! %s commit(s) exist only on this server:\033[0m\n%s\n" \
+      "$(printf '%s\n' "${ahead}" | grep -c .)" "${ahead}"
+
+    git -C "${APP_DIR}" branch -f "${rescue}" HEAD
+    ok "Preserved on local branch ${rescue}."
+
+    if git -C "${APP_DIR}" push -q origin "${rescue}:refs/heads/${rescue}" 2>/dev/null; then
+      ok "Pushed ${rescue} to origin."
+    else
+      printf "\033[1;33m! Could not push %s to origin (deploy key read-only?).\n  It exists on this server only — get it off the box.\033[0m\n" "${rescue}"
+    fi
   fi
 
   # Re-attach to main first: a previous half-finished deploy can leave HEAD detached.
