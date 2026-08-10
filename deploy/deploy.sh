@@ -32,6 +32,35 @@ die(){ printf "\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 
 need_root(){ [ "$(id -u)" = "0" ] || die "Run with sudo: sudo ./deploy.sh $1"; }
 
+# Make the checkout an exact mirror of origin/main.
+#
+# This used to be `git pull --ff-only`, which fails closed the moment anything
+# is committed on the server — and because that failure is buried in a GitHub
+# Actions log, nobody notices. It silently froze production at b0d564c from
+# 2026-07-31 to 2026-08-10: every deploy in between died on
+# "fatal: Not possible to fast-forward, aborting." before building anything.
+#
+# The droplet is a deploy target, not a place to author code, so origin wins.
+# Any local-only commit is printed before it is discarded, which keeps it
+# recoverable from the deploy log. Untracked files are left alone — `reset`
+# does not touch them, and `clean` is deliberately NOT run here because the
+# .env files holding every production secret are untracked.
+sync_to_origin(){
+  say "Syncing ${APP_DIR} to origin/main…"
+  git -C "${APP_DIR}" fetch --prune origin
+
+  local ahead
+  ahead="$(git -C "${APP_DIR}" log --oneline origin/main..HEAD 2>/dev/null || true)"
+  if [ -n "${ahead}" ]; then
+    printf "\033[1;33m! Discarding commits that exist only on this server:\033[0m\n%s\n" "${ahead}"
+  fi
+
+  # Re-attach to main first: a previous half-finished deploy can leave HEAD detached.
+  git -C "${APP_DIR}" checkout -q -B main origin/main
+  git -C "${APP_DIR}" reset --hard origin/main
+  ok "At $(git -C "${APP_DIR}" rev-parse --short HEAD)."
+}
+
 cmd_setup(){
   need_root setup
   say "Installing system packages (PHP 8.3, Node 20, MySQL, Redis, Nginx)…"
@@ -47,7 +76,7 @@ cmd_setup(){
   if [ ! -d "${APP_DIR}/.git" ]; then
     mkdir -p "${APP_DIR}"; git clone "${REPO_URL}" "${APP_DIR}"
   else
-    git -C "${APP_DIR}" pull --ff-only
+    sync_to_origin
   fi
   ok "Code in place."
 
@@ -170,8 +199,7 @@ DONE
 }
 
 cmd_update(){
-  say "Updating from git…"
-  git -C "${APP_DIR}" pull --ff-only
+  sync_to_origin
   cd "${API_DIR}"; sudo -u www-data composer install --no-dev --optimize-autoloader
   php artisan migrate --force; php artisan optimize
   # Sync canonical message templates (idempotent: templates upsert, demo rows are
