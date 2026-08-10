@@ -244,11 +244,12 @@ export function ShortlistDemo({ accent }: { accent: string }) {
 
 /* ---------------------------------- 03 call -------------------------------- */
 
+/** Mirrors what the Caller.Digital integration files on `lead_calls`. */
 const CALL_CHECKS = [
   { k: "Notice period", v: "15 days" },
   { k: "Expected CTC", v: "₹24 LPA" },
-  { k: "Hybrid, Bengaluru", v: "Confirmed" },
-  { k: "Selenium depth", v: "Scored 8.6/10" },
+  { k: "Outcome", v: "Interested" },
+  { k: "Transcript & recording", v: "Attached" },
 ] as const;
 
 export function CallDemo({ accent }: { accent: string }) {
@@ -434,7 +435,8 @@ export function RoundsDemo({ accent }: { accent: string }) {
 
 /* ---------------------------------- 05 ATS --------------------------------- */
 
-const ATS_COLUMNS = ["Screened", "L1", "L2", "Brief sent"] as const;
+/** The shipped pipeline stages (PRD-E F5), trimmed to what fits the panel. */
+const ATS_COLUMNS = ["Graded", "Shortlisted", "L1", "L2"] as const;
 
 /** Each card's column index at t=0 and where it lands — the board moves once. */
 const ATS_CARDS = [
@@ -507,11 +509,12 @@ export function AtsDemo({ accent }: { accent: string }) {
 
 /* ---------------------------------- 06 BGV --------------------------------- */
 
+/** Interview evidence + the proctoring record (PRD-E F4) — not a BGV report. */
 const BGV_CHECKS = [
-  { k: "Employment history", v: "Consistent", flag: false },
-  { k: "Education", v: "Consistent", flag: false },
-  { k: "Professional footprint", v: "Matches CV", flag: false },
-  { k: "Overlap 2021–22", v: "Review — two employers listed", flag: true },
+  { k: "Face match across rounds", v: "Consistent, all 3 rounds", flag: false },
+  { k: "Rubric coverage", v: "Every dimension scored", flag: false },
+  { k: "Transcript & replay", v: "Attached, seekable", flag: false },
+  { k: "Window switches", v: "Review — 2 events in L2", flag: true },
 ] as const;
 
 export function BgvDemo({ accent }: { accent: string }) {
@@ -523,7 +526,7 @@ export function BgvDemo({ accent }: { accent: string }) {
     <div ref={ref}>
       <Device
         accent={accent}
-        label="High-level BGV · R. Krishnan"
+        label="Evidence & integrity · R. Krishnan"
         chip={
           <span className="mono text-[10px] text-white/45">
             {Math.min(shown, BGV_CHECKS.length)}/{BGV_CHECKS.length}
@@ -558,7 +561,7 @@ export function BgvDemo({ accent }: { accent: string }) {
           })}
         </div>
         <p className="mt-3 text-[10.5px] leading-snug text-white/40">
-          Flags are surfaced with their source. Formal deep BGV stays with your provider.
+          A flag never auto-rejects. It surfaces the evidence and waits for a human.
         </p>
       </Device>
     </div>
@@ -571,7 +574,7 @@ const REPORT_BLOCKS = [
   { k: "Screening call", v: "Cleared · transcript attached" },
   { k: "L1 technical", v: "86 / 100" },
   { k: "L2 depth", v: "83 / 100" },
-  { k: "BGV", v: "1 item to review" },
+  { k: "Proctoring", v: "1 item to review" },
 ] as const;
 
 export function ReportDemo({ accent }: { accent: string }) {
@@ -626,7 +629,7 @@ export function ReportDemo({ accent }: { accent: string }) {
               Recommendation
             </p>
             <p className="mt-1 text-[11.5px] leading-snug text-white/75">
-              Progress to panel. Confirm the 2021–22 overlap in your own round.
+              Progress to panel. Watch the flagged L2 segment before you decide.
             </p>
           </motion.div>
         </div>

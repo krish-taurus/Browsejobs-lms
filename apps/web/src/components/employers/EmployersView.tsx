@@ -19,6 +19,7 @@ import {
   EMPLOYER_FAQ,
   PIPELINE,
   PRICING,
+  ROADMAP,
   TAT_AFTER,
   TAT_BEFORE,
   USE_CASES,
@@ -72,6 +73,9 @@ function EmployerNav() {
               {l.label}
             </a>
           ))}
+          <Link href="/employer" className="text-sm font-medium text-muted transition-colors hover:text-ink">
+            Employer sign in
+          </Link>
           <a
             href="#start"
             onClick={(e) => go(e, "#start")}
@@ -117,6 +121,13 @@ function EmployerNav() {
                 {l.label}
               </a>
             ))}
+            <Link
+              href="/employer"
+              onClick={() => setOpen(false)}
+              className="block rounded-input px-4 py-3 text-base font-semibold text-muted hover:bg-paper"
+            >
+              Employer sign in
+            </Link>
             <a
               href="#start"
               onClick={(e) => go(e, "#start")}
@@ -442,6 +453,41 @@ function ModelsSection() {
   );
 }
 
+/* --------------------------------- roadmap --------------------------------- */
+
+/**
+ * Deliberately styled as a dashed, muted band — nothing here ships today, and
+ * the section has to read as "not yet" at a glance, not as another feature list.
+ */
+function RoadmapSection() {
+  return (
+    <section className="mx-auto max-w-6xl px-6 pb-24 md:pb-32">
+      <Reveal>
+        <Kicker color="var(--bj-muted)">On the roadmap — not available yet</Kicker>
+        <h2 className="display mt-4 max-w-2xl text-2xl leading-[1.15] text-muted md:text-3xl">
+          Being built. We&rsquo;ll tell you where it stands on the call.
+        </h2>
+      </Reveal>
+
+      <div className="mt-10 grid gap-4 md:grid-cols-3">
+        {ROADMAP.map((r, i) => (
+          <Reveal
+            key={r.title}
+            delay={i * 0.06}
+            className="rounded-card border border-dashed border-line bg-paper/60 p-6"
+          >
+            <span className="mono inline-block rounded-full border border-line px-2.5 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted">
+              Planned
+            </span>
+            <h3 className="mt-4 text-[15px] font-semibold text-ink/70">{r.title}</h3>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-muted">{r.body}</p>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* --------------------------------- pricing --------------------------------- */
 
 function PricingSection() {
@@ -633,6 +679,7 @@ export function EmployersView() {
 
       <UseCasesSection />
       <ModelsSection />
+      <RoadmapSection />
       <PricingSection />
       <FaqSection />
       <StartSection />

@@ -1,9 +1,21 @@
 /**
- * Employer landing content (/employers). BrowseJobs sells the *process* to
- * hiring teams — the pipeline that runs before their first interview slot is
- * booked. Brand voice rules apply (CLAUDE.md §Brand Voice): no hype adjectives,
- * no guaranteed-hire claims, no fabricated performance statistics. Every number
- * shown on the page is either a process fact or a labelled illustration.
+ * Employer landing content (/employers) — the logged-out marketing page for the
+ * employer module that ships at /employer (PRD-E, ADR 0051).
+ *
+ * Everything in PIPELINE describes behaviour that exists today: JD drafting and
+ * skill extraction (F2), graded ranking with match rationale (F3), the
+ * Caller.Digital AI screening call (CRM `lead_calls`), async proctored L1/L2 and
+ * custom rounds (F5), the automation rules engine with dry-run simulation (F6),
+ * candidate evidence and the graded report (F4), and human-only offer release.
+ *
+ * Anything not yet built lives in ROADMAP and is rendered in a visually distinct
+ * band so it cannot read as available: the public API, webhooks and ATS import
+ * are phase E4, and the full Trust Score verification chain (DigiLocker / PAN /
+ * EPFO) needs its own ADR per PRD-E §7 before build.
+ *
+ * Brand voice rules apply (CLAUDE.md §Brand Voice): no hype adjectives, no
+ * guaranteed-hire claims, no fabricated performance statistics. Every number on
+ * the page is either a process fact or a labelled illustration.
  */
 
 /**
@@ -38,12 +50,12 @@ export const PIPELINE: readonly PipelineStage[] = [
     step: "01",
     kicker: "Job description",
     title: "Drop the JD. It fills itself in.",
-    body: "Paste a JD, upload the file, or start from blank. The AI reads it and completes the structured role — skills, seniority, must-haves, screening criteria. Every field stays editable.",
+    body: "Paste a JD, or start from a title and a few bullets. The AI drafts the structured role — skills, experience band, locations, knockout questions — and flags requirements that are too vague to screen against. You publish it, not the AI.",
     points: [
-      "Paste, upload (PDF/DOCX) or write it manually",
-      "Skills, experience band and location extracted into structured fields",
-      "Must-have vs nice-to-have split so screening has a real bar",
-      "Nothing is locked — override any field the AI proposes",
+      "Draft from a title + notes, or extract structure from a pasted JD",
+      "Tagged skills drive the matching; experience band and CTC band are yours to set",
+      "Vague requirements flagged before they cost you a bad shortlist",
+      "On publish, the JD's own interview mock and grading rubric are generated",
     ],
     accent: "#1b6df0",
     demo: "jd",
@@ -51,14 +63,14 @@ export const PIPELINE: readonly PipelineStage[] = [
   {
     id: "shortlist",
     step: "02",
-    kicker: "Sourcing & shortlist",
-    title: "Ranked against the bar you set.",
-    body: "Candidates are matched to the structured role and ranked — with the reason for the rank written next to each one. You see why someone placed where they did.",
+    kicker: "Applications & the graded pool",
+    title: "Ranked, with the reason written down.",
+    body: "Graded applicants rank on top, each with a short explanation of why they placed where they did — citing skills, mock evidence and readiness signals. Ungraded applicants sit below with a one-click invite to the mock.",
     points: [
-      "Runs on our candidate pool, your ATS/database, or both",
-      "Every rank carries a written justification, not just a score",
-      "Hard filters (notice period, location, CTC band) applied before ranking",
-      "Reject a candidate and the ranking learns the bar for that role",
+      "“Why #1 is #1” — a written rationale per candidate, not a bare score",
+      "Knockout questions and hard filters applied before ranking",
+      "Bulk advance, or reject with a templated, candidate-respectful reason",
+      "Every candidate ever graded for you stays searchable in your talent pool",
     ],
     accent: "#7c3aed",
     demo: "shortlist",
@@ -68,12 +80,12 @@ export const PIPELINE: readonly PipelineStage[] = [
     step: "03",
     kicker: "AI screening call",
     title: "The first call is placed for you.",
-    body: "An AI caller reaches each shortlisted candidate, confirms the basics no CV is honest about, and scores the conversation against the role.",
+    body: "An AI caller dials the shortlist automatically and has the conversation your recruiter would have had first — then files the transcript, the recording and a read on how it went.",
     points: [
-      "Availability, notice period, current and expected CTC, location fit",
-      "Role-specific screening questions generated from the JD",
-      "Full transcript and recording attached to the candidate",
-      "Candidates who fail the screen never reach your calendar",
+      "Auto-dialled from the queue; no answer returns the candidate to the queue, not the bin",
+      "Full transcript and call recording attached to the candidate record",
+      "Outcome and sentiment captured, so the next step is already decided",
+      "Multi-language, and every call is recorded and AI-monitored",
     ],
     accent: "#0ba860",
     demo: "call",
@@ -83,12 +95,12 @@ export const PIPELINE: readonly PipelineStage[] = [
     step: "04",
     kicker: "Interview rounds",
     title: "L1, L2, or a round you design.",
-    body: "Technical, functional or fully custom rounds run on the same rails — conducted by the AI interviewer, your panel, or a mix of both.",
+    body: "Rounds run async and proctored — the candidate is notified on WhatsApp or email and completes within a window you set. L1 to L2 can unlock the same day.",
     points: [
-      "L1 technical screen with role-weighted scoring",
-      "L2 depth round on the stack the JD actually names",
-      "Custom rounds: your questions, your rubric, your weightings",
-      "Hand any round back to a human panel at any point",
+      "Question source per JD: your own bank, AI-generated, or blended",
+      "Custom rounds insertable — coding round, assignment, whatever you run",
+      "Proctored like the mocks: face-match, window-switch and snapshot flags",
+      "Hand any round to a human panel with self-serve slot booking",
     ],
     accent: "#f5a623",
     demo: "rounds",
@@ -96,14 +108,14 @@ export const PIPELINE: readonly PipelineStage[] = [
   {
     id: "ats",
     step: "05",
-    kicker: "ATS & customisation",
+    kicker: "Pipeline & automation",
     title: "Watch every stage move.",
-    body: "One board per role. See where each candidate sits, what happened in each round, and where the pipeline is stalling — live.",
+    body: "Kanban or table, one board per role. Every transition — yours or a rule's — is an event with the actor named on the candidate's timeline.",
     points: [
-      "Stage-by-stage board with the full history per candidate",
-      "Per-JD customisation: stages, rubrics, thresholds, auto-advance rules",
-      "Recordings, transcripts and scores on every card",
-      "Bottleneck view — which stage is holding the role up",
+      "Applied → Graded → Shortlisted → L1 → L2 → Offer, plus stages you insert",
+      "Rules on thresholds and SLAs: “mock ≥ 70% → shortlist”, “no review in 24h → nudge”",
+      "Simulate a rule before enabling it, against your last 30 days of applicants",
+      "Automation can park for review but never rejects outright, and never releases an offer",
     ],
     accent: "#1b6df0",
     demo: "ats",
@@ -111,14 +123,14 @@ export const PIPELINE: readonly PipelineStage[] = [
   {
     id: "bgv",
     step: "06",
-    kicker: "Background verification",
-    title: "High-level BGV before you commit.",
-    body: "A first-pass verification runs on the finalists — so the checks that usually surface late surface early instead.",
+    kicker: "Evidence & integrity",
+    title: "See the proof, not just the score.",
+    body: "Every round leaves evidence you can inspect: the replay, the transcript beside it, per-dimension scores, and the proctoring record — with flags shown as evidence for a human to weigh.",
     points: [
-      "Employment and education consistency checks",
-      "Public professional footprint cross-referenced against the CV",
-      "Discrepancies flagged with the source, not a pass/fail verdict",
-      "Deep BGV stays with your existing provider — this is the early filter",
+      "Video replay with a seekable transcript — click a line, the video jumps",
+      "Per-rubric scores, so you can see which dimension carried the result",
+      "Proctoring flags with snapshot evidence and warning counts",
+      "A flag never auto-rejects anyone — it surfaces the evidence and waits for you",
     ],
     accent: "#7c3aed",
     demo: "bgv",
@@ -126,17 +138,39 @@ export const PIPELINE: readonly PipelineStage[] = [
   {
     id: "report",
     step: "07",
-    kicker: "Handover to HR",
-    title: "A written brief lands before you meet anyone.",
-    body: "Your HR team receives a detailed report per candidate — every round conducted, every score, every flag — before your hiring process even begins.",
+    kicker: "Decision & offer",
+    title: "A written brief before you meet anyone.",
+    body: "Your team gets a graded report per candidate — every round, every score, every flag — so the first human conversation starts at the interview, not at CV triage.",
     points: [
       "Round-by-round breakdown with scores and reasoning",
-      "Screening call transcript and BGV flags in the same document",
-      "A recommendation you can disagree with, with the evidence attached",
-      "Your panel starts at the interview, not at CV triage",
+      "Screening-call transcript and proctoring record in the same view",
+      "Hiring-manager comments and @mentions kept internal to your workspace",
+      "Offer release always takes an explicit human action — it is never automated",
     ],
     accent: "#0ba860",
     demo: "report",
+  },
+] as const;
+
+/* --------------------------------- roadmap --------------------------------- */
+
+/**
+ * Not built yet. Rendered in its own clearly-labelled band so nothing here can
+ * be mistaken for a shipped feature. Sources: PRD-E §F11 (phase E4) and §7
+ * (verification providers each need an ADR before build).
+ */
+export const ROADMAP = [
+  {
+    title: "Run it on your own stack",
+    body: "A public employer API, HMAC-signed webhooks and CSV/ATS import, so the pipeline reads and writes against the systems you already have.",
+  },
+  {
+    title: "Full background verification",
+    body: "A Trust Score built from DigiLocker ID, PAN, education certificates and EPFO employment history — with each component and its status shown, never a black box.",
+  },
+  {
+    title: "Semantic candidate search",
+    body: "Describe the person in a sentence and get matches back, with the interpretation shown as chips you can remove. Saved searches and match alerts alongside.",
   },
 ] as const;
 
@@ -151,15 +185,15 @@ export const TAT_BEFORE = [
   "Recruiter reads hundreds of CVs by hand",
   "Chase candidates for notice period and CTC",
   "Half the L1 slots are no-shows or mismatches",
-  "BGV starts after the offer — surprises land late",
+  "You meet the candidate before you have any evidence",
 ] as const;
 
 export const TAT_AFTER = [
   "JD in, structured role out — same sitting",
-  "Ranked shortlist with written reasoning",
+  "Ranked shortlist, each rank explained in writing",
   "AI screening call confirms the basics first",
   "L1/L2 run only on candidates who cleared the screen",
-  "BGV flags surface before your panel spends an hour",
+  "Replays, transcripts and scores waiting before your first meeting",
 ] as const;
 
 /* -------------------------------- use cases -------------------------------- */
@@ -195,7 +229,7 @@ export const USE_CASES: readonly UseCase[] = [
       "JD tuned by hand after AI extraction — must-haves made strict",
       "Custom L1 built around the exact stack, not a generic screen",
       "Two custom rounds with the hiring manager's own rubric",
-      "High-level BGV on the final two before the panel meets them",
+      "Replays and per-dimension scores read before the panel meets anyone",
     ],
     outcome:
       "A small, defensible shortlist with the reasoning written down for every rejection.",
@@ -204,15 +238,15 @@ export const USE_CASES: readonly UseCase[] = [
   {
     title: "Agency model",
     scenario:
-      "A startup has no ATS, no recruiter and needs five engineers before the next funding milestone.",
+      "A startup has no recruiter and needs five engineers before the next funding milestone.",
     flow: [
-      "Runs entirely on the BrowseJobs candidate pool",
+      "Runs on the BrowseJobs graded candidate pool",
       "We operate the pipeline end to end",
-      "Founder gets the written brief per finalist",
+      "Founder gets the graded report per finalist",
       "Optional CRM configured to how the team actually hires",
     ],
     outcome:
-      "The founder only ever meets candidates who have already cleared screening and BGV.",
+      "The founder only ever meets candidates who have already been screened, interviewed and graded.",
     accent: "#0ba860",
   },
 ] as const;
@@ -221,27 +255,27 @@ export const USE_CASES: readonly UseCase[] = [
 
 export const DELIVERY_MODELS = [
   {
-    id: "integrated",
-    label: "On your data",
-    title: "Plug into your stack",
-    body: "The pipeline runs against your existing ATS, candidate database and career-site inflow. Your data stays yours; we add the screening layer on top.",
+    id: "own",
+    label: "Your own applicants",
+    title: "Run your own pipeline",
+    body: "Publish the JD, point your inbound applicants at it, and they arrive graded and ranked in your workspace. Your team runs the decisions; the platform does the screening.",
     points: [
-      "Connect your ATS or candidate database",
-      "Your inbound applicants ranked and screened in place",
-      "Existing pipelines and stage names preserved",
+      "Your workspace, your JDs, your roles and permissions",
+      "Inbound applicants graded and ranked against your bar",
+      "Invite anyone already in your hands to take the JD's mock",
       "Optional CRM layer, configured to your hiring model",
     ],
     accent: "#1b6df0",
   },
   {
     id: "agency",
-    label: "On our data",
+    label: "Our candidate pool",
     title: "Run it as an agency engagement",
-    body: "No ATS, no sourcing team, no problem. We run the whole pipeline on the BrowseJobs pool and hand you finalists with the full paper trail.",
+    body: "No recruiter, no sourcing team, no problem. We run the whole pipeline on the BrowseJobs graded pool and hand you finalists with the full paper trail.",
     points: [
-      "Sourcing from the BrowseJobs candidate pool",
+      "Sourcing from the BrowseJobs graded candidate pool",
       "We operate JD, shortlist, screening and rounds",
-      "You receive the written brief per finalist",
+      "You receive the graded report per finalist",
       "Scales up and down with your open roles",
     ],
     accent: "#0ba860",
@@ -295,23 +329,27 @@ export const PRICING = {
 export const EMPLOYER_FAQ = [
   {
     q: "Do we have to replace our ATS?",
-    a: "No. The pipeline can run against your existing ATS and candidate database, keeping your stages and your data in place. The CRM layer is optional and only added if you want it.",
+    a: "Today the pipeline runs in its own workspace — you publish JDs and work candidates there. A public API, webhooks and CSV/ATS import are on the roadmap, not available yet; if connecting your existing systems is a launch requirement for you, say so on the call and we'll be straight about timing.",
   },
   {
     q: "Who conducts the interview rounds?",
-    a: "Whoever you choose. L1 and L2 can be conducted by the AI interviewer, by your panel, or split between them. Custom rounds use your questions and your rubric, and any round can be handed back to a human at any point.",
+    a: "Whoever you choose. L1 and L2 run async and proctored, with questions from your own bank, AI-generated, or a blend. Custom rounds use your questions and your rubric, and any round can be handed to a human panel with self-serve slot booking.",
   },
   {
-    q: "What exactly does the AI screening call cover?",
-    a: "Availability, notice period, current and expected CTC, location fit, and role-specific questions generated from your JD. The full recording and transcript are attached to the candidate record.",
+    q: "What exactly does the AI screening call do?",
+    a: "It dials the shortlist automatically and has the first conversation, then files the full transcript, the call recording, the outcome and a read on sentiment against the candidate. If nobody picks up, the candidate returns to the queue rather than being dropped.",
   },
   {
-    q: "How deep is the background verification?",
-    a: "It is a high-level first pass — employment and education consistency, and public professional footprint cross-referenced against the CV. Discrepancies are flagged with their source. Formal deep BGV stays with your existing provider.",
+    q: "Do you run background verification?",
+    a: "Not yet. Verification is on the roadmap as a Trust Score built from DigiLocker ID, PAN, education certificates and EPFO employment history. What you get today is interview evidence — replays, transcripts, per-rubric scores and the proctoring record.",
   },
   {
     q: "Can candidates tell they are speaking to an AI?",
     a: "Yes. Candidates are told at the start of the call, and every call is recorded and AI-monitored — the same standard we hold ourselves to on the student side.",
+  },
+  {
+    q: "Can the automation reject someone without us seeing them?",
+    a: "No. Rules can advance a candidate, unlock the next round, send a nudge or park someone for review — but they can never reject terminally and never release an offer. Offer release always takes an explicit human action from a permitted role.",
   },
   {
     q: "What happens after the six free months?",

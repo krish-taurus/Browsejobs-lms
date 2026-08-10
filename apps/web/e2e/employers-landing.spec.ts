@@ -64,9 +64,10 @@ test("each stage demo animates itself into view", async ({ page }) => {
     )
     .not.toEqual([5, 0, 0, 0]);
 
-  // 06 — BGV surfaces three clean checks and one flag.
+  // 06 — evidence panel surfaces three clean checks and one proctoring flag.
   await openStage(page, "bgv");
-  await expect(page.locator("#stage-bgv")).toContainText("Review — two employers listed");
+  await expect(page.locator("#stage-bgv")).toContainText("Review — 2 events in L2");
+  await expect(page.locator("#stage-bgv")).toContainText("A flag never auto-rejects");
 
   // 07 — the brief assembles and is marked sent.
   await openStage(page, "report");
@@ -74,10 +75,12 @@ test("each stage demo animates itself into view", async ({ page }) => {
 });
 
 test("employer enquiry form captures a lead", async ({ page }) => {
-  let payload: Record<string, unknown> | null = null;
+  // Collected into an array so the assertions below read the captured value
+  // without control-flow narrowing it back to its initial null.
+  const payloads: Record<string, unknown>[] = [];
 
   await page.route("**/api/v1/leads", async (route) => {
-    payload = route.request().postDataJSON();
+    payloads.push(route.request().postDataJSON());
     await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ status: "received", id: 1 }) });
   });
   await page.route("**/sanctum/csrf-cookie", (route) => route.fulfill({ status: 204, body: "" }));
@@ -105,14 +108,15 @@ test("employer enquiry form captures a lead", async ({ page }) => {
   await submit.click();
 
   await expect(page.locator("#start")).toContainText("Thanks — we have it.");
-  expect(payload).toMatchObject({
+  expect(payloads).toHaveLength(1);
+  expect(payloads[0]).toMatchObject({
     lead_type: "employer",
     name: "Meera Iyer",
     company: "Northwind Technologies",
     page: "/employers",
     consent: true,
   });
-  expect(String((payload as Record<string, unknown>).message)).toContain("6–20 roles");
+  expect(String(payloads[0].message)).toContain("6–20 roles");
 });
 
 test("the page is reachable from the home page nav", async ({ page }) => {
