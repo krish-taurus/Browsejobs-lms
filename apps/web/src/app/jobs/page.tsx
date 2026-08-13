@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Fresh IT jobs — updated every morning",
   description:
     "Live openings from the last 7 days across the roles we train for. Sign in to see your match score, likely interview questions, and a CV rebuilt for the exact JD.",
-};
+  path: "/jobs",
+});
 
 // The board refreshes with the morning feed sync — re-render at most every 30 min.
 export const revalidate = 1800;

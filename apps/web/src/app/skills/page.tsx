@@ -1,15 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Kicker } from "@/components/brand/Kicker";
 import { skillPages } from "@/content/skills";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Tech Skills in Demand in India — What Interviews Ask",
   description:
     "Which skills Indian tech interviews test right now — demand direction, real interview questions, hiring cities and the salaries behind SQL, Python, Spark, Kubernetes and more.",
-};
+  path: "/skills",
+});
 
 /** /skills index — the engine's tracked skills as a browsable set. */
 export default function SkillsIndex() {

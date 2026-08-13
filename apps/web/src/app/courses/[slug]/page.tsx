@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { courseDetails, getCourseDetail } from "@/content/courses";
 import CourseKeynote from "@/components/courses/CourseKeynote";
+import { pageMetadata } from "@/lib/seo";
 
 /**
  * Course detail page — keynote template (approved from the /v3 preview):
@@ -22,10 +23,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const course = getCourseDetail((await params).slug);
   if (!course) return {};
-  return {
+  return pageMetadata({
     title: `${course.name} Course`,
     description: course.hero,
-  };
+    path: `/courses/${course.slug}`,
+  });
 }
 
 export default async function CoursePage({

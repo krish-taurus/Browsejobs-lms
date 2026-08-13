@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { Kicker } from "@/components/brand/Kicker";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Programs",
   description:
     "Career programs rebuilt monthly from real interviews — Data Engineering, DevOps & Cloud, Python Backend, Data Analytics, and more.",
-};
+  path: "/courses",
+});
 
 export default function CoursesPage() {
   const detailSlugs = new Set(courseDetails.filter((c) => c.live).map((c) => c.slug));

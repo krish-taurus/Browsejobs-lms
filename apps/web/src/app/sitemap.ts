@@ -2,8 +2,11 @@ import type { MetadataRoute } from "next";
 import { salaryPages } from "@/content/salaries";
 import { skillPages } from "@/content/skills";
 import { courses } from "@/content/landing";
+import { PRODUCTION_URL } from "@/lib/seo";
 
-const BASE = "https://browsejobs.ai";
+// Always the live host: a sitemap is only ever consumed in production, and its
+// URLs must match the canonicals exactly.
+const BASE = PRODUCTION_URL;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

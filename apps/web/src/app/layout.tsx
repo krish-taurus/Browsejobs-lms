@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Sora, Inter, IBM_Plex_Mono } from "next/font/google";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const sora = Sora({
@@ -24,19 +25,22 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://browsejobs.ai";
-
-const TITLE = "BrowseJobs — Built from real interviews.";
-const DESCRIPTION =
-  "This syllabus was not written. It was reverse-engineered — from up to ~50 real & mock interviews monitored daily. Three free steps before you pay anything; placement fee only after you accept an offer.";
-
+/**
+ * Site-wide metadata only.
+ *
+ * `openGraph`, `twitter` and `alternates` are deliberately absent: Next inherits
+ * them into every descendant page, which is what made each subpage advertise the
+ * home page's og:url and og:title. Pages build those through `pageMetadata()`
+ * (`@/lib/seo`); `description` stays here purely as a fallback for the noindex
+ * app shells.
+ */
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: TITLE,
+    default: SITE_TITLE,
     template: "%s · BrowseJobs",
   },
-  description: DESCRIPTION,
+  description: SITE_DESCRIPTION,
   keywords: [
     "IT skilling India",
     "data engineering course",
@@ -45,27 +49,6 @@ export const metadata: Metadata = {
     "data analytics course",
     "placement support training",
   ],
-  openGraph: {
-    type: "website",
-    siteName: "BrowseJobs",
-    title: TITLE,
-    description: DESCRIPTION,
-    url: siteUrl,
-    images: [
-      {
-        url: "/og.png",
-        width: 1200,
-        height: 630,
-        alt: "BrowseJobs.ai — This syllabus was not written. It was reverse-engineered.",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-    images: ["/og.png"],
-  },
   robots: { index: true, follow: true },
   verification: {
     google: "lfmAeInA42ZA8RAzOxlyEz6A83lnwkQkgvnXlTOoL_E",

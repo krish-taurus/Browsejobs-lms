@@ -1,8 +1,13 @@
-import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Refund Policy" };
+export const metadata = pageMetadata({
+  title: "Refund Policy",
+  description:
+    "The 30-day money-back guarantee in writing: any reason, no conditions attached, plus how and when refunds are processed.",
+  path: "/refund-policy",
+});
 
 /** The 30-day guarantee in writing (spec §3.6); flagged for legal review. */
 export default function RefundPolicy() {

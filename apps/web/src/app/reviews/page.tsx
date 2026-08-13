@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { BookCta } from "@/components/landing/BookCta";
 import { Disclaimer } from "@/components/brand/Disclaimer";
@@ -6,12 +5,14 @@ import { MonoCounter } from "@/components/motion/MonoCounter";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ReviewWall } from "@/components/reviews/ReviewWall";
 import { reviewAggregates } from "@/content/landing";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Reviews",
   description:
     "Real stories. Real people. Real success. Reviews from BrowseJobs students on Google and WhatsApp.",
-};
+  path: "/reviews",
+});
 
 export default function ReviewsPage() {
   return (

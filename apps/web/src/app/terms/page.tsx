@@ -1,8 +1,13 @@
-import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Terms of Service" };
+export const metadata = pageMetadata({
+  title: "Terms of Service",
+  description:
+    "The terms governing your use of BrowseJobs programs and platform — enrolment, fees, conduct and the commitments we put in writing.",
+  path: "/terms",
+});
 
 /** Structure per spec §10; flagged for legal review before launch. */
 export default function Terms() {
