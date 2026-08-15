@@ -1,5 +1,6 @@
 # International Launch Kit
-### Ready-to-use assets for the Kenya · Nigeria · USA · Canada · Australia rollout
+### Ready-to-use assets for the Kenya · Nigeria · UAE · USA · Canada · Australia rollout
+**Version 1.1** — adds the UAE one-pager, UAE ad copy, and the Career Launch Support fee rules (§1b).
 **Companion to:** `docs/marketing/international-marketing-strategy.md` (§ references below point there).
 **Rule:** nothing in this file is published without the Compliance & Claims Reviewer's recorded sign-off (Strategy §13). Every `[BRACKET]` is a value that must be filled with a real, verifiable figure or removed.
 
@@ -22,6 +23,20 @@ Print these. One per market lead, counsellor, creator and agency.
 | **Masterclass slot** | 19:00–20:30 WAT (IST − 4:30) |
 | **Watch out** | ARCON advertising vetting — build approval time into every campaign timeline. NDPA consent. Naira FX. |
 | **Never say** | Anything about relocation, visas, or foreign-currency earnings as a promise |
+
+### 🇦🇪 United Arab Emirates
+| | |
+|---|---|
+| **Segments** | B4 Gulf Differentiator (primary) · B3 Switchers |
+| **The job to be done** | Stand out among hundreds of near-identical CVs |
+| **Message** | *"Everyone applying for that role has your CV. This is the part none of them can show."* |
+| **Primary channels** | Meta/Instagram · expat community networks · Google Search · LinkedIn · WhatsApp (opt-in permitted) |
+| **Price** | AED 4,500–6,500 · optional Career Launch Support US$1,500 |
+| **Rails** | Stripe · cards · Apple Pay. AED is USD-pegged — no FX risk. |
+| **Comms** | WhatsApp permitted on opt-in. Email and SMS with consent. |
+| **Masterclass slot** | 19:00–20:30 GST — **the same session as 20:30 IST.** One class, two markets, local prime time in both. |
+| **Watch out** | **Charging a worker recruitment fees is prohibited — the employer bears recruitment cost. The US$1,500 must be documented as upfront preparation, never a placement fee, never outcome-triggered (§1b).** KHDA/ADEK training-permit scope · advertising permits · PDPL · 5% VAT · plan around Ramadan. |
+| **Never say** | Anything framing the add-on as "we will find you a job." No comparative advertising naming competitors. |
 
 ### 🇰🇪 Kenya
 | | |
@@ -80,6 +95,26 @@ Print these. One per market lead, counsellor, creator and agency.
 
 ---
 
+## 1b. The Career Launch Support fee — what every counsellor, creator and page must say
+
+**The fee:** optional, flat **US$1,500**, identical in every market. There is **no placement fee and no revenue-share** for candidates outside India.
+
+**Three sentences that must be true of every description of it, everywhere:**
+
+1. **It buys preparation, not placement.** Every deliverable is something the student receives whether or not they get hired.
+2. **It is paid when they opt in — never triggered by getting an offer.** An outcome-triggered fee is a placement fee and a credit product at the same time.
+3. **It is optional.** Enrolment, learning, mocks, certification and applying to any job all work in full without it.
+
+**Say it this way**
+> Career Launch Support is an optional add-on. It is a flat US$1,500, the same price in every country, and you pay it when you choose to start it — never because you got a job. It buys the work we do with you: your CV rebuilt for this market, unlimited proctored mocks, your verified readiness record, interview coaching, negotiation preparation, and support through your first ninety days. You get all of it whether or not you end up with an offer. Nothing in the programme is locked behind it.
+
+**Never say it this way**
+> ~~"Pay $1,500 when you get placed."~~ · ~~"The placement fee is $1,500."~~ · ~~"$1,500 and we'll get you a job."~~ · ~~"$1,500 to be submitted to our employer network."~~ · ~~"You need this to access jobs."~~
+
+**Why this matters more than it sounds:** in the UAE, Canada, Australia, the USA, Kenya and Nigeria, charging a *job seeker* a fee connected to finding them work is licensed, restricted or prohibited. The wording above is not brand polish — it is the difference between a service fee and a regulated employment-agency fee. **Any counsellor call or creative asset that describes it as a placement fee is a stop-ship incident.**
+
+---
+
 ## 2. Ad copy bank
 
 All copy is a starting point for testing, not a finished asset. Every variant goes through the banned-phrase lint and the Compliance Reviewer.
@@ -122,7 +157,25 @@ All copy is a starting point for testing, not a finished asset. Every variant go
 > Here they are now, free.
 > → Get the list
 
-### 2.3 Canada — Search / LinkedIn (Segment B1)
+### 2.3 UAE — Meta / Instagram / Search (Segment B4)
+
+**V1 — The differentiation problem**
+> Four hundred people applied for that role. Most of them have your CV.
+> What none of them have is a graded, proctored record of how they actually interview.
+> Free: take one, see your score, see the three gaps.
+> → Get your free report
+
+**V2 — Same session, both sides of the Gulf**
+> Live at 7pm Dubai time: the questions interviewers are asking for [ROLE] right now — pulled from real interviews, not a syllabus written years ago.
+> Free. 90 minutes. No pitch until the last five.
+> → Book a free seat
+
+**V3 — The refusal**
+> We will not promise you a job in Dubai. Nobody honest can.
+> What we will do is show you, in writing, exactly where your interview answers fall short — and fix them.
+> → See what we promise
+
+### 2.4 Canada — Search / LinkedIn (Segment B1)
 
 **V1 — Name the objection**
 > "You lack Canadian experience."
@@ -143,7 +196,7 @@ All copy is a starting point for testing, not a finished asset. Every variant go
 
 **Search keyword clusters (Canada):** `canadian experience requirement` · `no canadian experience jobs` · `failing final round interview` · `[role] interview questions canada` · `how to explain career gap after immigrating` · `newcomer tech jobs canada`
 
-### 2.4 Australia — Search / LinkedIn (Segments B2, B3)
+### 2.5 Australia — Search / LinkedIn (Segments B2, B3)
 
 **V1**
 > The cloud interview changed. Most courses did not.
@@ -156,7 +209,7 @@ All copy is a starting point for testing, not a finished asset. Every variant go
 > What we can do is tell you, precisely and in writing, where your interview answers are falling short — and fix it.
 > → Get the free breakdown
 
-### 2.5 USA — organic-led (Segments B2, B3)
+### 2.6 USA — organic-led (Segments B2, B3)
 
 **V1 — LinkedIn / YouTube**
 > We recorded what interviewers actually asked for [ROLE] this month. Here is the list, what changed, and what disappeared.
@@ -277,10 +330,11 @@ Attach the banned-phrase list as a contractual schedule. Creator claims are our 
 **Hard requirements (contractual)**
 1. Disclose the paid partnership clearly, in-video and in caption, per platform rules and local law.
 2. **Never** say or imply: guaranteed job, assured placement, "you will get hired", any salary figure, any visa or relocation help, any accreditation.
-3. Any statistic must be one we supplied, used verbatim, with the disclaimer on screen.
-4. Speak only from your own genuine experience. Do not describe outcomes you have not had.
-5. Submit for review 48 hours before publishing. We may request changes. We may require takedown.
-6. Do not disparage named competitors.
+3. **Never** describe the Career Launch Support fee as a placement fee, a fee paid on getting hired, or a way to access employers. It is optional, flat, paid upfront, and buys preparation. If you mention it at all, use the wording in §1b verbatim.
+4. Any statistic must be one we supplied, used verbatim, with the disclaimer on screen.
+5. Speak only from your own genuine experience. Do not describe outcomes you have not had.
+6. Submit for review 48 hours before publishing. We may request changes. We may require takedown.
+7. Do not disparage named competitors. (In the UAE, comparative advertising naming competitors is not acceptable practice at all.)
 
 **What you get:** flat fee [AMOUNT] + [PERFORMANCE TERM], creative freedom within the above, and early access to each Interview Index.
 
@@ -295,6 +349,8 @@ MARKET: ______________          TARGET LAUNCH: ______________
 
 LEGAL & ENTITY
 [ ] Local counsel opinion: offer, contract, refund terms, claims          date ____ by ____
+[ ] Counsel opinion: US$1,500 fee vs employment-agency rules              date ____ by ____
+[ ] Employment-agency / recruiter licensing position determined           date ____ by ____
 [ ] Entity / tax / VAT / digital-services-tax position determined         date ____ by ____
 [ ] Vocational-training / career-college licensing position determined    date ____ by ____
 [ ] Advertising pre-clearance where required (NG: ARCON)                  date ____ by ____
@@ -313,10 +369,13 @@ CLAIMS
 [ ] Banned-phrase CI lint green: site, emails, ad copy, creator briefs    date ____ by ____
 [ ] Call-transcript banned-phrase flagging live for this market's team    date ____ by ____
 [ ] No placement / salary / visa / accreditation claim anywhere           date ____ by ____
+[ ] Career Launch fee described as upfront preparation everywhere         date ____ by ____
+[ ] Fee is NOT outcome-triggered in product, contract or copy             date ____ by ____
 
 PLATFORM
 [ ] Local currency live, server-owned, integer minor units                date ____ by ____
 [ ] Local payment rail live and tested end to end                         date ____ by ____
+[ ] Career Launch Support purchasable as an opt-in entitlement             date ____ by ____
 [ ] Timezone: sessions, reminders, calendar invites all local             date ____ by ____
 [ ] Salary/benchmark UI suppressed or localised (never Indian LPA)        date ____ by ____
 [ ] Messaging sender registered for this market                           date ____ by ____
@@ -346,7 +405,7 @@ Founder:                      ____________________  date ____
 3. Masterclass show rate by market — *a drop is almost always a timezone or reminder bug, check that first.*
 4. Bootcamp completions (Cluster A north star) / Gap Reports completed (Cluster B north star).
 5. Lead→paid by cohort.
-6. Guardrails: refunds, complaints, unsubscribes, spam rate, ad-account health, **banned-phrase flags (target: zero).**
+6. Guardrails: refunds, complaints, unsubscribes, spam rate, ad-account health, **banned-phrase flags (target: zero)** · Career Launch attach rate · any instance of the fee being described as a placement fee.
 7. One decision: what gets more money, what gets paused, what gets tested next.
 
 **Monthly:** market deep-dive · Interview Index ships · creative refresh · price/FX review (Nigeria).

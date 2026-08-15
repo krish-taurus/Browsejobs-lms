@@ -1,6 +1,8 @@
 # BrowseJobs International Go-To-Market Strategy
-### Kenya · Nigeria · USA · Canada · Australia
-**Version 1.0 · Planning document · IBrowseJobs Technologies Pvt Ltd**
+### Kenya · Nigeria · UAE · USA · Canada · Australia
+**Version 1.1 · Planning document · IBrowseJobs Technologies Pvt Ltd**
+
+**Changes in v1.1 (founder input, 2026-08):** no placement fee or revenue-share for candidates outside India; deployment support is an optional add-on at a flat **US$1,500**, identical in every market (§6.4 rewritten). **UAE added as a sixth market** and promoted into Wave 1 (§3.6, §3.7).
 **Companion to:** `docs/browsejobs-lms-requirements.md` (PRD v1.8) and `docs/browsejobs-platform-spec-v1.txt` (Platform Spec v1.0).
 **Status:** Strategy for founder approval. Nothing here overrides the PRD. Where this document requires new platform capability, it is listed in §12 as engineering work, not assumed.
 
@@ -27,7 +29,7 @@ Good strategy starts with a diagnosis, not a wish list (Rumelt, *Good Strategy/B
 | Radical-honesty brand voice | Differentiates in a category built on lies | **Yes** — and it is worth more abroad than at home |
 | AI mock interviews + graded, video-verified evidence | Product-led proof | **Yes** — this is the strongest export |
 | Placement network + employer relationships | Real | **No** — India only |
-| Pay-after-placement fee (3 months' CTC) | Powerful in India | **No** — see §6.4. Legally hazardous in US/CA/AU |
+| Pay-after-placement fee (3 months' CTC) | Powerful in India | **Not exported** — replaced abroad by a flat US$1,500 optional deployment-support fee (§6.4) |
 | INR pricing, Razorpay, IST scheduling | Works | **No** — engineering prerequisite, §12 |
 
 **The central problem:** the funnel's emotional payoff is *"we place you."* Outside India we cannot say that, because it is not true, and because saying it is exactly the claim our own brand rules forbid (Platform Spec §3.3) and exactly the claim that regulators in the US, Canada and Australia prosecute. A strategy that quietly hopes nobody notices is not a strategy; it is a liability with a media budget.
@@ -38,16 +40,18 @@ Good strategy starts with a diagnosis, not a wish list (Rumelt, *Good Strategy/B
 
 | | **Cluster A — Growth markets** | **Cluster B — Diaspora & newcomer markets** |
 |---|---|---|
-| Markets | Kenya, Nigeria | USA, Canada, Australia |
+| Markets | Kenya, Nigeria | UAE, Canada, Australia, USA |
 | Core job-to-be-done | *"Get me a global-paying job from here."* | *"I already have skills. Get me past the interview in this country."* |
 | Product | Full program: skilling → projects → mocks → global remote job access | Interview-readiness: gap diagnosis → targeted upskilling → proctored mocks → verified profile |
 | Promise | Skills + evidence + access to global remote roles | Interview performance + verifiable proof, in writing |
 | Price posture | Low ticket, high volume, local rails | Mid ticket, lower volume, card rails |
 | Primary channel | WhatsApp, TikTok, creators, campus/community | LinkedIn, search, email, community orgs, YouTube |
-| Placement fee model | Deferred variants possible (§6.3) | **No ISA at launch** (§6.4) |
-| Regulatory load | Moderate | **Heavy** — §11 |
+| Placement fee model | No placement fee. Optional US$1,500 deployment support (§6.4) | No placement fee. Optional US$1,500 deployment support (§6.4) |
+| Regulatory load | Moderate | **Heavy** — §11. UAE is moderate; USA is heaviest. |
 
 Cluster A is a volume business run on trust and mobile. Cluster B is a credibility business run on precision and compliance. Do not let one contaminate the other: **do not run Nigerian creative in Canada, and do not run US compliance overhead in Kenya.**
+
+**A note on the UAE.** It sits in Cluster B but is the odd one out, and in a useful way. In Canada and Australia the blocker is *being foreign*; in the UAE, being foreign is the norm — roughly nine in ten workers are expatriates. So the objection we are answering there is not "you lack local experience" but "there are four hundred other applicants with your exact profile." That makes the UAE the purest test of our actual differentiator: **evidence that you can pass the interview, when everyone's CV looks the same.**
 
 ---
 
@@ -113,19 +117,39 @@ Figures below are planning-grade context for prioritisation, not marketing claim
 - **Cultural note that must shape creative:** Australia lived through a national vocational-education funding scandal. Public and regulator tolerance for job-outcome claims and enrolment inducements is close to zero. **Understatement is the winning register here.** Our brand voice is already built for it — this is the market where "we will not promise you a job" is not a compliance concession but the strongest possible hook.
 - **Regulatory notes:** Australian Consumer Law s18 misleading conduct (ACCC has an active history in education), Spam Act 2003, Do Not Call Register, Privacy Act/APPs, unfair-contract-terms regime with penalties, and ASQA/RTO rules — we must **not** imply accredited qualification status unless registered. See §11.5.
 
-### 3.6 Prioritisation
+### 3.6 United Arab Emirates
+
+- **Shape of the market:** ~11M people, of whom roughly nine in ten are expatriates. Dubai and Abu Dhabi dominate. English is the working language of business. The single largest expatriate community is South Asian — **an audience that already knows and searches for India-origin training brands.**
+- **The job to be done:** *"There are four hundred applicants with my exact profile. Make me the one who gets the offer."* Not a skills gap and not a credibility gap — a **differentiation** gap. This is the purest fit for our evidence-led product of any market in this document.
+- **Why it may be the best-fit market of the six:**
+  - **Timezone is almost free.** GST is IST − 1:30. A class at 20:30 IST is 19:00 GST — local prime time in both countries simultaneously. No new trainer roster, no follow-the-sun cost.
+  - **No FX risk.** The dirham is pegged to the US dollar, so a USD-denominated price is stable — unlike the naira.
+  - **High willingness to pay**, tax-free incomes, mature card and wallet payment behaviour.
+  - **Warm brand context.** Indian expatriates in the Gulf are the closest thing to our existing audience that exists outside India.
+- **Competitive set:** a large field of locally licensed training institutes, the Indian edtech majors with Gulf operations, the global MOOCs, and a substantial informal market. Local institutes hold the permits; we hold the interview data.
+- **Cultural and calendar notes that must shape the plan:** Ramadan materially changes both ad performance and webinar timing — schedule around it deliberately, and shift class times to post-iftar during the month. The working week is Monday–Friday. Content must be culturally reviewed; comparative advertising that disparages named competitors is not acceptable practice.
+- **Regulatory notes:** training institutes operating in Dubai are permitted through **KHDA** (ADEK in Abu Dhabi, the Ministry of Education federally) — determine whether cross-border online delivery plus local marketing brings us into scope. Advertising is subject to UAE media-content rules and permit requirements. **UAE PDPL** governs personal data. VAT at 5% applies to services supplied to UAE customers, with registration obligations for non-resident suppliers of electronic services. **Most importantly for §6.4: UAE labour law prohibits charging a worker recruitment fees — the employer bears recruitment cost.** See §11.6.
+
+### 3.7 Prioritisation
 
 Scored 1–5 on reachability, willingness to pay, deliverability of our promise, competitive whitespace, and regulatory drag (inverted). *(assumption — re-score after Phase 0 research)*
 
-| Market | Reach | WTP | Deliverable | Whitespace | Low reg. drag | **Total** | Wave |
-|---|---|---|---|---|---|---|---|
-| Nigeria | 5 | 3 | 4 | 4 | 3 | **19** | **Wave 1** |
-| Canada | 4 | 5 | 5 | 5 | 2 | **21** | **Wave 1** |
-| Kenya | 4 | 3 | 4 | 3 | 3 | **17** | Wave 2 |
-| Australia | 3 | 5 | 4 | 4 | 2 | **18** | Wave 2 |
-| USA | 3 | 5 | 4 | 3 | 1 | **16** | Wave 3 |
+| Market | Reach | WTP | Deliverable | Whitespace | Low reg. drag | Low ops friction | **Total** | Wave |
+|---|---|---|---|---|---|---|---|---|
+| **UAE** | 4 | 5 | 5 | 4 | 3 | **5** | **26** | **Wave 1** |
+| Canada | 4 | 5 | 5 | 5 | 2 | 2 | **23** | **Wave 1** |
+| Nigeria | 5 | 3 | 4 | 4 | 3 | 3 | **22** | **Wave 1** |
+| Australia | 3 | 5 | 4 | 4 | 2 | 2 | **20** | Wave 2 |
+| Kenya | 4 | 3 | 4 | 3 | 3 | 3 | **20** | Wave 2 |
+| USA | 3 | 5 | 4 | 3 | 1 | 2 | **18** | Wave 3 |
 
-**Recommendation: launch Nigeria and Canada first.** They are the two ends of the strategy — highest-volume Cluster A and highest-value Cluster B — which means Wave 1 stress-tests both motions simultaneously with one budget. Kenya and Australia follow at day 90 reusing the proven playbook; the USA follows at day 180 once licensing and claim-substantiation work is complete.
+*"Low ops friction" is added in v1.1 and it is the column that moves the UAE to the top: near-identical timezone, a dollar-pegged currency, English delivery and a warm audience mean the UAE costs less to run than any other market on this list.*
+
+**Recommendation: launch UAE, Canada and Nigeria together in Wave 1.**
+
+Three markets in Wave 1 rather than two, because the UAE adds almost no marginal operating cost — the same trainers, at nearly the same hour, in the same language, to an audience that already recognises us — while adding the highest-margin revenue in the set. The three together cover the whole strategy: **Nigeria proves Cluster A. Canada proves the hardest version of Cluster B. The UAE proves the cheapest version of Cluster B, and should be the first market to reach profitability.**
+
+Kenya and Australia follow at day 90 on the proven playbook. The USA follows at day 180, organic-first, once licensing and claim-substantiation work is complete.
 
 ---
 
@@ -140,7 +164,8 @@ Six named segments. Everything downstream — creative, channel, sequence, landi
 | **A3** | *The Campus Final-Year* — university student 6–12 months from graduating | NG, KE | Placement season | "I can enter the market ahead of my classmates" |
 | **B1** | *The Canadian-Experience Wall* — 28–40, 3–10 yrs India/Africa IT experience, 0–24 months in Canada | CA | Third or fourth rejection at final round | "The gap is interview performance and local framing, not my skills — and this fixes exactly that" |
 | **B2** | *The Visa-Clock Migrant* — F-1 OPT / recent grad / skilled-migrant with a time-bounded window | US, AU | Countdown pressure | "This compresses months of flailing into a measurable readiness score" |
-| **B3** | *The Adjacent-Role Switcher* — support/QA/ops professional moving to cloud, data or DevOps | US, CA, AU | Role eliminated, or a colleague switched | "The syllabus is what employers ask *this month*, not a 2019 curriculum" |
+| **B3** | *The Adjacent-Role Switcher* — support/QA/ops professional moving to cloud, data or DevOps | US, CA, AU, AE | Role eliminated, or a colleague switched | "The syllabus is what employers ask *this month*, not a 2019 curriculum" |
+| **B4** | *The Gulf Differentiator* — 25–38, South Asian expat in the UAE, employed but stuck, competing against hundreds of identical CVs | AE | Passed over for a role they were qualified for | "Everyone here has my CV. This gives me something none of them can show." |
 
 **Explicitly out of scope for year one:** absolute beginners with no technical background in Cluster B markets (long time-to-value, high refund risk, heaviest regulatory exposure); and anyone in any market who is looking for visa sponsorship or relocation assistance — **we do not provide immigration services and must never imply that we do.** This is a hard exclusion and must be enforced in ad copy review (§11.1).
 
@@ -228,7 +253,7 @@ The free ladder is our single most valuable conversion mechanic. It **does not c
 | 03 FREE | 7-hour Bootcamp (real platform, real cohort) | Free | Product-led proof; engagement telemetry → lead score |
 | 04 PAID | Full programme | **Local mid-ticket, see below** | Enrolment |
 
-**Cluster B — Canada, USA, Australia**
+**Cluster B — UAE, Canada, Australia, USA**
 
 | Rung | Offer | Cost | Purpose |
 |---|---|---|---|
@@ -243,33 +268,67 @@ The free ladder is our single most valuable conversion mechanic. It **does not c
 
 Prices are **decisions for the founder**, set here as a defensible starting frame. All figures must be server-owned (`config/fees.php`), never client-sent, and stored as integer minor units per currency (§12.1).
 
-| Market | Currency | Registration / programme fee *(assumption — validate)* | Instalments | Deferred component |
+| Market | Currency | Registration / programme fee *(assumption — validate)* | Instalments | Optional Career Launch Support (§6.4) |
 |---|---|---|---|---|
-| Nigeria | NGN (review monthly for FX) | ₦180,000–₦250,000 | 3× monthly | Optional deferred top-up, §6.4 |
-| Kenya | KES | KES 45,000–65,000 | 3× monthly | Optional deferred top-up, §6.4 |
-| Canada | CAD | CAD $1,200–1,800 | 3× monthly | **None at launch** |
-| Australia | AUD | AUD $1,300–1,900 | 3× monthly | **None at launch** |
-| USA | USD | USD $900–1,400 | 3× monthly | **None at launch** |
+| Nigeria | NGN (review monthly for FX) | ₦180,000–₦250,000 | 3× monthly | US$1,500 — hard-currency roles only, see §6.4 |
+| Kenya | KES | KES 45,000–65,000 | 3× monthly | US$1,500 — hard-currency roles only, see §6.4 |
+| **UAE** | **AED** | **AED 4,500–6,500** | **3× monthly** | **US$1,500 flat** |
+| Canada | CAD | CAD $1,200–1,800 | 3× monthly | US$1,500 flat, quoted in CAD |
+| Australia | AUD | AUD $1,300–1,900 | 3× monthly | US$1,500 flat, quoted in AUD |
+| USA | USD | USD $900–1,400 | 3× monthly | US$1,500 flat |
 
 **Pricing principles:**
 1. **Never convert the Indian price.** ₹30,000 is ~$360 — priced into Canada it signals "cheap and probably worthless" to a segment that equates price with seriousness. Cluster B prices are set against local *competitive alternatives* (§3), not against Indian cost.
-2. **Never discount the headline price to close.** Use the existing voucher engine (PRD §6.8) with published, time-boxed, rule-based vouchers. Ad-hoc discounting destroys the honesty positioning faster than any competitor can.
-3. **Publish the total cost.** In every market, one page shows every rupee/naira/dollar the student will ever pay. This is a differentiator in a category built on hidden fees, and it is a compliance asset in Cluster B.
-4. **Keep the 30-day money-back guarantee everywhere.** It is the cheapest trust instrument we own and it is already in the brand promise. In Cluster B it also materially reduces regulatory risk on the enrolment conversation.
+2. **The add-on is never a condition of anything.** Enrolment, learning, mocks, certification and applying to any job must all work in full without it. Anything else makes it a gate, and a gated placement fee is exactly the instrument §6.4 exists to avoid.
+3. **Never discount the headline price to close.** Use the existing voucher engine (PRD §6.8) with published, time-boxed, rule-based vouchers. Ad-hoc discounting destroys the honesty positioning faster than any competitor can.
+4. **Publish the total cost.** In every market, one page shows every rupee/naira/dollar the student will ever pay. This is a differentiator in a category built on hidden fees, and it is a compliance asset in Cluster B.
+5. **Keep the 30-day money-back guarantee everywhere.** It is the cheapest trust instrument we own and it is already in the brand promise. In Cluster B it also materially reduces regulatory risk on the enrolment conversation.
 
-### 6.4 The pay-after-placement question — a formal recommendation
+### 6.4 The deployment-support fee — how to structure it so it holds in all six markets
 
-**Recommendation: do not export the "first 3 months' CTC" placement fee to the USA, Canada or Australia in year one.**
+**The model (founder decision, 2026-08):** there is **no placement fee and no revenue-share for candidates outside India.** Deployment support is an **optional add-on at a flat US$1,500**, the same price in every market.
 
-Three independent reasons, any one of which is sufficient:
+**Adopt it. This is a better instrument than the one this document originally proposed**, and it resolves the income-share problem outright:
 
-1. **The arithmetic breaks.** Three months of a CAD $85,000 salary is over CAD $21,000. As a consumer education contract, that is not a fee — it is a large unsecured consumer credit product with a contingent trigger.
-2. **It is regulated as credit.** Income-share and deferred-tuition agreements in the US have been treated by federal and state regulators as credit products requiring licensing and disclosure, and a major bootcamp has already been the subject of federal enforcement over both its placement-rate claims and its unlicensed lending. Canada and Australia bring their own consumer-credit, unfair-contract-terms and misleading-conduct regimes. Australia's unfair contract terms penalties in particular make a long-dated contingent obligation in a standard-form consumer contract a live risk.
-3. **We cannot honour the implied bargain.** A placement fee is a promise that we participate in the placement. In Toronto today, we do not. Charging contingent on an outcome we do not influence is precisely the dishonesty our brand exists to refuse.
+- It is **flat, not proportional.** Nothing about it scales with the student's salary, so the central argument that it is an income-share agreement disappears.
+- It is **small enough not to be a credit product.** US$1,500 is a service price, not a multi-year contingent obligation.
+- It is **identical everywhere**, which makes it simple to publish, simple to defend, and impossible to accuse of opportunistic pricing.
+- It is **honest in the brand's own terms** — the price does not rise because the student succeeded.
 
-**Where a deferred model *is* appropriate:** Nigeria and Kenya, where (a) the deferred component can be small and capped in absolute terms rather than proportional to salary, (b) it is tied to *our own* placement activity via the employer module, and (c) it is introduced only after Wave 1 proves the funnel. Even there: cap it, publish it, make it optional, take local counsel, and never let it be a *condition* of anything.
+**But it introduces a different risk, and this one is serious.** The income-share problem is solved; an **employment-agency** problem takes its place. In most of these markets, charging a *job seeker* a fee connected to finding them work is licensed, restricted, or prohibited outright — and unlike the credit rules, this one bites hardest in the market that otherwise looks easiest.
 
-**Revisit trigger:** re-open the deferred-fee question for a Cluster B market only when that market has (i) 25+ live employer accounts on the employer module, (ii) local counsel sign-off, (iii) any required state/provincial licensing, and (iv) 12 months of substantiated placement-rate data collected to the standard a regulator would demand.
+| Market | The rule to check before charging a candidate anything placement-adjacent |
+|---|---|
+| 🇦🇪 **UAE** | **Recruitment fees may not be charged to the worker** — the employer bears recruitment cost. This is well established and actively enforced. **The strictest of the six on this point.** |
+| 🇨🇦 Canada | Provincial employment-standards rules prohibit recruiters charging work seekers fees, with recruiter licensing regimes in some provinces |
+| 🇦🇺 Australia | Employment agents are generally prohibited from charging work seekers a fee for finding them work |
+| 🇺🇸 USA | Employment agencies are licensed state by state, with candidate-paid fees restricted or capped in many states |
+| 🇰🇪 Kenya | Private employment agencies are regulated; charging job seekers is restricted |
+| 🇳🇬 Nigeria | Overseas recruitment is licensed; charging candidates for foreign placement is tightly controlled |
+
+**The fix is structural, not cosmetic. Three rules keep the US$1,500 clean everywhere:**
+
+1. **It buys preparation, not placement.** Every deliverable must be something the student receives *whether or not they get a job*. The moment the fee is described as buying access to employers, submissions, or a placement outcome, it is an employment-agency fee and the table above applies.
+2. **It is paid when the student opts in — never triggered by getting hired.** Contingency is the trap: an outcome-triggered fee is simultaneously a placement fee (agency rules) *and* deferred credit (lending rules). Charging it upfront on opt-in avoids both regimes at once. This is the single most important sentence in this section.
+3. **Employers pay for placement. Candidates never do.** This is already the architecture of the employer module — a credit-based demand side. Keep candidate money and placement money on opposite sides of the marketplace and the entire category of risk goes away.
+
+**What the US$1,500 should therefore contain** — all of it deliverable regardless of hiring outcome:
+
+- ATS-grade CV and profile rebuild, market-specific
+- Unlimited proctored mock interviews for the support window, human-reviewed
+- The verified readiness record, published to their employer-facing profile
+- Role-targeted interview coaching and salary-negotiation preparation
+- Applications strategy and market-specific positioning coaching
+- Onboarding and first-90-days support after they start a role
+
+**Naming.** "Deployment" is Indian IT vernacular; abroad it reads as either opaque or as placement. Externally, name it for the preparation it delivers — **Career Launch Support** — and never as placement, deployment, recruitment or job assistance. The internal name can stay whatever the team already uses.
+
+**Two open decisions for the founder:**
+
+- **Does the flat US$1,500 apply to Cluster A local placements?** Against the Nigerian programme fee (~US$130) it is **eleven times the course price**, and against a local Lagos or Nairobi salary it is implausible; attach will be near zero and the optics are poor. Against a hard-currency remote role paying US$30–40k it is roughly 4–5% of first-year income — entirely rational and easy to justify. **Recommendation: keep the flat US$1,500 wherever the target role pays in hard currency (which is the whole Cluster A proposition anyway), and either price a lower local tier or decline to offer the add-on for local-market placements.** Do not let a defensible fee become an indefensible one through inattention.
+- **Is US$1,500 charged in USD everywhere, or in local currency at a fixed equivalent?** Recommendation: **quote in local currency at a rate reviewed monthly**, because a USD price on a Canadian or Australian checkout adds friction and an FX surprise. The UAE is the exception where a USD price is effectively stable by peg.
+
+**What this changes downstream:** the add-on is a second revenue line and it materially improves unit economics — see §14.2, where it moves the USA from clearly negative to roughly breakeven and makes the UAE the strongest market in the set. It also means **attach rate becomes a first-class metric** (§15.3), and the product must be able to sell, deliver and account for it (§12.12).
 
 ---
 
@@ -291,7 +350,7 @@ Ad / content / referral
 
 **The seven localisation rules:**
 
-1. **Timezone is not a detail, it is the conversion.** Masterclasses must run at 19:00–20:30 *local*. WAT is IST−4:30, EAT is IST−2:30, ET is IST−9:30/10:30, AEST is IST+4:30/5:30. A single IST schedule will silently halve show rates in four markets. This is engineering work (§12.2), and it is the highest-ROI engineering item in this document.
+1. **Timezone is not a detail, it is the conversion.** Masterclasses must run at 19:00–20:30 *local*. WAT is IST−4:30, EAT is IST−2:30, GST is IST−1:30, ET is IST−9:30/10:30, AEST is IST+4:30/5:30. A single IST schedule will silently halve show rates in five markets. **The UAE is the happy exception** — 20:30 IST is 19:00 GST, so one class serves both countries at local prime time, which is a real and unusual operating advantage worth designing the Gulf schedule around. This is engineering work (§12.2), and it is the highest-ROI engineering item in this document.
 2. **Speed-to-lead under 15 minutes.** The single largest, most reliably replicated finding in inbound lead research is that contact speed dominates almost every other variable. Automated WhatsApp/SMS instantly; human callback slot booked in the same interaction; counsellor coverage rostered to local evening hours, not Bengaluru business hours.
 3. **Rung 01 differs by cluster** (§6.2) — do not ship one lead magnet for all five markets.
 4. **Reminder cadence follows local norms.** Cluster A: WhatsApp at 24h/2h/10min (WhatsApp is the primary channel, not a fallback). Cluster B: email + calendar invite at 24h/1h, SMS only with explicit opt-in, **no WhatsApp cold contact in Canada** (§11.4).
@@ -329,7 +388,7 @@ Ad / content / referral
 | T5 | Community-org partnership (newcomer agencies) | CA | 3 signed partners, 100 referred leads, near-zero CAC | < 1 signed partner in 6 weeks |
 | T6 | Interview Index content + PR | NG + CA | 500 organic leads/month by month 4 | < 100 by month 4 |
 
-**Inner ring — expected winners to concentrate on** *(hypothesis, to be proven by the tests)*: **Nigeria → creator-led TikTok/WhatsApp + Meta retargeting. Canada → search + community partnerships + LinkedIn.** Concentrate ~70% of market budget on the winning two channels by month 4. Do not spread.
+**Inner ring — expected winners to concentrate on** *(hypothesis, to be proven by the tests)*: **Nigeria → creator-led TikTok/WhatsApp + Meta retargeting. Canada → search + community partnerships + LinkedIn. UAE → Meta/Instagram + expat community networks + search.** Concentrate ~70% of market budget on the winning two channels by month 4. Do not spread.
 
 ### 8.2 Cluster A channel detail (Nigeria, Kenya)
 
@@ -349,19 +408,19 @@ Ad / content / referral
 
 ### 8.4 The channel × segment matrix
 
-| Channel | A1 NG | A2 KE | A3 Campus | B1 CA | B2 US/AU | B3 Switchers |
-|---|---|---|---|---|---|---|
-| Meta ads | ●●● | ●●● | ●● | ● | ● | ●● |
-| TikTok | ●●● | ●●● | ●●● | ○ | ● | ● |
-| Google Search | ● | ● | ○ | ●●● | ●●● | ●●● |
-| LinkedIn | ● | ● | ○ | ●●● | ●●● | ●●● |
-| YouTube | ●● | ●● | ●● | ●●● | ●●● | ●●● |
-| WhatsApp comms | ●●● | ●●● | ●●● | ●* | ●* | ●* |
-| Creators | ●●● | ●●● | ●●● | ● | ● | ● |
-| Campus | ●● | ●● | ●●● | ○ | ● | ○ |
-| Community orgs | ● | ●● | ● | ●●● | ●● | ● |
-| SEO / Interview Index | ●● | ●● | ●● | ●●● | ●●● | ●●● |
-| Referral | ●●● | ●●● | ●● | ●● | ●● | ●● |
+| Channel | A1 NG | A2 KE | A3 Campus | B1 CA | B2 US/AU | B4 UAE | B3 Switchers |
+|---|---|---|---|---|---|---|---|
+| Meta ads | ●●● | ●●● | ●● | ● | ● | ●●● | ●● |
+| TikTok | ●●● | ●●● | ●●● | ○ | ● | ● | ● |
+| Google Search | ● | ● | ○ | ●●● | ●●● | ●●● | ●●● |
+| LinkedIn | ● | ● | ○ | ●●● | ●●● | ●●● | ●●● |
+| YouTube | ●● | ●● | ●● | ●●● | ●●● | ●● | ●●● |
+| WhatsApp comms | ●●● | ●●● | ●●● | ●* | ●* | ●●● | ●* |
+| Creators | ●●● | ●●● | ●●● | ● | ● | ●● | ● |
+| Campus | ●● | ●● | ●●● | ○ | ● | ● | ○ |
+| Community orgs | ● | ●● | ● | ●●● | ●● | ●●● | ● |
+| SEO / Interview Index | ●● | ●● | ●● | ●●● | ●●● | ●●● | ●●● |
+| Referral | ●●● | ●●● | ●● | ●● | ●● | ●●● | ●● |
 
 ●●● primary · ●● secondary · ● opportunistic · ○ no · \* opt-in only, never cold
 
@@ -429,15 +488,15 @@ Extends PRD §5 Stage 3. Non-negotiable in all five markets: real students only,
 
 ### 10.1 Channel-by-market rules (this table is a compliance artefact — follow it exactly)
 
-| Channel | NG | KE | CA | US | AU |
-|---|---|---|---|---|---|
-| WhatsApp — transactional after opt-in | ✅ primary | ✅ primary | ⚠️ express consent, CASL applies | ⚠️ opt-in, treat as SMS | ⚠️ Spam Act consent |
-| WhatsApp — marketing broadcast | ✅ opt-in | ✅ opt-in | ❌ | ❌ | ❌ |
-| SMS | ✅ | ✅ | ⚠️ CASL express consent | ⚠️ TCPA + A2P 10DLC registration | ⚠️ Spam Act + DNC |
-| Email — transactional | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Email — marketing | ✅ opt-in | ✅ opt-in | ⚠️ **express/implied consent required, records kept** | ⚠️ CAN-SPAM: opt-out, physical address | ⚠️ consent + unsubscribe |
-| Outbound calling | ✅ | ✅ | ⚠️ DNC rules | ⚠️ TCPA, state rules | ⚠️ Do Not Call Register |
-| Push / in-app | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Channel | NG | KE | AE | CA | US | AU |
+|---|---|---|---|---|---|---|
+| WhatsApp — transactional after opt-in | ✅ primary | ✅ primary | ✅ primary | ⚠️ express consent, CASL applies | ⚠️ opt-in, treat as SMS | ⚠️ Spam Act consent |
+| WhatsApp — marketing broadcast | ✅ opt-in | ✅ opt-in | ✅ opt-in | ❌ | ❌ | ❌ |
+| SMS | ✅ | ✅ | ⚠️ consent + TDRA rules | ⚠️ CASL express consent | ⚠️ TCPA + A2P 10DLC registration | ⚠️ Spam Act + DNC |
+| Email — transactional | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Email — marketing | ✅ opt-in | ✅ opt-in | ⚠️ opt-in | ⚠️ **express/implied consent required, records kept** | ⚠️ CAN-SPAM: opt-out, physical address | ⚠️ consent + unsubscribe |
+| Outbound calling | ✅ | ✅ | ⚠️ TDRA rules | ⚠️ DNC rules | ⚠️ TCPA, state rules | ⚠️ Do Not Call Register |
+| Push / in-app | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Global rule: consent is captured, timestamped, sourced and stored per contact per channel, and is auditable.** This is a platform requirement (§12.5), not a marketing habit. In Canada, the burden of proving consent is on us.
 
@@ -517,11 +576,21 @@ One email/WhatsApp in the middle of every nurture flow titled *"What we will not
 - **Unfair contract terms** — penalties now apply; our enrolment terms, refund terms and any deferred obligation must be reviewed by Australian counsel.
 - **ASQA/RTO** — do not imply accredited qualification status. Describe outcomes as skills, evidence and readiness — never as a qualification.
 
-### 11.6 The pre-launch compliance gate
+### 11.6 United Arab Emirates
+- **Charging candidates for anything placement-adjacent is the headline risk.** UAE labour law places recruitment cost on the employer and prohibits charging the worker recruitment fees. The US$1,500 add-on must therefore be — and be documented as — a **preparation service purchased upfront**, never a fee for finding work, never triggered by an offer. See §6.4. **Get a written UAE counsel opinion on this specific fee before it is offered to a single UAE candidate.**
+- **Training-provider permits:** institutes delivering training in Dubai are permitted through KHDA (ADEK in Abu Dhabi, the Ministry of Education federally). Determine whether cross-border online delivery combined with local marketing and local sales activity brings us into scope, and whether a free-zone or mainland presence is required.
+- **Advertising:** UAE media-content rules and advertising permit requirements apply; comparative advertising naming competitors is not acceptable practice. Cultural review of every creative asset before publication.
+- **Data:** UAE PDPL — lawful basis, notice, cross-border transfer assessment.
+- **Tax:** VAT at 5% on services supplied to UAE customers; assess non-resident registration obligations for electronically supplied services. Corporate-tax position if any local presence is established.
+- **Calendar:** plan campaigns and class times around Ramadan explicitly — both ad performance and evening availability shift materially.
+
+### 11.7 The pre-launch compliance gate
 
 No market goes live until every box is ticked. Store as a checklist in the repo and require sign-off:
 
 - [ ] Local counsel opinion on offer, contract, refund terms and claims
+- [ ] **Counsel opinion specifically on the US$1,500 Career Launch Support fee against local employment-agency and recruiter-fee rules (§6.4)**
+- [ ] Employment-agency / recruiter licensing position determined for this market
 - [ ] Entity/tax/VAT position determined and registered where required
 - [ ] Privacy: lawful basis, notices, DSR path, cross-border transfer assessment, local registration if required
 - [ ] Advertising pre-clearance where required (Nigeria/ARCON)
@@ -551,9 +620,10 @@ Marketing cannot outrun the product. These are the gaps between the platform as 
 | **12.8** | **Market-local salary benchmarks** | Bengaluru/Pune/Hyderabad only, LPA | Per-market role/salary benchmark data with currency and local bands, or **suppress the salary UI entirely in markets where we lack data** — showing Indian LPA figures to a Toronto user is worse than showing nothing | CA, US, AU |
 | **12.9** | **Localised landing pages** | Single India site | Market-routed pages with local currency, local timezone, local proof, local legal footer, hreflang, market-specific JSON-LD | All |
 | **12.10** | **Interview Index publishing** | Data exists | Pipeline: extractions → per-market aggregation → human review → branded PDF (existing WeasyPrint pipeline) + web page + email issue | Month 2 |
+| **12.12** | **Career Launch Support as a product** | Not modelled | The US$1,500 add-on as a first-class entitlement: opt-in purchase (never outcome-triggered), local-currency quoting, deliverable tracking, attach-rate reporting, and a refund path consistent with the 30-day guarantee | Wave 1 |
 | **12.11** | **Attribution** | UTM capture, `funnel_events` | Server-side conversion API for Meta/Google/TikTok, market dimension on every funnel event, cohort-level CAC/LTV reporting | Month 1 |
 
-**Sequencing note:** 12.2 (timezone) and 12.1/12.3 (currency and rails) are the true launch blockers. 12.5 (consent) blocks Cluster B specifically. Everything else can ship in parallel with early traffic.
+**Sequencing note:** 12.2 (timezone) and 12.1/12.3 (currency and rails) are the true launch blockers. 12.5 (consent) blocks Cluster B specifically — with the partial exception of the UAE, where WhatsApp marketing is permitted on opt-in and the consent burden is closer to Cluster A. **The UAE is the cheapest market to make ready:** GST is a 90-minute offset from IST, AED is dollar-pegged, and delivery is in English. Everything else can ship in parallel with early traffic.
 
 ---
 
@@ -568,6 +638,7 @@ Minimum viable structure for year one. Roles, not necessarily headcount — one 
 | **Content & Interview Index Lead** | The monthly Index, SEO, YouTube, PR | Day 1 |
 | **Market Lead — Nigeria** (local hire) | Creators, campus, communities, cultural accuracy | Wave 1 |
 | **Market Lead — Canada** (local hire) | Community orgs, employer partnerships, compliance liaison | Wave 1 |
+| **Market Lead — UAE** (local hire or Dubai-based contractor) | Expat community networks, employer partnerships, KHDA/permit liaison, cultural review | Wave 1 |
 | **Counsellors** (timezone-rostered) | Speed-to-lead, masterclass conversion | Wave 1 |
 | **Compliance & Claims Reviewer** | The §11.6 gate; sign-off on every asset before publication | Day 1 — **non-negotiable** |
 | **Local counsel** (retained, per market) | Legal opinions, contract localisation | Before each market's launch |
@@ -586,30 +657,40 @@ Illustrative on a **US$150,000** year-one international budget *(assumption — 
 
 | Line | Share | Amount | Note |
 |---|---|---|---|
-| Paid media — Nigeria | 18% | $27,000 | Volume test bed |
-| Paid media — Canada | 20% | $30,000 | Highest value per lead |
-| Paid media — Kenya | 8% | $12,000 | Wave 2 |
-| Paid media — Australia | 9% | $13,500 | Wave 2 |
-| Paid media — USA | 7% | $10,500 | Wave 3, narrow |
+| Paid media — Canada | 16% | $24,000 | Hardest Cluster B test |
+| Paid media — Nigeria | 14% | $21,000 | Cluster A volume test bed |
+| **Paid media — UAE** | **13%** | **$19,500** | **Cheapest market to run, highest expected margin** |
+| Paid media — Australia | 7% | $10,500 | Wave 2 |
+| Paid media — Kenya | 6% | $9,000 | Wave 2 |
+| Paid media — USA | 4% | $6,000 | Wave 3, retargeting only |
 | Content & Interview Index production | 12% | $18,000 | The compounding asset |
-| Creator programme | 8% | $12,000 | Cluster A weighted |
-| **Legal, compliance & registrations** | **9%** | **$13,500** | Five jurisdictions. Do not cut this line. |
+| Creator programme | 7% | $10,500 | Cluster A weighted |
+| **Legal, compliance & registrations** | **10%** | **$15,000** | Six jurisdictions, plus the §6.4 fee opinion in each. Do not cut this line. |
 | Tooling, martech, attribution | 5% | $7,500 | |
-| Experiment reserve | 4% | $6,000 | Unallocated by design |
+| Experiment reserve | 6% | $9,000 | Unallocated by design |
 
 **Brand vs activation:** ~35/65 in Q1–Q2, moving to ~45/55 by Q4 as the Interview Index builds mental availability (Binet & Field, adjusted for a business with zero brand equity in these markets).
 
-### 14.2 Unit economics targets *(assumptions to be replaced by measured data)*
+### 14.2 Unit economics with the Career Launch add-on *(assumptions to be replaced by measured data)*
 
-| Market | Target CPL | Lead→paid | Implied CAC | Price | Gross margin/student | Payback |
-|---|---|---|---|---|---|---|
-| Nigeria | $1.20 | 1.5% | ~$80 | ~$130 | ~$95 | ~1 cohort |
-| Kenya | $1.50 | 1.4% | ~$107 | ~$400 | ~$310 | immediate |
-| Canada | $22 | 2.2% | ~$1,000 | ~$1,100 | ~$800 | 1–2 instalments |
-| Australia | $25 | 2.0% | ~$1,250 | ~$1,200 | ~$880 | 1–2 instalments |
-| USA | $28 | 1.8% | ~$1,555 | ~$1,100 | ~$800 | **negative — see note** |
+The flat US$1,500 add-on is a second revenue line, and it changes the picture enough that the Wave-3 decision on the USA rests on it. Attach rate is the variable that matters most and it is currently unknown — **measure it from the first cohort.**
 
-**Read the last row carefully.** On these assumptions the US is unprofitable on paid acquisition alone. That is not an argument for a bigger budget; it is the argument for launching the US last, on organic, partnership and Interview Index-led acquisition, with paid used only for retargeting. **If a market cannot pay back CAC within one cohort, it does not get scaled paid spend.** That rule is worth more than any tactic in this document.
+| Market | Target CPL | Lead→paid | Implied CAC | Programme | Attach *(assumed)* | Add-on rev/student | **Total rev/student** | Payback |
+|---|---|---|---|---|---|---|---|---|
+| **UAE** | $16 | 2.3% | ~$696 | ~$1,300 | 40% | ~$600 | **~$1,900** | **Best in set — inside 1 cohort** |
+| Nigeria | $1.20 | 1.5% | ~$80 | ~$130 | 12% | ~$180 | ~$310 | Inside 1 cohort |
+| Kenya | $1.50 | 1.4% | ~$107 | ~$400 | 12% | ~$180 | ~$580 | Immediate |
+| Canada | $22 | 2.2% | ~$1,000 | ~$1,100 | 30% | ~$450 | ~$1,550 | 1–2 instalments |
+| Australia | $25 | 2.0% | ~$1,250 | ~$1,200 | 30% | ~$450 | ~$1,650 | 1–2 instalments |
+| USA | $28 | 1.8% | ~$1,555 | ~$1,100 | 30% | ~$450 | ~$1,550 | **~Breakeven — still not scalable on paid** |
+
+**Three things to read out of this table.**
+
+1. **The UAE is the strongest market in the set** on these assumptions — roughly 2.7× revenue-to-CAC, on the lowest operating overhead of the six. That is why it moves into Wave 1.
+2. **The USA moves from clearly negative to roughly breakeven.** That is an improvement, not a green light: breakeven on assumed numbers is a loss on real ones. The USA still launches last, organic-first, with paid restricted to retargeting.
+3. **Cluster A attach is deliberately modelled low (12%)** because a flat US$1,500 against a local Lagos or Nairobi salary is implausible — see §6.4. If Cluster A attach is instead measured against hard-currency remote placements only, the realistic attach on *that* subset is much higher, and the number to track is **attach among students targeting hard-currency roles**, not attach overall.
+
+**Timing caveat:** add-on revenue arrives later than programme revenue — it is purchased at the placement-preparation stage, not at enrolment. Track **payback on programme fee alone** as the primary gate, and treat add-on revenue as margin upside rather than as the thing that justifies a market. A market that only works if the add-on attaches is a market that does not work.
 
 ### 14.3 The stage-gate
 
@@ -646,7 +727,7 @@ Revenue per market
 
 ### 15.3 Guardrail metrics — watch these as closely as the growth numbers
 
-Refund rate (<5%), complaint rate, unsubscribe rate (<0.5%), email spam-complaint rate (<0.1%), WhatsApp block rate, **ad account health per market**, review sentiment, counsellor call banned-phrase flags (**target: zero**), and speed-to-lead p50 and p90 (target: p90 under 15 minutes).
+**Career Launch attach rate** (overall, and among students targeting hard-currency roles — §14.2), refund rate (<5%), complaint rate, unsubscribe rate (<0.5%), email spam-complaint rate (<0.1%), WhatsApp block rate, **ad account health per market**, review sentiment, counsellor call banned-phrase flags (**target: zero**), and speed-to-lead p50 and p90 (target: p90 under 15 minutes).
 
 ### 15.4 Instrumentation
 Every lead carries market, segment, channel, campaign, creative and consent source. Server-side conversion APIs (privacy rules make browser pixels unreliable in these markets). One weekly dashboard, reviewed for 30 minutes, every week, by the same people.
@@ -658,13 +739,13 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 ### PHASE 0 — Foundation (Days 1–30) · *No paid spend*
 
 **Week 1 — Decide**
-1. Founder signs off §1 (two-cluster strategy), §3.6 (Nigeria + Canada first), §6.4 (no ISA in Cluster B).
+1. Founder signs off §1 (two-cluster strategy), §3.7 (UAE + Canada + Nigeria in Wave 1), §6.4 (the US$1,500 add-on structured as upfront preparation, never outcome-triggered).
 2. Appoint Head of International Growth and Compliance & Claims Reviewer.
-3. Retain local counsel in Nigeria and Canada; brief them on the offer, contract, refund terms and claims.
-4. Open engineering tickets for §12.1, §12.2, §12.3, §12.5, §12.7, §12.11.
+3. Retain local counsel in the UAE, Canada and Nigeria; brief them on the offer, contract, refund terms, claims **and specifically on the US$1,500 fee against local employment-agency and recruiter-fee rules (§6.4). The UAE opinion is the one to get first — it is the strictest of the six on candidate-paid fees.**
+4. Open engineering tickets for §12.1, §12.2, §12.3, §12.5, §12.7, §12.11 and §12.12 (Career Launch Support as a purchasable entitlement).
 
 **Week 2 — Research and price**
-5. Validate every *(assumption)* in §3 against primary sources; re-score §3.6.
+5. Validate every *(assumption)* in §3 against primary sources; re-score §3.7.
 6. Interview 10 people per Wave-1 market from the target segment. Ask what they tried, what failed, and what they paid for. This is worth more than any competitive analysis.
 7. Set final prices per market (§6.3) and load them into the server-owned catalogue.
 8. Competitive teardown: 5 competitors per market — offer, price, claims, funnel, ad library.
@@ -676,23 +757,23 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 12. Draft all Sequence A/B/C copy; compliance review; legal review for Canada.
 
 **Week 4 — Build the machine**
-13. Ship localised landing pages for NG and CA (§12.9) with local currency, timezone, legal footer.
+13. Ship localised landing pages for AE, CA and NG (§12.9) with local currency, timezone, legal footer.
 14. Ship the Interview Gap Report as a self-serve free flow (Cluster B rung 01).
-15. Consent ledger live (§12.5). Payment rails live for NG (Paystack/Flutterwave) and CA (Stripe).
-16. Counsellor roster for WAT and ET evening hours. Speed-to-lead automation tested end to end.
-17. **Run the §11.6 compliance gate for Nigeria and Canada. Do not proceed on a red box.**
+15. Consent ledger live (§12.5). Payment rails live for NG (Paystack/Flutterwave), CA and AE (Stripe). Publish the Career Launch Support page: flat price, full deliverable list, and the explicit statement that it is optional and buys preparation, not placement.
+16. Counsellor roster for WAT, GST and ET evening hours — note that GST evening coverage costs almost nothing on top of the existing IST roster. Speed-to-lead automation tested end to end.
+17. **Run the §11.7 compliance gate for the UAE, Canada and Nigeria. Do not proceed on a red box.**
 
 ### PHASE 1 — Wave 1 launch and channel discovery (Days 31–90)
 
 **Weeks 5–7 — Test**
 18. Launch tests T1–T6 (§8.1). Small budgets, clean measurement, 3 weeks minimum before judging.
-19. First masterclass in each Wave-1 market, local prime time. Target 100 registrations, 40% attendance.
+19. First masterclass in each Wave-1 market, local prime time — the UAE session can run off the existing IST slot at 19:00 GST. Target 100 registrations, 40% attendance.
 20. Recruit and contract 8 creators in Nigeria (with the banned-phrase schedule attached).
 21. Open conversations with 10 Canadian community organisations; target 3 signed.
-22. Publish Interview Index issue 2; begin PR outreach.
+22. Publish Interview Index issue 2; begin PR outreach. Open UAE expat-community and employer conversations in Dubai and Abu Dhabi.
 
 **Weeks 8–10 — Learn**
-23. First paid cohorts enrol. Instrument every step; replace §7 benchmark assumptions with real numbers.
+23. First paid cohorts enrol. Instrument every step; replace §7 benchmark assumptions with real numbers. **Begin measuring Career Launch attach from the first cohort that reaches placement-preparation stage.**
 24. Kill the losing channels at Gate 1 (§14.3). No sentiment, no "one more week."
 25. Double creative volume on the winning channel; refresh every 10–14 days.
 26. Launch the referral programme to first cohorts (their networks are the cheapest lead source we will ever have).
@@ -705,7 +786,7 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 
 ### PHASE 2 — Wave 2: Kenya and Australia (Days 91–180)
 
-31. Run the §11.6 gate for Kenya and Australia. M-Pesa integration live for Kenya; Australian counsel review of terms and unfair-contract-terms exposure.
+31. Run the §11.7 gate for Kenya and Australia. M-Pesa integration live for Kenya; Australian counsel review of terms and unfair-contract-terms exposure.
 32. Clone the proven playbook — localise language, casting, price, timing and legal only. Do not redesign the funnel.
 33. Kenya: campus programme at 4 universities; creator programme; Nairobi tech-community partnerships.
 34. Australia: search + LinkedIn + community organisations. Understated creative register (§3.5).
@@ -718,8 +799,8 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 38. US state-licensing posture determined; launch in a narrow, cleared set of states.
 39. US launches **organic-first**: Interview Index, YouTube teardowns, LinkedIn, community and employer partnerships. Paid restricted to retargeting until unit economics clear (§14.2).
 40. Substantiated placement data now exists for Wave-1 markets — publish it, with the disclaimer, and only then begin outcome-led messaging in those markets.
-41. Re-open the deferred-fee question only against the four revisit triggers in §6.4.
-42. Annual review: re-run §3.6 scoring, re-cut budget by measured CAC payback, retire what did not work.
+41. Review Career Launch attach and delivery quality per market; adjust price or scope only on measured data, never to close a sale.
+42. Annual review: re-run §3.7 scoring, re-cut budget by measured CAC payback, retire what did not work.
 
 ---
 
@@ -732,6 +813,7 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 | We cannot deliver the promise (no local employers) | **High if unmanaged** | Severe | Never promise placement abroad; sell readiness; build employer side first | Any placement claim published without substantiation is a stop-ship incident |
 | CAC exceeds payback in Cluster B | Medium | High | Stage gates §14.3 | Gate 3 failure → organic-only |
 | FX volatility destroys Nigerian pricing | High | Medium | Monthly price review, or USD pricing with PSP conversion | Margin below 40% for two months → reprice |
+| Career Launch fee reframed as a placement fee in copy or on a call | Medium | **Severe** | §6.4 rules in every brief; phrase lint; call-transcript flagging | Any instance → correct immediately, retrain, review how it shipped |
 | Creator says something we cannot defend | Medium | High | Contractual schedule, 48h pre-publication review, takedown clause | One breach → terminate, publish correction |
 | Brand dilution across five markets | Medium | Medium | Distinctive assets held constant (§9.1); localise language, never identity | — |
 | Platform not ready (timezone/currency) at launch | Medium | High | §12 blockers gate the launch date, not the other way round | Launch slips rather than shipping a broken checkout |
@@ -741,7 +823,7 @@ Every lead carries market, segment, channel, campaign, creative and consent sour
 
 ## 18. The one-paragraph version
 
-Do not export the Indian business. Export the Indian *method*. In Nigeria and Kenya, sell a low-ticket, WhatsApp-and-creator-led programme to young people who want globally-paid work and are exhausted by worthless certificates — the free ladder works there almost unchanged. In Canada, Australia and the USA, sell something different to a different person: interview-readiness and verifiable proof to experienced immigrants who are getting interviews and not offers — no placement promise, no income-share agreement, no exceptions. Bind both together with one asset nobody else can build: a monthly public Interview Index of what employers are actually asking, which is simultaneously our SEO engine, our PR hook, our lead magnet and our category claim. Launch Nigeria and Canada first because they stress-test both motions at once. Gate every market on compliance and on CAC payback inside one cohort. And keep saying the thing that competitors structurally cannot say — that nobody can guarantee a job, and here is everything we will put in writing instead. That sentence is the product.
+Do not export the Indian business. Export the Indian *method*. In Nigeria and Kenya, sell a low-ticket, WhatsApp-and-creator-led programme to young people who want globally-paid work and are exhausted by worthless certificates — the free ladder works there almost unchanged. In Canada, Australia and the USA, sell something different to a different person: interview-readiness and verifiable proof to experienced immigrants who are getting interviews and not offers — no placement promise, no income-share agreement, and a flat, optional US$1,500 that buys preparation and is never triggered by getting hired. Bind both together with one asset nobody else can build: a monthly public Interview Index of what employers are actually asking, which is simultaneously our SEO engine, our PR hook, our lead magnet and our category claim. Launch the UAE, Canada and Nigeria together, because the UAE is nearly free to run alongside India and should be first to profit, Canada proves the hardest version of the strategy, and Nigeria proves the volume version. Gate every market on compliance and on CAC payback inside one cohort. And keep saying the thing that competitors structurally cannot say — that nobody can guarantee a job, and here is everything we will put in writing instead. That sentence is the product.
 
 ---
 
