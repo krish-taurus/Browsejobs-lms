@@ -63,7 +63,7 @@ export default function StudentLogin() {
           </h1>
           <p className="mt-1 text-sm text-muted">
             {step === "identifier"
-              ? "We'll send a one-time code to your phone or email."
+              ? "We'll send a one-time code to your phone."
               : `We sent a 6-digit code to ${identifier}.`}
           </p>
 
@@ -80,7 +80,7 @@ export default function StudentLogin() {
                   autoFocus
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Phone or email"
+                  placeholder="Phone number"
                   className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-trust"
                 />
                 <button
@@ -113,7 +113,7 @@ export default function StudentLogin() {
                 onClick={() => setStep("identifier")}
                 className="w-full text-sm text-muted hover:text-ink"
               >
-                Use a different phone / email
+                Use a different phone
               </button>
             </form>
           )}
