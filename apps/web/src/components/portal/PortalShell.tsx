@@ -9,7 +9,7 @@ import { durations, ease } from "@/lib/motion";
 import { useAuth } from "@/lib/auth";
 import { useFeeStatus } from "@/lib/fee-status";
 import { Mark } from "@/components/brand/Wordmark";
-import { navGroups, primaryTabs } from "@/components/portal/nav";
+import { isNavParent, navGroups, primaryTabs } from "@/components/portal/nav";
 import { CommandPalette } from "@/components/portal/CommandPalette";
 import { FeeBlockedScreen } from "@/components/portal/FeeBlockedScreen";
 
@@ -73,18 +73,47 @@ function PortalShellInner({ children }: { children: ReactNode }) {
             <div key={group.label}>
               <p className="mono px-3 pb-1 text-[10px] uppercase tracking-widest text-muted/70">{group.label}</p>
               <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const active = pathname === item.href;
+                {group.items.map((entry) => {
+                  if (isNavParent(entry)) {
+                    const anyChildActive = entry.children.some((c) => pathname === c.href);
+
+                    return (
+                      <div key={entry.label}>
+                        <p className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-ink">
+                          <NavIcon path={entry.icon} active={anyChildActive} />
+                          {entry.label}
+                        </p>
+                        <div className="space-y-0.5 border-l border-line pl-3 ml-5">
+                          {entry.children.map((child) => {
+                            const active = pathname === child.href;
+                            return (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className={`block rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                                  active ? "bg-sky text-ink" : "text-muted hover:bg-paper"
+                                }`}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const active = pathname === entry.href;
                   return (
                     <Link
-                      key={item.href}
-                      href={item.href}
+                      key={entry.href}
+                      href={entry.href}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         active ? "bg-sky text-ink" : "text-muted hover:bg-paper"
                       }`}
                     >
-                      <NavIcon path={item.icon} active={active} />
-                      {item.label}
+                      <NavIcon path={entry.icon} active={active} />
+                      {entry.label}
                     </Link>
                   );
                 })}
@@ -134,16 +163,36 @@ function PortalShellInner({ children }: { children: ReactNode }) {
                 <div key={group.label}>
                   <p className="mono pb-1 text-[10px] uppercase tracking-widest text-muted">{group.label}</p>
                   <div className="space-y-0.5">
-                    {group.items.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-2 py-1.5 text-sm font-medium ${pathname === item.href ? "text-trust" : "text-ink"}`}
-                      >
-                        <NavIcon path={item.icon} active={pathname === item.href} />
-                        {item.label}
-                      </Link>
-                    ))}
+                    {group.items.map((entry) =>
+                      isNavParent(entry) ? (
+                        <div key={entry.label}>
+                          <p className="flex items-center gap-2 py-1.5 text-sm font-medium text-ink">
+                            <NavIcon path={entry.icon} active={entry.children.some((c) => pathname === c.href)} />
+                            {entry.label}
+                          </p>
+                          <div className="ml-6 space-y-0.5 border-l border-line pl-2">
+                            {entry.children.map((child) => (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className={`block py-1.5 text-sm font-medium ${pathname === child.href ? "text-trust" : "text-ink"}`}
+                              >
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          key={entry.href}
+                          href={entry.href}
+                          className={`flex items-center gap-2 py-1.5 text-sm font-medium ${pathname === entry.href ? "text-trust" : "text-ink"}`}
+                        >
+                          <NavIcon path={entry.icon} active={pathname === entry.href} />
+                          {entry.label}
+                        </Link>
+                      ),
+                    )}
                   </div>
                 </div>
               ))}
