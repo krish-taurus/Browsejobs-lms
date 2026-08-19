@@ -30,7 +30,9 @@ final readonly class SendBatchCredentials
             // For the Meta template's batch slot: number + course in one value,
             // so the approved template stays course-dynamic without a re-review.
             'batch_course' => "{$batch->number} ({$course})",
-            'starts' => $batch->starts_on ? $batch->starts_on->format('D, d M Y') : 'soon',
+            // Written out in full — "Tuesday, 01 September 2026" reads like a
+            // date somebody wrote, not a log line.
+            'starts' => $batch->starts_on ? $batch->starts_on->format('l, d F Y') : 'soon',
             'login' => filled($student->email) ? (string) $student->email : (string) $student->phone,
             'link' => rtrim((string) config('app.frontend_url', ''), '/').'/student',
         ];
