@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth";
 import { FeeWidget } from "@/components/portal/FeeWidget";
+import { FeeSummary } from "@/components/portal/FeeSummary";
 import { FeeChoiceCard } from "@/components/portal/FeeChoiceCard";
 import { NextClassCard } from "@/components/portal/NextClassCard";
 import { QuizDueCard } from "@/components/portal/QuizDueCard";
@@ -20,6 +21,10 @@ export default function DashboardPage() {
       </h1>
 
       <FeeWidget />
+
+      {/* The whole fee picture — cost, paid, remaining, every instalment — so a
+          student never has to ask the team where their money stands. */}
+      <FeeSummary />
 
       {/* Seat held but nothing agreed yet — pick full payment or an EMI plan.
           Renders nothing once a plan exists; FeeWidget above takes over. */}
