@@ -96,7 +96,10 @@ final class PlanMasterclass extends Command
                 (string) ($this->option('title') ?: 'Masterclass — '.$course->name),
                 $start,
                 $end,
-                kind: LiveSession::KIND_MASTERCLASS,
+                // A masterclass slot is an ordinary class on a masterclass
+                // batch — the batch type carries that meaning, and 'class' and
+                // 'mentoring' are the only kinds the column accepts.
+                kind: LiveSession::KIND_CLASS,
             );
 
             $this->info("Class scheduled: {$session->title} at {$session->scheduled_start} (session #{$session->id}).");
