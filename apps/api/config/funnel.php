@@ -14,6 +14,12 @@ return [
     // day-5 payment nudge keeps running either way.
     'auto_advance' => (bool) env('FUNNEL_AUTO_ADVANCE', false),
 
+    // Whether moving a masterclass into its bootcamp also fills the calendar
+    // with seven daily classes. OFF means the batch arrives empty and the team
+    // schedules it from the batch page — "Schedule Class Series" builds the
+    // same seven in one click, on the days and times they actually teach.
+    'auto_schedule_bootcamp_classes' => (bool) env('FUNNEL_AUTO_SCHEDULE_BOOTCAMP_CLASSES', false),
+
     // The daily "simulated live" masterclass showing: the recorded masterclass
     // plays as-if-live at this time every day, so a Monday lead never waits
     // for Saturday. The live weekend masterclass is unaffected.

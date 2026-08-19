@@ -105,16 +105,22 @@ final readonly class RolloverMasterclassesToBootcamps
             $enrolled++;
         }
 
-        $this->scheduleSeries->handle(
-            $batch,
-            weekdays: [1, 2, 3, 4, 5, 6, 7],
-            time: (string) config('funnel.class_time', '19:00'),
-            durationMinutes: (int) config('funnel.class_duration_minutes', 90),
-            count: 7,
-            startDate: CarbonImmutable::parse($bootcampStart->toDateString()),
-            titlePrefix: 'Bootcamp Day',
-            mapTopics: true,
-        );
+        // A bootcamp used to arrive with seven daily classes already booked, at
+        // a time nobody had agreed to. The batch now arrives empty and the team
+        // builds the calendar from the batch page; switching this on restores
+        // the old behaviour exactly.
+        if (config('funnel.auto_schedule_bootcamp_classes')) {
+            $this->scheduleSeries->handle(
+                $batch,
+                weekdays: [1, 2, 3, 4, 5, 6, 7],
+                time: (string) config('funnel.class_time', '19:00'),
+                durationMinutes: (int) config('funnel.class_duration_minutes', 90),
+                count: 7,
+                startDate: CarbonImmutable::parse($bootcampStart->toDateString()),
+                titlePrefix: 'Bootcamp Day',
+                mapTopics: true,
+            );
+        }
 
         $this->audit->log(
             action: 'batch.stage_advanced',
