@@ -48,6 +48,15 @@ return [
     // approved reminder — see MessengerSessionNotifier::reminderKey().
     'class_reminder_5min' => ['name' => 'bj_class_starting_5min', 'params' => ['name', 'title', 'batch', 'time', 'link']],
     'class_rescheduled' => ['name' => 'bj_class_rescheduled', 'params' => ['name', 'title', 'batch', 'date', 'time']],
+
+    // A cancelled class, and the trainer's copy of both a cancellation and a
+    // reschedule, were missing from this map entirely — so they went out as
+    // free text, which Meta accepts and then drops outside the 24-hour window.
+    // A trainer who has never messaged the business number therefore heard
+    // nothing at all when their own class moved or was called off.
+    'class_cancelled' => ['name' => 'bj_class_cancelled', 'params' => ['name', 'title', 'reason']],
+    'class_cancelled_trainer' => ['name' => 'bj_class_cancelled_trainer', 'params' => ['name', 'title', 'batch', 'reason']],
+    'class_rescheduled_trainer' => ['name' => 'bj_class_rescheduled_trainer', 'params' => ['name', 'title', 'batch', 'starts', 'reason']],
     'bootcamp_payment_nudge' => ['name' => 'bj_payment_nudge', 'params' => ['name', 'days', 'course']],
     'mentor_booked' => ['name' => 'bj_mentor_booked', 'params' => ['name', 'with', 'when']],
     // Two-round placement interview. The params order below IS the {{1}}, {{2}},
