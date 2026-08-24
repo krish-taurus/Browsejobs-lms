@@ -79,6 +79,9 @@ export default function CvPage() {
   const [jd, setJd] = useState("");
   const [importText, setImportText] = useState("");
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // The real file input is hidden so it can be styled, and the browser only
+  // names the chosen file inside its own control — so the label says it.
+  const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -112,6 +115,7 @@ export default function CvPage() {
       setShowProfile(true);
       setImportText("");
       if (fileRef.current) fileRef.current.value = "";
+      setFileName(null);
       say("Imported — review your experience and projects below, then generate.", null);
     } catch (err) {
       say(null, err instanceof ApiError ? (err.firstError ?? err.message) : "Could not read that CV.");
@@ -243,17 +247,53 @@ export default function CvPage() {
           </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input ref={fileRef} type="file" accept=".txt,.md,.docx" className="text-xs text-muted" />
-          <span className="text-xs text-muted">or</span>
-          <input
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            placeholder="paste your current CV text…"
-            className="min-w-40 flex-1 rounded-[10px] border border-line bg-white px-3 py-1.5 text-xs text-ink outline-none focus:border-trust"
-          />
-          <button onClick={importCv} disabled={busy === "import"}
-            className="rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-ink hover:border-trust disabled:opacity-50">
+        {/* Two ways in, side by side and equally weighted — the browser's own
+            file input ("Choose File · No file chosen") sat unstyled next to a
+            one-line box, and a CV pasted into a one-line box shows you eight
+            words of itself. */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".txt,.md,.docx"
+              className="sr-only"
+              id="cv-file"
+              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            />
+            <label
+              htmlFor="cv-file"
+              className="flex h-full min-h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-[12px] border border-dashed border-line bg-paper px-4 py-4 text-center transition hover:border-trust"
+            >
+              <span className="text-xs font-semibold text-ink">
+                {fileName ?? "Choose a file"}
+              </span>
+              <span className="text-[11px] text-muted">
+                {fileName ? "Ready to import" : ".txt, .md or .docx"}
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              rows={3}
+              placeholder="…or paste your current CV text here"
+              className="min-h-24 w-full resize-y rounded-[12px] border border-line bg-white px-3 py-2 text-xs leading-relaxed text-ink outline-none focus:border-trust"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-muted">
+            Imported once, yours to edit afterwards. Nothing is shared until you generate.
+          </p>
+          <button
+            onClick={importCv}
+            disabled={busy === "import" || (fileName === null && importText.trim() === "")}
+            className="rounded-full bg-trust px-5 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
+          >
             {busy === "import" ? "Reading…" : "Import my CV"}
           </button>
         </div>
