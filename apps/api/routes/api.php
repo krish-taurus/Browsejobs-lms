@@ -130,10 +130,12 @@ use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\Me\SalaryBenchmarkController as MeSalaryBenchmarkController;
 use App\Http\Controllers\Me\VerificationController;
+use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
+use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFeedbackController;
@@ -385,6 +387,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::delete('me/cv/{cv}/share', [CvController::class, 'unshare']);
     // Mentor scheduling (PRD §6.11).
     Route::get('me/mentors', [MentorBookingController::class, 'index']);
+    // Two-round placement interview: the student applies for a slot, a Tech
+    // Mentor (round 1) or Tech Manager (round 2) approves or moves it in the CRM.
+    Route::get('me/interviews', [InterviewController::class, 'index']);
+    Route::post('me/interviews', [InterviewController::class, 'store'])->middleware('throttle:20,1');
     Route::get('me/mentor-sessions', [MentorBookingController::class, 'sessions']);
     Route::post('me/mentor-sessions', [MentorBookingController::class, 'store'])->middleware('throttle:20,1');
     Route::post('me/mentor-sessions/{session}/cancel', [MentorBookingController::class, 'destroy']);
@@ -402,6 +408,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
     Route::get('me/mocks/{mock}', [MockController::class, 'show']);
     Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
+    // Reads a question aloud in the configured ElevenLabs voice. Answers 204
+    // when no voice is set up, and the room falls back to the browser's own.
+    Route::post('me/mocks/{mock}/speak', SpeakMockQuestion::class)->middleware('throttle:60,1');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
     // Proctoring close from the interview room — no refund, like walking out.
     Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');

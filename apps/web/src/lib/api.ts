@@ -105,3 +105,33 @@ export async function apiBlob(path: string): Promise<Blob> {
   if (!res.ok) throw new ApiError(res.status, {});
   return res.blob();
 }
+
+/**
+ * POST and take the answer as a Blob — for endpoints that return a file rather
+ * than JSON, such as the mock interviewer's spoken question.
+ *
+ * Returns null when the server has nothing to give (204), which the caller is
+ * expected to treat as "fall back", not as an error.
+ */
+export async function apiPostBlob(
+  path: string,
+  body: unknown,
+): Promise<Blob | null> {
+  await ensureCsrf();
+
+  const headers = new Headers({ "Content-Type": "application/json" });
+  const xsrf = getCookie("XSRF-TOKEN");
+  if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+
+  if (res.status === 204) return null;
+  if (!res.ok) throw new ApiError(res.status, {});
+
+  return res.blob();
+}

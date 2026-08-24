@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
-import { apiJson } from "@/lib/api";
+import { apiJson, apiPostBlob } from "@/lib/api";
 
 type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 
@@ -45,6 +45,19 @@ function speechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
 
 function pad(n: number): string {
   return n.toString().padStart(2, "0");
+}
+
+/**
+ * The spoken question currently playing. Module-scoped rather than a ref so
+ * that every place which silences the browser voice — the proctor closing the
+ * interview, the mic opening, unmount — can silence this one with a plain call
+ * and no hook dependencies. One room is open at a time.
+ */
+let currentAudio: HTMLAudioElement | null = null;
+
+function stopAudio(): void {
+  currentAudio?.pause();
+  currentAudio = null;
 }
 
 /**
@@ -123,8 +136,10 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     }
   }, [camOn, accepted]);
 
-  const speak = useCallback((text: string) => {
+  /** The browser's own robot — the fallback, and what this used to be. */
+  const speakLocally = useCallback((text: string) => {
     window.speechSynthesis.cancel();
+    stopAudio();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
     utterance.rate = 0.95;
@@ -132,6 +147,42 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     setSpeaking(true);
     window.speechSynthesis.speak(utterance);
   }, []);
+
+  /**
+   * Ask the API for the question in a real voice and play that. Anything at all
+   * going wrong — no voice configured, ElevenLabs down, audio blocked — drops
+   * back to the browser, because an interview with a robot voice still works
+   * and one with no voice does not.
+   */
+  const speak = useCallback(
+    (text: string) => {
+      window.speechSynthesis.cancel();
+      stopAudio();
+      setSpeaking(true);
+
+      apiPostBlob(`/api/v1/me/mocks/${id}/speak`, { text })
+        .then((blob) => {
+          if (blob === null || blob.size === 0) {
+            speakLocally(text);
+            return;
+          }
+
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          currentAudio = audio;
+          audio.onended = () => {
+            setSpeaking(false);
+            URL.revokeObjectURL(url);
+          };
+          audio.play().catch(() => {
+            URL.revokeObjectURL(url);
+            speakLocally(text);
+          });
+        })
+        .catch(() => speakLocally(text));
+    },
+    [id, speakLocally],
+  );
 
   // Read each new interviewer question aloud — only once the rules are accepted.
   useEffect(() => {
@@ -156,6 +207,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         closingRef.current = true;
         recognitionRef.current?.stop();
         window.speechSynthesis.cancel();
+        stopAudio();
         void apiJson(`/api/v1/me/mocks/${id}/abandon`, { method: "POST" })
           .catch(() => {})
           .finally(() => router.push(`/mock/${id}`));
@@ -170,6 +222,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   useEffect(() => () => {
     recognitionRef.current?.stop();
     if (typeof window !== "undefined") window.speechSynthesis.cancel();
+    stopAudio();
   }, []);
 
   const sendAnswer = useCallback(async (text: string) => {
@@ -199,6 +252,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     const Ctor = speechRecognitionCtor();
     if (Ctor === null) { setMicError("Voice input needs Chrome or Edge."); return; }
     window.speechSynthesis.cancel();
+    stopAudio();
     setSpeaking(false);
     setMicError(null);
     committedRef.current = "";
@@ -240,6 +294,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   async function finish() {
     recognitionRef.current?.stop();
     window.speechSynthesis.cancel();
+    stopAudio();
     setPhase("grading");
     try {
       await apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST" });

@@ -158,4 +158,25 @@ return [
         'api_key' => env('EPFO_API_KEY', ''),
     ],
 
+    // Which sandbox runs coding-lab submissions: 'piston' (self-hosted, default)
+    // or 'judge0'. Piston runs in Docker on this host — see PistonJudge0Client.
+    'code_runner' => env('CODE_RUNNER', 'piston'),
+
+    'piston' => [
+        'url' => env('PISTON_URL', 'http://127.0.0.1:2000'),
+    ],
+
+    /*
+    | The voice the AI interviewer speaks in. Without a key the mock room falls
+    | back to the browser's own speech synthesis, so the interview still has a
+    | voice — just whichever robot the candidate's device ships with.
+    |
+    | ELEVENLABS_VOICE_ID is the voice: change it here and every question is
+    | read in the new one. Find ids at elevenlabs.io → Voices → ID.
+    */
+    'elevenlabs' => [
+        'api_key' => env('ELEVENLABS_API_KEY', ''),
+        'voice_id' => env('ELEVENLABS_VOICE_ID', ''),
+        'model' => env('ELEVENLABS_MODEL', 'eleven_turbo_v2_5'),
+    ],
 ];
