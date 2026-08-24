@@ -179,4 +179,15 @@ return [
         'voice_id' => env('ELEVENLABS_VOICE_ID', ''),
         'model' => env('ELEVENLABS_MODEL', 'eleven_turbo_v2_5'),
     ],
+
+    /*
+    | The CRM, for the batch-chat bridge. Students hold no CRM account, so
+    | this server relays their messages there on their behalf. The secret
+    | is shared with the CRM and never reaches a browser.
+    */
+    'crm' => [
+        'url' => env('CRM_URL', 'https://crm.browsejobs.ai'),
+        'internal_secret' => env('CRM_INTERNAL_SECRET', ''),
+    ],
+
 ];

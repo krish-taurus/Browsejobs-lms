@@ -134,6 +134,7 @@ use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
+use App\Http\Controllers\BatchChatController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\MyVoucherController;
@@ -403,6 +404,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/mentorhub/{session}/no-show', [MentorHubController::class, 'markNoShow']);
     Route::get('me/mentorhub/availability', [MentorHubController::class, 'availability']);
     Route::put('me/mentorhub/availability', [MentorHubController::class, 'updateAvailability']);
+    // Batch chat: the class's own room, relayed to the CRM where the staff
+    // who answer already work. Throttled like any other write a student makes.
+    Route::get('me/batch-chat', [BatchChatController::class, 'index']);
+    Route::get('me/batch-chat/{batchNumber}', [BatchChatController::class, 'show']);
+    Route::post('me/batch-chat/{batchNumber}', [BatchChatController::class, 'store'])->middleware('throttle:30,1');
     Route::get('me/mocks', [MockController::class, 'index']);
     Route::post('me/mocks', [MockController::class, 'store']);
     Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');

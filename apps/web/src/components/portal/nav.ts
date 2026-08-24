@@ -19,6 +19,7 @@ export type NavGroup = { label: string; items: NavEntry[] };
 
 const DASHBOARD: NavItem = { href: "/dashboard", label: "Dashboard", icon: "M3 10.5 12 4l9 6.5M5 9.5V20h14V9.5", primary: true };
 const CLASSES: NavItem = { href: "/classes", label: "My Classes", icon: "M4 5h16v12H4zM8 20h8M12 17v3", primary: true, short: "Classes" };
+const BATCH_CHAT: NavItem = { href: "/batch-chat", label: "Batch Chat", icon: "M4 5h16v11H8l-4 4V5ZM8 9h8M8 12h5", short: "Chat" };
 const RECORDINGS: NavItem = { href: "/recordings", label: "Recordings", icon: "M4 6h16v12H4zM10 9l5 3-5 3z" };
 const PRACTICE: NavItem = { href: "/labs", label: "Practice", icon: "M8 6 3 12l5 6M16 6l5 6-5 6M13 4l-2 16", primary: true };
 const QUIZZES: NavItem = { href: "/quizzes", label: "Quizzes", icon: "M9 5h6M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM9 11l2 2 4-4" };
@@ -48,7 +49,7 @@ const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4
 
 /** Grouped for the sidebar and the mobile menu sheet. */
 export const navGroups: NavGroup[] = [
-  { label: "Learn", items: [DASHBOARD, CLASSES, RECORDINGS, PRACTICE, QUIZZES, TUTOR] },
+  { label: "Learn", items: [DASHBOARD, CLASSES, BATCH_CHAT, RECORDINGS, PRACTICE, QUIZZES, TUTOR] },
   { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
   { label: "Career", items: [MOCK_INTERVIEWS, MENTORS, PLACEMENT, JOBS, CV] },
   { label: "You", items: [PULSE, ALERTS, CHECKIN, STORE, SUPPORT, PROFILE] },
