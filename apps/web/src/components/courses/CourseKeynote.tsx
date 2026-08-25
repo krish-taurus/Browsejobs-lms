@@ -57,9 +57,16 @@ const COURSE_EXTRAS: Record<string, { accent: string; icon: string; tutorQ: stri
   "python-backend": {
     accent: "#f59e0b",
     icon: "🐍",
-    tutorQ: "My FastAPI endpoint is slow under load 😤",
-    tutorA: "You're blocking the event loop with sync DB calls. Switch to an async driver and pool connections — pattern below 👇",
+    tutorQ: "My list endpoint fires 200 queries 😤",
+    tutorA: "Classic N+1 — you're looping over a related field. Add select_related for the FK and prefetch_related for the M2M; here it is on your serializer 👇",
     mockQ: "Design a rate limiter for a public API. What do you store, and where?",
+  },
+  "ai-engineering": {
+    accent: "#e11d8f",
+    icon: "🧠",
+    tutorQ: "My RAG keeps citing the wrong section 😩",
+    tutorA: "Retrieval is fine — your chunks split mid-clause, so the citation loses its heading. Chunk on structure, not size; here's the splitter 👇",
+    mockQ: "Your agent has write access to a customer database. How do you stop a prompt injection from using it?",
   },
 };
 
@@ -353,13 +360,19 @@ const PORTAL_COLORS: Record<string, string> = { Naukri: "#4a90e2", LinkedIn: "#0
 
 function MarketDemandSection({ slug, accent, courseName }: { slug: string; accent: string; courseName: string }) {
   const [demand, setDemand] = useState<TrackDemand | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [live, setLive] = useState(false);
   useEffect(() => {
     fetch("/api/job-demand")
       .then((r) => r.json())
       .then((d) => { setDemand(d.tracks?.[slug] ?? null); setLive(d.source === "kimi-k3"); })
-      .catch(() => setDemand(null));
+      .catch(() => setDemand(null))
+      .finally(() => setLoaded(true));
   }, [slug]);
+
+  // Loaded but this track has no demand data: hide the section rather than
+  // leaving a skeleton pulsing forever, and never borrow another track's numbers.
+  if (loaded && !demand) return null;
 
   if (!demand) {
     return (
@@ -474,7 +487,7 @@ function MarketDemandSection({ slug, accent, courseName }: { slug: string; accen
           <h3 className="font-display mt-4 text-xl font-bold">Demand decides our modules.</h3>
           <p className="mt-3 flex-1 text-sm leading-relaxed text-fg/55">
             We don&apos;t run courses in every domain — only where the market is actually hiring.
-            That&apos;s why there are just four live tracks, and why the {courseName} syllabus is
+            That&apos;s why there are just five live tracks, and why the {courseName} syllabus is
             rebuilt monthly from what this demand is asking for.
           </p>
           <a
@@ -521,7 +534,10 @@ const COURSE_REVIEWS: Record<string, { n: string; src: string; q: string }[]> = 
 };
 
 function CourseReviews({ slug, accent }: { slug: string; accent: string }) {
-  const reviews = COURSE_REVIEWS[slug] ?? COURSE_REVIEWS["data-engineering"];
+  // Never borrow another track's testimonials — these are real, named students.
+  // A track with no reviews of its own simply doesn't render the section.
+  const reviews = COURSE_REVIEWS[slug] ?? [];
+  if (reviews.length === 0) return null;
   return (
     <section className="mx-auto max-w-6xl px-6 py-24 md:py-28">
       <motion.p

@@ -723,18 +723,19 @@ function LabsTile() {
   );
 }
 
-/** Four live tracks. */
+/** Five live tracks. */
 function TracksTile() {
   const tracks = [
     { name: "Data Engineering", tools: "Python · SQL · Spark · AWS · Databricks · Airflow" },
     { name: "DevOps & Cloud", tools: "Docker · Kubernetes · Terraform · Jenkins · AWS" },
     { name: "Data Analytics", tools: "Excel · SQL · Python · Power BI · DAX · Pandas" },
-    { name: "Python Backend", tools: "APIs, databases, and production Python" },
+    { name: "Python Backend", tools: "Django · DRF · PostgreSQL · Celery · AWS" },
+    { name: "AI Engineering", tools: "RAG · LangGraph · MCP · Evals · FastAPI" },
   ];
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b6df0]">Programs</p>
-      <h3 className="font-display mt-3 text-xl font-bold">Four live tracks. Rebuilt monthly from real interviews.</h3>
+      <h3 className="font-display mt-3 text-xl font-bold">Five live tracks. Rebuilt monthly from real interviews.</h3>
       <div className="mt-5 space-y-2">
         {tracks.map((t, i) => (
           <motion.div
@@ -755,7 +756,7 @@ function TracksTile() {
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {["Agentic AI", "Cyber Security", "ServiceNow"].map((w) => (
+        {["Cyber Security", "ServiceNow"].map((w) => (
           <span key={w} className="rounded-full border border-fg/10 px-2.5 py-1 text-[10px] font-semibold text-fg/40">
             {w} · Waitlist
           </span>
@@ -1103,9 +1104,10 @@ function PathSection() {
 
 const PROGRAMS = [
   { code: "DE", slug: "data-engineering", name: "Data Engineering", tag: "Pipelines, warehouses, and the modern data stack.", tools: ["Python", "SQL", "Spark", "AWS", "Databricks", "Airflow"], projects: "3 CV-ready projects", accent: "#1b6df0", icon: "🛠️" },
-  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "Ansible"], projects: "4 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
-  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "APIs, databases, and production Python.", tools: ["Python", "FastAPI", "PostgreSQL", "Redis"], projects: "Detailed syllabus arriving", accent: "#f59e0b", icon: "🐍" },
-  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "Pandas"], projects: "5 CV-ready projects", accent: "#0ba860", icon: "📊" },
+  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "Ansible"], projects: "5 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
+  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "Django APIs, real databases, and production Python.", tools: ["Python", "Django", "DRF", "PostgreSQL", "Celery", "AWS"], projects: "3 CV-ready projects", accent: "#f59e0b", icon: "🐍" },
+  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "Pandas"], projects: "4 CV-ready projects", accent: "#0ba860", icon: "📊" },
+  { code: "AE", slug: "ai-engineering", name: "AI Engineering", tag: "Grounded retrieval, safe agents, and MCP servers.", tools: ["Python", "RAG", "LangGraph", "MCP", "Evals", "FastAPI"], projects: "5 CV-ready projects", accent: "#e11d8f", icon: "🧠" },
 ];
 
 /** Light-mode 3D tilt with a cursor-tracking accent spotlight. */
@@ -1171,13 +1173,13 @@ function ProgramsSection() {
         initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
         className="font-display mt-5 max-w-2xl text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl"
       >
-        Four live tracks. Each one rebuilt monthly.
+        Five live tracks. Each one rebuilt monthly.
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
         className="mt-5 max-w-xl text-lg text-fg/50"
       >
-        Only four — because <strong className="text-ink">demand decides what we teach.</strong> We run
+        Only five — because <strong className="text-ink">demand decides what we teach.</strong> We run
         tracks only where the market is actively hiring.
         {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● counted from our job feed</span>}
       </motion.p>
@@ -1262,7 +1264,6 @@ function ProgramsSection() {
         className="mt-6 grid gap-4 sm:grid-cols-3"
       >
         {[
-          { name: "Agentic AI", slug: "agentic-ai" },
           { name: "Cyber Security", slug: "cyber-security" },
           { name: "ServiceNow", slug: "servicenow" },
         ].map((w) => (
