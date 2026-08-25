@@ -66,6 +66,36 @@ export const careerPanels: Record<string, CareerPanel> = {
       { role: "Cloud Architect", range: "₹20 – 25 LPA+" },
     ],
   },
+  /*
+   * The two newest tracks use role-progression panels rather than market
+   * statistics: we do not yet have figures for them that survive the "verify
+   * us" test, and an unverifiable number is worse than none. Swap in a `stats`
+   * panel once the figures are sourced.
+   */
+  "ai-engineering": {
+    kind: "flow",
+    heading: "Why AI Engineering is the fastest-moving track we run",
+    body: "Every company that adopted an LLM last year now needs someone who can make it reliable — grounded in their data, safe to give tools to, and cheap enough to run. That work has become its own discipline, and the syllabus for it changes faster than any other track we teach.",
+    label: "Career growth flow",
+    steps: [
+      { role: "AI Engineer", what: "Build RAG and agent features on top of existing models" },
+      { role: "Senior AI Engineer", what: "Own evaluation, guardrails and cost for AI in production" },
+      { role: "AI Platform Engineer", what: "Build the shared serving, retrieval and tooling layer" },
+      { role: "Lead / AI Architect", what: "Set the architecture and the safety bar across teams" },
+    ],
+  },
+  "python-backend": {
+    kind: "flow",
+    heading: "Why backend engineering stays the most portable skill in software",
+    body: "Every product needs an API, a database and someone who can keep both up. Backend is the least fashion-driven track we run, which is exactly why it stays hireable — and why adding AI features to a backend is now a standard part of the job.",
+    label: "Career growth flow",
+    steps: [
+      { role: "Backend Developer", what: "Build and maintain APIs against a real database" },
+      { role: "Software Engineer", what: "Own a service end to end, including its deployment" },
+      { role: "Senior Backend Engineer", what: "Design for scale, lead reviews, set the patterns" },
+      { role: "Tech Lead / Architect", what: "System design across services and teams" },
+    ],
+  },
   "data-analytics": {
     kind: "flow",
     heading: "Why Data Analytics is one of the fastest-growing careers",

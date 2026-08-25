@@ -100,13 +100,20 @@ export type CourseCard = {
   live: boolean;
 };
 
-/** Spec §6.1: 4 live + 3 waitlist. */
+/**
+ * 5 live + 2 waitlist. AI Engineering replaces the old "Agentic AI" waitlist
+ * card: it is a full track now, so it is live and its slug follows the course
+ * name like every other one (Str::slug in CurriculumSeeder).
+ *
+ * A card with `live: false` has no CourseDetail, so /courses/{slug} 404s.
+ * Never link a waitlist card at a course page — send it to /register.
+ */
 export const courses: CourseCard[] = [
   { code: "DE", slug: "data-engineering", name: "Data Engineering", tagline: "Pipelines, warehouses, and the modern data stack.", live: true },
   { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tagline: "Ship, scale, and run production systems.", live: true },
+  { code: "AE", slug: "ai-engineering", name: "AI Engineering", tagline: "Agents, RAG and MCP — shipped to production.", live: true },
   { code: "PB", slug: "python-backend", name: "Python Backend", tagline: "APIs, databases, and production Python.", live: true },
   { code: "DA", slug: "data-analytics", name: "Data Analytics", tagline: "SQL, dashboards, and decisions from data.", live: true },
-  { code: "AA", slug: "agentic-ai", name: "Agentic AI", tagline: "Build with LLMs, agents, and tools.", live: false },
   { code: "CS", slug: "cyber-security", name: "Cyber Security", tagline: "Defend real systems against real attacks.", live: false },
   { code: "SN", slug: "servicenow", name: "ServiceNow", tagline: "The enterprise workflow platform.", live: false },
 ];

@@ -2,13 +2,25 @@
  * Full course content, sourced from the 2026 brochures (docs/ brochures; do
  * NOT invent topics). Per founder instruction, Data Engineering excludes
  * real-time/Kafka from the core syllabus — those live in `exploreLater` as
- * optional self-study. Python Backend has no brochure yet: minimal entry only.
+ * optional self-study.
+ *
+ * Every track now carries one applied agentic-AI module (`ai: true`), and AI
+ * Engineering is a track in its own right. Those modules are scoped to what
+ * the role is actually asked to do with AI — an agent that repairs a pipeline,
+ * an agent that triages an incident — rather than a general LLM tour, so the
+ * "reverse-engineered from interviews" claim still holds for them.
  */
 
 export type CourseModuleContent = {
   title: string;
   hook: string;
   topics: string[];
+  /**
+   * Applied-AI module. Set on the agentic-AI module every track now carries, so
+   * the course page and the brochure can both mark the newest material without
+   * matching on the title.
+   */
+  ai?: boolean;
 };
 
 export type CourseProjectContent = {
@@ -52,7 +64,7 @@ export const courseDetails: CourseDetail[] = [
     duration: "6 months",
     format: "Live online + recordings",
     access: "1 year unlimited",
-    projectsLabel: "3 CV-ready",
+    projectsLabel: "4 CV-ready",
     outcomes: [
       "Design and ship production batch data pipelines on AWS and Azure",
       "Answer the SQL, Spark and system-design questions asked in this month's interviews",
@@ -155,6 +167,20 @@ export const courseDetails: CourseDetail[] = [
         ],
       },
       {
+        title: "Agentic AI for Data Engineering",
+        hook: "The skill now appearing in Data Engineering JDs — pipelines that a model can read, repair and be trusted with.",
+        ai: true,
+        topics: [
+          "LLMs for data teams: tool calling, structured outputs, and when an agent beats a script",
+          "Build an MCP server over your warehouse — expose schemas and query tools safely",
+          "Pipeline copilots: agents that generate, test and repair Spark & SQL jobs",
+          "LLM-as-a-judge for data quality — anomaly explanations and column-level checks",
+          "Agentic ingestion: schema-drift detection and self-healing Autoloader jobs",
+          "Text-to-SQL with guardrails: read-only roles, cost limits, human approval",
+          "Token, latency and cost budgets for agents running inside a pipeline",
+        ],
+      },
+      {
         title: "Interview Engineering",
         hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
         topics: [
@@ -168,7 +194,7 @@ export const courseDetails: CourseDetail[] = [
     tools: [
       "Python", "SQL", "Pandas", "PySpark", "Apache Spark",
       "AWS (S3, Glue, Redshift, Lambda, EC2)", "Databricks", "Delta Lake",
-      "Azure (ADF, Synapse, ADLS Gen2)", "Airflow", "Git",
+      "Azure (ADF, Synapse, ADLS Gen2)", "Airflow", "Git", "MCP", "LangGraph",
     ],
     projects: [
       {
@@ -185,6 +211,11 @@ export const courseDetails: CourseDetail[] = [
         title: "Production Airflow deployment",
         body: "Orchestrated, monitored, alerting-enabled workflows — deployed, not just coded.",
         points: ["DAG design & dependencies", "Retries & SLAs", "Alerting", "Parameterized runs"],
+      },
+      {
+        title: "Pipeline copilot on MCP",
+        body: "An MCP server over your warehouse plus an agent that diagnoses a failed job and proposes the fix.",
+        points: ["MCP server & tools", "Read-only query guardrails", "Failure triage agent", "Human approval gate"],
       },
     ],
     exploreLater: {
@@ -208,7 +239,7 @@ export const courseDetails: CourseDetail[] = [
     duration: "6 months",
     format: "Live online + recordings",
     access: "1 year unlimited",
-    projectsLabel: "4 CV-ready",
+    projectsLabel: "5 CV-ready",
     outcomes: [
       "Build and run CI/CD pipelines that take code from commit to production automatically",
       "Deploy, scale and troubleshoot containerized applications on Kubernetes",
@@ -322,6 +353,21 @@ export const courseDetails: CourseDetail[] = [
         ],
       },
       {
+        title: "Agentic AI for DevOps",
+        hook: "AIOps has stopped being a buzzword — this is the part interviews now ask platform engineers about.",
+        ai: true,
+        topics: [
+          "Agent fundamentals for platform teams: tool calling, the agent loop, structured outputs",
+          "MCP servers over cloud APIs, Kubernetes and your CI/CD system",
+          "Incident-response agents: log triage, root-cause summaries, runbook execution",
+          "Human-in-the-loop approval gates — why an agent never gets `kubectl delete`",
+          "AI in the pipeline: PR review, IaC drift explanation, test-failure triage",
+          "Self-healing infrastructure — and the failure modes that argue against it",
+          "Securing agents: least privilege, secret handling, prompt injection through logs",
+          "Observability for agents: tracing, token cost, and SLOs on non-deterministic systems",
+        ],
+      },
+      {
         title: "Interview Engineering",
         hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
         topics: [
@@ -335,7 +381,7 @@ export const courseDetails: CourseDetail[] = [
     tools: [
       "Linux", "Bash", "Git", "GitHub", "Docker", "Kubernetes", "Helm",
       "Jenkins", "GitHub Actions", "Terraform", "Ansible", "AWS",
-      "Python", "PowerShell", "Prometheus", "Grafana",
+      "Python", "PowerShell", "Prometheus", "Grafana", "MCP",
     ],
     projects: [
       {
@@ -358,6 +404,11 @@ export const courseDetails: CourseDetail[] = [
         body: "Deployed, autoscaled and monitored with Prometheus and Grafana.",
         points: ["Pods & deployments", "Services & Ingress", "ConfigMaps & secrets", "Rolling updates"],
       },
+      {
+        title: "Incident-response agent",
+        body: "An agent wired to your cluster over MCP that triages an alert, summarises root cause and proposes a runbook step.",
+        points: ["MCP over Kubernetes & logs", "Alert triage", "Approval before any write", "Traced & cost-capped"],
+      },
     ],
     hasSyllabus: true,
   },
@@ -371,7 +422,7 @@ export const courseDetails: CourseDetail[] = [
     duration: "5–6 months",
     format: "Live online + recordings",
     access: "1 year unlimited",
-    projectsLabel: "5 CV-ready",
+    projectsLabel: "6 CV-ready",
     outcomes: [
       "Analyze real business datasets and present insights that actually drive decisions",
       "Build interactive Power BI dashboards — from data modeling and DAX to scheduled refresh",
@@ -459,6 +510,20 @@ export const courseDetails: CourseDetail[] = [
         ],
       },
       {
+        title: "Agentic AI for Data Analytics",
+        hook: "Analysts are now judged on whether they can use AI without being fooled by it.",
+        ai: true,
+        topics: [
+          "LLM fundamentals for analysts: prompting, context engineering, structured outputs",
+          "Text-to-SQL agents on a real warehouse — and the guardrails that make them safe",
+          "Agentic EDA: an agent that profiles a dataset and proposes the analysis",
+          "RAG over business documents — grounding answers in policy, contracts and reports",
+          "LLM-as-a-judge: validating AI-generated insight before a stakeholder sees it",
+          "Automating the narrative: AI commentary in Power BI and scheduled insight digests",
+          "Where AI is wrong: hallucination, bias, and the analyst's duty to verify",
+        ],
+      },
+      {
         title: "Interview Engineering",
         hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
         topics: [
@@ -471,7 +536,7 @@ export const courseDetails: CourseDetail[] = [
     ],
     tools: [
       "Microsoft Excel", "SQL", "Python", "NumPy", "Pandas", "Power BI",
-      "Power Query", "DAX", "Statistics", "Git & GitHub",
+      "Power Query", "DAX", "Statistics", "Git & GitHub", "LLM APIs",
     ],
     projects: [
       {
@@ -499,6 +564,11 @@ export const courseDetails: CourseDetail[] = [
         body: "The one-screen view a leadership team makes decisions from.",
         points: ["Business overview", "Key performance indicators", "Goal tracking", "Data-driven decision making"],
       },
+      {
+        title: "Grounded insight assistant",
+        body: "A text-to-SQL and document-RAG assistant that answers business questions with citations — and refuses when it can't ground the answer.",
+        points: ["Text-to-SQL with guardrails", "RAG over business docs", "Cited answers", "Judged for accuracy"],
+      },
     ],
     hasSyllabus: true,
   },
@@ -508,17 +578,387 @@ export const courseDetails: CourseDetail[] = [
     name: "Python Backend",
     tagline: "APIs, databases, and production Python.",
     live: true,
-    hero: "Production Python for the backend roles companies are hiring for — APIs, databases, and the engineering practices interviews test.",
+    hero: "Production Python for the backend roles companies are hiring for — APIs, databases, and the engineering practices interviews test. A six-month, project-first program whose syllabus is rebuilt every month from real backend interviews.",
     duration: "6 months",
     format: "Live online + recordings",
     access: "1 year unlimited",
-    projectsLabel: "CV-ready",
-    outcomes: [],
-    roles: [],
-    modules: [],
-    tools: [],
-    projects: [],
-    hasSyllabus: false,
+    projectsLabel: "5 CV-ready",
+    outcomes: [
+      "Design and ship production REST APIs with FastAPI, backed by a real database",
+      "Model data properly in PostgreSQL — schemas, indexes, transactions and migrations",
+      "Secure an API the way interviews expect: auth, authorization, validation and rate limits",
+      "Run background work, caching and async I/O without breaking under load",
+      "Answer the system-design and debugging questions backend interviews lead with",
+    ],
+    roles: ["Backend Developer", "Python Developer", "API Developer", "Software Engineer", "Platform Engineer"],
+    modules: [
+      {
+        title: "Python for Backend Engineering",
+        hook: "Core Python through to the depth interviewers actually probe.",
+        topics: [
+          "Data types, collections, comprehensions, slicing",
+          "Functions, arguments, closures, decorators",
+          "Classes, inheritance, dunder methods, dataclasses",
+          "Modules, packaging, virtual environments, dependency management",
+          "Exceptions, context managers, file and JSON handling",
+          "Type hints and static checking",
+        ],
+      },
+      {
+        title: "Clean Code & Testing",
+        hook: "The round that separates a scripter from an engineer.",
+        topics: [
+          "SOLID principles applied to real Python",
+          "pytest: fixtures, parametrize, mocking, coverage",
+          "Test-driven development on a real feature",
+          "Debugging, logging and profiling",
+          "Git workflow: branches, pull requests, code review",
+        ],
+      },
+      {
+        title: "Databases & SQL",
+        hook: "Backend interviews are database interviews wearing a different hat.",
+        topics: [
+          "PostgreSQL fundamentals, data types, constraints",
+          "Joins, aggregations, subqueries, window functions",
+          "Schema design, normalization, indexing strategy",
+          "Transactions, isolation levels, deadlocks",
+          "SQLAlchemy ORM, sessions, relationships, N+1 queries",
+          "Alembic migrations and safe schema change",
+        ],
+      },
+      {
+        title: "FastAPI & Production APIs",
+        hook: "The framework named in most current Python backend job descriptions.",
+        topics: [
+          "Routing, path & query parameters, dependency injection",
+          "Pydantic models, request/response validation, serialization",
+          "REST design, status codes, versioning, pagination",
+          "Error handling and a consistent error envelope",
+          "OpenAPI docs, and testing endpoints with httpx",
+        ],
+      },
+      {
+        title: "Authentication, Authorization & Security",
+        hook: "The area candidates most often get caught out on.",
+        topics: [
+          "Password hashing, sessions vs tokens, JWT and refresh flows",
+          "OAuth2 and third-party login",
+          "Role-based access control and permission design",
+          "OWASP Top 10 for APIs: injection, IDOR, SSRF, mass assignment",
+          "Secrets management, CORS, rate limiting",
+        ],
+      },
+      {
+        title: "Async Python, Queues & Background Jobs",
+        hook: "Where 'it worked on my laptop' stops being good enough.",
+        topics: [
+          "asyncio, coroutines, event loop, async database access",
+          "Blocking vs non-blocking I/O — and how to tell which you wrote",
+          "Celery and Redis: queues, workers, retries, idempotency",
+          "Scheduled jobs and long-running task patterns",
+          "WebSockets and server-sent events",
+        ],
+      },
+      {
+        title: "Caching, Performance & Scale",
+        hook: "The system-design conversation, made concrete.",
+        topics: [
+          "Redis caching patterns, TTLs, cache invalidation",
+          "Query optimization and connection pooling",
+          "Load testing and finding the real bottleneck",
+          "Horizontal scaling, statelessness, load balancing",
+          "Observability: structured logs, metrics, tracing",
+        ],
+      },
+      {
+        title: "Docker, CI/CD & Cloud Deployment",
+        hook: "Shipping it — because a project that isn't deployed doesn't count.",
+        topics: [
+          "Dockerfiles, multi-stage builds, Docker Compose",
+          "GitHub Actions: test, build and deploy pipelines",
+          "Environment configuration and twelve-factor practice",
+          "Deploying to AWS: EC2, RDS, S3, load balancing",
+          "Zero-downtime deploys, health checks and rollback",
+        ],
+      },
+      {
+        title: "System Design for Backend Interviews",
+        hook: "The round that decides your level — and your offer.",
+        topics: [
+          "Requirements, estimation and trade-off reasoning",
+          "Designing a URL shortener, a rate limiter, a feed",
+          "SQL vs NoSQL, sharding, replication, consistency",
+          "Message queues and event-driven architecture",
+          "Microservices vs monolith — and defending your choice",
+        ],
+      },
+      {
+        title: "Agentic AI for Backend Engineers",
+        hook: "Backend roles now ship AI features — this is the part interviews ask about.",
+        ai: true,
+        topics: [
+          "Calling LLM APIs from a backend: streaming, timeouts, retries, idempotency",
+          "Structured outputs with Pydantic and schema-validated tool calling",
+          "Building an MCP server that exposes your own API to an agent",
+          "RAG service design: embeddings, a vector store, and citation-backed answers",
+          "Guardrails, prompt-injection defence and least-privilege tool access",
+          "Token cost, caching and rate limiting for AI endpoints",
+          "Evaluating and monitoring a non-deterministic feature in production",
+        ],
+      },
+      {
+        title: "Interview Engineering",
+        hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
+        topics: [
+          "Live question bank from monitored interviews, refreshed monthly",
+          "Weekly technical + HR mock interviews, AI-analysed",
+          "Live coding and debugging drills under time pressure",
+          "Communication & confidence coaching — scored, not optional",
+        ],
+      },
+    ],
+    tools: [
+      "Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Alembic", "Redis",
+      "Celery", "pytest", "Docker", "GitHub Actions", "AWS", "Git", "MCP",
+    ],
+    projects: [
+      {
+        title: "Production REST API",
+        body: "A multi-resource API with auth, validation, pagination and a full test suite.",
+        points: ["FastAPI + PostgreSQL", "JWT auth & RBAC", "Migrations", "90%+ test coverage"],
+      },
+      {
+        title: "Async job processing service",
+        body: "Queue-backed background work with retries, idempotency and monitoring.",
+        points: ["Celery + Redis", "Retry & dead-letter", "Scheduled jobs", "Worker metrics"],
+      },
+      {
+        title: "Containerised deployment pipeline",
+        body: "Commit to running service on AWS, automatically, with rollback.",
+        points: ["Multi-stage Docker", "GitHub Actions CI/CD", "Deploy to AWS", "Health checks"],
+      },
+      {
+        title: "High-throughput cached service",
+        body: "An endpoint taken from slow to fast, with the load test that proves it.",
+        points: ["Redis caching", "Query optimization", "Load testing", "Before/after benchmarks"],
+      },
+      {
+        title: "AI feature on your own API",
+        body: "An MCP server over your service plus a guardrailed, cited RAG endpoint.",
+        points: ["MCP server", "Vector store & RAG", "Structured outputs", "Cost & rate limits"],
+      },
+    ],
+    hasSyllabus: true,
+  },
+  {
+    code: "AE",
+    slug: "ai-engineering",
+    name: "AI Engineering",
+    tagline: "Agents, RAG and MCP — shipped to production.",
+    live: true,
+    hero: "Build the AI systems companies are actually hiring for: retrieval that stays grounded, agents that use tools safely, and MCP servers that connect them to real systems. A six-month, project-first program whose syllabus is rebuilt every month from real AI Engineer interviews.",
+    duration: "6 months",
+    format: "Live online + recordings",
+    access: "1 year unlimited",
+    projectsLabel: "5 CV-ready",
+    outcomes: [
+      "Ship a retrieval system that answers from your data with citations — and refuses when it can't",
+      "Build agents that call tools, keep memory and hand off work, without going off the rails",
+      "Write and publish MCP servers that connect a model to real systems safely",
+      "Prove a non-deterministic feature works: eval sets, tracing, regression tests and cost budgets",
+      "Answer the RAG, agent-design and guardrail questions AI Engineer interviews lead with",
+    ],
+    roles: [
+      "AI Engineer",
+      "LLM Application Engineer",
+      "Agentic AI Engineer",
+      "Applied AI Engineer",
+      "AI Platform Engineer",
+    ],
+    modules: [
+      {
+        title: "Python & Async for AI Engineering",
+        hook: "The language floor every AI Engineering interview assumes.",
+        topics: [
+          "Core Python, typing, dataclasses, decorators",
+          "asyncio and concurrent API calls — the difference between a demo and a service",
+          "Pydantic models and schema validation",
+          "Packaging, environments and dependency management with uv",
+          "Git, pull requests and code review",
+        ],
+      },
+      {
+        title: "LLM Foundations & the Provider Layer",
+        hook: "Understanding the model you are engineering around.",
+        topics: [
+          "Tokens, context windows, temperature, sampling and why output varies",
+          "Comparing providers: capability, latency, price, rate limits",
+          "One interface, many models — a provider-agnostic gateway you can swap",
+          "Running models locally with Ollama, and when local is the right answer",
+          "Streaming, timeouts, retries and graceful degradation",
+        ],
+      },
+      {
+        title: "Prompting, Context Engineering & Structured Outputs",
+        hook: "The term that replaced 'prompt engineering' in this year's job descriptions.",
+        topics: [
+          "System prompts, few-shot patterns and instruction design",
+          "Context engineering: what to put in the window, and what to leave out",
+          "Structured outputs with JSON schema and Pydantic — parsing you can trust",
+          "Chunking long inputs, summarisation chains and context compression",
+          "Caching prompts and cutting token cost without losing quality",
+        ],
+      },
+      {
+        title: "RAG — Retrieval-Augmented Generation",
+        hook: "The single most-asked topic in AI Engineer interviews.",
+        topics: [
+          "Embeddings, similarity and what a vector actually encodes",
+          "Chunking strategies and why naive splitting breaks answers",
+          "Vector stores: pgvector, Chroma, Qdrant — and choosing between them",
+          "Hybrid search, metadata filtering and reranking",
+          "Citations, groundedness and teaching a system to say 'I don't know'",
+          "Measuring retrieval: recall, precision and failure analysis",
+        ],
+      },
+      {
+        title: "Agent Fundamentals & Design Patterns",
+        hook: "What an agent is, and — more usefully — when not to build one.",
+        topics: [
+          "The agent loop: reason, act, observe, repeat",
+          "Agentic design patterns: reflection, planning, tool use, multi-agent",
+          "Tool calling: definitions, schemas, parallel calls, error recovery",
+          "Memory: short-term, long-term and retrieval-backed",
+          "Agentic AI risks — and the failure modes interviewers ask you to name",
+        ],
+      },
+      {
+        title: "Building Agents with the Major Frameworks",
+        hook: "Depth in the frameworks JDs name, not a tour of every library.",
+        topics: [
+          "LangChain core: models, tools, structured output binding",
+          "LangGraph: state, nodes, edges, checkpointing and durable execution",
+          "Human-in-the-loop interrupts and approval gates",
+          "The OpenAI Agents SDK: agents, handoffs, sessions",
+          "CrewAI compared — roles, tasks and when a crew fits better",
+          "Choosing a framework, and defending the choice in an interview",
+        ],
+      },
+      {
+        title: "Multi-Agent Systems & Orchestration",
+        hook: "Where most candidates' understanding runs out.",
+        topics: [
+          "Orchestrator–worker, planner–executor and debate patterns",
+          "Handoffs, delegation and shared state between agents",
+          "The A2A protocol: agent-to-agent communication",
+          "Sandboxed execution — running model-written code without losing the host",
+          "Loop limits, budgets and stopping conditions",
+        ],
+      },
+      {
+        title: "MCP — Model Context Protocol",
+        hook: "The integration layer that turned agents from demos into products.",
+        topics: [
+          "Hosts, clients and servers — the MCP architecture",
+          "Tools, resources and prompts: the three things a server exposes",
+          "Local (stdio) vs remote (HTTP/SSE) transport",
+          "Connecting an agent to existing MCP servers and marketplaces",
+          "Writing your own MCP server over a real system, with auth",
+          "Agentic RAG and long-term memory through MCP",
+        ],
+      },
+      {
+        title: "Guardrails, Safety & Prompt-Injection Defence",
+        hook: "The module that decides whether your system is allowed near production.",
+        topics: [
+          "Input and output guardrails, and where each belongs",
+          "Prompt injection, indirect injection and the lethal trifecta",
+          "Least-privilege tool access and read-only by default",
+          "PII handling, redaction and data-residency constraints",
+          "Human approval gates and audit trails for agent actions",
+          "Refusal, fallback and failing safely",
+        ],
+      },
+      {
+        title: "Evaluation, Observability & LLMOps",
+        hook: "How you prove a non-deterministic feature works — the question that ends most interviews.",
+        topics: [
+          "Building an eval set from real usage, not vibes",
+          "LLM-as-a-judge: rubrics, bias, and validating the judge itself",
+          "Regression testing prompts and models before you ship",
+          "Tracing with LangSmith: spans, latency, token accounting",
+          "Cost budgets, model routing and caching strategy",
+          "Monitoring drift and quality in production",
+        ],
+      },
+      {
+        title: "Deploying AI Systems to Production",
+        hook: "Deployed, monitored and affordable — or it isn't engineering.",
+        topics: [
+          "Serving agents behind FastAPI with streaming responses",
+          "Containerising an AI service and managing model configuration",
+          "Queues and background execution for long-running agent runs",
+          "Rate limiting, quotas and per-user token budgets",
+          "Building a UI with Gradio, and shipping it",
+          "CI/CD, staged rollout and rollback for prompt and model changes",
+        ],
+      },
+      {
+        title: "Interview Engineering",
+        hook: "The module no other institute has — because no one else monitors 50 interviews a day.",
+        topics: [
+          "Live question bank from monitored AI Engineer interviews, refreshed monthly",
+          "Weekly technical + HR mock interviews, AI-analysed",
+          "System-design drills: design a RAG platform, design an agent runtime",
+          "Communication & confidence coaching — scored, not optional",
+        ],
+      },
+    ],
+    tools: [
+      "Python", "OpenAI API", "Anthropic API", "Ollama", "LangChain", "LangGraph",
+      "LangSmith", "OpenAI Agents SDK", "CrewAI", "MCP", "Pydantic", "FastAPI",
+      "pgvector", "Qdrant", "Docker", "Gradio", "AWS", "Git",
+    ],
+    projects: [
+      {
+        title: "Grounded knowledge assistant",
+        body: "RAG over a real document corpus — hybrid search, reranking, citations, and a measured refusal rate.",
+        points: ["Chunking & embeddings", "Hybrid search + rerank", "Cited answers", "Retrieval eval set"],
+      },
+      {
+        title: "Autonomous research analyst",
+        body: "A planner, searcher and writer working together to produce a sourced report from one question.",
+        points: ["Multi-agent orchestration", "Web search tools", "Structured report output", "Loop & cost limits"],
+      },
+      {
+        title: "Your own MCP server",
+        body: "An MCP server over a real system, authenticated, connected to a host and driven by an agent.",
+        points: ["Tools, resources, prompts", "Local & remote transport", "Auth & least privilege", "Published & documented"],
+      },
+      {
+        title: "Guardrailed agent with human-in-the-loop",
+        body: "An agent that takes real actions — behind input/output guardrails, approval gates and an audit trail.",
+        points: ["Injection defence", "Approval interrupts", "Audit log", "Safe failure paths"],
+      },
+      {
+        title: "Eval harness & cost dashboard",
+        body: "The evidence layer: regression tests over prompts and models, traced, with token spend per feature.",
+        points: ["Eval set & rubrics", "LLM-as-a-judge", "LangSmith tracing", "Cost per request"],
+      },
+    ],
+    exploreLater: {
+      note: "The core program goes deep on the frameworks named in live job descriptions rather than touring every library. If a specific JD asks for one of these, here is your self-study map — and your mentor will point you at it when it matters.",
+      items: [
+        "Google ADK — agents on Google's stack",
+        "Pydantic AI — typed agents in pure Python",
+        "Microsoft Agent Framework and Agno",
+        "Mastra — building agents in TypeScript",
+        "n8n — low-code agent workflows",
+        "Fine-tuning and parameter-efficient adaptation (LoRA)",
+      ],
+    },
+    hasSyllabus: true,
   },
 ];
 

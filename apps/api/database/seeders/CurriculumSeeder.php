@@ -15,10 +15,13 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 /**
- * Seeds the seven BrowseJobs programs (Platform Spec v1.0 §6.1): 4 live +
- * 3 waitlist. Live courses get a sample module/topic/lesson tree so the
- * curriculum and batch features are demo-able; the REAL ~8–9-module syllabi
- * live in the brochures and replace these samples when supplied (spec §14.7).
+ * Seeds the seven BrowseJobs programs: 5 live + 2 waitlist. Live courses get a
+ * sample module/topic/lesson tree so the curriculum and batch features are
+ * demo-able; the REAL syllabi live in apps/web/src/content/courses.ts and
+ * replace these samples when supplied (spec §14.7).
+ *
+ * AI Engineering (AE) supersedes the old "Agentic AI" (AA) waitlist entry, which
+ * {@see self::retireSupersededCourses()} removes where it is safe to.
  */
 class CurriculumSeeder extends Seeder
 {
@@ -28,9 +31,9 @@ class CurriculumSeeder extends Seeder
     private const COURSES = [
         'DE' => ['name' => 'Data Engineering', 'status' => 'live', 'tagline' => 'Pipelines, warehouses, and the modern data stack.'],
         'DC' => ['name' => 'DevOps & Cloud', 'status' => 'live', 'tagline' => 'Ship, scale, and run production systems.'],
+        'AE' => ['name' => 'AI Engineering', 'status' => 'live', 'tagline' => 'Agents, RAG and MCP — shipped to production.'],
         'PB' => ['name' => 'Python Backend', 'status' => 'live', 'tagline' => 'APIs, databases, and production Python.'],
         'DA' => ['name' => 'Data Analytics', 'status' => 'live', 'tagline' => 'SQL, dashboards, and decisions from data.'],
-        'AA' => ['name' => 'Agentic AI', 'status' => 'coming_soon', 'tagline' => 'Build with LLMs, agents, and tools.'],
         'CS' => ['name' => 'Cyber Security', 'status' => 'coming_soon', 'tagline' => 'Defend real systems against real attacks.'],
         'SN' => ['name' => 'ServiceNow', 'status' => 'coming_soon', 'tagline' => 'The enterprise workflow platform.'],
     ];
@@ -63,6 +66,40 @@ class CurriculumSeeder extends Seeder
             if ($definition['status'] === 'live') {
                 $this->seedModules($tenant->id, $course);
             }
+        }
+
+        $this->retireSupersededCourses($tenant->id);
+    }
+
+    /**
+     * Remove course rows this seeder no longer defines, so a renamed track does
+     * not leave a second, unreachable course behind — the old 'agentic-ai' slug
+     * had no CourseDetail on the site, so its course page 404'd.
+     *
+     * Deliberately conservative: a course carrying modules or batches is left
+     * alone and reported, because deleting it would take real student data with
+     * it. Nothing here runs unless the row is genuinely empty.
+     */
+    private function retireSupersededCourses(int $tenantId): void
+    {
+        $superseded = Course::query()
+            ->where('tenant_id', $tenantId)
+            ->whereNotIn('code', array_keys(self::COURSES))
+            ->withCount(['modules', 'batches'])
+            ->get();
+
+        foreach ($superseded as $course) {
+            if ($course->modules_count > 0 || $course->batches_count > 0) {
+                $this->command?->warn(
+                    "Course {$course->code} ({$course->slug}) is superseded but still has "
+                    ."{$course->modules_count} module(s) and {$course->batches_count} batch(es) — left in place."
+                );
+
+                continue;
+            }
+
+            $course->delete();
+            $this->command?->info("Removed superseded course {$course->code} ({$course->slug}).");
         }
     }
 

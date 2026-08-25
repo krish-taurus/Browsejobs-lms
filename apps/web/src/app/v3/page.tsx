@@ -734,7 +734,7 @@ function TracksTile() {
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b6df0]">Programs</p>
-      <h3 className="font-display mt-3 text-xl font-bold">Four live tracks. Rebuilt monthly from real interviews.</h3>
+      <h3 className="font-display mt-3 text-xl font-bold">Five live tracks. Rebuilt monthly from real interviews.</h3>
       <div className="mt-5 space-y-2">
         {tracks.map((t, i) => (
           <motion.div
@@ -1101,11 +1101,14 @@ function PathSection() {
 
 /* --------------------------------- programs -------------------------------- */
 
+/* Card data for the programs grid. Keep the slugs and project counts in step
+   with src/content/courses.ts — that file is the syllabus source of truth. */
 const PROGRAMS = [
-  { code: "DE", slug: "data-engineering", name: "Data Engineering", tag: "Pipelines, warehouses, and the modern data stack.", tools: ["Python", "SQL", "Spark", "AWS", "Databricks", "Airflow"], projects: "3 CV-ready projects", accent: "#1b6df0", icon: "🛠️" },
-  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "Ansible"], projects: "4 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
-  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "APIs, databases, and production Python.", tools: ["Python", "FastAPI", "PostgreSQL", "Redis"], projects: "Detailed syllabus arriving", accent: "#f59e0b", icon: "🐍" },
-  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "Pandas"], projects: "5 CV-ready projects", accent: "#0ba860", icon: "📊" },
+  { code: "DE", slug: "data-engineering", name: "Data Engineering", tag: "Pipelines, warehouses, and the modern data stack.", tools: ["Python", "SQL", "Spark", "AWS", "Databricks", "MCP"], projects: "4 CV-ready projects", accent: "#1b6df0", icon: "🛠️" },
+  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "MCP"], projects: "5 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
+  { code: "AE", slug: "ai-engineering", name: "AI Engineering", tag: "Agents, RAG and MCP — shipped to production.", tools: ["Python", "LangGraph", "MCP", "RAG", "Pydantic", "FastAPI"], projects: "5 CV-ready projects", accent: "#0e3fa9", icon: "🤖" },
+  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "APIs, databases, and production Python.", tools: ["Python", "FastAPI", "PostgreSQL", "Redis", "Celery", "Docker"], projects: "5 CV-ready projects", accent: "#f59e0b", icon: "🐍" },
+  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "LLM APIs"], projects: "6 CV-ready projects", accent: "#0ba860", icon: "📊" },
 ];
 
 /** Light-mode 3D tilt with a cursor-tracking accent spotlight. */
@@ -1171,14 +1174,15 @@ function ProgramsSection() {
         initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
         className="font-display mt-5 max-w-2xl text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl"
       >
-        Four live tracks. Each one rebuilt monthly.
+        Five live tracks. Every one rebuilt monthly.
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
         className="mt-5 max-w-xl text-lg text-fg/50"
       >
-        Only four — because <strong className="text-ink">demand decides what we teach.</strong> We run
-        tracks only where the market is actively hiring.
+        Only five — because <strong className="text-ink">demand decides what we teach.</strong> We run
+        tracks only where the market is actively hiring, and every one now carries an applied
+        agentic-AI module.
         {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● counted from our job feed</span>}
       </motion.p>
       <div className="mt-14 grid gap-6 md:grid-cols-2">
@@ -1259,14 +1263,13 @@ function ProgramsSection() {
       </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.7 }}
-        className="mt-6 grid gap-4 sm:grid-cols-3"
+        className="mt-6 grid gap-4 sm:grid-cols-2"
       >
         {[
-          { name: "Agentic AI", slug: "agentic-ai" },
           { name: "Cyber Security", slug: "cyber-security" },
           { name: "ServiceNow", slug: "servicenow" },
         ].map((w) => (
-          <a key={w.slug} href={`/courses/${w.slug}`} className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
+          <a key={w.slug} href={`/register?track=${w.slug}`} className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
             <span className="font-semibold text-fg/60">{w.name}</span>
             <span className="text-xs font-bold uppercase tracking-wider text-fg/35 transition-colors group-hover:text-[#1b6df0]">
               Waitlist <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
