@@ -46,3 +46,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Brochure generator intermediate (rebuilt by `npm run brochures`).
+scripts/brochure/.content.json

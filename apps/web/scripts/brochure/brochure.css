@@ -1,0 +1,955 @@
+/*
+ * BrowseJobs course brochure — print stylesheet.
+ *
+ * The design system in CLAUDE.md §Design System, translated to A4. Every
+ * colour is a variable so a whitelabel tenant can be themed by overriding
+ * :root, exactly like the website. Semantic colour rules are hard rules and
+ * are honoured here too: green marks free/verified/kept-promise only, red
+ * marks a refused promise only, amber marks review stars and coach notes
+ * only, and blue is the single primary/action colour.
+ */
+
+:root {
+  --bj-ink: #0a1220;
+  --bj-ink2: #1b2a44;
+  --bj-deep: #0e3fa9;
+  --bj-trust: #1b6df0;
+  --bj-sky: #e7f1fe;
+  --bj-verify: #0ba860;
+  --bj-verify-bg: #e6f7ef;
+  --bj-warn: #d64545;
+  --bj-warn-bg: #fdeeee;
+  --bj-amber: #f5a623;
+  --bj-paper: #f6f9fe;
+  --bj-line: #dce6f5;
+  --bj-muted: #5a6b85;
+  --bj-white: #ffffff;
+
+  --radius-card: 14px;
+  --radius-panel: 22px;
+  --radius-pill: 999px;
+}
+
+/* ------------------------------- typefaces -------------------------------- */
+/* Vendored woff2 (SIL OFL) so a brochure build is reproducible offline. */
+
+@font-face {
+  font-family: "Sora";
+  font-weight: 700;
+  font-style: normal;
+  src: url("fonts/Sora-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Sora";
+  font-weight: 800;
+  font-style: normal;
+  src: url("fonts/Sora-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  src: url("fonts/Inter-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: italic;
+  src: url("fonts/Inter-400-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 500;
+  font-style: normal;
+  src: url("fonts/Inter-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  font-style: normal;
+  src: url("fonts/Inter-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: normal;
+  src: url("fonts/Inter-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-weight: 500;
+  font-style: normal;
+  src: url("fonts/IBMPlexMono-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-weight: 600;
+  font-style: normal;
+  src: url("fonts/IBMPlexMono-600.woff2") format("woff2");
+}
+
+/* --------------------------------- page ----------------------------------- */
+
+@page {
+  size: A4;
+  margin: 15mm 14mm 16mm 20mm;
+
+  @bottom-left {
+    content: "BrowseJobs · Whitefield, Bengaluru · London est. 2013 · hello@browsejobs.ai · +91 86185 19825 · browsejobs.ai";
+    font-family: "Inter", sans-serif;
+    font-size: 6pt;
+    color: var(--bj-muted);
+    vertical-align: top;
+    padding-top: 4mm;
+  }
+
+  @bottom-right {
+    content: counter(page);
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 8pt;
+    color: var(--bj-trust);
+    vertical-align: top;
+    padding-top: 3.4mm;
+  }
+}
+
+/* The cover carries no running furniture. */
+@page :first {
+  margin: 0;
+  @bottom-left {
+    content: "";
+  }
+  @bottom-right {
+    content: "";
+  }
+}
+
+html {
+  font-size: 10pt;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  color: var(--bj-ink);
+  background: var(--bj-white);
+  line-height: 1.5;
+  -weasy-hyphens: none;
+}
+
+/* Vertical brand rail, repeated down the left edge of every inside page. */
+.rail {
+  position: fixed;
+  left: -12mm;
+  bottom: 0;
+  width: 0;
+  height: 0;
+}
+
+.rail span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6pt;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--bj-line);
+  white-space: nowrap;
+}
+
+/* ------------------------------- primitives ------------------------------- */
+
+.page {
+  page-break-after: always;
+  break-after: page;
+}
+
+.page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 7pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+  margin: 0;
+}
+
+/* Green kicker: reserved for sections about something free or verified. */
+.kicker.free {
+  color: var(--bj-verify);
+}
+
+.mono {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Sora", sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+h2.section-title {
+  font-weight: 800;
+  font-size: 21pt;
+  margin: 2.5mm 0 0;
+  white-space: pre-line;
+}
+
+h3 {
+  font-weight: 700;
+  font-size: 11.5pt;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+.lede {
+  font-size: 9.5pt;
+  color: var(--bj-ink2);
+  margin-top: 3.5mm;
+  max-width: 165mm;
+}
+
+.muted {
+  color: var(--bj-muted);
+}
+
+/* Mandatory stat disclaimer — muted mono, always directly under a stat band. */
+.disclaimer {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6pt;
+  line-height: 1.45;
+  color: var(--bj-muted);
+  margin-top: 2.5mm;
+}
+
+.card {
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-card);
+  padding: 4mm 4.5mm;
+  background: var(--bj-white);
+}
+
+.panel {
+  border-radius: var(--radius-panel);
+  padding: 6mm 6.5mm;
+}
+
+.panel.ink {
+  background: var(--bj-ink);
+  color: var(--bj-white);
+}
+
+.panel.sky {
+  background: var(--bj-sky);
+}
+
+.panel.paper {
+  background: var(--bj-paper);
+  border: 1px solid var(--bj-line);
+}
+
+/* Inline-block, NOT flex: WeasyPrint's flex-wrap does not lay multi-row card
+   grids out reliably (they stack into one column). The parent zeroes its font
+   size so the whitespace between inline-blocks cannot open a gap; each child
+   restores it. */
+.grid {
+  font-size: 0;
+  margin: 0 -2mm;
+}
+
+.grid > * {
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+  margin: 0 2mm 4mm;
+  font-size: 10pt;
+  break-inside: avoid;
+}
+
+.grid.two > * {
+  width: calc(50% - 4mm);
+}
+
+.grid.three > * {
+  width: calc(33.333% - 4mm);
+}
+
+/* --------------------------------- cover ---------------------------------- */
+
+.cover {
+  position: relative;
+  height: 297mm;
+  width: 210mm;
+  padding: 20mm 18mm 16mm;
+  box-sizing: border-box;
+  background: var(--bj-ink);
+  color: var(--bj-white);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Calm ambient wash — transform-free, print-safe. */
+.cover::after {
+  content: "";
+  position: absolute;
+  top: -60mm;
+  right: -50mm;
+  width: 170mm;
+  height: 170mm;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(27, 109, 240, 0.28) 0%, rgba(27, 109, 240, 0) 70%);
+}
+
+.cover > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cover .wordmark {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 15pt;
+  letter-spacing: -0.02em;
+}
+
+.cover .platform-line {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2mm;
+}
+
+.cover .program-kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 7pt;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6ea6ff;
+  margin-bottom: 4mm;
+}
+
+.cover h1 {
+  font-weight: 800;
+  font-size: 40pt;
+  line-height: 1.02;
+}
+
+.cover .hero {
+  margin-top: 6mm;
+  font-size: 10pt;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 132mm;
+}
+
+.cover .spacer {
+  flex: 1 1 auto;
+}
+
+.cover .meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 7pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 7mm;
+  padding-top: 4mm;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cover .promise {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-verify);
+  margin-top: 2.5mm;
+}
+
+.cover .rail-mark {
+  position: absolute;
+  left: 9mm;
+  bottom: 18mm;
+  width: 0;
+  height: 0;
+  z-index: 1;
+}
+
+.cover .rail-mark span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
+  white-space: nowrap;
+}
+
+/* ------------------------------- stat band -------------------------------- */
+/* 4-up mono stat band. Per the brand rules it is ALWAYS followed by the
+   disclaimer, so `.stat-band` and `.disclaimer` travel together. */
+
+.stat-band {
+  display: flex;
+  gap: 4mm;
+}
+
+.stat-band > div {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.stat-band .value {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 18pt;
+  letter-spacing: -0.02em;
+  color: var(--bj-trust);
+  line-height: 1.1;
+}
+
+.stat-band .label {
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  font-size: 7pt;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--bj-muted);
+  margin-top: 1.5mm;
+}
+
+.cover .stat-band {
+  padding-top: 5mm;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cover .stat-band .value {
+  color: var(--bj-white);
+}
+
+.cover .stat-band .label {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --------------------------- proof engine panel ---------------------------- */
+
+.engine-steps {
+  display: flex;
+  gap: 5mm;
+  margin-top: 5mm;
+}
+
+.engine-steps > div {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-top: 3mm;
+  border-top: 2px solid var(--bj-trust);
+}
+
+.engine-steps .step {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6ea6ff;
+}
+
+.engine-steps p {
+  margin-top: 2mm;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* -------------------------------- modules ---------------------------------- */
+
+/* Multi-column, NOT flex: WeasyPrint cannot fragment a flex container across
+   pages, which is what left a near-blank page in the 2026 brochures. Columns
+   flow, so the syllabus starts under its own heading and fills every page. */
+.modules {
+  column-count: 2;
+  column-gap: 8mm;
+  margin-top: 8mm;
+}
+
+.module {
+  margin-bottom: 6mm;
+  border-top: 2px solid var(--bj-trust);
+  padding-top: 3mm;
+  break-inside: avoid;
+}
+
+.module .no {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+}
+
+.module h3 {
+  margin-top: 1.5mm;
+  font-size: 11pt;
+}
+
+.module .hook {
+  margin-top: 1.5mm;
+  font-size: 8pt;
+  line-height: 1.45;
+  color: var(--bj-muted);
+}
+
+.module ul {
+  margin: 3mm 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.module li {
+  position: relative;
+  padding-left: 4mm;
+  font-size: 8pt;
+  line-height: 1.45;
+  color: var(--bj-ink2);
+  margin-bottom: 1.6mm;
+}
+
+.module li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.5mm;
+  width: 1.4mm;
+  height: 1.4mm;
+  border-radius: 50%;
+  background: var(--bj-trust);
+}
+
+/* The AI module is the differentiator — give it the sky fill so it reads as
+   the newest thing on the page without breaking the one-primary-colour rule. */
+.module.ai {
+  background: var(--bj-sky);
+  border-radius: var(--radius-card);
+  border-top: none;
+  border-left: 3px solid var(--bj-trust);
+  padding: 3.5mm 4mm;
+}
+
+/* --------------------------------- lists ----------------------------------- */
+
+ul.check,
+ul.cross {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul.check li,
+ul.cross li {
+  position: relative;
+  padding-left: 5.5mm;
+  font-size: 8.5pt;
+  line-height: 1.45;
+  margin-bottom: 2.5mm;
+}
+
+ul.check li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  color: var(--bj-verify);
+}
+
+ul.cross li::before {
+  content: "✕";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  color: var(--bj-warn);
+}
+
+/* Green = kept promise, red = refused promise. Never decorative. */
+.promise-card {
+  border-radius: var(--radius-card);
+  padding: 4.5mm 5mm;
+}
+
+.promise-card.kept {
+  background: var(--bj-verify-bg);
+  border: 1px solid rgba(11, 168, 96, 0.28);
+}
+
+.promise-card.never {
+  background: var(--bj-warn-bg);
+  border: 1px solid rgba(214, 69, 69, 0.25);
+}
+
+.promise-card h3 {
+  font-size: 10pt;
+  margin-bottom: 3mm;
+}
+
+/* -------------------------------- tables ----------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+  text-align: left;
+  padding: 0 0 2mm;
+  border-bottom: 1px solid var(--bj-line);
+}
+
+td {
+  font-size: 8.5pt;
+  padding: 2.6mm 0;
+  border-bottom: 1px solid var(--bj-line);
+  vertical-align: top;
+  color: var(--bj-ink2);
+}
+
+td.key {
+  font-weight: 600;
+  color: var(--bj-ink);
+  padding-right: 5mm;
+}
+
+td.amount {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  color: var(--bj-ink);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ------------------------------ free ladder -------------------------------- */
+/* Three green FREE rungs, then the single blue paid rung. */
+
+.ladder {
+  display: flex;
+  gap: 3.5mm;
+}
+
+.ladder > div {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: var(--radius-card);
+  padding: 4mm;
+}
+
+.ladder .free {
+  background: var(--bj-verify-bg);
+  border: 1px solid rgba(11, 168, 96, 0.28);
+}
+
+.ladder .paid {
+  background: var(--bj-sky);
+  border: 1px solid rgba(27, 109, 240, 0.3);
+}
+
+.ladder .rung-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ladder .free .rung-label {
+  color: var(--bj-verify);
+}
+
+.ladder .paid .rung-label {
+  color: var(--bj-trust);
+}
+
+.ladder h3 {
+  font-size: 9.5pt;
+  margin-top: 2mm;
+}
+
+.ladder p {
+  margin-top: 2mm;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--bj-ink2);
+}
+
+/* Left-rule blocks: blue for a worked example, amber for a coach note. */
+.rule-block {
+  border-left: 3px solid var(--bj-trust);
+  background: var(--bj-paper);
+  padding: 3.5mm 4.5mm;
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  font-size: 8pt;
+  line-height: 1.5;
+  color: var(--bj-ink2);
+}
+
+.rule-block.coach {
+  border-left-color: var(--bj-amber);
+}
+
+.rule-block .rule-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+  display: block;
+  margin-bottom: 1.5mm;
+}
+
+.rule-block.coach .rule-label {
+  color: var(--bj-amber);
+}
+
+/* -------------------------------- pills ------------------------------------ */
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2mm;
+}
+
+.pill {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 7pt;
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-pill);
+  padding: 1.2mm 3mm;
+  color: var(--bj-ink2);
+  background: var(--bj-white);
+}
+
+.pill.solid {
+  background: var(--bj-sky);
+  border-color: rgba(27, 109, 240, 0.25);
+  color: var(--bj-deep);
+}
+
+/* ------------------------------- quotes ------------------------------------ */
+
+.pull-quote {
+  border-left: 3px solid var(--bj-trust);
+  padding: 1mm 0 1mm 5mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 11pt;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+}
+
+.pull-quote .attribution {
+  display: block;
+  margin-top: 3mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+}
+
+.testimonial .stars {
+  color: var(--bj-amber);
+  font-size: 9pt;
+  letter-spacing: 0.08em;
+}
+
+.testimonial .track {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+  margin-left: 2mm;
+}
+
+.testimonial p {
+  margin-top: 2.5mm;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  color: var(--bj-ink2);
+  font-style: italic;
+}
+
+.testimonial .author {
+  margin-top: 2.5mm;
+  font-weight: 600;
+  font-size: 8.5pt;
+}
+
+/* ------------------------------ type scale --------------------------------- */
+
+h3.xl {
+  font-size: 14pt;
+}
+h3.lg {
+  font-size: 13pt;
+}
+h3.sm {
+  font-size: 10pt;
+}
+
+/* Default body copy inside cards. */
+.body {
+  font-size: 8pt;
+  line-height: 1.5;
+  color: var(--bj-ink2);
+}
+
+.promise-card .body {
+  font-size: 8.5pt;
+}
+
+/* Small mono eyebrow above a card title (PROJECT 01, STEP 02, …). */
+.eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+}
+
+.card .hook {
+  font-size: 8pt;
+  line-height: 1.45;
+  color: var(--bj-muted);
+  margin-top: 1.5mm;
+}
+
+/* Kicker sitting on an ink panel needs the lifted blue to clear AA. */
+.kicker.on-ink {
+  color: #6ea6ff;
+}
+
+.dot-ai {
+  color: var(--bj-trust);
+}
+
+.plain-list {
+  margin: 2.5mm 0 0;
+  padding-left: 4mm;
+  font-size: 8pt;
+  line-height: 1.5;
+}
+
+.feature {
+  margin-top: 4mm;
+  break-inside: avoid;
+}
+
+/* -------------------------------- helpers ---------------------------------- */
+
+.mt-2 {
+  margin-top: 2mm;
+}
+.mt-4 {
+  margin-top: 4mm;
+}
+.mt-6 {
+  margin-top: 6mm;
+}
+.mt-8 {
+  margin-top: 8mm;
+}
+.mt-10 {
+  margin-top: 10mm;
+}
+
+.label {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+}
+
+.closing {
+  background: var(--bj-ink);
+  color: var(--bj-white);
+  border-radius: var(--radius-panel);
+  padding: 6mm 7mm;
+}
+
+.closing h3 {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 15pt;
+}
+
+.closing p {
+  margin-top: 3mm;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.closing .cta {
+  margin-top: 4mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 8pt;
+  color: var(--bj-verify);
+}
+
+.colophon {
+  font-size: 6pt;
+  line-height: 1.5;
+  color: var(--bj-muted);
+  margin-top: 4mm;
+}
