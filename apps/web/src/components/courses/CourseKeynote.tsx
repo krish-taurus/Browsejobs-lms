@@ -817,7 +817,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
             </a>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="mt-4 text-sm text-fg/35">
-            3 free steps first · ₹30,000 only after the free bootcamp · pay-after-placement path
+            3 free steps first · enrollment fee ₹30,000 only after the free bootcamp · EMI available
           </motion.p>
         </div>
       </section>
@@ -993,7 +993,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.9 }}
             className="mx-auto mt-6 max-w-md text-white/50"
           >
-            ₹30,000 registration (EMI 3 × ₹10,000) only after the free steps. Placement fee only after you accept an offer.
+            Enrollment fee ₹30,000 (or 3 EMIs of ₹10,000), payable only after the three free steps.
             30-day money-back guarantee, in writing.
           </motion.p>
           <motion.div

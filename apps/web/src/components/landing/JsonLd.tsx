@@ -34,7 +34,7 @@ export function JsonLd() {
           provider: { "@type": "EducationalOrganization", name: "BrowseJobs" },
           offers: {
             "@type": "Offer",
-            category: "Registration",
+            category: "Enrollment",
             price: "30000",
             priceCurrency: "INR",
           },

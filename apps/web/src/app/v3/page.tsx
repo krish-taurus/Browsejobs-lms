@@ -827,7 +827,7 @@ function FreeLadderTile() {
           </div>
         ))}
       </div>
-      <p className="mt-4 text-[11px] text-fg/40">Then decide. Pay-after-placement paths available on every track.</p>
+      <p className="mt-4 text-[11px] text-fg/40">Then decide. Nothing is charged before those three steps are done.</p>
     </div>
   );
 }
@@ -1088,7 +1088,7 @@ function PathSection() {
                 🎉
               </motion.span>
               <p className="font-display mt-5 text-3xl font-bold leading-tight">Offer accepted.</p>
-              <p className="mt-3 text-sm text-white/55">The placement fee starts only here — paid from the salary the offer brings.</p>
+              <p className="mt-3 text-sm text-white/55">Presented through three channels, by our team, with your profile optimised first.</p>
             </div>
           </motion.div>
           <div className="mx-auto mt-12 h-1.5 w-full max-w-md rounded-full bg-fg/[0.07]">
@@ -1459,7 +1459,7 @@ function FeesSection() {
         initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
         className="font-display mt-5 max-w-3xl text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl"
       >
-        Two fees. Both in writing. <span className="bg-gradient-to-r from-[#1b6df0] to-[#7c3aed] bg-clip-text text-transparent">One only after you&apos;re hired.</span>
+        The enrollment fee. <span className="bg-gradient-to-r from-[#1b6df0] to-[#7c3aed] bg-clip-text text-transparent">In writing, after three free steps.</span>
       </motion.h2>
       <div className="mt-14 grid gap-6 md:grid-cols-2">
         <motion.div
@@ -1467,7 +1467,7 @@ function FeesSection() {
           transition={{ duration: 0.8, ease: EASE }}
           className="rounded-3xl border border-fg/[0.07] bg-surface p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">01 · Registration</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">Enrollment fee</p>
           <p className="font-display mt-4 text-5xl font-bold">₹<Counter to={30000} /></p>
           <p className="mt-3 text-fg/50">Payable only after the free masterclass and the free 7-hour bootcamp.</p>
           <div className="mt-5 flex gap-2">
@@ -1483,26 +1483,25 @@ function FeesSection() {
           transition={{ duration: 0.8, ease: EASE, delay: 0.12 }}
           className="rounded-3xl bg-[#0a0f1c] p-9 text-white"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">02 · Placement fee</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">What it covers</p>
           <p className="mt-4 text-lg leading-relaxed text-white/75">
-            Your first 3 months&apos; CTC, due <strong className="text-white">only after you accept an offer</strong> — paid as 6 monthly
-            EMIs from your new salary. Your ₹30,000 registration is adjusted inside it.
+            The whole six-month program, and a <strong className="text-white">full year of access</strong> — not a
+            starter tier with the useful parts sold separately.
           </p>
           <div className="mt-6 rounded-2xl bg-surface/[0.05] p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Worked example · ₹12 LPA offer</p>
             {[
-              ["3 months' CTC", "₹3,00,000"],
-              ["− registration already paid", "− ₹30,000"],
-              ["Placement fee", "₹2,70,000"],
-              ["= 6 EMIs of", "₹45,000 / month"],
-            ].map(([k, v], i) => (
+              "Live classes, recordings and the coding lab",
+              "Mock interviews, question bank and career services",
+              "Repeating batches & upskilling for one year",
+              "1:1 mentoring, support desk and certificate",
+            ].map((k, i) => (
               <motion.div
                 key={k}
                 initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.3 + i * 0.15, duration: 0.5, ease: EASE }}
-                className={`flex items-center justify-between py-2 text-sm ${i === 3 ? "border-t border-white/10 pt-3 font-bold text-white" : "text-white/60"}`}
+                className="flex items-start gap-3 py-2 text-sm text-white/70"
               >
-                <span>{k}</span><span className="font-mono">{v}</span>
+                <span className="mt-0.5 text-[#0ba860]">✓</span><span>{k}</span>
               </motion.div>
             ))}
           </div>
@@ -1707,7 +1706,7 @@ function HonestySection() {
           >
             <p className="font-display text-lg font-bold text-[#0ba860]">What we promise in writing</p>
             <ul className="mt-4 space-y-2.5">
-              {["Every commitment you get from us is in writing.", "Three full steps are free before you pay a rupee.", "The placement fee is due only after you accept an offer.", "30-day money-back guarantee — any reason, full refund.", "Every counselling call is recorded & AI-monitored."].map((x, i) => (
+              {["Every commitment you get from us is in writing.", "Three full steps are free before you pay a rupee.", "Every fee, and the date it falls due, is in the agreement before you pay.", "30-day money-back guarantee — any reason, full refund.", "Every counselling call is recorded & AI-monitored."].map((x, i) => (
                 <motion.li
                   key={i}
                   initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}

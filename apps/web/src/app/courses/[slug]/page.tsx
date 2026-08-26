@@ -42,7 +42,7 @@ export default async function CoursePage({
     name: course.name,
     description: course.hero,
     provider: { "@type": "EducationalOrganization", name: "BrowseJobs" },
-    offers: { "@type": "Offer", category: "Registration", price: "30000", priceCurrency: "INR" },
+    offers: { "@type": "Offer", category: "Enrollment", price: "30000", priceCurrency: "INR" },
   };
 
   return (
