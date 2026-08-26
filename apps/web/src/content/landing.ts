@@ -87,7 +87,7 @@ export const freeLadder = [
   {
     step: "04",
     free: false,
-    title: "Registration — ₹30,000",
+    title: "Enrollment fee — ₹30,000",
     body: "Only after all three free steps. EMI available: 3 × ₹10,000. Then full enrolment and LMS access.",
   },
 ] as const;
@@ -100,13 +100,13 @@ export type CourseCard = {
   live: boolean;
 };
 
-/** Spec §6.1: 4 live + 3 waitlist. */
+/** Spec §6.1: 5 live + 2 waitlist. */
 export const courses: CourseCard[] = [
   { code: "DE", slug: "data-engineering", name: "Data Engineering", tagline: "Pipelines, warehouses, and the modern data stack.", live: true },
   { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tagline: "Ship, scale, and run production systems.", live: true },
-  { code: "PB", slug: "python-backend", name: "Python Backend", tagline: "APIs, databases, and production Python.", live: true },
+  { code: "PB", slug: "python-backend", name: "Python Backend", tagline: "Django APIs, real databases, and production Python.", live: true },
   { code: "DA", slug: "data-analytics", name: "Data Analytics", tagline: "SQL, dashboards, and decisions from data.", live: true },
-  { code: "AA", slug: "agentic-ai", name: "Agentic AI", tagline: "Build with LLMs, agents, and tools.", live: false },
+  { code: "AE", slug: "ai-engineering", name: "AI Engineering", tagline: "Grounded retrieval, safe agents, and MCP servers.", live: true },
   { code: "CS", slug: "cyber-security", name: "Cyber Security", tagline: "Defend real systems against real attacks.", live: false },
   { code: "SN", slug: "servicenow", name: "ServiceNow", tagline: "The enterprise workflow platform.", live: false },
 ];
@@ -134,7 +134,7 @@ export const verifyChecks = [
 export const promisesKept = [
   "Every commitment you get from us is in writing.",
   "Three full steps are free before you pay a rupee.",
-  "The placement fee is due only after you accept an offer.",
+  "Every fee, and the date it falls due, is in the agreement before you pay.",
   "30-day money-back guarantee — any reason, full refund.",
   "Every counselling call is recorded & AI-monitored.",
 ] as const;
@@ -162,7 +162,7 @@ export const fees = {
 export const faqs = [
   {
     q: "What do I pay, and when?",
-    a: "Nothing until you've finished the three free steps — counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Then registration is ₹30,000 (or 3 EMIs of ₹10,000). The placement fee — your first 3 months' CTC — is due only after you accept an offer, paid as 6 monthly EMIs from your new salary, with the ₹30,000 adjusted inside it.",
+    a: "Nothing until you've finished the three free steps — counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Then the enrollment fee is ₹30,000, payable in full or as 3 EMIs of ₹10,000. It covers the whole six-month program and a full year of access. Every fee, and the date it falls due, is set out in your enrolment agreement before you pay.",
   },
   {
     q: "Do you guarantee a job?",
@@ -174,7 +174,7 @@ export const faqs = [
   },
   {
     q: "What is the 30-day guarantee?",
-    a: "A full refund within 30 days of registration, for any reason, in writing. No forms designed to make you give up.",
+    a: "A full refund of the enrollment fee within 30 days, for any reason, in writing. No forms designed to make you give up.",
   },
   {
     q: "How is the syllabus different?",

@@ -170,6 +170,12 @@ const QUESTIONS_FALLBACK: Record<string, QRound[]> = {
     { round: 2, name: "BI & storytelling", questions: ["A DAX measure returns wrong totals — debug", "Walk us through a dashboard you built"] },
     { round: 3, name: "Case round", questions: ["Sales dropped 12% — investigate with data", "Which metric would you cut? Defend it"] },
   ],
+  "ai-engineering": [
+    { round: 1, name: "LLM screening", questions: ["Context window vs tokens — explain the cost", "When would you not build an agent?"] },
+    { round: 2, name: "RAG deep-dive", questions: ["Your RAG cites the wrong section — debug it", "Chunking strategy, and how you measure it", "Hybrid search vs pure vector — when each?"] },
+    { round: 3, name: "Agents & safety", questions: ["Stop a prompt injection reaching a write tool", "Design an approval gate for an agent action"] },
+    { round: 4, name: "Evaluation", questions: ["How do you prove a prompt change is safe?", "Build an eval set without labelled data"] },
+  ],
 };
 
 let questionsCache: QuestionBank | null = null;
@@ -181,7 +187,7 @@ export async function getInterviewQuestions(): Promise<QuestionBank> {
   try {
     const parsed = await kimiJson<{ tracks: Record<string, QRound[]> }>(
       "You are an interview-prep analyst who has read thousands of real Indian tech interview transcripts. Respond with strict JSON only.",
-      'Return {"tracks":{"data-engineering":[{"round":1,"name":"...","questions":["...","...","..."]} x4],"devops-cloud":[x4],"python-backend":[x3],"data-analytics":[x3]}}. For each track give the MOST FREQUENTLY asked real interview questions in Indian tech hiring right now, grouped by round in the usual loop order (screening -> technical deep-dive -> system design/case -> managerial). Round "name" under 4 words. Each question under 12 words, specific and realistic (e.g. "Debug a CrashLoopBackOff — live"). 2-3 questions per round.',
+      'Return {"tracks":{"data-engineering":[{"round":1,"name":"...","questions":["...","...","..."]} x4],"devops-cloud":[x4],"python-backend":[x3],"data-analytics":[x3],"ai-engineering":[x4]}}. For each track give the MOST FREQUENTLY asked real interview questions in Indian tech hiring right now, grouped by round in the usual loop order (screening -> technical deep-dive -> system design/case -> managerial). Round "name" under 4 words. Each question under 12 words, specific and realistic (e.g. "Debug a CrashLoopBackOff — live"). 2-3 questions per round.',
       6000,
     );
     if (!parsed.tracks || !Array.isArray(parsed.tracks["data-engineering"]) || parsed.tracks["data-engineering"].length === 0) {

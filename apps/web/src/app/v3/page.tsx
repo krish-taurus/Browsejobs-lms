@@ -723,18 +723,19 @@ function LabsTile() {
   );
 }
 
-/** Four live tracks. */
+/** Five live tracks. */
 function TracksTile() {
   const tracks = [
     { name: "Data Engineering", tools: "Python · SQL · Spark · AWS · Databricks · Airflow" },
     { name: "DevOps & Cloud", tools: "Docker · Kubernetes · Terraform · Jenkins · AWS" },
     { name: "Data Analytics", tools: "Excel · SQL · Python · Power BI · DAX · Pandas" },
-    { name: "Python Backend", tools: "APIs, databases, and production Python" },
+    { name: "Python Backend", tools: "Django · DRF · PostgreSQL · Celery · AWS" },
+    { name: "AI Engineering", tools: "RAG · LangGraph · MCP · Evals · FastAPI" },
   ];
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1b6df0]">Programs</p>
-      <h3 className="font-display mt-3 text-xl font-bold">Four live tracks. Rebuilt monthly from real interviews.</h3>
+      <h3 className="font-display mt-3 text-xl font-bold">Five live tracks. Rebuilt monthly from real interviews.</h3>
       <div className="mt-5 space-y-2">
         {tracks.map((t, i) => (
           <motion.div
@@ -755,7 +756,7 @@ function TracksTile() {
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {["Agentic AI", "Cyber Security", "ServiceNow"].map((w) => (
+        {["Cyber Security", "ServiceNow"].map((w) => (
           <span key={w} className="rounded-full border border-fg/10 px-2.5 py-1 text-[10px] font-semibold text-fg/40">
             {w} · Waitlist
           </span>
@@ -826,7 +827,7 @@ function FreeLadderTile() {
           </div>
         ))}
       </div>
-      <p className="mt-4 text-[11px] text-fg/40">Then decide. Pay-after-placement paths available on every track.</p>
+      <p className="mt-4 text-[11px] text-fg/40">Then decide. Nothing is charged before those three steps are done.</p>
     </div>
   );
 }
@@ -1087,7 +1088,7 @@ function PathSection() {
                 🎉
               </motion.span>
               <p className="font-display mt-5 text-3xl font-bold leading-tight">Offer accepted.</p>
-              <p className="mt-3 text-sm text-white/55">The placement fee starts only here — paid from the salary the offer brings.</p>
+              <p className="mt-3 text-sm text-white/55">Presented through three channels, by our team, with your profile optimised first.</p>
             </div>
           </motion.div>
           <div className="mx-auto mt-12 h-1.5 w-full max-w-md rounded-full bg-fg/[0.07]">
@@ -1103,9 +1104,10 @@ function PathSection() {
 
 const PROGRAMS = [
   { code: "DE", slug: "data-engineering", name: "Data Engineering", tag: "Pipelines, warehouses, and the modern data stack.", tools: ["Python", "SQL", "Spark", "AWS", "Databricks", "Airflow"], projects: "3 CV-ready projects", accent: "#1b6df0", icon: "🛠️" },
-  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "Ansible"], projects: "4 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
-  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "APIs, databases, and production Python.", tools: ["Python", "FastAPI", "PostgreSQL", "Redis"], projects: "Detailed syllabus arriving", accent: "#f59e0b", icon: "🐍" },
-  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "Pandas"], projects: "5 CV-ready projects", accent: "#0ba860", icon: "📊" },
+  { code: "DC", slug: "devops-cloud", name: "DevOps & Cloud", tag: "Ship, scale, and run production systems.", tools: ["Docker", "Kubernetes", "Terraform", "Jenkins", "AWS", "Ansible"], projects: "5 CV-ready projects", accent: "#7c3aed", icon: "☁️" },
+  { code: "PB", slug: "python-backend", name: "Python Backend", tag: "Django APIs, real databases, and production Python.", tools: ["Python", "Django", "DRF", "PostgreSQL", "Celery", "AWS"], projects: "3 CV-ready projects", accent: "#f59e0b", icon: "🐍" },
+  { code: "DA", slug: "data-analytics", name: "Data Analytics", tag: "SQL, dashboards, and decisions from data.", tools: ["Excel", "SQL", "Python", "Power BI", "DAX", "Pandas"], projects: "4 CV-ready projects", accent: "#0ba860", icon: "📊" },
+  { code: "AE", slug: "ai-engineering", name: "AI Engineering", tag: "Grounded retrieval, safe agents, and MCP servers.", tools: ["Python", "RAG", "LangGraph", "MCP", "Evals", "FastAPI"], projects: "5 CV-ready projects", accent: "#e11d8f", icon: "🧠" },
 ];
 
 /** Light-mode 3D tilt with a cursor-tracking accent spotlight. */
@@ -1171,13 +1173,13 @@ function ProgramsSection() {
         initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
         className="font-display mt-5 max-w-2xl text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl"
       >
-        Four live tracks. Each one rebuilt monthly.
+        Five live tracks. Each one rebuilt monthly.
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.8 }}
         className="mt-5 max-w-xl text-lg text-fg/50"
       >
-        Only four — because <strong className="text-ink">demand decides what we teach.</strong> We run
+        Only five — because <strong className="text-ink">demand decides what we teach.</strong> We run
         tracks only where the market is actively hiring.
         {demandLive && <span className="ml-2 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">● counted from our job feed</span>}
       </motion.p>
@@ -1262,7 +1264,6 @@ function ProgramsSection() {
         className="mt-6 grid gap-4 sm:grid-cols-3"
       >
         {[
-          { name: "Agentic AI", slug: "agentic-ai" },
           { name: "Cyber Security", slug: "cyber-security" },
           { name: "ServiceNow", slug: "servicenow" },
         ].map((w) => (
@@ -1458,7 +1459,7 @@ function FeesSection() {
         initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
         className="font-display mt-5 max-w-3xl text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl"
       >
-        Two fees. Both in writing. <span className="bg-gradient-to-r from-[#1b6df0] to-[#7c3aed] bg-clip-text text-transparent">One only after you&apos;re hired.</span>
+        The enrollment fee. <span className="bg-gradient-to-r from-[#1b6df0] to-[#7c3aed] bg-clip-text text-transparent">In writing, after three free steps.</span>
       </motion.h2>
       <div className="mt-14 grid gap-6 md:grid-cols-2">
         <motion.div
@@ -1466,7 +1467,7 @@ function FeesSection() {
           transition={{ duration: 0.8, ease: EASE }}
           className="rounded-3xl border border-fg/[0.07] bg-surface p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">01 · Registration</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">Enrollment fee</p>
           <p className="font-display mt-4 text-5xl font-bold">₹<Counter to={30000} /></p>
           <p className="mt-3 text-fg/50">Payable only after the free masterclass and the free 7-hour bootcamp.</p>
           <div className="mt-5 flex gap-2">
@@ -1482,26 +1483,25 @@ function FeesSection() {
           transition={{ duration: 0.8, ease: EASE, delay: 0.12 }}
           className="rounded-3xl bg-[#0a0f1c] p-9 text-white"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">02 · Placement fee</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">What it covers</p>
           <p className="mt-4 text-lg leading-relaxed text-white/75">
-            Your first 3 months&apos; CTC, due <strong className="text-white">only after you accept an offer</strong> — paid as 6 monthly
-            EMIs from your new salary. Your ₹30,000 registration is adjusted inside it.
+            The whole six-month program, and a <strong className="text-white">full year of access</strong> — not a
+            starter tier with the useful parts sold separately.
           </p>
           <div className="mt-6 rounded-2xl bg-surface/[0.05] p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Worked example · ₹12 LPA offer</p>
             {[
-              ["3 months' CTC", "₹3,00,000"],
-              ["− registration already paid", "− ₹30,000"],
-              ["Placement fee", "₹2,70,000"],
-              ["= 6 EMIs of", "₹45,000 / month"],
-            ].map(([k, v], i) => (
+              "Live classes, recordings and the coding lab",
+              "Mock interviews, question bank and career services",
+              "Repeating batches & upskilling for one year",
+              "1:1 mentoring, support desk and certificate",
+            ].map((k, i) => (
               <motion.div
                 key={k}
                 initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.3 + i * 0.15, duration: 0.5, ease: EASE }}
-                className={`flex items-center justify-between py-2 text-sm ${i === 3 ? "border-t border-white/10 pt-3 font-bold text-white" : "text-white/60"}`}
+                className="flex items-start gap-3 py-2 text-sm text-white/70"
               >
-                <span>{k}</span><span className="font-mono">{v}</span>
+                <span className="mt-0.5 text-[#0ba860]">✓</span><span>{k}</span>
               </motion.div>
             ))}
           </div>
@@ -1706,7 +1706,7 @@ function HonestySection() {
           >
             <p className="font-display text-lg font-bold text-[#0ba860]">What we promise in writing</p>
             <ul className="mt-4 space-y-2.5">
-              {["Every commitment you get from us is in writing.", "Three full steps are free before you pay a rupee.", "The placement fee is due only after you accept an offer.", "30-day money-back guarantee — any reason, full refund.", "Every counselling call is recorded & AI-monitored."].map((x, i) => (
+              {["Every commitment you get from us is in writing.", "Three full steps are free before you pay a rupee.", "Every fee, and the date it falls due, is in the agreement before you pay.", "30-day money-back guarantee — any reason, full refund.", "Every counselling call is recorded & AI-monitored."].map((x, i) => (
                 <motion.li
                   key={i}
                   initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}

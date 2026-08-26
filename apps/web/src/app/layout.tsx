@@ -28,7 +28,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://browsejobs.ai";
 
 const TITLE = "BrowseJobs — Built from real interviews.";
 const DESCRIPTION =
-  "This syllabus was not written. It was reverse-engineered — from up to ~50 real & mock interviews monitored daily. Three free steps before you pay anything; placement fee only after you accept an offer.";
+  "This syllabus was not written. It was reverse-engineered — from up to ~50 real & mock interviews monitored daily. Three free steps before you pay anything, then a ₹30,000 enrollment fee with a 30-day money-back guarantee.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
