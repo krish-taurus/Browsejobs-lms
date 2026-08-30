@@ -18,9 +18,20 @@ import {
   deploymentStory,
   entityLine,
   founderQuote,
+  masterBrochure,
   platformFeatures,
   syllabusEngine,
 } from "../../src/content/brochure.ts";
+import {
+  DELIVERY_MODELS,
+  EMPLOYER_DISCLAIMER,
+  EMPLOYER_TAGLINE,
+  PIPELINE,
+  PRICING,
+  ROADMAP,
+  TAT_AFTER,
+  TAT_BEFORE,
+} from "../../src/content/employers.ts";
 import {
   careerServices,
   placementChannels,
@@ -30,6 +41,7 @@ import {
   DISCLAIMER,
   FOOTER_LINE,
   contact,
+  courses as courseCards,
   fees,
   freeLadder,
   promisesKept,
@@ -72,6 +84,33 @@ const payload = {
     founderQuote,
     testimonials: brochureTestimonials,
     entityLine,
+  },
+  /** Everything the master brochure needs on top of the per-course payload. */
+  master: {
+    ...masterBrochure,
+    /** Every track, including the waitlist ones the course brochures skip. */
+    tracks: courseCards.map((card) => {
+      const detail = printable.find((course) => course.slug === card.slug);
+
+      return {
+        ...card,
+        duration: detail?.duration ?? null,
+        moduleCount: detail?.modules.length ?? 0,
+        projectsLabel: detail?.projectsLabel ?? null,
+        tools: detail?.tools.slice(0, 6) ?? [],
+        aiModule: detail?.modules.find((module) => module.ai)?.title ?? null,
+      };
+    }),
+    employer: {
+      tagline: EMPLOYER_TAGLINE,
+      disclaimer: EMPLOYER_DISCLAIMER,
+      pipeline: PIPELINE,
+      deliveryModels: DELIVERY_MODELS,
+      pricing: PRICING,
+      roadmap: ROADMAP,
+      before: TAT_BEFORE,
+      after: TAT_AFTER,
+    },
   },
 };
 

@@ -278,6 +278,58 @@ export const brochureTestimonials = [
   },
 ] as const;
 
+/**
+ * The master brochure — one printable document covering both sides of the
+ * platform: what a student gets, what an employer gets, every track, the
+ * hiring process and the feedback. Course brochures go deep on one syllabus;
+ * this one is the thing you hand someone who has never heard of BrowseJobs.
+ *
+ * The cover headline mirrors the three feature groups above (Learn / Prove /
+ * Get hired), so the promise on page one is literally the structure of the
+ * document behind it.
+ */
+export const masterBrochure = {
+  cover: {
+    headline: ["Learn it.", "Prove it.", "Get hired."],
+    subline:
+      "Five live career tracks, rebuilt every month from the questions real interviews are actually asking. An AI tutor that never sleeps. Mock interviews that call your phone. And a hiring engine on the other side.",
+    audienceLine: "For the people learning. And for the companies hiring them.",
+    meta: "Whitefield, Bengaluru · London est. 2013 · 2026 Edition",
+  },
+  manifesto: {
+    line1: "Colleges hand you a degree.",
+    line2: "Nobody hands you a career.",
+    line3: "So we built a machine.",
+    verbs: [
+      { title: "Studies", body: "~50 real interview transcripts, every day" },
+      { title: "Teaches", body: "exactly what companies ask right now" },
+      { title: "Drills", body: "you until pressure feels normal" },
+      { title: "Hunts", body: "jobs with you until you sign an offer" },
+    ],
+  },
+  /** Section openers, so the two halves of the document announce themselves. */
+  studentBanner: {
+    kicker: "For students",
+    headline: "Everything between where you are\nand the offer letter.",
+  },
+  employerBanner: {
+    kicker: "For employers",
+    headline: "Interview the shortlist.\nNot the inbox.",
+  },
+  employerIntro:
+    "The same engine that grades our students runs the hiring pipeline on the other side. A role goes in; a ranked, screened, interviewed and evidenced shortlist comes out — and a human still makes every decision that matters.",
+  closing: {
+    student: {
+      title: "Students — start with everything free.",
+      body: "Free counselling with a written career report, a free live masterclass, and a free 7-hour Python bootcamp. Then, and only then, decide.",
+    },
+    employer: {
+      title: "Employers — the first six months are free.",
+      body: "Run the full pipeline at no cost for six months. No card, no lock-in. We agree what happens next before anything is ever charged.",
+    },
+  },
+} as const;
+
 /** Registered-entity line printed in the brochure colophon. */
 export const entityLine =
   "BrowseJobs is a unit of IBrowseJobs Technologies Pvt Ltd · Fl 3, Channasandra Main Rd, Ambedkar Nagar, Whitefield, Bengaluru, Karnataka 560066 · Mon–Sat, 9:00 AM – 7:00 PM IST.";

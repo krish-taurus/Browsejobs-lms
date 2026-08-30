@@ -831,6 +831,200 @@ td.amount {
   font-size: 8.5pt;
 }
 
+/* --------------------------- master brochure ------------------------------- */
+
+/*
+ * The master cover. Colour grading is three stacked layers rather than one
+ * flat gradient: an ink→deep-navy base that keeps the top dark enough for the
+ * wordmark, a large trust-blue glow off the top-right, and a low verify-green
+ * wash at the foot so the free-and-verified promise line sits in its own
+ * light. All three stay inside the brand palette.
+ */
+.cover.master {
+  background:
+    radial-gradient(120% 80% at 8% 108%, rgba(11, 168, 96, 0.22) 0%, rgba(11, 168, 96, 0) 60%),
+    radial-gradient(90% 70% at 88% -6%, rgba(27, 109, 240, 0.55) 0%, rgba(27, 109, 240, 0) 62%),
+    linear-gradient(168deg, #0e1a30 0%, var(--bj-ink) 46%, #070d18 100%);
+}
+
+/* The base cover's single glow would fight the layered grading above. */
+.cover.master::after {
+  content: none;
+}
+
+.cover h1.stack span {
+  display: block;
+}
+
+.cover h1.stack span:last-child {
+  color: #6ea6ff;
+}
+
+.cover .audience {
+  margin-top: 6mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-verify);
+}
+
+/* Manifesto pay-off line. */
+.statement {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 15pt;
+  letter-spacing: -0.02em;
+  color: var(--bj-trust);
+}
+
+.grid.four > * {
+  width: calc(25% - 4mm);
+}
+
+/* Track cards on the programs page. */
+.track-card {
+  position: relative;
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-card);
+  padding: 4.5mm 5mm;
+  background: var(--bj-white);
+  overflow: hidden;
+}
+
+.track-card .track-code {
+  position: absolute;
+  top: 1mm;
+  right: 3mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 26pt;
+  color: var(--bj-sky);
+  line-height: 1;
+}
+
+.track-card h3 {
+  position: relative;
+  font-size: 12pt;
+}
+
+.track-card .track-meta {
+  margin-top: 2.5mm;
+  font-size: 7pt;
+  color: var(--bj-trust);
+  font-weight: 600;
+}
+
+.track-card .ai-flag {
+  margin-top: 3mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--bj-line);
+  font-size: 7.5pt;
+  color: var(--bj-muted);
+}
+
+.track-card.waitlist {
+  background: var(--bj-paper);
+}
+
+.track-card.waitlist .waitlist-row {
+  margin-top: 3mm;
+}
+
+.waitlist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-card);
+  padding: 3mm 4.5mm;
+  background: var(--bj-paper);
+}
+
+.waitlist-row .name {
+  font-weight: 600;
+  font-size: 9pt;
+}
+
+.waitlist-row .tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+}
+
+/* Employer pipeline: seven stages down a single ruled column. */
+/* Laid out with the inline-block .grid, not columns: balanced columns sized
+   themselves to three stages and pushed the seventh onto a near-blank page,
+   and column-fill:auto overflowed into a clipped third column. */
+.stage {
+  border-left: 2px solid var(--bj-trust);
+}
+
+.stage {
+  padding-left: 4mm;
+}
+
+ul.tight {
+  margin: 0;
+  padding-left: 4mm;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--bj-ink2);
+}
+
+ul.tight li {
+  margin-bottom: 1.2mm;
+}
+
+td.amount.verify {
+  color: var(--bj-verify);
+}
+
+.closing.light {
+  background: var(--bj-sky);
+  color: var(--bj-ink);
+}
+
+.closing.light p {
+  color: var(--bj-ink2);
+}
+
+.closing.light .cta {
+  color: var(--bj-deep);
+}
+
+/* Compact one-line variant of a rule block, for pages where a full block
+   would push a card grid onto the next page (a grid cannot fragment). */
+.spine-line {
+  border-left: 3px solid var(--bj-trust);
+  padding-left: 4mm;
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--bj-ink2);
+}
+
+.spine-line span {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+}
+
+.promise-line {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-verify);
+}
+
 /* ------------------------------ type scale --------------------------------- */
 
 h3.xl {
