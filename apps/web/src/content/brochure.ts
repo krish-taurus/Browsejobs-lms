@@ -28,7 +28,8 @@ export type CareerPanel =
       body: string;
       label: string;
       note: string;
-      rungs: { role: string; range: string }[];
+      /** `low`/`high` are LPA and drive the range-bar chart in the brochures. */
+      rungs: { role: string; range: string; low: number; high: number }[];
     }
   | {
       kind: "flow";
@@ -59,11 +60,11 @@ export const careerPanels: Record<string, CareerPanel> = {
     label: "Salary growth ladder · Indian market ranges",
     note: "Salary ranges are market observations, not a promise. Packages depend on your profile, performance and the live market — verify current ranges yourself on Naukri (see Check 01).",
     rungs: [
-      { role: "Freshers", range: "₹6 – 8 LPA" },
-      { role: "Junior DevOps Engineer", range: "₹8 – 12 LPA" },
-      { role: "DevOps Engineer", range: "₹12 – 18 LPA" },
-      { role: "Senior DevOps Engineer", range: "₹18 – 22 LPA" },
-      { role: "Cloud Architect", range: "₹20 – 25 LPA+" },
+      { role: "Freshers", range: "₹6 – 8", low: 6, high: 8 },
+      { role: "Junior DevOps Engineer", range: "₹8 – 12", low: 8, high: 12 },
+      { role: "DevOps Engineer", range: "₹12 – 18", low: 12, high: 18 },
+      { role: "Senior DevOps Engineer", range: "₹18 – 22", low: 18, high: 22 },
+      { role: "Cloud Architect", range: "₹20 – 25+", low: 20, high: 25 },
     ],
   },
   /*
@@ -150,18 +151,22 @@ export const platformFeatures = [
     items: [
       {
         name: "AI Tutor — awake at 2am",
+        short: "Every doubt answered in seconds, from your syllabus.",
         body: "Every doubt answered in seconds, in your context, from your syllabus. Students ask it hundreds of questions a course, because it never judges and never sleeps.",
       },
       {
         name: "Live batches + recordings",
+        short: "Live, instructor-led, recorded and searchable for a year.",
         body: "Every class is live and instructor-led, then recorded and searchable by topic. Your access runs a full year, so a missed class is never a lost one.",
       },
       {
         name: "Coding Lab",
+        short: "Browser labs on the real stack. No local setup.",
         body: "Browser-based labs with the real stack. You write, run and break things inside the LMS — no local setup standing between you and practice.",
       },
       {
         name: "Content Hub & lesson notes",
+        short: "Notes, slides and reference material per lesson.",
         body: "Per-lesson notes, slides and reference material, generated against the day's teaching plan and kept with the recording.",
       },
     ],
@@ -171,22 +176,27 @@ export const platformFeatures = [
     items: [
       {
         name: "Voice Mock Lab — the interviewer that calls you",
+        short: "A voice AI rings your phone and scores the round.",
         body: "A voice AI rings your phone, runs a real technical round, and scores every answer on depth, communication and confidence. By the twelfth mock, the real thing feels like a rerun.",
       },
       {
         name: "Weekly technical + HR mocks",
+        short: "Human-led mocks, AI-analysed, with a written gap report.",
         body: "Human-led mocks alongside the AI ones, AI-analysed afterwards, each returning a written gap report rather than a grade.",
       },
       {
         name: "PRI & the mastery map",
+        short: "A readiness index and one next best action, daily.",
         body: "A Placement Readiness Index built from your mock data, attendance and assignments — with one clear next best action every day.",
       },
       {
         name: "Live interview question bank",
+        short: "This month's questions for your role, round by round.",
         body: "The questions pulled from monitored interviews for your role this month, organised round by round.",
       },
       {
         name: "Quizzes, assignments & graded feedback",
+        short: "Scored work with trainer feedback.",
         body: "Scored work with trainer feedback, so readiness is a measurement rather than an opinion.",
       },
     ],
@@ -196,18 +206,22 @@ export const platformFeatures = [
     items: [
       {
         name: "Job Radar",
+        short: "LinkedIn and Naukri roles matched to you, daily.",
         body: "Live roles from LinkedIn and Naukri matched to your skill graph and refreshed daily, so the openings are already waiting when you are ready.",
       },
       {
         name: "ATS resume, LinkedIn & GitHub",
+        short: "Rebuilt to survive the filter and the recruiter search.",
         body: "Your CV rebuilt to survive the filter, your LinkedIn tuned for recruiter search, your GitHub arranged around the projects you actually shipped.",
       },
       {
         name: "Verifiable certificates",
+        short: "A QR an employer scans to check you.",
         body: "Every certificate carries a QR code that resolves to a public verification page. An employer checks it in one scan.",
       },
       {
         name: "1:1 mentoring & support desk",
+        short: "A mentor for decisions, a ticket desk for everything else.",
         body: "A mentor for the career decisions and a ticketed support desk for everything else, both inside the LMS.",
       },
     ],
@@ -307,6 +321,15 @@ export const masterBrochure = {
       { title: "Hunts", body: "jobs with you until you sign an offer" },
     ],
   },
+  /** Six months, as the timeline graphic plots them. `weight` is months. */
+  journey: [
+    { label: "Foundations", month: "Month 1", weight: 1, detail: "Language, tooling, fundamentals" },
+    { label: "Core stack", month: "Months 2–3", weight: 2, detail: "The tools named in live JDs" },
+    { label: "Advanced & cloud", month: "Month 4", weight: 1, detail: "Production patterns, deployment" },
+    { label: "Applied AI", month: "Month 5", weight: 1, detail: "Agents, MCP, guardrails" },
+    { label: "Interview engineering", month: "Month 6+", weight: 1.4, detail: "Mocks, question bank, placement" },
+  ],
+
   /** Section openers, so the two halves of the document announce themselves. */
   studentBanner: {
     kicker: "For students",

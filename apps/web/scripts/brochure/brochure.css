@@ -1086,6 +1086,405 @@ h3.sm {
   break-inside: avoid;
 }
 
+
+/* ------------------------------- figures ----------------------------------- */
+/*
+ * Chart anatomy: a mono label above, the plot, a caption below. Print has no
+ * hover layer, so charts.py direct-labels every value — the caption carries
+ * the reading, never a number the reader has to hunt for.
+ */
+
+.fig {
+  margin: 6mm 0 0;
+  break-inside: avoid;
+}
+
+.fig-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+  margin-bottom: 3mm;
+}
+
+.fig-caption {
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--bj-muted);
+  margin-top: 3mm;
+  max-width: 150mm;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+}
+
+/* --------------------------------- KPIs ------------------------------------ */
+
+.kpi-row {
+  font-size: 0;
+  margin: 0 -2mm;
+}
+
+.kpi-row > .kpi {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(25% - 4mm);
+  margin: 0 2mm 4mm;
+  box-sizing: border-box;
+}
+
+.kpi-value {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 20pt;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--bj-trust);
+}
+
+.kpi-label {
+  font-size: 7.5pt;
+  line-height: 1.35;
+  color: var(--bj-muted);
+  margin-top: 1.5mm;
+}
+
+/* Meter rings sit beside a pair of headline figures. */
+.ring-row {
+  font-size: 0;
+  margin: 0 -3mm;
+}
+
+.ring-row > .ring {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(27% - 6mm);
+  margin: 0 3mm;
+}
+
+.ring-side {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(46% - 6mm);
+  margin: 0 3mm;
+  padding-left: 5mm;
+  border-left: 1px solid var(--bj-line);
+  box-sizing: border-box;
+}
+
+.ring-side .kpi {
+  margin-bottom: 6mm;
+}
+
+/* Career-flow "what you do" lines, in columns matching the chevrons. */
+.flow-row {
+  font-size: 0;
+  margin-top: 2.5mm;
+}
+
+.flow-cell {
+  display: inline-block;
+  vertical-align: top;
+  width: 20%;
+  padding-right: 3mm;
+  box-sizing: border-box;
+  font-size: 6.8pt;
+  line-height: 1.4;
+  color: var(--bj-muted);
+}
+
+/* The guarantee, as a badge beside its promise. Green: a kept promise. */
+.guarantee {
+  display: flex;
+  gap: 5mm;
+  align-items: flex-start;
+  background: var(--bj-verify-bg);
+  border: 1px solid rgba(11, 168, 96, 0.28);
+  border-radius: var(--radius-card);
+  padding: 5mm 5.5mm;
+}
+
+.g-badge {
+  flex: 0 0 auto;
+  width: 16mm;
+  height: 16mm;
+  border-radius: 50%;
+  background: var(--bj-verify);
+  color: #ffffff;
+  font-size: 16pt;
+  font-weight: 600;
+  text-align: center;
+  line-height: 16mm;
+}
+
+/* Split-bar key: a swatch carries identity, the text stays in ink tokens. */
+.split-key {
+  font-size: 0;
+  margin-top: 3.5mm;
+}
+
+.sk {
+  display: inline-block;
+  vertical-align: top;
+  width: 50%;
+  padding-right: 6mm;
+  box-sizing: border-box;
+  font-size: 10pt;
+}
+
+.sk-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  margin-right: 2mm;
+}
+
+.sk-label {
+  font-weight: 600;
+  font-size: 8.5pt;
+  color: var(--bj-ink);
+}
+
+.sk-amount {
+  display: block;
+  margin-top: 1mm;
+  padding-left: 5mm;
+  font-size: 7.5pt;
+  color: var(--bj-muted);
+}
+
+.track-chip {
+  min-height: 26mm;
+}
+
+/* Timeline phase names sit under the bar in equal columns, so a narrow
+   segment's label cannot collide with its neighbour. */
+.phase-row {
+  font-size: 0;
+  margin-top: 3mm;
+}
+
+.phase {
+  display: inline-block;
+  vertical-align: top;
+  width: 20%;
+  padding-right: 4mm;
+  box-sizing: border-box;
+  font-size: 10pt;
+}
+
+.phase-name {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 8.5pt;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--bj-ink);
+}
+
+.phase-detail {
+  margin-top: 1mm;
+  font-size: 7pt;
+  line-height: 1.4;
+  color: var(--bj-muted);
+}
+
+.ring-label {
+  font-size: 7.5pt;
+  line-height: 1.35;
+  color: var(--bj-muted);
+  text-align: center;
+  margin-top: 2mm;
+}
+
+/* The manifesto verbs, as a four-up strip. */
+.verb-row {
+  font-size: 0;
+  margin: 0 -2mm;
+}
+
+.verb {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(25% - 4mm);
+  margin: 0 2mm;
+  padding-top: 3mm;
+  border-top: 2px solid var(--bj-trust);
+  box-sizing: border-box;
+  font-size: 10pt;
+}
+
+.verb-title {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 11pt;
+  letter-spacing: -0.02em;
+  color: var(--bj-ink);
+}
+
+.verb-body {
+  margin-top: 1.5mm;
+  font-size: 7.5pt;
+  line-height: 1.4;
+  color: var(--bj-muted);
+}
+
+.statement span {
+  color: var(--bj-ink);
+}
+
+/* --------------------------- syllabus engine strip ------------------------- */
+
+.engine-strip {
+  margin-top: 5mm;
+  font-size: 0;
+}
+
+.engine-step {
+  display: inline-block;
+  vertical-align: top;
+  width: 33.333%;
+  padding-right: 5mm;
+  box-sizing: border-box;
+  font-size: 10pt;
+}
+
+.engine-step .n {
+  display: inline-block;
+  width: 7mm;
+  height: 7mm;
+  border-radius: 50%;
+  background: rgba(110, 166, 255, 0.18);
+  color: #6ea6ff;
+  font-size: 7.5pt;
+  font-weight: 600;
+  text-align: center;
+  line-height: 7mm;
+  margin-bottom: 2.5mm;
+}
+
+.engine-step .s-title {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 7pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6ea6ff;
+}
+
+.engine-step .s-body {
+  margin-top: 1.5mm;
+  font-size: 8pt;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ------------------------------ feature grid ------------------------------- */
+
+.f-group-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+  padding-bottom: 2mm;
+  border-bottom: 2px solid var(--bj-trust);
+}
+
+.f-item {
+  margin-top: 4mm;
+  break-inside: avoid;
+}
+
+.f-name {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 9pt;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--bj-ink);
+}
+
+.f-short {
+  margin-top: 1.2mm;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--bj-muted);
+}
+
+/* ------------------------------ track chips -------------------------------- */
+
+.track-chips {
+  font-size: 0;
+  margin: 0 -1.5mm;
+}
+
+.track-chip {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(20% - 3mm);
+  margin: 0 1.5mm;
+  padding: 3mm;
+  box-sizing: border-box;
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-card);
+  background: var(--bj-paper);
+  font-size: 10pt;
+}
+
+.tc-code {
+  display: block;
+  font-size: 7pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--bj-trust);
+}
+
+.tc-name {
+  display: block;
+  margin-top: 1.5mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 8.5pt;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.tc-tools {
+  display: block;
+  margin-top: 2mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6pt;
+  line-height: 1.5;
+  color: var(--bj-muted);
+}
+
+.waitlist-line {
+  font-size: 7.5pt;
+  color: var(--bj-muted);
+}
+
+.waitlist-line span {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-ink2);
+  margin-right: 2mm;
+}
+
+.check-card {
+  border-left: 2px solid var(--bj-trust);
+  padding-left: 3.5mm;
+}
+
 /* -------------------------------- helpers ---------------------------------- */
 
 .mt-2 {
