@@ -36,6 +36,19 @@ STYLESHEET = HERE / "brochure.css"
 OUT_DIR = HERE.parents[3] / "docs" / "brochures"
 
 EDITION = "2026 Edition"
+
+# The Breakout Bar mark, repeated top-left on every page (see brochure.css).
+MARK_SVG = (
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    '<rect width="64" height="64" rx="14" fill="#0A1220"/>'
+    '<rect x="13.5" y="36" width="5.5" height="13" rx="2.75" fill="#1B6DF0" opacity="0.55"/>'
+    '<rect x="22.5" y="30" width="5.5" height="19" rx="2.75" fill="#1B6DF0" opacity="0.75"/>'
+    '<rect x="31.5" y="24" width="5.5" height="25" rx="2.75" fill="#1B6DF0"/>'
+    '<rect x="41.75" y="20" width="5.5" height="29" rx="2.75" fill="#FFFFFF"/>'
+    '<path d="M38.5 20.5 L44.5 13.5 L50.5 20.5" stroke="#FFFFFF" stroke-width="5.5" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+    "</svg>"
+)
 PLATFORM_LINE = "The world's first AI-driven skilling & placement platform"
 
 
@@ -280,8 +293,7 @@ def pills(labels: list[str], cls: str = "pill") -> str:
     return join(f'<span class="{cls}">{e(label)}</span>' for label in labels)
 
 
-def tools_and_projects_page(course: dict, shared: dict) -> str:
-    tools = pills(course["tools"])
+def projects_page(course: dict, shared: dict) -> str:
     projects = join(
         f'<div class="card"><div class="eyebrow">Project {i:02d}</div>'
         f'<h3 class="mt-2">{e(p["title"])}</h3>'
@@ -291,16 +303,6 @@ def tools_and_projects_page(course: dict, shared: dict) -> str:
         for i, p in enumerate(course["projects"], start=1)
     )
 
-    explore = ""
-    if course.get("exploreLater"):
-        items = join(f"<li>{e(i)}</li>" for i in course["exploreLater"]["items"])
-        explore = f"""
-  <div class="rule-block coach mt-8">
-    <span class="rule-label">Coach note · explore later</span>
-    {e(course['exploreLater']['note'])}
-    <ul class="plain-list">{items}</ul>
-  </div>"""
-
     return f"""
 <section class="page">
   <h2 class="section-title">Real projects you'll build.
@@ -309,16 +311,25 @@ These go on your CV.</h2>
   interviewer through line by line. Fully genuine, so every candidate clears background
   verification.</p>
   <div class="grid two mt-8">{projects}</div>
-
-  <p class="label mt-10">The stack you'll have used</p>
-  <div class="pills mt-4">{tools}</div>
-  {explore}
 </section>
 """
 
 
-def deployment_page(shared: dict) -> str:
+def deployment_page(course: dict, shared: dict) -> str:
     story = shared["deploymentStory"]
+    tools = pills(course["tools"])
+    # The optional self-study map rides here rather than on the projects page:
+    # there it overflowed and stranded itself on a near-blank page of its own.
+    explore = ""
+    if course.get("exploreLater"):
+        items = join(f"<li>{e(i)}</li>" for i in course["exploreLater"]["items"])
+        explore = (
+            '<div class="rule-block coach mt-10">'
+            '<span class="rule-label">Coach note · explore later</span>'
+            f'{e(course["exploreLater"]["note"])}'
+            f'<ul class="plain-list">{items}</ul>'
+            "</div>"
+        )
     steps = join(
         f'<div class="card"><div class="eyebrow">{e(s["step"])}</div>'
         f'<h3 class="mt-2 sm">{e(s["title"])}</h3>'
@@ -342,6 +353,10 @@ def deployment_page(shared: dict) -> str:
   <h2 class="section-title">{e(story['headline'])}</h2>
   <p class="lede">{e(story['body'])}</p>
   <div class="grid two mt-8">{steps}</div>
+
+  <p class="label mt-10">The stack you'll have used</p>
+  <div class="pills mt-4">{tools}</div>
+  {explore}
 </section>
 
 <section class="page">
@@ -537,8 +552,8 @@ def document(course: dict, shared: dict) -> str:
             engine_page(course, shared),
             situation_page(course, shared),
             syllabus_page(course),
-            tools_and_projects_page(course, shared),
-            deployment_page(shared),
+            projects_page(course, shared),
+            deployment_page(course, shared),
             placement_page(course, shared),
             fees_page(shared),
             verify_page(course, shared),
@@ -552,6 +567,7 @@ def document(course: dict, shared: dict) -> str:
   <title>{e(course['name'])}</title>
 </head>
 <body>
+  <div class="mark" aria-hidden="true">{MARK_SVG}</div>
   <div class="rail"><span>{e(rail)}</span></div>
   {pages}
 </body>

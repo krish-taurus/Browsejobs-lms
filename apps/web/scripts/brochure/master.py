@@ -47,6 +47,19 @@ TARGET = "BrowseJobs_Brochure_2026.pdf"
 # ----------------------------------------------------------------------------
 
 
+MARK_SVG = (
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
+    '<rect width="64" height="64" rx="14" fill="#0A1220"/>'
+    '<rect x="13.5" y="36" width="5.5" height="13" rx="2.75" fill="#1B6DF0" opacity="0.55"/>'
+    '<rect x="22.5" y="30" width="5.5" height="19" rx="2.75" fill="#1B6DF0" opacity="0.75"/>'
+    '<rect x="31.5" y="24" width="5.5" height="25" rx="2.75" fill="#1B6DF0"/>'
+    '<rect x="41.75" y="20" width="5.5" height="29" rx="2.75" fill="#FFFFFF"/>'
+    '<path d="M38.5 20.5 L44.5 13.5 L50.5 20.5" stroke="#FFFFFF" stroke-width="5.5" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+    "</svg>"
+)
+
+
 def figure(svg: str, caption: str = "", *, label: str = "") -> str:
     """A chart with its label above and its caption below — the figure contract."""
     head = f'<p class="fig-label">{e(label)}</p>' if label else ""
@@ -58,6 +71,29 @@ def kpi(value: str, label: str) -> str:
     return (
         f'<div class="kpi"><div class="kpi-value mono">{e(value)}</div>'
         f'<div class="kpi-label">{e(label)}</div></div>'
+    )
+
+
+def spread_mark() -> str:
+    """The mark, placed inside a bleed spread.
+
+    The document's `position: fixed` mark is laid out against the paper page's
+    content box; a bleed page has no margins, so that copy falls off the sheet.
+    A spread therefore prints its own, and the logo appears on every page.
+    """
+    return f'<div class="spread-mark" aria-hidden="true">{MARK_SVG}</div>'
+
+
+def ghost(numeral: str) -> str:
+    """The oversized, near-transparent section numeral."""
+    return f'<div class="ghost" aria-hidden="true">{e(numeral)}</div>'
+
+
+def spread_foot(numeral: str, title: str) -> str:
+    """A bleed spread carries no running footer, so it prints its own."""
+    return (
+        f'<div class="spread-foot"><span>{e(title)}</span>'
+        f'<span class="no">{e(numeral)}</span></div>'
     )
 
 
@@ -74,23 +110,23 @@ def cover(master: dict, shared: dict) -> str:
         for s in shared["stats"]
     )
     return f"""
-<section class="cover master">
-  <div class="rail-mark"><span>BrowseJobs · {e(EDITION)}</span></div>
-  <div class="wordmark">BrowseJobs<span class="dot-ai">.ai</span></div>
-  <div class="platform-line">{e(PLATFORM_LINE)}</div>
-  <div class="spacer"></div>
+<section class="page bleed cover-spread">
+  <div class="cover-mark">{MARK_SVG}<span>BrowseJobs<i>.ai</i></span></div>
+  <p class="platform-line">{e(PLATFORM_LINE)}</p>
   <h1 class="stack">{headline}</h1>
   <p class="audience">{e(master['cover']['audienceLine'])}</p>
-  <div class="spacer"></div>
-  <div class="stat-band">{stats}</div>
-  <div class="meta">{e(master['cover']['meta'])}</div>
-  <div class="promise">{e(shared['footerLine'])}</div>
+  {charts.breakout_motif()}
+  <div class="cover-base">
+    <div class="stat-band">{stats}</div>
+    <p class="meta">{e(master['cover']['meta'])}</p>
+    <p class="promise">{e(shared['footerLine'])}</p>
+  </div>
 </section>
 """
 
 
 def receipts_page(master: dict, shared: dict) -> str:
-    """The numbers page: two meters, two headline figures, one process strip."""
+    """A dark spread: two meters, two headline figures, the engine, the verbs."""
     engine = shared["syllabusEngine"]
     manifesto = master["manifesto"]
     verbs = join(
@@ -105,12 +141,16 @@ def receipts_page(master: dict, shared: dict) -> str:
         for i, s in enumerate(engine["steps"], start=1)
     )
     rings = charts.meter_ring(
-        0.98, "98%", "of candidates who attend interviews get placed"
-    ) + charts.meter_ring(0.90, "~90%", "of interview questions come from our material")
+        0.98, "98%", "of candidates who attend interviews get placed", theme=charts.DARK
+    ) + charts.meter_ring(
+        0.90, "~90%", "of interview questions come from our material", theme=charts.DARK
+    )
     return f"""
-<section class="page">
+<section class="page bleed spread">
+  {spread_mark()}
+  {ghost("01")}
   <p class="kicker">The receipts</p>
-  <h2 class="section-title">We can show you
+  <h2 class="section-title jumbo">We can show you
 the working.</h2>
 
   <div class="ring-row mt-8">{rings}
@@ -121,21 +161,29 @@ the working.</h2>
   </div>
   <p class="disclaimer">*{e(shared['disclaimer'])}</p>
 
-  <div class="panel ink mt-8">
-    <p class="kicker on-ink">{e(engine['kicker'])}</p>
+  <p class="statement mt-8">{e(manifesto['line1'])} {e(manifesto['line2'])}
+  <span>{e(manifesto['line3'])}</span></p>
+  <div class="verb-row mt-6">{verbs}</div>
+
+  <div class="engine-panel mt-8">
+    <p class="kicker">{e(engine['kicker'])}</p>
     <h3 class="mt-2 xl">{e(engine['headline'])}</h3>
     <div class="engine-strip">{steps}</div>
   </div>
 
-  <p class="statement mt-10">{e(manifesto['line1'])} {e(manifesto['line2'])}
-  <span>{e(manifesto['line3'])}</span></p>
-  <div class="verb-row mt-6">{verbs}</div>
+  {spread_foot("01", "The receipts")}
 </section>
 """
 
 
 def path_page(master: dict, shared: dict) -> str:
-    """The funnel spine and the six months, both as graphics."""
+    """The funnel spine, the six months, and how a profile reaches employers."""
+    channels = join(
+        f'<div class="card"><p class="kicker">{e(c["kicker"])}</p>'
+        f'<h3 class="sm mt-2">{e(c["title"])}</h3>'
+        f'<p class="body mt-2">{e(c["body"])}</p></div>'
+        for c in shared["placementChannels"]
+    )
     short = {
         "01": ("Counselling", "+ written report"),
         "02": ("Masterclass", "live, 45 min"),
@@ -163,6 +211,7 @@ def path_page(master: dict, shared: dict) -> str:
     )
     return f"""
 <section class="page">
+  {ghost("02")}
   <p class="kicker free">Three free steps before you pay a rupee</p>
   <h2 class="section-title">{e(master['studentBanner']['headline'])}</h2>
 
@@ -175,6 +224,15 @@ def path_page(master: dict, shared: dict) -> str:
           "Access runs a full year — longer than the programme itself, so you can sit any "
           "later batch again at no cost.",
           label="Six months, month by month")}
+
+  <p class="label mt-10">And then you are presented — three channels, by our team</p>
+  <div class="grid three mt-4">{channels}</div>
+
+  <div class="rule-block mt-6">
+    <span class="rule-label">Readiness is decided on data</span>
+    We send you to interviews when your mock scores say you are ready — not when a sales target
+    says so.
+  </div>
 </section>
 """
 
@@ -198,6 +256,7 @@ def features_page(shared: dict) -> str:
     )
     return f"""
 <section class="page">
+  {ghost("03")}
   <p class="kicker">Everything included</p>
   <h2 class="section-title">One fee. The whole machine.</h2>
   <p class="lede">No add-on pricing for the things that get you hired.</p>
@@ -238,6 +297,7 @@ def tracks_page(master: dict) -> str:
 
     return f"""
 <section class="page">
+  {ghost("04")}
   <p class="kicker">The programs</p>
   <h2 class="section-title">Five live tracks.
 Every one rebuilt monthly.</h2>
@@ -278,21 +338,25 @@ def market_page(panels: dict) -> str:
         + "</div>"
     )
     return f"""
-<section class="page">
+<section class="page bleed spread">
+  {spread_mark()}
+  {ghost("05")}
   <p class="kicker">The market</p>
   <h2 class="section-title">We only run tracks
 where hiring is real.</h2>
 
-  {figure(charts.range_bars(rows), ladder["note"], label=ladder["label"])}
+  {figure(charts.range_bars(rows, theme=charts.DARK), ladder["note"], label=ladder["label"])}
 
   <p class="label mt-8">Why Data Engineering leads the demand</p>
   <div class="kpi-row mt-4">{figures}</div>
   <p class="disclaimer">{e(de["note"])}</p>
 
-  {figure(charts.career_flow(flow_steps) + flow_row,
+  {figure(charts.career_flow(flow_steps, theme=charts.DARK) + flow_row,
           "The ladder runs long — analysts move into strategy and leadership rather than "
           "topping out.",
           label=f"{da['label']} · Data Analytics")}
+
+  {spread_foot("05", "The market")}
 </section>
 """
 
@@ -331,6 +395,7 @@ def fees_page(shared: dict) -> str:
     never = join(f"<li>{e(p)}</li>" for p in shared["promisesNever"])
     return f"""
 <section class="page">
+  {ghost("06")}
   <p class="kicker">The fee structure</p>
   <h2 class="section-title">Two fees. Both in writing.
 One only after you're hired.</h2>
@@ -374,11 +439,13 @@ def employer_page(master: dict) -> str:
     before = join(f"<li>{e(x)}</li>" for x in employer["before"])
     after = join(f"<li>{e(x)}</li>" for x in employer["after"])
     return f"""
-<section class="page">
+<section class="page bleed spread">
+  {spread_mark()}
+  {ghost("07")}
   <p class="kicker">For employers</p>
-  <h2 class="section-title">{e(master['employerBanner']['headline'])}</h2>
+  <h2 class="section-title jumbo">{e(master['employerBanner']['headline'])}</h2>
 
-  {figure(charts.pipeline_flow(stages),
+  {figure(charts.pipeline_flow(stages, theme=charts.DARK),
           "Automation can advance, unlock or nudge — it can never reject terminally, and it never "
           "releases an offer. Both take an explicit human action.",
           label="The hiring pipeline, end to end")}
@@ -394,6 +461,8 @@ def employer_page(master: dict) -> str:
     </div>
   </div>
   <p class="disclaimer">{e(employer['disclaimer'])}</p>
+
+  {spread_foot("07", "For employers")}
 </section>
 """
 
@@ -416,8 +485,15 @@ def employer_models_page(master: dict) -> str:
         f'<li><strong>{e(r["title"])}</strong> — {e(r["body"])}</li>'
         for r in employer["roadmap"]
     )
+    cases = join(
+        f'<div class="card"><p class="kicker">{e(c["title"])}</p>'
+        f'<p class="body mt-2">{e(c["scenario"])}</p>'
+        f'<p class="case-out mt-2">{e(c["outcome"])}</p></div>'
+        for c in employer["useCases"]
+    )
     return f"""
 <section class="page">
+  {ghost("08")}
   <p class="kicker">For employers</p>
   <h2 class="section-title">Two ways to work with us.</h2>
 
@@ -432,6 +508,9 @@ def employer_models_page(master: dict) -> str:
     {options}
   </table>
   <p class="disclaimer">Nothing is charged without a written agreement first.</p>
+
+  <p class="label mt-8">What this looks like in practice</p>
+  <div class="grid three mt-4">{cases}</div>
 
   <div class="rule-block coach mt-6">
     <span class="rule-label">On the roadmap — not available yet</span>
@@ -457,6 +536,7 @@ def feedback_page(shared: dict) -> str:
     )
     return f"""
 <section class="page">
+  {ghost("09")}
   <p class="kicker">In their words</p>
   <h2 class="section-title">The people who did it,
 on the record.</h2>
@@ -476,8 +556,12 @@ def closing_page(master: dict, shared: dict) -> str:
     contact = shared["contact"]
     closing = master["closing"]
     return f"""
-<section class="page">
-  <h2 class="section-title">Start here.</h2>
+<section class="page bleed spread">
+  {spread_mark()}
+  {ghost("10")}
+  <p class="kicker">Start here</p>
+  <h2 class="section-title jumbo">Three free steps.
+Then you decide.</h2>
 
   <div class="closing mt-8">
     <h3>{e(closing['student']['title'])}</h3>
@@ -500,6 +584,9 @@ def closing_page(master: dict, shared: dict) -> str:
 
   <p class="promise-line mt-8">{e(shared['footerLine'])}</p>
   <p class="colophon">{e(shared['entityLine'])}</p>
+
+  {charts.breakout_motif()}
+  {spread_foot("10", "Start here")}
 </section>
 """
 
@@ -510,6 +597,12 @@ def closing_page(master: dict, shared: dict) -> str:
 
 
 def document(master: dict, shared: dict, panels: dict) -> str:
+    """Ten pages, alternating ink spreads and paper pages.
+
+    The mark is one position:fixed element, so it repeats on every page — the
+    ink tile reads on paper and dissolves into a spread, leaving the bars and
+    the breakout arrow floating.
+    """
     pages = join(
         [
             cover(master, shared),
@@ -531,8 +624,8 @@ def document(master: dict, shared: dict, panels: dict) -> str:
   <meta charset="utf-8">
   <title>BrowseJobs</title>
 </head>
-<body>
-  <div class="rail"><span>BrowseJobs · Learn it. Prove it. Get hired. · {e(EDITION)}</span></div>
+<body class="master">
+  <div class="mark" aria-hidden="true">{MARK_SVG}</div>
   {pages}
 </body>
 </html>

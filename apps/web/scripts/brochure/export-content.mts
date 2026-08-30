@@ -31,6 +31,7 @@ import {
   ROADMAP,
   TAT_AFTER,
   TAT_BEFORE,
+  USE_CASES,
 } from "../../src/content/employers.ts";
 import {
   careerServices,
@@ -110,6 +111,7 @@ const payload = {
       roadmap: ROADMAP,
       before: TAT_BEFORE,
       after: TAT_AFTER,
+      useCases: USE_CASES,
     },
   },
 };

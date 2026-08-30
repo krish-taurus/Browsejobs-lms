@@ -89,13 +89,22 @@
 }
 
 /* --------------------------------- page ----------------------------------- */
+/*
+ * Two page masters. The default is the paper page; `bleed` is a full-bleed ink
+ * spread with no margins, so a section can run colour to the trim edge. A
+ * document that alternates the two reads far less like a printed web page.
+ *
+ * The mark is a position:fixed element rather than a margin box: WeasyPrint
+ * renders neither `content: url()` nor a background-image inside a margin box,
+ * so that route silently produces nothing at all.
+ */
 
 @page {
   size: A4;
-  margin: 15mm 14mm 16mm 20mm;
+  margin: 22mm 14mm 16mm 20mm;
 
   @bottom-left {
-    content: "BrowseJobs · Whitefield, Bengaluru · London est. 2013 · hello@browsejobs.ai · +91 86185 19825 · browsejobs.ai";
+    content: "BrowseJobs · Whitefield, Bengaluru · London est. 2013 · hello@browsejobs.ai · +91 86185 19825";
     font-family: "Inter", sans-serif;
     font-size: 6pt;
     color: var(--bj-muted);
@@ -114,9 +123,29 @@
   }
 }
 
-/* The cover carries no running furniture. */
+/* Full-bleed ink spread: no margins and no running furniture — the section
+   paints its own edge-to-edge ground and carries its own page number. */
+@page bleed {
+  margin: 0;
+
+  @bottom-left {
+    content: "";
+  }
+  @bottom-right {
+    content: "";
+  }
+}
+
+.bleed {
+  page: bleed;
+}
+
+/* The course brochures' cover is a 297mm block sized to the whole sheet, so
+   the first page carries no margins either. Without this the cover overflows
+   its content box and spills a near-blank page 2. */
 @page :first {
   margin: 0;
+
   @bottom-left {
     content: "";
   }
@@ -139,7 +168,33 @@ body {
   -weasy-hyphens: none;
 }
 
-/* Vertical brand rail, repeated down the left edge of every inside page. */
+/*
+ * The mark, repeated top-left on every page. The ink tile is deliberate on
+ * paper and simply dissolves into an ink spread, leaving the bars and the
+ * breakout arrow floating — one mark reading correctly on both grounds.
+ */
+.mark {
+  position: fixed;
+  top: -15mm;
+  left: 0;
+  width: 10mm;
+  height: 10mm;
+}
+
+.mark svg {
+  display: block;
+  width: 10mm;
+  height: 10mm;
+}
+
+/* On a bleed spread the fixed mark keeps the paper page's coordinates, so it
+   is nudged into the spread's own padding. */
+.mark.on-bleed {
+  top: 0;
+  left: 0;
+}
+
+/* Vertical brand rail down the left edge of the course brochures. */
 .rail {
   position: fixed;
   left: -12mm;
@@ -1545,4 +1600,483 @@ h3.sm {
   line-height: 1.5;
   color: var(--bj-muted);
   margin-top: 4mm;
+}
+
+/* ============================== dark spreads =============================== */
+/*
+ * A full-bleed ink section. Everything inside it re-tokenises to the on-ink
+ * palette in one place, so a card or a table dropped into a spread does not
+ * need a dark variant of its own at every call site.
+ */
+
+.spread {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 20mm 18mm 16mm;
+  box-sizing: border-box;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 60% at 92% -8%, rgba(27, 109, 240, 0.5) 0%, rgba(27, 109, 240, 0) 60%),
+    radial-gradient(70% 50% at -8% 104%, rgba(11, 168, 96, 0.2) 0%, rgba(11, 168, 96, 0) 62%),
+    linear-gradient(168deg, #0e1a30 0%, #0a1220 48%, #070d18 100%);
+  color: #f4f7fb;
+}
+
+.spread > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* The section numeral, set oversized and nearly transparent behind the
+   content — a modern print device that costs no ink and no reading effort. */
+.spread .ghost,
+.page .ghost {
+  position: absolute;
+  top: 6mm;
+  right: 10mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 78pt;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  z-index: 0;
+}
+
+.spread .ghost {
+  color: rgba(255, 255, 255, 0.055);
+}
+
+.page .ghost {
+  color: rgba(27, 109, 240, 0.07);
+}
+
+.spread .kicker {
+  color: #6ea6ff;
+}
+
+.spread .kicker.free {
+  color: #2fcf8d;
+}
+
+.spread h2.section-title,
+.spread h3 {
+  color: #f4f7fb;
+}
+
+.spread .lede {
+  color: rgba(244, 247, 251, 0.66);
+}
+
+.spread .fig-label,
+.spread .label,
+.spread .disclaimer,
+.spread .fig-caption,
+.spread .kpi-label,
+.spread .ring-label,
+.spread .phase-detail,
+.spread .flow-cell,
+.spread .f-short,
+.spread .body {
+  color: #93a3ba;
+}
+
+.spread .kpi-value {
+  color: #6ea6ff;
+}
+
+.spread .f-name,
+.spread .phase-name,
+.spread .sk-label {
+  color: #f4f7fb;
+}
+
+.spread .card {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.spread td,
+.spread th {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.spread td.key {
+  color: #f4f7fb;
+}
+
+.spread td.amount {
+  color: #f4f7fb;
+}
+
+.spread .f-group-label {
+  color: #6ea6ff;
+  border-bottom-color: #6ea6ff;
+}
+
+.spread .promise-card.kept {
+  background: rgba(11, 168, 96, 0.12);
+  border-color: rgba(47, 207, 141, 0.3);
+}
+
+.spread .promise-card.never {
+  background: rgba(214, 69, 69, 0.12);
+  border-color: rgba(242, 161, 167, 0.28);
+}
+
+.spread .promise-card h3 {
+  color: #f4f7fb;
+}
+
+.spread ul.check li,
+.spread ul.cross li,
+.spread ul.tight {
+  color: rgba(244, 247, 251, 0.8);
+}
+
+.spread ul.check li::before {
+  color: #2fcf8d;
+}
+
+.spread ul.cross li::before {
+  color: #f2a1a7;
+}
+
+.spread .rule-block {
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(244, 247, 251, 0.8);
+  border-left-color: #6ea6ff;
+}
+
+.spread .rule-block .rule-label {
+  color: #6ea6ff;
+}
+
+.spread .spine-line {
+  border-left-color: #6ea6ff;
+  color: rgba(244, 247, 251, 0.72);
+}
+
+.spread .spine-line span {
+  color: #6ea6ff;
+}
+
+/* A bleed spread has no running footer, so it prints its own. */
+.spread .spread-foot {
+  position: absolute;
+  left: 18mm;
+  right: 18mm;
+  bottom: 10mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(244, 247, 251, 0.4);
+  z-index: 1;
+}
+
+.spread .spread-foot .no {
+  font-size: 8pt;
+  font-weight: 600;
+  color: #6ea6ff;
+}
+
+/* ============================= modern type scale =========================== */
+/*
+ * Scoped to the master brochure. Applied globally it reflowed the course
+ * brochures — their fixed-length sections spilled and left three near-blank
+ * pages — so the larger scale stays on the document that was designed for it.
+ */
+
+.master h2.section-title {
+  font-size: 26pt;
+  line-height: 1.04;
+}
+
+.master h2.section-title.jumbo {
+  font-size: 34pt;
+}
+
+.master .kpi-value {
+  font-size: 24pt;
+}
+
+/* Oversized lead figure for a spread's headline number. */
+.mega {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 44pt;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #6ea6ff;
+}
+
+/* ============================== cover spread =============================== */
+
+.cover-spread {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 22mm 20mm 18mm;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #f4f7fb;
+  background:
+    radial-gradient(70% 46% at 6% 106%, rgba(11, 168, 96, 0.26) 0%, rgba(11, 168, 96, 0) 62%),
+    radial-gradient(84% 62% at 94% -10%, rgba(27, 109, 240, 0.6) 0%, rgba(27, 109, 240, 0) 60%),
+    linear-gradient(166deg, #10203c 0%, #0a1220 50%, #05080f 100%);
+}
+
+.cover-mark {
+  display: flex;
+  align-items: center;
+  gap: 3.5mm;
+}
+
+.cover-mark svg {
+  width: 12mm;
+  height: 12mm;
+}
+
+.cover-mark span {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 16pt;
+  letter-spacing: -0.02em;
+}
+
+.cover-mark i {
+  font-style: normal;
+  color: #6ea6ff;
+}
+
+.cover-spread .platform-line {
+  margin-top: 3mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: 6.5pt;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(244, 247, 251, 0.5);
+}
+
+.cover-spread h1.stack {
+  margin-top: 42mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 52pt;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.cover-spread h1.stack span {
+  display: block;
+}
+
+.cover-spread h1.stack span:last-child {
+  color: #6ea6ff;
+}
+
+.cover-spread .audience {
+  margin-top: 7mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2fcf8d;
+}
+
+.cover-base {
+  position: absolute;
+  left: 20mm;
+  right: 20mm;
+  bottom: 18mm;
+}
+
+.cover-base .stat-band {
+  padding-top: 6mm;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.cover-base .stat-band .value {
+  color: #ffffff;
+  font-size: 20pt;
+}
+
+.cover-base .stat-band .label {
+  color: rgba(244, 247, 251, 0.5);
+}
+
+.cover-base .meta {
+  margin-top: 7mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 7pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244, 247, 251, 0.5);
+}
+
+.cover-base .promise {
+  margin-top: 2.5mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2fcf8d;
+}
+
+/* The engine panel inside a spread is a lifted glass block, not a second ink
+   box — an ink panel on an ink ground would be invisible. */
+.engine-panel {
+  border-radius: var(--radius-panel);
+  padding: 6mm 6.5mm;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.spread .engine-step .n {
+  background: rgba(110, 166, 255, 0.18);
+  color: #6ea6ff;
+}
+
+.spread .statement {
+  color: #6ea6ff;
+}
+
+.spread .statement span {
+  color: #f4f7fb;
+}
+
+.spread .verb {
+  border-top-color: #6ea6ff;
+}
+
+.spread .verb-title {
+  color: #f4f7fb;
+}
+
+.spread .verb-body {
+  color: #93a3ba;
+}
+
+.spread .closing {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.spread .closing.light {
+  background: rgba(110, 166, 255, 0.14);
+  border-color: rgba(110, 166, 255, 0.3);
+  color: #f4f7fb;
+}
+
+.spread .closing.light h3,
+.spread .closing h3 {
+  color: #f4f7fb;
+}
+
+.spread .closing.light p {
+  color: rgba(244, 247, 251, 0.72);
+}
+
+.spread .closing.light .cta {
+  color: #6ea6ff;
+}
+
+.spread .promise-line {
+  color: #2fcf8d;
+}
+
+.spread .colophon {
+  color: rgba(244, 247, 251, 0.4);
+}
+
+/* The oversized Breakout Bar motif on the cover. */
+.cover-spread .motif {
+  position: absolute;
+  right: 18mm;
+  bottom: 58mm;
+  width: 72mm;
+  opacity: 0.92;
+}
+
+.case-out {
+  margin-top: 2mm;
+  padding-top: 2mm;
+  border-top: 1px solid var(--bj-line);
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--bj-ink2);
+  font-weight: 500;
+}
+
+.spread .case-out {
+  border-top-color: rgba(255, 255, 255, 0.12);
+  color: rgba(244, 247, 251, 0.82);
+}
+
+/* Keep the ghost numeral clear of the headline: below it, hard right. */
+.page .ghost,
+.spread .ghost {
+  top: 26mm;
+  right: 4mm;
+  font-size: 64pt;
+}
+
+/* A bleed spread prints its own mark: the document's fixed copy is positioned
+   against the paper page's content box and falls off a margin-0 page. */
+.spread-mark {
+  position: absolute;
+  top: 9mm;
+  left: 18mm;
+  width: 10mm;
+  height: 10mm;
+  z-index: 2;
+}
+
+.spread-mark svg {
+  display: block;
+  width: 10mm;
+  height: 10mm;
+}
+
+/* The mark's ink tile is invisible on ink, so give it a hairline edge to sit
+   in — the bars and arrow still read, the tile just gains a boundary. */
+.spread-mark svg rect:first-child {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1.5;
+}
+
+/* The spread's own heading clears the mark. */
+.spread > .kicker:first-of-type {
+  margin-top: 6mm;
+}
+
+/* The closing spread bookends the cover with the same motif, quieter. */
+.spread .motif {
+  position: absolute;
+  right: 18mm;
+  bottom: 22mm;
+  width: 54mm;
+  opacity: 0.16;
+  z-index: 0;
+}
+
+/* Blocks that must not split across a page break. A rule-block whose list was
+   allowed to fragment left its first line on one page and three bullets alone
+   on the next. */
+.rule-block,
+.promise-card,
+.stat-band,
+.ladder,
+.guarantee,
+.engine-panel,
+.closing,
+.testimonial {
+  break-inside: avoid;
 }
