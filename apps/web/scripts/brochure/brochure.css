@@ -2080,3 +2080,207 @@ h3.sm {
 .testimonial {
   break-inside: avoid;
 }
+
+/* ========================== whitelabel partner pack ======================== */
+/*
+ * The partner documents reuse the brochure system wholesale; only the cover
+ * furniture and a few B2B blocks are new.
+ */
+
+.partner-cover .doc-no {
+  margin-top: 34mm;
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: #6ea6ff;
+}
+
+.partner-cover h1.doc-title {
+  margin-top: 4mm;
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 44pt;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  white-space: pre-line;
+}
+
+.partner-cover .doc-sub {
+  margin-top: 6mm;
+  max-width: 118mm;
+  font-size: 10.5pt;
+  line-height: 1.5;
+  color: rgba(244, 247, 251, 0.7);
+}
+
+.partner-cover .confidential {
+  margin-top: 3mm;
+  font-size: 6.5pt;
+  line-height: 1.5;
+  color: rgba(244, 247, 251, 0.42);
+  max-width: 120mm;
+}
+
+/* A price the business has not set yet is rendered as a visible marker, never
+   as a blank — a blank field reads as free. */
+.tier-price {
+  margin-top: 3mm;
+  font-size: 13pt;
+  font-weight: 600;
+  color: var(--bj-trust);
+  letter-spacing: 0.04em;
+}
+
+.tier-row {
+  font-size: 0;
+  margin: 0 -2mm;
+}
+
+.tier-row > .tier,
+.tier-row > .tier-card {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(33.333% - 4mm);
+  margin: 0 2mm 4mm;
+  box-sizing: border-box;
+  font-size: 10pt;
+  break-inside: avoid;
+}
+
+.tier-row > .tier {
+  border-top: 2px solid var(--bj-trust);
+  padding-top: 3mm;
+}
+
+.tier-card {
+  border: 1px solid var(--bj-line);
+  border-radius: var(--radius-card);
+  background: var(--bj-white);
+  padding: 5mm;
+}
+
+.tier-row.full .tier-card:last-child {
+  background: var(--bj-sky);
+  border-color: rgba(27, 109, 240, 0.3);
+}
+
+.tier-name {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 13pt;
+  letter-spacing: -0.02em;
+}
+
+.tier-for {
+  margin-top: 2mm;
+  font-size: 7.5pt;
+  line-height: 1.45;
+  color: var(--bj-muted);
+}
+
+.tier-limits {
+  margin-top: 3mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--bj-line);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6.5pt;
+  line-height: 1.5;
+  color: var(--bj-muted);
+}
+
+.tier-card ul.check li {
+  font-size: 7.5pt;
+  margin-bottom: 1.8mm;
+}
+
+/* Onboarding responsibilities, phase by phase. */
+.raci {
+  margin-top: 5mm;
+  padding-top: 3mm;
+  border-top: 1px solid var(--bj-line);
+  break-inside: avoid;
+}
+
+.raci-phase {
+  font-size: 7pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-trust);
+}
+
+.raci-cols {
+  font-size: 0;
+  margin-top: 2.5mm;
+}
+
+.raci-cols > div {
+  display: inline-block;
+  vertical-align: top;
+  width: 50%;
+  padding-right: 6mm;
+  box-sizing: border-box;
+  font-size: 10pt;
+}
+
+.raci-h {
+  font-size: 7.5pt;
+  font-weight: 600;
+  color: var(--bj-ink);
+  margin-bottom: 1.5mm;
+}
+
+/* Term-sheet clause: the position, then the decision the business owes. */
+.clause {
+  margin-top: 4.5mm;
+  padding-left: 4mm;
+  border-left: 2px solid var(--bj-line);
+  break-inside: avoid;
+}
+
+.clause-name {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 9.5pt;
+  letter-spacing: -0.01em;
+}
+
+.clause-pos {
+  margin-top: 1.5mm;
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--bj-ink2);
+}
+
+.clause-decide {
+  margin-top: 1.5mm;
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--bj-muted);
+}
+
+.clause-decide span {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bj-amber);
+  margin-right: 1.5mm;
+}
+
+/* Six-phase onboarding timeline label row. */
+.phase-row.six > .phase {
+  width: 16.666%;
+}
+
+table.fixed {
+  table-layout: fixed;
+}
+
+/* A module group's heading must not orphan at the foot of a page, away from
+   the table it introduces. */
+.group-head {
+  break-inside: avoid;
+  break-after: avoid;
+}

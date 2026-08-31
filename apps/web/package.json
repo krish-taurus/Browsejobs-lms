@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "brochures": "node scripts/brochure/export-content.mts > scripts/brochure/.content.json && python3 scripts/brochure/generate.py && python3 scripts/brochure/master.py"
+    "brochures": "node scripts/brochure/export-content.mts > scripts/brochure/.content.json && python3 scripts/brochure/generate.py && python3 scripts/brochure/master.py",
+    "partner-docs": "python3 scripts/whitelabel/build.py && python3 scripts/whitelabel/matrix.py"
   },
   "dependencies": {
     "@browsejobs/shared": "*",
