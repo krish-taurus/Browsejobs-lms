@@ -2128,7 +2128,105 @@ h3.sm {
   font-size: 13pt;
   font-weight: 600;
   color: var(--bj-trust);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.tier-price i {
+  font-style: normal;
+  font-size: 7.5pt;
+  font-weight: 500;
+  color: var(--bj-muted);
+  letter-spacing: 0;
+}
+
+/* Two list prices sit side by side because they are two independent price
+   lists, not one converted at spot. Rendering them as a conversion is how a
+   partner talks you into the cheaper of the two. */
+.tier-prices {
+  margin-top: 3mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--bj-line);
+  font-size: 0;
+}
+
+.price-pair {
+  display: inline-block;
+  width: 50%;
+  padding-right: 1.5mm;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+
+.price-pair + .price-pair {
+  padding-left: 3mm;
+  border-left: 1px solid var(--bj-line);
+}
+
+.price-cur {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+}
+
+.price-val {
+  display: block;
+  margin-top: 1mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--bj-trust);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* The period rides small and muted so a longer figure — ₹1,99,999 — cannot
+   push it onto a second line and break the column rule. */
+.price-val i {
+  font-style: normal;
+  font-size: 6.5pt;
+  font-weight: 500;
+  color: var(--bj-muted);
+  letter-spacing: 0;
+}
+
+.lede.sm {
+  font-size: 8pt;
+  line-height: 1.55;
+  max-width: none;
+}
+
+.tier-seats {
+  margin-top: 2mm;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6.5pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bj-ink-2);
+}
+
+.tier-allow {
+  margin-top: 3mm;
+  padding: 2.5mm 3mm;
+  background: var(--bj-sky);
+  border-radius: 2mm;
+  font-size: 7pt;
+  line-height: 1.5;
+  color: var(--bj-ink-2);
+}
+
+.tier-allow b {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bj-muted);
+  margin-bottom: 1mm;
 }
 
 .tier-row {
@@ -2283,4 +2381,40 @@ table.fixed {
 .group-head {
   break-inside: avoid;
   break-after: avoid;
+}
+
+
+/* The metered price list: two narrow currency columns that must not collide.
+   Fixed widths, because auto layout gives a two-word header the same room as
+   a two-character one. */
+.partner table.prices { table-layout: fixed; }
+.partner table.prices th:nth-child(1),
+.partner table.prices td:nth-child(1) { width: 30%; }
+.partner table.prices th:nth-child(2),
+.partner table.prices td:nth-child(2) { width: 42%; }
+.partner table.prices th:nth-child(3),
+.partner table.prices td:nth-child(3),
+.partner table.prices th:nth-child(4),
+.partner table.prices td:nth-child(4) {
+  width: 14%;
+  text-align: right;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* Figure key. SVG cannot wrap text, so anything longer than a word or two is
+   read out here instead of colliding with the marks. */
+.partner .fig-key {
+  margin-top: 2mm;
+  font-size: 7.5pt;
+  line-height: 1.6;
+  color: var(--bj-muted);
+}
+
+.partner .fig-key b {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 6.8pt;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bj-ink-2);
 }

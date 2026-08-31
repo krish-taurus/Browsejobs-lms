@@ -144,8 +144,10 @@ def doc_overview() -> None:
     )
     tiers = join(
         f'<div class="tier"><p class="tier-name">{e(t["name"])}</p>'
+        f'<p class="tier-seats">{e(t["seats"])}</p>'
         f'<p class="tier-for">{e(t["for"])}</p>'
-        f'<p class="tier-price mono">{e(t["price"])}</p></div>'
+        f'<p class="tier-price mono">{e(t["price_inr"])}</p>'
+        f'<p class="tier-limits">{e(t["price_usd"])} international</p></div>'
         for t in C.TIERS
     )
     set_rows = [(n, t, s, w) for n, t, s, w in C.DOCUMENT_SET]
@@ -190,8 +192,9 @@ def doc_overview() -> None:
 Three ways to pay.</h2>
 
   <div class="tier-row mt-8">{tiers}</div>
-  <p class="disclaimer">Pricing is confirmed in writing on the order form before anything is
-  charged. A marked field is one your account manager sets for your volume.</p>
+  <p class="disclaimer">{e(C.CURRENCY_NOTE)} AI Assist and voice minutes are metered above the
+  included allowance — document 03 carries the full price list. Pricing is confirmed in writing on
+  the order form before anything is charged.</p>
 
   <p class="label mt-8">Commercial models</p>
   <div class="grid three mt-4">{models}</div>
@@ -311,19 +314,57 @@ and who is billed.</h2>
 
 
 def doc_pricing() -> None:
+    """The price list, and the cost reasoning that produced it.
+
+    Two independent price lists sit side by side rather than one converted at
+    spot: the cost base is dollar-denominated and identical in both markets,
+    but the anchor price is not, and rendering INR as a conversion of USD is
+    how a partner argues you down to the cheaper of the two.
+    """
+    replaces = table(
+        [(n, f"{ours} / mo", stack, why) for n, ours, stack, why in C.REPLACES],
+        ["Tier", "Our licence", "Stack today", "That stack, itemised"],
+    )
     tier_cards = join(
         f'<div class="tier-card"><p class="tier-name">{e(t["name"])}</p>'
+        f'<p class="tier-seats">{e(t["seats"])}</p>'
         f'<p class="tier-for">{e(t["for"])}</p>'
-        f'<p class="tier-price mono">{e(t["price"])}</p>'
+        f'<div class="tier-prices">'
+        f'<div class="price-pair"><span class="price-cur">India</span>'
+        f'<span class="price-val">{e(t["price_inr"])}<i>/mo</i></span></div>'
+        f'<div class="price-pair"><span class="price-cur">Intl</span>'
+        f'<span class="price-val">{e(t["price_usd"])}<i>/mo</i></span></div></div>'
+        f'<div class="tier-allow"><b>AI included every month</b>{e(t["allowance"])}</div>'
         f'<ul class="check mt-4">{join(f"<li>{e(x)}</li>" for x in t["includes"])}</ul>'
         f'<p class="tier-limits">{e(t["limits"])}</p></div>'
         for t in C.TIERS
     )
+    metered = table(
+        [(f"{n} — {basis}", why, inr, usd) for n, basis, why, inr, usd in C.METERED],
+        ["Meter", "What it covers", "India", "Intl"],
+    ).replace('<table class="mt-2"', '<table class="mt-2 prices"')
+    blocks = table(list(C.VOICE_BLOCKS),
+                   ["Block", "Minutes", "Price (India)", "Effective rate"])
+    one_time = table([(n, why, inr, usd) for n, why, inr, usd in C.ONE_TIME],
+                     ["One-time fee", "What it covers", "India", "Intl"]
+                     ).replace('<table class="mt-2"', '<table class="mt-2 prices"')
+    policy = table(list(C.DISCOUNT_POLICY), ["Concession", "What may be given"])
+    concession = table(
+        list(C.VOICE_CONCESSION),
+        ["Included minutes / mo", "What that is", "Gross margin", "Verdict"],
+    )
+    cost_figure = charts.cost_scale([
+        {"name": "Platform", "value": 0.2095, "label": "$0.21"},
+        {"name": "AI Assist", "value": 0.52, "label": "$0.52"},
+        {"name": "One voice mock", "value": 1.95, "label": "$1.95"},
+        {"name": "Four voice mocks", "value": 7.80, "label": "$7.80"},
+    ])
+
     pages = (
         cover(
             "03",
             "Pricing &\nPackages",
-            "What each tier includes, what is metered, and the three ways to buy.",
+            "Three tiers, two price lists, and one meter that actually moves.",
             "Commercial",
         )
         + page(
@@ -331,39 +372,113 @@ def doc_pricing() -> None:
   <p class="kicker">Packages</p>
   <h2 class="section-title">Three tiers.</h2>
   <p class="lede">Tiers are enforced by per-tenant feature flags, so moving between them is a
-  configuration change rather than a migration.</p>
+  configuration change rather than a migration. Every tier is whitelabel — your name, your logo,
+  your palette — from the first one.</p>
 
   <div class="tier-row full mt-8">{tier_cards}</div>
-  <p class="disclaimer">A marked price field is set for your volume on the order form. Nothing is
+  <p class="disclaimer">{e(C.CURRENCY_NOTE)} Final terms are set on the order form; nothing is
   charged without a written agreement first.</p>
 
-  <p class="label mt-10">Three ways to buy</p>
-  {table([(t, b) for t, b in C.COMMERCIAL_MODELS], ["Model", "How it works"])}
+  <p class="label mt-8">What the licence replaces</p>
+  {replaces}
+  <p class="disclaimer">No vendor sells LMS, institute CRM, placement and AI mocks as one product,
+  so the comparison is against the stack a partner already pays for — not counting the staff time
+  that stitches it together. Published or third-party-reported list prices, August 2026:
+  indicative, not quotes. Sources are listed in the cost model.</p>
 """,
             "01",
         )
         + page(
             f"""
-  <p class="kicker">How it is priced</p>
-  <h2 class="section-title">Five axes.
-One meter that matters.</h2>
-  {table(list(C.PRICING_AXES), ["Axis", "Why"])}
+  <p class="kicker">The meters</p>
+  <h2 class="section-title">One month of platform costs cents.
+One voice mock costs dollars.</h2>
+  <p class="lede">That single fact decides the whole commercial shape. Everything a student
+  consumes in a month — video, storage, compute, messaging — is a fraction of what one
+  fifteen-minute voice interview costs to run. So the platform is licensed, and voice is
+  metered.</p>
+
+  {metered}
+
+  <p class="label mt-8">What one student costs us to serve, per month</p>
+  {cost_figure}
+  <p class="fig-key"><b>Platform</b> video delivery, recording storage, compute and WhatsApp for one
+  active student · <b>AI Assist</b> a month of tutor questions, auto-grading and written mock
+  analysis · <b>voice mock</b> one fifteen-minute call, platform and telephony · <b>four</b> the
+  weekly-mock programme for one student for one month.</p>
+  <p class="disclaimer">Modelled cost of service, not price. Built bottom-up from published vendor
+  rates — CDN, object storage, model tokens, voice platform, telephony — in the cost model
+  workbook. The axis is linear on purpose: the gap is the point.</p>
+
+  <div class="rule-block mt-8">
+    <span class="rule-label">What follows from it</span>
+    Seats can be sold generously and minutes cannot. Doubling a partner's enrolled seats costs us
+    cents per student; doubling their included voice minutes costs dollars per student. That is why
+    the licence bands are wide, the voice allowance is narrow and stated in the order form, and the
+    partner who wants unlimited voice is offered their own keys rather than a bigger bundle.
+  </div>
+
+""",
+            "02",
+        )
+        + page(
+            f"""
+  <p class="kicker">Buying AI</p>
+  <h2 class="section-title">Prepaid voice blocks.</h2>
+  <p class="lede">Voice is the only line where our margin is genuinely thin — roughly half of what
+  you pay is a third party's invoice. Blocks make the volume discount visible and bounded rather
+  than negotiated deal by deal.</p>
+  {blocks}
+  <p class="disclaimer">India list. Blocks do not expire while the subscription is live. Usage
+  beyond a block, or without one, is billed monthly in arrears at the standard rate.</p>
+
+  <p class="label mt-10">One-time fees</p>
+  {one_time}
 
   <div class="rule-block mt-8">
     <span class="rule-label">Why AI is metered and not bundled</span>
     Voice mock interviews, the AI tutor and AI screening calls carry a genuine per-call cost. The
     platform already records purpose, model, tokens, cost and latency for every AI call, per
-    tenant. Charging a flat unlimited fee would mean the heaviest user is the worst margin, so
-    each tier carries an allowance and overage is billed against that record.
+    tenant. A flat unlimited fee would make the heaviest user the worst margin — the partner
+    getting the most value would be the one we most want to lose — so each tier carries a stated
+    allowance and everything beyond it is billed against that record.
   </div>
+
+  <p class="label mt-8">Three ways to buy</p>
+  {table([(t, b) for t, b in C.COMMERCIAL_MODELS], ["Model", "How it works"])}
+""",
+            "03",
+        )
+        + page(
+            f"""
+  <p class="kicker">Negotiating</p>
+  <h2 class="section-title">What may be discounted.</h2>
+  <p class="lede">A concession on a licence is recoverable. A concession on included voice minutes
+  is not — it changes the cost of serving that partner every month for the life of the contract.</p>
+  {policy}
+
+  <p class="label mt-10">What a voice concession costs — Growth tier at ₹74,999</p>
+  {concession}
+  <p class="disclaimer">Gross margin on cost of service, from the Sensitivity sheet of the cost
+  model. Excludes R&amp;D, sales and G&amp;A, so the contribution margin is materially lower than
+  each figure shown.</p>
+""",
+            "04",
+        )
+        + page(
+            f"""
+  <p class="kicker">How it is priced</p>
+  <h2 class="section-title">Five axes.</h2>
+  {table(list(C.PRICING_AXES), ["Axis", "Why"])}
 
   <p class="label mt-8">Billing notes</p>
   <ul class="check mt-4">{join(f"<li>{e(n)}</li>" for n in C.BILLING_NOTES)}</ul>
 """,
-            "02",
+            "05",
         )
     )
-    render("03_BrowseJobs_Whitelabel_Pricing_and_Packages.pdf", "Pricing & Packages", pages)
+    render("03_BrowseJobs_Whitelabel_Pricing_and_Packages.pdf",
+           "Pricing & Packages", pages)
 
 
 # ----------------------------------------------------------------------------

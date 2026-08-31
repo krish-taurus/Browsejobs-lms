@@ -7,10 +7,12 @@ place and every document follows. Three rules govern what may be added:
 1. **Shipped means shipped.** Anything in ``MODULES`` exists in the codebase
    today. Anything not yet built goes in ``ROADMAP`` and is rendered in a
    visually distinct band, exactly as the public /employers page does it.
-2. **No invented commercials.** Every price is the ``PRICE_TBD`` sentinel.
-   The generator renders it as a filled marker so an unpriced tier cannot be
-   mistaken for a free one, and a document cannot be sent carrying a number
-   nobody agreed.
+2. **No unmodelled commercials.** Every price here is a list price traced to
+   ``pricing_model.py`` — the workbook that builds cost bottom-up from
+   published vendor rates and solves margin from it. If a number changes here
+   it must change there first, or the margin it implies is fiction. Anything
+   genuinely open still uses the ``PRICE_TBD`` sentinel, which renders as a
+   filled marker so an unpriced line cannot be mistaken for a free one.
 3. **Brand voice applies.** The rules in CLAUDE.md — no hype adjectives, no
    guarantees, every stat carrying its disclaimer — hold for B2B collateral
    exactly as they do for student-facing pages.
@@ -21,6 +23,11 @@ from __future__ import annotations
 # Rendered as a marker, never as a number: a placeholder that looks like a
 # price is how an unagreed figure reaches a customer.
 PRICE_TBD = "[ SET ]"
+
+# List prices, ex-GST, monthly on an annual commitment. These are the figures
+# solved in 08_..._Cost_and_Pricing_Model.xlsx; the gross margin each one earns
+# is stated there and should be re-checked before any of them is edited.
+CURRENCY_NOTE = "All prices ex-GST. Monthly rate on an annual commitment; add 20% for month-to-month."
 
 COMPANY = {
     "entity": "IBrowseJobs Technologies Pvt Ltd",
@@ -273,7 +280,10 @@ TIERS = [
             "Email support, next business day",
         ],
         "limits": "Capped active students · single admin workspace · shared infrastructure",
-        "price": PRICE_TBD,
+        "seats": "Up to 100 enrolled",
+        "price_inr": "₹24,999",
+        "price_usd": "$499",
+        "allowance": "AI Assist for 25 students · 150 voice minutes (≈10 mock interviews)",
     },
     {
         "name": "Growth",
@@ -287,7 +297,10 @@ TIERS = [
             "Priority support with a defined response SLA",
         ],
         "limits": "Higher student cap · AI usage beyond the allowance billed as overage",
-        "price": PRICE_TBD,
+        "seats": "Up to 500 enrolled",
+        "price_inr": "₹74,999",
+        "price_usd": "$1,499",
+        "allowance": "AI Assist for 100 students · 400 voice minutes (≈27 mock interviews)",
     },
     {
         "name": "Enterprise",
@@ -301,8 +314,84 @@ TIERS = [
             "Security review support and a signed DPA",
         ],
         "limits": "Scoped per engagement",
-        "price": PRICE_TBD,
+        "seats": "Up to 1,500 enrolled, then per seat",
+        "price_inr": "₹1,99,999",
+        "price_usd": "$3,499",
+        "allowance": "AI Assist for 250 students · 800 voice minutes (≈53 mock interviews)",
     },
+]
+
+# The metered layer. Voice is roughly ten times the cost of everything else a
+# student consumes in a month, which is the entire reason it is billed by the
+# minute instead of bundled. Margins are stated in the cost model workbook.
+METERED = [
+    ("AI Assist", "Per AI-active student, per month",
+     "Tutor, auto-grading and written mock-interview analysis.",
+     "₹199", "$3.00"),
+    ("AI Voice mock", "Per minute, on our voice keys",
+     "A 15-minute mock interview costs about ₹375.",
+     "₹25", "$0.40"),
+    ("AI Voice mock", "Per minute, on your own Vapi/Twilio keys",
+     "Orchestration only — you hold the vendor contract and the bill.",
+     "₹6", "$0.10"),
+    ("Extra enrolled seat", "Per seat, per month, beyond the tier band",
+     "Charged on enrolment, not on activity.",
+     "₹35", "$0.60"),
+]
+
+# Prepaid voice blocks. The ladder exists so the volume discount is bounded and
+# visible rather than negotiated line by line.
+VOICE_BLOCKS = [
+    ("Trial", "500 minutes", "₹12,499", "₹25.00 / min"),
+    ("Standard", "1,000 minutes", "₹24,999", "₹25.00 / min"),
+    ("Volume", "5,000 minutes", "₹1,14,999", "₹23.00 / min"),
+    ("Institutional", "20,000 minutes", "₹4,19,999", "₹21.00 / min"),
+]
+
+ONE_TIME = [
+    ("Onboarding & implementation",
+     "Branding, data model, first cohort live. Six phases, described in document 06.",
+     "₹1,25,000", "$2,500"),
+    ("Data migration, per source system",
+     "Extract, map, dry run, cutover. One fee per system you are migrating from.",
+     "₹40,000", "$999"),
+    ("Custom domain + branded app store listing",
+     "Your domain on the platform, and your own listing under your developer account.",
+     "₹49,999", "$999"),
+]
+
+# What a salesperson may concede without asking. The floor is a margin, not a
+# price, because a discount that looks small on a licence can be fatal on a
+# voice allowance.
+DISCOUNT_POLICY = [
+    ("Annual prepay", "Two months free — a 16.7% effective discount. The standard concession."),
+    ("Two-year commitment", "20% off the licence, invoiced annually in advance."),
+    ("Reference partner", "Onboarding fee discounted to cost, in exchange for a named case study "
+     "and a reference call. Discount the onboarding fee, never the licence: the licence is what renews."),
+    ("Voice allowance", "Not a concession. Included minutes are stated in the order form and are "
+     "the single most expensive thing that can be given away — at 2,500 included minutes the Growth "
+     "tier margin halves, and at 5,000 it is negative."),
+    ("Floor", "No licence below 55% gross margin without founder sign-off."),
+]
+
+REPLACES = [
+    ("Starter", "₹24,999", "≈ ₹22,500",
+     "Classplus ₹15,000 + CRM ₹2,500 × 3 seats"),
+    ("Growth", "₹74,999", "≈ ₹51,000",
+     "Classplus ₹15,000 + CRM ₹4,500 × 8 seats"),
+    ("Enterprise", "₹1,99,999", "≈ ₹2,15,000",
+     "Teachmint ₹1,25,000 + CRM ₹4,500 × 20 seats"),
+]
+
+# What a voice concession actually costs, straight out of the Sensitivity sheet
+# of the cost model. Growth tier, India list price. This exists so nobody has to
+# take "minutes are expensive" on trust in a negotiation.
+VOICE_CONCESSION = [
+    ("0", "None — voice sold separately", "75.5%", "Healthy"),
+    ("400", "The Growth allowance", "68.8%", "Target"),
+    ("1,000", "A generous concession", "58.9%", "Above the floor"),
+    ("2,500", "Half the margin gone", "34.0%", "Founder sign-off"),
+    ("5,000", "Loss-making", "−7.4%", "Never"),
 ]
 
 PRICING_AXES = [
@@ -313,9 +402,11 @@ PRICING_AXES = [
     ),
     (
         "AI usage",
-        "Voice mocks, the AI tutor and AI screening calls carry a real per-call cost, already "
-        "metered per tenant in ai_events. Each tier includes an allowance; beyond it, usage is "
-        "billed at cost plus a stated margin.",
+        "The second meter, and the one that moves. A month of platform for one student costs us "
+        "cents; a single 15-minute voice mock costs dollars. Each tier includes an allowance so the "
+        "AI demonstrates itself; beyond it, usage is billed against the metered record. A partner "
+        "who would rather hold the vendor relationship can bring their own voice keys and pay "
+        "orchestration only.",
     ),
     (
         "Modules enabled",
@@ -351,11 +442,17 @@ COMMERCIAL_MODELS = [
 ]
 
 BILLING_NOTES = [
-    "Fees are quoted exclusive of GST.",
-    "AI usage above the tier allowance is billed monthly in arrears against the metered record.",
+    "Fees are quoted exclusive of GST. Indian invoices carry GST at 18%.",
+    "Listed rates are the monthly price on an annual commitment. Month-to-month is 20% higher.",
+    "AI usage above the tier allowance is billed monthly in arrears against the metered record in "
+    "ai_events — purpose, model, tokens, cost and latency, per call, per tenant.",
+    "Voice minutes may be prepaid in blocks, or billed in arrears at the standard rate. Prepaid "
+    "blocks do not expire while the subscription is live.",
     "Third-party costs on your own accounts — Zoom, payment gateway, WhatsApp — are never marked up by us.",
     "Annual commitments are invoiced in advance; monthly plans in advance, per month.",
     "The onboarding fee is one-time and is due before implementation begins.",
+    "International pricing is billed in USD. The INR and USD price lists are independent, not an FX "
+    "conversion of one another.",
 ]
 
 # ----------------------------------------------------------------------------

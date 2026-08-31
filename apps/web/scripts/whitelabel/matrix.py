@@ -159,32 +159,60 @@ def sheet_matrix(wb: Workbook) -> None:
 def sheet_pricing(wb: Workbook) -> None:
     ws = wb.create_sheet("Pricing")
     ws.sheet_view.showGridLines = False
-    ws["A1"] = "Pricing — to be completed before issue"
+    ws["A1"] = "Pricing — list prices"
     style(ws["A1"], bold=True, size=14, colour=INK)
-    ws["A2"] = ("Yellow cells are the ones to fill in. Nothing in this workbook should reach a "
-                "customer with a price still unset.")
+    ws["A2"] = ("List prices, ex-GST, monthly on an annual commitment. Every figure here is solved "
+                "in 08_..._Cost_and_Pricing_Model.xlsx — change it there first, or the margin it "
+                "implies is fiction. Yellow cells are quote-specific and set per deal.")
     style(ws["A2"], size=9, colour=MUTED)
 
-    headers = ["Tier", "For", "Platform fee (monthly, ex-GST)", "Included students",
-               "Included AI allowance", "Overage rate", "Onboarding fee"]
+    headers = ["Tier", "For", "Licence — India (₹/mo)", "Licence — Intl ($/mo)",
+               "Included seats", "Included AI allowance", "Onboarding fee (India)",
+               "Negotiated rate"]
     for i, h in enumerate(headers, start=1):
         style(ws.cell(row=4, column=i, value=h), bold=True, size=10, colour="FFFFFF",
               fill=TRUST, wrap=True)
 
     yellow = PatternFill("solid", fgColor="FFFF00")
+    onboarding = "₹1,25,000"
     for r, tier in enumerate(C.TIERS, start=5):
         style(ws.cell(row=r, column=1, value=tier["name"]), bold=True, size=11, colour=INK)
         style(ws.cell(row=r, column=2, value=tier["for"]), size=9, colour=MUTED, wrap=True)
-        for col in range(3, 8):
-            c = ws.cell(row=r, column=col, value=C.PRICE_TBD)
-            style(c, size=10, colour="0000FF", align="center")
-            c.fill = yellow
+        for col, value in (
+            (3, tier["price_inr"]),
+            (4, tier["price_usd"]),
+            (5, tier["seats"]),
+            (6, tier["allowance"]),
+            (7, onboarding),
+        ):
+            style(ws.cell(row=r, column=col, value=value), size=10, colour=INK, wrap=True)
+        # The only cell still unset: what this particular partner actually pays.
+        c = ws.cell(row=r, column=8, value=C.PRICE_TBD)
+        style(c, size=10, colour="0000FF", align="center")
+        c.fill = yellow
 
-    ws.cell(row=9, column=1, value="Billing notes").font = Font(name=FONT, bold=True, size=10)
+    row = 5 + len(C.TIERS) + 1
+    ws.cell(row=row, column=1, value="Metered, on top of the licence").font = Font(
+        name=FONT, bold=True, size=10)
+    row += 1
+    for i, h in enumerate(["Meter", "Basis", "What it covers", "India", "Intl"], start=1):
+        style(ws.cell(row=row, column=i, value=h), bold=True, size=9, colour="FFFFFF",
+              fill=TRUST, wrap=True)
+    for k, (name, basis, why, inr, usd) in enumerate(C.METERED, start=1):
+        rw = row + k
+        style(ws.cell(row=rw, column=1, value=name), bold=True, size=9.5, colour=INK)
+        style(ws.cell(row=rw, column=2, value=basis), size=9, colour=MUTED, wrap=True)
+        style(ws.cell(row=rw, column=3, value=why), size=9, colour="1B2A44", wrap=True)
+        style(ws.cell(row=rw, column=4, value=inr), size=9.5, colour=INK, align="right")
+        style(ws.cell(row=rw, column=5, value=usd), size=9.5, colour=INK, align="right")
+
+    row = row + len(C.METERED) + 2
+    ws.cell(row=row, column=1, value="Billing notes").font = Font(name=FONT, bold=True, size=10)
     for k, n in enumerate(C.BILLING_NOTES):
-        ws.cell(row=10 + k, column=1, value=f"• {n}").font = Font(name=FONT, size=9, color=MUTED)
+        ws.cell(row=row + 1 + k, column=1, value=f"• {n}").font = Font(
+            name=FONT, size=9, color=MUTED)
 
-    for col, width in zip("ABCDEFG", (16, 44, 26, 18, 22, 18, 18)):
+    for col, width in zip("ABCDEFGH", (16, 40, 22, 20, 20, 34, 20, 18)):
         ws.column_dimensions[col].width = width
 
 

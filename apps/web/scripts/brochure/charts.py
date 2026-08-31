@@ -326,6 +326,51 @@ def grouped_bars(
     return _svg(width, height, "".join(body))
 
 
+def cost_scale(rows: list[dict], *, width: float = 640, theme: Theme = LIGHT) -> str:
+    """One linear axis across costs that differ by more than thirty times.
+
+    A log axis would flatter the small values and destroy the only point this
+    figure makes. The disparity IS the finding, so the axis stays linear and
+    the smallest bar is allowed to read as nearly nothing — with its value
+    direct-labelled outside the bar, so "nearly nothing" is still legible as a
+    number. Ramp runs light to dark as cost rises, which is ordinal and matches
+    the reading order.
+    """
+    pad_top = 8
+    row_h = 34
+    bar_h = 20
+    # SVG text neither wraps nor clips, so the name column is sized for short
+    # labels only. Anything longer belongs in HTML beneath the figure.
+    label_w = 132
+    height = pad_top + row_h * len(rows) + 20
+    plot_x = label_w
+    plot_w = width - plot_x - 74
+    top = max(r["value"] for r in rows)
+
+    body = []
+    for tick in (0.0, 0.25, 0.5, 0.75, 1.0):
+        gx = plot_x + tick * plot_w
+        body.append(
+            f'<line x1="{gx:.1f}" y1="{pad_top:.0f}" x2="{gx:.1f}" '
+            f'y2="{pad_top + row_h * len(rows):.0f}" stroke="{theme.line}" stroke-width="1"/>'
+        )
+
+    for i, row in enumerate(rows):
+        y = pad_top + i * row_h + (row_h - bar_h) / 2
+        w = (row["value"] / top) * plot_w
+        step = min(i, len(theme.ramp) - 1)
+        body.append(_t(0, y + bar_h - 6, row["name"], size=9.5, fill=theme.ink, weight="600"))
+        body.append(
+            f'<rect x="{plot_x}" y="{y:.1f}" width="{max(w, 2.5):.1f}" '
+            f'height="{bar_h}" rx="4" fill="{theme.ramp[step]}"/>'
+        )
+        body.append(
+            _t(plot_x + max(w, 2.5) + 8, y + bar_h - 6, row["label"],
+               size=9.5, fill=theme.ink2, weight="600", family=MONO)
+        )
+    return _svg(width, height, "".join(body))
+
+
 # ----------------------------------------------------------------------------
 # diagrams — process, not magnitude
 # ----------------------------------------------------------------------------
