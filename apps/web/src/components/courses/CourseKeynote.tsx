@@ -21,6 +21,7 @@ import {
   useMotionValue,
   useSpring,
 } from "framer-motion";
+import { Disclaimer } from "@/components/brand/Disclaimer";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Footer } from "@/components/landing/Footer";
 import { LeadModal } from "@/components/landing/LeadModal";
@@ -99,6 +100,10 @@ function Magnetic({ children }: { children: React.ReactNode }) {
   );
 }
 
+function formatCounter(value: number, suffix: string) {
+  return Math.round(value).toLocaleString("en-IN") + suffix;
+}
+
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
@@ -106,11 +111,11 @@ function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
     if (!inView || !ref.current) return;
     const c = animate(0, to, {
       duration: 1.6, ease: EASE,
-      onUpdate: (v) => { ref.current!.textContent = Math.round(v).toLocaleString("en-IN") + suffix; },
+      onUpdate: (v) => { ref.current!.textContent = formatCounter(v, suffix); },
     });
     return () => c.stop();
   }, [inView, to, suffix]);
-  return <span ref={ref}>0{suffix}</span>;
+  return <span ref={ref}>{formatCounter(to, suffix)}</span>;
 }
 
 /* ------------------------------ journey explorer ---------------------------- */
@@ -731,19 +736,24 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
           </motion.div>
 
           <h1 className="font-display text-5xl font-bold leading-[1.02] tracking-[-0.03em] md:text-7xl">
-            {course.name.split(" ").map((w, i) => (
+            {(course.headline ?? course.name).split(" ").map((w, i, words) => (
               <span key={w + i} className="inline-block overflow-hidden pb-1 align-bottom">
                 <motion.span
                   initial={{ y: "105%" }} animate={{ y: "0%" }}
                   transition={{ delay: 0.2 + i * 0.09, duration: 0.9, ease: EASE }}
                   className="inline-block pr-3"
                 >
-                  {i === course.name.split(" ").length - 1 ? (
+                  {i === words.length - 1 ? (
                     <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(90deg, ${accent}, #7c3aed)` }}>{w}</span>
                   ) : w}
                 </motion.span>
               </span>
             ))}
+            {course.headlinePayoff && (
+              <span className="mt-3 block text-[0.38em] font-semibold tracking-[-0.02em] text-ink">
+                {course.headlinePayoff}
+              </span>
+            )}
           </h1>
 
           <motion.p
@@ -999,6 +1009,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
           <p className="mt-5 text-xs text-white/30">
             <Counter to={20000} suffix="+" /> students trained · 98% interview success rate · top package ₹42 LPA
           </p>
+          <Disclaimer className="mx-auto mt-3 max-w-lg !text-white/45" />
         </div>
       </section>
 

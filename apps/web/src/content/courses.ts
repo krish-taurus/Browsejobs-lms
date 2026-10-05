@@ -23,6 +23,12 @@ export type CourseDetail = {
   name: string;
   tagline: string;
   live: boolean;
+  /** Document title when it should differ from `${name} Course`. */
+  seoTitle?: string;
+  /** Visible H1. Falls back to `name`. */
+  headline?: string;
+  /** Second line of the H1. */
+  headlinePayoff?: string;
   hero: string;
   duration: string;
   format: string;
@@ -48,6 +54,9 @@ export const courseDetails: CourseDetail[] = [
     name: "Data Engineering",
     tagline: "Pipelines, warehouses, and the modern data stack.",
     live: true,
+    seoTitle: "Data Engineering Course with Placement — Pay After You're Hired",
+    headline: "Data Engineering Course with Placement",
+    headlinePayoff: "Pay after you're hired.",
     hero: "Build the pipelines companies are hiring for right now. A six-month, project-first program whose syllabus is rebuilt every month from the questions asked in real Data Engineering interviews.",
     duration: "6 months",
     format: "Live online + recordings",

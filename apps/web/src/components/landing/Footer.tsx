@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
-import { FOOTER_LINE, contact } from "@/content/landing";
+import { FOOTER_LINE, contact, courses } from "@/content/landing";
 
 export function Footer() {
   return (
@@ -30,6 +30,15 @@ export function Footer() {
                   Programs
                 </Link>
               </li>
+              {courses
+                .filter((course) => course.live)
+                .map((course) => (
+                  <li key={course.slug}>
+                    <Link href={`/courses/${course.slug}`} className="text-sky/80 hover:text-white">
+                      {course.name}
+                    </Link>
+                  </li>
+                ))}
               <li>
                 <Link href="/reviews" className="text-sky/80 hover:text-white">
                   Reviews

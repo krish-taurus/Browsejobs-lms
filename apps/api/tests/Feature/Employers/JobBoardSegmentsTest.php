@@ -62,6 +62,26 @@ it('marks internal postings the candidate has already applied to', function (): 
         ->assertJsonPath('data.internal.0.has_applied', true);
 });
 
+it('publishes the real description and withholds salary unless the employer opted in', function (): void {
+    $response = $this->getJson('http://acme-board.test/api/v1/job-board')->assertOk();
+
+    expect($response->json('data.internal.0.description'))->toBe($this->job->description)
+        ->and($response->json('data.internal.0'))->not->toHaveKey('ctc_min_paise')
+        ->and($response->json('data.external.0.description'))->not->toBe('')
+        ->and($response->json('data.external.0.expires_at'))->not->toBeNull();
+
+    $this->job->update([
+        'ctc_visible' => true,
+        'ctc_min_paise' => 80000000,
+        'ctc_max_paise' => 120000000,
+    ]);
+
+    $this->getJson('http://acme-board.test/api/v1/job-board')
+        ->assertOk()
+        ->assertJsonPath('data.internal.0.ctc_min_paise', 80000000)
+        ->assertJsonPath('data.internal.0.ctc_max_paise', 120000000);
+});
+
 it('serves the board to signed-out visitors without leaking application state', function (): void {
     $response = $this->getJson('http://acme-board.test/api/v1/job-board')->assertOk();
 

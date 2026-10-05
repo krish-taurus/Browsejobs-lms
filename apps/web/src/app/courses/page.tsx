@@ -5,11 +5,13 @@ import { Kicker } from "@/components/brand/Kicker";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Programs",
   description:
     "Career programs rebuilt monthly from real interviews — Data Engineering, DevOps & Cloud, Python Backend, Data Analytics, and more.",
+  alternates: { canonical: canonical("/courses") },
 };
 
 export default function CoursesPage() {

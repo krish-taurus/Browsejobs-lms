@@ -5,11 +5,13 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Kicker } from "@/components/brand/Kicker";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { salaryPages } from "@/content/salaries";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Tech Salaries in India — Role & City Benchmarks",
   description:
     "What Data Engineers, Analysts and DevOps Engineers actually earn across Bengaluru, Hyderabad, Pune, Mumbai and NCR — percentile benchmarks from BrowseJobs placement data.",
+  alternates: { canonical: canonical("/salaries") },
 };
 
 /** /salaries index — every deep-dive page, grouped by role. */

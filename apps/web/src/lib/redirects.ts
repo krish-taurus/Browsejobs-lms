@@ -51,6 +51,11 @@ export const legacyRedirects: Redirect[] = [
  * real routes so none of them 404.
  */
 export const aliasRedirects: Redirect[] = [
+  // Old Course schema (and typed guesses) used /data-engineering. The live path is /courses/…
+  { source: "/data-engineering", destination: "/courses/data-engineering", permanent: true },
+  { source: "/devops-cloud", destination: "/courses/devops-cloud", permanent: true },
+  { source: "/python-backend", destination: "/courses/python-backend", permanent: true },
+  { source: "/data-analytics", destination: "/courses/data-analytics", permanent: true },
   { source: "/login", destination: "/student", permanent: false },
   { source: "/signin", destination: "/student", permanent: false },
   { source: "/signup", destination: "/register", permanent: false },

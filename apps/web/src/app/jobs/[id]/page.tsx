@@ -3,6 +3,8 @@ import { JobDescription } from "@/components/jobs/JobDescription";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell } from "@/components/landing/MarketingShell";
+import { buildJobPosting } from "@/lib/job-posting";
+import { canonical } from "@/lib/seo";
 
 /**
  * One role, readable without an account (PRD-E F10).
@@ -55,9 +57,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const job = payload.data;
   const company = job.company?.name ?? "an employer";
 
+  const url = canonical(`/jobs/${id}`);
   return {
     title: `${job.title} at ${company} — apply with an interview`,
     description: job.description.slice(0, 155),
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${job.title} at ${company}`,
+      description: job.description.slice(0, 155),
+      url,
+    },
   };
 }
 
@@ -81,9 +90,30 @@ export default async function PublicJobPage({ params }: { params: Promise<{ id: 
 
   const job = payload.data;
   const pay = [ctc(job.ctc_min_paise), ctc(job.ctc_max_paise)].filter(Boolean).join(" – ");
+  const posting = buildJobPosting({
+    id: `internal-${job.id}`,
+    title: job.title,
+    description: job.description,
+    company: job.company?.name ?? null,
+    datePosted: job.published_at,
+    locations: job.locations ?? [],
+    remote: job.remote,
+    url: canonical(`/jobs/${job.id}`),
+    directApply: true,
+    salaryMinPaise: job.ctc_min_paise,
+    salaryMaxPaise: job.ctc_max_paise,
+  });
 
   return (
     <MarketingShell>
+      {posting && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({ "@context": "https://schema.org", ...posting }),
+          }}
+        />
+      )}
       {/* Extra top padding clears the floating nav, which otherwise sits
           over the kicker and the back link. */}
       <article className="mx-auto max-w-4xl px-6 pb-16 pt-28 md:pb-24 md:pt-36">

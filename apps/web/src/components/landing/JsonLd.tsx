@@ -1,4 +1,5 @@
 import { contact, courses, faqs } from "@/content/landing";
+import { canonical } from "@/lib/seo";
 
 /**
  * JSON-LD (spec §11): EducationalOrganization + the live Courses + FAQPage.
@@ -28,10 +29,14 @@ export function JsonLd() {
         .filter((c) => c.live)
         .map((c) => ({
           "@type": "Course",
-          name: c.name,
+          name: c.slug === "data-engineering" ? "Data Engineering Course with Placement" : `${c.name} Course`,
           description: c.tagline,
-          url: `https://browsejobs.ai/${c.slug}`,
-          provider: { "@type": "EducationalOrganization", name: "BrowseJobs" },
+          url: canonical(`/courses/${c.slug}`),
+          provider: {
+            "@type": "EducationalOrganization",
+            name: "BrowseJobs",
+            url: "https://browsejobs.ai",
+          },
           offers: {
             "@type": "Offer",
             category: "Registration",
