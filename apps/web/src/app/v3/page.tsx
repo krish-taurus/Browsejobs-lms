@@ -67,6 +67,10 @@ function Magnetic({ children }: { children: React.ReactNode }) {
   );
 }
 
+function formatCounter(value: number, suffix: string, decimals: number) {
+  return value.toFixed(decimals) + suffix;
+}
+
 function Counter({ to, suffix = "", decimals = 0 }: { to: number; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -74,11 +78,12 @@ function Counter({ to, suffix = "", decimals = 0 }: { to: number; suffix?: strin
     if (!inView || !ref.current) return;
     const c = animate(0, to, {
       duration: 2, ease: EASE,
-      onUpdate: (v) => { ref.current!.textContent = v.toFixed(decimals) + suffix; },
+      onUpdate: (v) => { ref.current!.textContent = formatCounter(v, suffix, decimals); },
     });
     return () => c.stop();
   }, [inView, to, suffix, decimals]);
-  return <span ref={ref}>0{suffix}</span>;
+  // Final value is in the HTML so crawlers don't read a zero mid-animation.
+  return <span ref={ref}>{formatCounter(to, suffix, decimals)}</span>;
 }
 
 /* Apple-style scrubbed paragraph: words ignite as the scrollbar passes them. */
@@ -1266,12 +1271,12 @@ function ProgramsSection() {
           { name: "Cyber Security", slug: "cyber-security" },
           { name: "ServiceNow", slug: "servicenow" },
         ].map((w) => (
-          <a key={w.slug} href={`/courses/${w.slug}`} className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
+          <Link key={w.slug} href="/courses" className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
             <span className="font-semibold text-fg/60">{w.name}</span>
             <span className="text-xs font-bold uppercase tracking-wider text-fg/35 transition-colors group-hover:text-[#1b6df0]">
               Waitlist <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
             </span>
-          </a>
+          </Link>
         ))}
       </motion.div>
     </section>
@@ -2293,8 +2298,8 @@ export default function V3Landing() {
           >
             BrowseJobs · The Career Engine
           </motion.p>
-          <h1 className="font-display mx-auto mt-6 max-w-5xl text-[13vw] font-bold leading-[0.98] tracking-[-0.04em] md:text-[7.5rem]">
-            {["Six", "months", "from"].map((w, i) => (
+          <h1 className="font-display mx-auto mt-6 max-w-5xl text-[9vw] font-bold leading-[0.98] tracking-[-0.04em] md:text-7xl">
+            {["Data", "Engineering", "&", "AI", "courses."].map((w, i) => (
               <Fragment key={w}>
                 <span className="inline-block overflow-hidden align-bottom">
                   <motion.span
@@ -2310,15 +2315,10 @@ export default function V3Landing() {
             <br />
             <span className="inline-block overflow-hidden align-bottom">
               <motion.span
-                initial={{ y: "105%" }} animate={{ y: "0%" }} transition={{ delay: 0.55, duration: 1, ease: EASE }}
-                className="inline-block bg-gradient-to-r from-[#1b6df0] via-[#4d94ff] to-[#7c3aed] bg-clip-text pr-[0.05em] text-transparent"
+                initial={{ y: "105%" }} animate={{ y: "0%" }} transition={{ delay: 0.7, duration: 1, ease: EASE }}
+                className="inline-block bg-gradient-to-r from-[#1b6df0] via-[#4d94ff] to-[#7c3aed] bg-clip-text text-transparent"
               >
-                “still searching”
-              </motion.span>
-            </span>
-            <span className="inline-block overflow-hidden align-bottom">
-              <motion.span initial={{ y: "105%" }} animate={{ y: "0%" }} transition={{ delay: 0.65, duration: 1, ease: EASE }} className="inline-block">
-                &nbsp;to&nbsp;signed.
+                Pay after you&apos;re hired.
               </motion.span>
             </span>
           </h1>
@@ -2326,8 +2326,8 @@ export default function V3Landing() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 0.9, ease: EASE }}
             className="mx-auto mt-8 max-w-xl text-xl leading-relaxed text-fg/50"
           >
-            An AI tutor that never sleeps. Mock interviews that call your phone.
-            A job radar that hunts while you study. <strong className="font-semibold text-fg">You bring the effort — we bring the offer.</strong>
+            Bengaluru courses built from real interviews. Three free steps before registration.
+            The placement fee is due only after you accept an offer.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.9, ease: EASE }}
@@ -2523,9 +2523,12 @@ export default function V3Landing() {
             </motion.div>
           ))}
         </div>
+        <div className="mx-auto mt-10 max-w-xl">
+          <Disclaimer />
+        </div>
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 1 }}
-          className="mx-auto mt-16 max-w-xl text-fg/40"
+          className="mx-auto mt-6 max-w-xl text-fg/40"
         >
           Every number above is backed by verifiable student records —{" "}
           <span className="font-semibold text-[#0ba860]">scan any certificate&apos;s QR to check us.</span>

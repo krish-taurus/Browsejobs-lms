@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
+import { canonical } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Refund Policy" };
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  alternates: { canonical: canonical("/refund-policy") },
+};
 
 /** The 30-day guarantee in writing (spec §3.6); flagged for legal review. */
 export default function RefundPolicy() {

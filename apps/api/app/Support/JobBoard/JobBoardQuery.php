@@ -97,6 +97,13 @@ final readonly class JobBoardQuery
             'experience_max_years' => $job->experience_max_years,
             'openings' => $job->openings,
             'posted_at' => $job->published_at?->toIso8601String(),
+            'description' => $job->description,
+            // CTC only when the employer chose to publish it. An absent
+            // figure is not a gap the public board is allowed to fill.
+            ...($job->ctc_visible ? [
+                'ctc_min_paise' => $job->ctc_min_paise,
+                'ctc_max_paise' => $job->ctc_max_paise,
+            ] : []),
             // What makes an internal posting different, stated plainly.
             'mock_ready' => $job->currentMock() !== null,
             'has_applied' => in_array($job->id, $applied, true),
@@ -122,6 +129,8 @@ final readonly class JobBoardQuery
                 'skills' => array_slice($item->extracted_skills ?? [], 0, 8),
                 'seniority' => $item->seniority,
                 'posted_at' => $item->posted_at?->toIso8601String(),
+                'expires_at' => $item->expires_at?->toIso8601String(),
+                'description' => $item->description,
                 'source_kind' => $item->source_kind,
                 'question_count' => is_array($item->prep_questions) ? count($item->prep_questions) : 0,
             ])->all();

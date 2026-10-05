@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { contact, legal } from "@/content/landing";
+import { canonical } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  alternates: { canonical: canonical("/privacy-policy") },
+};
 
 /**
  * DPDP Act 2023–aligned structure (spec §10). Placeholders in [brackets] are

@@ -161,7 +161,7 @@ function Hero() {
       />
       <motion.div style={ok ? { opacity: fade, y: lift } : undefined} className="relative">
         <Reveal>
-          <Kicker color="var(--bj-trust)">BrowseJobs for employers</Kicker>
+          <Kicker color="var(--bj-trust)">AI interviews for hiring teams</Kicker>
         </Reveal>
 
         <h1 className="display mx-auto mt-6 max-w-4xl text-[12vw] leading-[0.98] md:text-[6.5rem]">
