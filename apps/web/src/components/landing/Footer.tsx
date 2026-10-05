@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { seoMoneyLinks } from "@/content/seo-nav";
 import { FOOTER_LINE, contact, courses } from "@/content/landing";
 
 export function Footer() {
@@ -11,7 +12,7 @@ export function Footer() {
         </p>
         <p className="mono mt-4 text-sm text-sky/70">{FOOTER_LINE}</p>
 
-        <div className="mt-10 grid gap-8 border-t border-white/10 pt-8 sm:grid-cols-3">
+        <div className="mt-10 grid gap-8 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="kicker text-sky/60">Talk to us</p>
             <p className="mono mt-3 text-sm">{contact.phone}</p>
@@ -21,6 +22,18 @@ export function Footer() {
           <div>
             <p className="kicker text-sky/60">Visit</p>
             <p className="mt-3 text-sm text-sky/80">{contact.address}</p>
+          </div>
+          <div>
+            <p className="kicker text-sky/60">Guides</p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {seoMoneyLinks.map((item) => (
+                <li key={item.path}>
+                  <Link href={item.path} className="text-sky/80 hover:text-white">
+                    {item.footerLabel}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
           <div>
             <p className="kicker text-sky/60">Explore</p>

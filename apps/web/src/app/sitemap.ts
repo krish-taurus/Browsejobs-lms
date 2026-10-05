@@ -4,6 +4,7 @@ import { courses } from "@/content/landing";
 import { salaryPages } from "@/content/salaries";
 import { skillPages } from "@/content/skills";
 import { SITE_ORIGIN } from "@/lib/seo";
+import { seoMoneyLinks } from "@/content/seo-nav";
 
 /** Only URLs that both content sources agree are live, so the sitemap never lists a 404. */
 const liveCourseSlugs = courses
@@ -29,5 +30,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     dated("/skills", 0.8),
     ...skillPages.map((page) => dated(`/skills/${page.slug}`, 0.7)),
     dated("/reviews", 0.6),
+    ...seoMoneyLinks.map((page) => dated(page.path, page.priority)),
   ];
 }
