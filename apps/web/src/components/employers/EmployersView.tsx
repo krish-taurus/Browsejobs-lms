@@ -582,6 +582,17 @@ function FaqSection() {
             </div>
           ))}
         </div>
+        <p className="mt-8 text-sm leading-relaxed text-muted">
+          Longer pages for the same product:{" "}
+          <Link href="/ai-hiring" className="font-semibold text-trust">
+            AI hiring
+          </Link>
+          {" and "}
+          <Link href="/ai-interview-platform" className="font-semibold text-trust">
+            the AI interview platform
+          </Link>
+          .
+        </p>
       </div>
     </section>
   );

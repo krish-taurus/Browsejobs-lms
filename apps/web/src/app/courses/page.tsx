@@ -5,6 +5,7 @@ import { Kicker } from "@/components/brand/Kicker";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
+import { seoMoneyLinks } from "@/content/seo-nav";
 
 export const metadata: Metadata = {
   title: "Programs",
@@ -68,6 +69,24 @@ export default function CoursesPage() {
                 </span>
               </div>
             ))}
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal>
+          <div className="mt-16 border-t border-line pt-12">
+            <Kicker>Guides</Kicker>
+            <h2 className="display mt-3 max-w-2xl text-3xl text-ink">Read the fee, the city, and the switch before you book</h2>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {seoMoneyLinks
+                .filter((item) => item.path !== "/ai-hiring" && item.path !== "/ai-interview-platform")
+                .map((item) => (
+                  <li key={item.path}>
+                    <Link href={item.path} className="font-semibold text-trust hover:underline">
+                      {item.footerLabel}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
           </div>
         </ScrollReveal>
       </div>

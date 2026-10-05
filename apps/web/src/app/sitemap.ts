@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { salaryPages } from "@/content/salaries";
 import { skillPages } from "@/content/skills";
 import { courses } from "@/content/landing";
+import { seoMoneyLinks } from "@/content/seo-nav";
 
 const BASE = "https://browsejobs.ai";
 
@@ -18,5 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ...skillPages.map((p) => ({ url: `${BASE}/skills/${p.slug}`, priority: 0.7 })),
   { url: `${BASE}/reviews`, priority: 0.6 },
   { url: `${BASE}/employers`, priority: 0.9 },
+    ...seoMoneyLinks.map((page) => ({ url: `${BASE}${page.path}`, priority: page.priority })),
   ];
 }
