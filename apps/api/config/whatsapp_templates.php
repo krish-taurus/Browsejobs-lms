@@ -91,4 +91,14 @@ return [
         'name' => env('WHATSAPP_INTERVIEW_NOT_CLEARED_TEMPLATE', 'bj_interview_not_cleared'),
         'params' => ['round', 'stage', 'note', 'url'],
     ],
+
+    // Sept 2026 — an employer shortlisting someone straight from the Talent
+    // Pool (TalentPoolController::shortlist), before any formal application
+    // exists. Waits on Meta approval like every template above; falls back
+    // to a 24h-window session text (see the class_rescheduled comment) until
+    // whatsapp:sync-templates activates it.
+    'talent_pool_shortlisted' => [
+        'name' => env('WHATSAPP_TALENT_SHORTLISTED_TEMPLATE', 'bj_talent_shortlisted'),
+        'params' => ['name', 'role', 'company'],
+    ],
 ];

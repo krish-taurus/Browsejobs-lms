@@ -27,6 +27,7 @@ use App\Support\JobFeed\JobApiTransport;
 use App\Support\JobFeed\NullJobApiTransport;
 use App\Support\Judge0\HttpJudge0Client;
 use App\Support\Judge0\Judge0Client;
+use App\Support\Judge0\PistonJudge0Client;
 use App\Support\Market\MarketIntelSource;
 use App\Support\Market\SeedMarketIntelSource;
 use App\Support\Messaging\NullPushSender;
@@ -193,7 +194,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Coding labs code execution (P3.1). Real Judge0 client from config; tests
         // bind FakeJudge0Client.
-        $this->app->bind(Judge0Client::class, function (): HttpJudge0Client {
+        $this->app->bind(Judge0Client::class, function (): Judge0Client {
+            // Piston is the runner in production: Judge0 CE's stable line wants
+            // cgroup v1 and this host is cgroup v2, which would cost a reboot of
+            // the box the LMS and CRM share. Set CODE_RUNNER=judge0 to go back.
+            if (config('services.code_runner', 'piston') === 'piston') {
+                return new PistonJudge0Client([
+                    'url' => (string) config('services.piston.url'),
+                    'timeout_ms' => (int) config('coding_labs.time_limit_ms', 5_000),
+                ]);
+            }
+
             /** @var array{url: string, auth_token: string} $config */
             $config = config('services.judge0');
 

@@ -14,6 +14,7 @@ type CelebrationRow = {
   is_me: boolean;
   guidance: Guidance;
 };
+type ContentRow = { id: number; kind: string; title: string; url: string; view_count: number | null; published_at: string };
 type PulseData = {
   celebrations: CelebrationRow[];
   digest: {
@@ -21,14 +22,43 @@ type PulseData = {
     narrative: string;
     sources: { id: number; title: string; url: string; source_name: string }[];
   } | null;
-  content: { id: number; kind: string; title: string; url: string; published_at: string }[];
+  content: ContentRow[];
 };
 
 const KIND_LABEL: Record<string, string> = {
-  youtube: "▶ Video",
-  podcast: "🎙 Podcast",
-  instagram: "◎ Post",
+  youtube: "Video",
+  podcast: "Podcast",
+  instagram: "Post",
 };
+
+/** Each kind gets its own wash + icon when there's no thumbnail to show (podcast, post). */
+const KIND_STYLE: Record<string, { wash: string; icon: string }> = {
+  youtube: { wash: "from-trust/25 to-trust/5", icon: "▶" },
+  podcast: { wash: "from-violet-500/25 to-violet-500/5", icon: "🎙" },
+  instagram: { wash: "from-pink-500/25 to-pink-500/5", icon: "◎" },
+};
+
+/** A youtu.be / youtube.com URL's video id, or null for anything else. */
+function youtubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1) || null;
+    if (u.hostname.endsWith("youtube.com")) {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] ?? null;
+      if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] ?? null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function viewsLabel(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M views`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k views`;
+  return `${n} view${n === 1 ? "" : "s"}`;
+}
 
 export default function PulsePage() {
   const [data, setData] = useState<PulseData | null>(null);
@@ -61,7 +91,7 @@ export default function PulsePage() {
     }
   }
 
-  function openContent(item: PulseData["content"][number]) {
+  function openContent(item: ContentRow) {
     void apiJson(`/api/v1/me/pulse/content/${item.id}/viewed`, { method: "POST" }).catch(() => {});
     window.open(item.url, "_blank", "noopener");
   }
@@ -174,23 +204,45 @@ export default function PulsePage() {
       </section>
 
       {/* Content Hub */}
-      <section className="mt-8">
+      <section className="mt-8 pb-10">
         <p className="kicker text-trust">Content Hub</p>
         {data?.content.length ? (
-          <div className="mt-4 divide-y divide-line rounded-2xl border border-line bg-white">
-            {data.content.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => openContent(item)}
-                className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-paper"
-              >
-                <span className="mono shrink-0 text-xs text-muted">
-                  {KIND_LABEL[item.kind] ?? item.kind}
-                </span>
-                <span className="flex-1 font-medium text-ink">{item.title}</span>
-                <span className="text-trust">↗</span>
-              </button>
-            ))}
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {data.content.map((item) => {
+              const ytId = item.kind === "youtube" ? youtubeId(item.url) : null;
+              const style = KIND_STYLE[item.kind] ?? KIND_STYLE.podcast;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => openContent(item)}
+                  className="group overflow-hidden rounded-2xl border border-line bg-white text-left shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition hover:shadow-[0_4px_16px_-6px_rgba(16,24,40,0.12)]"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden bg-paper">
+                    {ytId ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- external thumbnail host, not a static asset
+                      <img
+                        src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.wash}`}>
+                        <span className="text-3xl">{style.icon}</span>
+                      </div>
+                    )}
+                    <span className="mono absolute left-2.5 top-2.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+                      {KIND_LABEL[item.kind] ?? item.kind}
+                    </span>
+                  </div>
+                  <div className="p-3.5">
+                    <p className="line-clamp-2 text-sm font-semibold leading-snug text-ink">{item.title}</p>
+                    <p className="mono mt-1.5 text-[11px] text-muted">
+                      {item.view_count ? `${viewsLabel(item.view_count)} on BrowseJobs` : "Open ↗"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="mt-4">

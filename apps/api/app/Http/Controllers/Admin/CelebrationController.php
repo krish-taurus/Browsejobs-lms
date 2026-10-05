@@ -32,6 +32,8 @@ final class CelebrationController extends Controller
                 'display_mode' => $c->display_mode,
                 'role_title' => $c->role_title,
                 'company' => $c->company,
+                'photo_url' => $c->photoUrl(),
+                'video_url' => $c->video_url,
                 'published_at' => $c->published_at?->toDateTimeString(),
                 'is_active' => $c->is_active,
             ]);
@@ -48,12 +50,33 @@ final class CelebrationController extends Controller
             'anonymous_label' => $request->input('anonymous_label'),
             'role_title' => $request->string('role_title')->toString(),
             'company' => $request->input('company'),
+            'video_url' => $request->input('video_url'),
             // The checkbox asserts the student's explicit consent; we record when.
             'consented_at' => now(),
             'created_by' => $request->user()->id,
         ]);
 
         return response()->json(['data' => $celebration], 201);
+    }
+
+    /**
+     * A student photo for the "good news" card (dashboard + classes page).
+     * Mirrors SocialProofController::uploadScreenshot() — same size/type
+     * limits, same disk.
+     */
+    public function uploadPhoto(Request $request, Celebration $celebration): JsonResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'file', 'image', 'max:8192'],
+        ]);
+
+        $path = $request->file('photo')->store("celebrations/{$celebration->tenant_id}", 's3');
+        $celebration->update(['photo_path' => $path]);
+
+        return response()->json(['data' => [
+            'id' => $celebration->id,
+            'photo_url' => $celebration->refresh()->photoUrl(),
+        ]]);
     }
 
     public function publish(Celebration $celebration, PublishCelebration $publish): JsonResponse

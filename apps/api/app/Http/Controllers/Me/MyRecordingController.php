@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Me;
 use App\Enums\BatchMemberStatus;
 use App\Http\Controllers\Controller;
 use App\Models\BatchMember;
+use App\Models\LiveSession;
 use App\Models\Recording;
 use App\Support\Fees\FeeGate;
 use App\Support\Tenancy\TenantContext;
@@ -31,27 +32,38 @@ final class MyRecordingController extends Controller
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
             $batchIds = $this->batchIds($request->user()->id);
 
-            $recordings = Recording::query()
-                ->where('status', 'stored')
-                ->whereHas('liveSession', fn ($q) => $q->whereIn('batch_id', $batchIds))
-                ->with([
-                    'liveSession:id,title,scheduled_start,batch_id',
-                    'liveSession.batch:id,number,course_id',
-                    'liveSession.batch.course:id,code,name',
-                ])
-                ->orderByDesc('id')
+            // Every class that has already happened, not only the ones that
+            // produced a recording. Listing just the recordings left a student
+            // unable to tell "no classes yet" apart from "this class was never
+            // recorded", which is exactly the question they open this page with.
+            $sessions = LiveSession::query()
+                ->whereIn('batch_id', $batchIds)
+                ->where('status', 'ended')
+                ->with(['batch:id,number,course_id', 'batch.course:id,code,name'])
+                ->orderByDesc('scheduled_start')
                 ->get();
 
+            $recordings = Recording::query()
+                ->where('status', 'stored')
+                ->whereIn('live_session_id', $sessions->pluck('id'))
+                ->get()
+                ->keyBy('live_session_id');
+
             return response()->json([
-                'data' => $recordings->map(function (Recording $r) {
-                    $batch = $r->liveSession?->batch;
+                'data' => $sessions->map(function (LiveSession $session) use ($recordings) {
+                    $recording = $recordings->get($session->id);
+                    $batch = $session->batch;
 
                     return [
-                        'id' => $r->id,
-                        'title' => $r->title,
-                        'duration_seconds' => $r->duration_seconds,
-                        'class' => $r->liveSession?->title,
-                        'recorded_on' => $r->liveSession?->scheduled_start?->toIso8601String(),
+                        // null when the class produced no recording; the page keys
+                        // off session_id so a class without one still has a row.
+                        'id' => $recording?->id,
+                        'session_id' => $session->id,
+                        'has_recording' => $recording !== null,
+                        'title' => $recording?->title ?? $session->title,
+                        'duration_seconds' => $recording?->duration_seconds,
+                        'class' => $session->title,
+                        'recorded_on' => $session->scheduled_start?->toIso8601String(),
                         'batch_number' => $batch?->number,
                         'course_code' => $batch?->course?->code,
                         'course_name' => $batch?->course?->name,
@@ -100,14 +112,31 @@ final class MyRecordingController extends Controller
             // and S3 are the fallbacks.
             $localUrl = null;
             if ($model->storage_path !== null && Storage::disk('public')->exists($model->storage_path)) {
-                $localUrl = rtrim((string) config('app.url'), '/').'/media/'.$model->storage_path;
+                // ?v= busts the browser cache whenever this row changes — the
+                // path alone never does, so a replaced file (a corrected
+                // recording swapped in for a stray earlier one, say) used to
+                // keep serving whoever already opened this class their
+                // browser's stale cached copy of the old bytes forever.
+                $localUrl = rtrim((string) config('app.url'), '/').'/media/'.$model->storage_path
+                    .'?v='.$model->updated_at?->timestamp;
             }
 
-            $watchUrl = $localUrl ?? $model->play_url ?? ($model->storage_path !== null ? $this->signedUrl($model->storage_path) : null);
+            // Falling back to Zoom's own page, carry the passcode IN the link
+            // (`?pwd=`) rather than handing the student a 100-character code to
+            // copy and paste. A student who has to transcribe a passcode to
+            // watch a class they already paid for simply does not watch it.
+            $zoomUrl = $model->play_url;
+            if ($localUrl === null && $zoomUrl !== null && (string) $model->passcode !== '') {
+                $zoomUrl .= (str_contains($zoomUrl, '?') ? '&' : '?').'pwd='.rawurlencode((string) $model->passcode);
+            }
+
+            $watchUrl = $localUrl ?? $zoomUrl ?? ($model->storage_path !== null ? $this->signedUrl($model->storage_path) : null);
 
             return response()->json(['data' => [
                 'watch_url' => $watchUrl,
-                'passcode' => $localUrl !== null ? null : $model->passcode,
+                // Never surfaced to the student: it is either unnecessary (local
+                // copy) or already embedded in the link above.
+                'passcode' => null,
                 'embedded' => $localUrl !== null,
             ]]);
         });

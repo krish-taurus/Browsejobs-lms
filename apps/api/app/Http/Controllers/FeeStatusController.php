@@ -66,7 +66,11 @@ final class FeeStatusController extends Controller
                 'rows' => $schedule->handle(FeePlanType::Single, 1, $total),
             ]];
 
-            foreach ((array) config('fees.emi_options', [1, 2, 3]) as $count) {
+            // Deliberately its own setting, not fees.emi_options — that one
+            // is the wider ceiling CreateFeePlan enforces for every caller,
+            // CRM-driven onboarding included. What a student is offered here
+            // stays narrower on purpose.
+            foreach ((array) config('fees.student_emi_options', [1, 2, 3]) as $count) {
                 if ((int) $count < 2) {
                     continue; // "1 EMI" is just paying in full
                 }
@@ -120,12 +124,26 @@ final class FeeStatusController extends Controller
             abort_if($member === null, 422, 'You have no seat awaiting payment.');
 
             $type = FeePlanType::from($validated['type']);
+            $emiCount = $type === FeePlanType::Emi ? (int) ($validated['emi_count'] ?? 2) : 1;
+
+            // CreateFeePlan's own check (fees.emi_options) is the wider
+            // ceiling the CRM's onboarding also relies on — a student
+            // hitting this endpoint directly with an emi_count that ceiling
+            // would accept but the dashboard was never offered must still
+            // be turned away here, not quietly allowed through.
+            $studentOptions = (array) config('fees.student_emi_options', [1, 2, 3]);
+            abort_if(
+                $type === FeePlanType::Emi && ! in_array($emiCount, $studentOptions, true),
+                422,
+                'That EMI count is not offered to students.',
+            );
+
             $plan = $create->handle(
                 tenant: $tenant,
                 student: $student,
                 batch: $member->batch,
                 type: $type,
-                emiCount: $type === FeePlanType::Emi ? (int) ($validated['emi_count'] ?? 2) : 1,
+                emiCount: $emiCount,
                 actor: $student,
             );
 

@@ -22,6 +22,8 @@ final class EmployerInviteResource extends JsonResource
         return [
             'id' => $this->id,
             'email' => $this->email,
+            'name' => $this->name,
+            'whatsapp' => $this->whatsapp,
             'role' => $this->role->value,
             'expires_at' => $this->expires_at->toIso8601String(),
             'accepted_at' => $this->accepted_at?->toIso8601String(),

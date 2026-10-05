@@ -17,13 +17,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $user_id
  * @property array<string, mixed> $data
  * @property string|null $uploaded_filename
+ * @property int|null $cv_mock_score
+ * @property \Illuminate\Support\Carbon|null $cv_mock_completed_at
  */
 class CvProfile extends Model
 {
     use BelongsToTenant;
 
     /** @var list<string> */
-    protected $fillable = ['tenant_id', 'user_id', 'data', 'uploaded_filename'];
+    protected $fillable = ['tenant_id', 'user_id', 'data', 'uploaded_filename', 'cv_mock_score', 'cv_mock_completed_at'];
 
     /** The empty shape the editor and merger both rely on. */
     public const EMPTY = [
@@ -51,6 +53,10 @@ class CvProfile extends Model
      */
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return [
+            'data' => 'array',
+            'cv_mock_score' => 'integer',
+            'cv_mock_completed_at' => 'datetime',
+        ];
     }
 }

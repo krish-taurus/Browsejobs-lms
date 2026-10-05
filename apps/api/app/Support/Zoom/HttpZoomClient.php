@@ -31,7 +31,13 @@ final class HttpZoomClient implements ZoomClient
         ?string $hostUserId = null,
         ?bool $autoRecord = null,
     ): ZoomMeeting {
-        $settings = ['waiting_room' => true, 'join_before_host' => false];
+        // No waiting room: with it on, every student sits in a list the
+        // host has to click "Admit" on one at a time, class after class.
+        // Off, join_before_host still false means they land on "please
+        // wait, the host hasn't started this meeting" until the host
+        // actually starts it -- then everyone already there is seated at
+        // once, with no per-student admit click.
+        $settings = ['waiting_room' => false, 'join_before_host' => false];
         if ($autoRecord !== null) {
             $settings['auto_recording'] = $autoRecord ? 'cloud' : 'none';
         }

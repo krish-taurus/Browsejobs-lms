@@ -36,6 +36,7 @@ final readonly class CompleteVoiceMock
         array $transcript,
         int $durationSeconds,
         int $costMicros,
+        ?string $recordingUrl = null,
         bool $failed = false,
     ): ?MockInterview {
         $interview = MockInterview::query()->withoutGlobalScopes()
@@ -51,10 +52,11 @@ final readonly class CompleteVoiceMock
             return null;
         }
 
-        return app(TenantContext::class)->run($tenant, function () use ($interview, $transcript, $durationSeconds, $costMicros, $failed): MockInterview {
+        return app(TenantContext::class)->run($tenant, function () use ($interview, $transcript, $durationSeconds, $costMicros, $recordingUrl, $failed): MockInterview {
             $interview->update([
                 'duration_seconds' => $durationSeconds,
                 'cost_micros' => $costMicros,
+                'recording_url' => $recordingUrl,
             ]);
 
             $this->logCost($interview, $durationSeconds, $costMicros);

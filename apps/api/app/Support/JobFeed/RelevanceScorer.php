@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\JobFeed;
 
 use App\Models\CvProfile;
+use App\Models\EmployerJob;
 use App\Models\JobFeedItem;
 use App\Models\StudentScore;
 use App\Models\User;
@@ -17,6 +18,11 @@ use App\Models\User;
  *
  * Skills come from the student's own profile + the modules they've studied; no
  * per-student data leaves this scoring (it only reads the viewer's own record).
+ *
+ * Also scores employer JD postings (`scoreForEmployerJob`) — a different
+ * source of skills/role-title (the employer's own posting, not a scraped
+ * feed item) but the same underlying "how much overlap" question, so it
+ * shares this class rather than duplicating skillBlob/roleBonus.
  */
 final class RelevanceScorer
 {
@@ -28,8 +34,33 @@ final class RelevanceScorer
      */
     public function score(User $student, JobFeedItem $item): array
     {
+        return $this->scoreSkills(
+            $student,
+            $item->extracted_skills ?? [],
+            (string) ($item->role_title ?? $item->title),
+        );
+    }
+
+    /**
+     * Same scoring, against an employer's own JD (PRD-E) rather than a
+     * scraped feed item — used to gate auto-shortlisting on CV fit, not just
+     * interview performance (Aug 2026 candidate request).
+     *
+     * @return array{match_pct: int, matched: list<string>, gap: list<string>}
+     */
+    public function scoreForEmployerJob(User $student, EmployerJob $job): array
+    {
+        return $this->scoreSkills($student, $job->skills ?? [], $job->title);
+    }
+
+    /**
+     * @param  array<int, mixed>  $rawSkills
+     * @return array{match_pct: int, matched: list<string>, gap: list<string>}
+     */
+    private function scoreSkills(User $student, array $rawSkills, string $roleTitle): array
+    {
         $blob = $this->skillBlob($student);
-        $skills = array_values(array_unique(array_map('strval', $item->extracted_skills ?? [])));
+        $skills = array_values(array_unique(array_map('strval', $rawSkills)));
 
         $matched = [];
         $gap = [];
@@ -46,7 +77,7 @@ final class RelevanceScorer
         }
 
         $skillShare = $skills === [] ? 0.0 : count($matched) / count($skills);
-        $roleBonus = $this->roleBonus($blob, (string) ($item->role_title ?? $item->title));
+        $roleBonus = $this->roleBonus($blob, $roleTitle);
 
         // Skill overlap dominates; role fit nudges. Items with no extracted skills
         // yet score on role alone (they still surface, lower).

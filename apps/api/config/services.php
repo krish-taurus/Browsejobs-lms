@@ -190,4 +190,16 @@ return [
         'internal_secret' => env('CRM_INTERNAL_SECRET', ''),
     ],
 
+    /*
+    | The Next.js web app, for on-demand ISR revalidation of the public job
+    | board — so closing or publishing a JD stops showing the stale version
+    | immediately instead of waiting out the timed revalidate window. The
+    | secret matches the web app's own REVALIDATE_SECRET and never reaches a
+    | browser.
+    */
+    'web' => [
+        'url' => env('FRONTEND_URL', 'http://localhost:3000'),
+        'revalidate_secret' => env('WEB_REVALIDATE_SECRET', ''),
+    ],
+
 ];

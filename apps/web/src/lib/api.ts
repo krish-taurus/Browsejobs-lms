@@ -52,6 +52,26 @@ async function ensureCsrf(force = false): Promise<void> {
   await csrfRequest;
 }
 
+/**
+ * Send an unsafe request; if the server rejects the CSRF token, take a fresh
+ * one and send it again — once.
+ *
+ * 419 means the token expired or rotated (a session timing out, or the API
+ * being redeployed with a new APP_KEY, which invalidates the encrypted
+ * cookie). It is recoverable and routine, so it must never reach the caller as
+ * a failure.
+ *
+ * This lives in one place deliberately. It used to exist only inside apiJson,
+ * and apiPostBlob went without — so JSON calls healed themselves while audio
+ * calls silently failed, and the console dropped to the browser voice at random.
+ * Anything that sends an unsafe request goes through here.
+ */
+async function sendUnsafe(send: (refresh: boolean) => Promise<Response>): Promise<Response> {
+  const res = await send(false);
+
+  return res.status === 419 ? send(true) : res;
+}
+
 export async function apiJson<T = unknown>(
   path: string,
   options: RequestInit = {},
@@ -80,14 +100,7 @@ export async function apiJson<T = unknown>(
     });
   };
 
-  let res = await send(false);
-
-  // 419 = token expired or rotated (e.g. the API was redeployed with a new
-  // APP_KEY, invalidating the encrypted cookie). Take a fresh token and retry
-  // once so the student never sees a CSRF error for a recoverable cause.
-  if (res.status === 419 && unsafe) {
-    res = await send(true);
-  }
+  const res = unsafe ? await sendUnsafe(send) : await send(false);
 
   const body =
     res.status === 204 ? null : await res.json().catch(() => null);
@@ -117,21 +130,27 @@ export async function apiPostBlob(
   path: string,
   body: unknown,
 ): Promise<Blob | null> {
-  await ensureCsrf();
+  const send = async (refresh: boolean): Promise<Response> => {
+    await ensureCsrf(refresh);
 
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const xsrf = getCookie("XSRF-TOKEN");
-  if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+    const headers = new Headers({ "Content-Type": "application/json" });
+    const xsrf = getCookie("XSRF-TOKEN");
+    if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers,
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
+    return fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+  };
+
+  const res = await sendUnsafe(send);
 
   if (res.status === 204) return null;
-  if (!res.ok) throw new ApiError(res.status, {});
+
+  const problem = res.status === 419 ? { message: "CSRF token rejected twice." } : {};
+  if (!res.ok) throw new ApiError(res.status, problem);
 
   return res.blob();
 }

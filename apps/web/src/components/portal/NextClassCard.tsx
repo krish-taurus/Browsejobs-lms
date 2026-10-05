@@ -18,7 +18,11 @@ type LiveClass = {
   batch: string | null;
   topic: string | null;
   scheduled_start: string | null;
+  scheduled_end: string | null;
   status: string;
+  join_opens_at: string | null;
+  can_join: boolean;
+  blocked_reason: "fees" | "too_early" | "ended" | "not_ready" | null;
 };
 
 const TZ = "Asia/Kolkata";
@@ -50,8 +54,17 @@ export function NextClassCard() {
     queryFn: () => apiJson<{ data: LiveClass[] }>("/api/v1/me/classes"),
   });
 
+  // A class that has finished stays `scheduled` until someone marks it, so status
+  // alone kept surfacing this morning's class as "next" with a live Join button.
+  // Trust the server's own verdict instead, and drop anything already over.
+  const now = Date.now();
   const next = (data?.data ?? [])
-    .filter((c) => (c.status === "scheduled" || c.status === "live") && c.scheduled_start)
+    .filter((c) => {
+      if (!c.scheduled_start || c.blocked_reason === "ended") return false;
+      if (c.status !== "scheduled" && c.status !== "live") return false;
+      const endsAt = c.scheduled_end ? new Date(c.scheduled_end).getTime() : null;
+      return endsAt === null || endsAt > now;
+    })
     .sort((a, b) => (a.scheduled_start! < b.scheduled_start! ? -1 : 1))[0];
 
   if (!next) return null;
@@ -101,13 +114,25 @@ export function NextClassCard() {
           <Link href="/classes" className="text-sm font-semibold text-trust hover:underline">
             Schedule →
           </Link>
-          <button
-            onClick={join}
-            disabled={joining}
-            className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
-          >
-            {joining ? "Opening…" : "Join"}
-          </button>
+          {/* Same rule as the schedule page: the server decides. A Join button
+              that only fails on click helps nobody. */}
+          {next.can_join ? (
+            <button
+              onClick={join}
+              disabled={joining}
+              className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
+            >
+              {joining ? "Opening…" : "Join"}
+            </button>
+          ) : (
+            <span className="rounded-full bg-paper px-4 py-2 text-xs text-muted">
+              {next.blocked_reason === "fees"
+                ? "Pay fees to unlock"
+                : next.blocked_reason === "too_early" && next.join_opens_at
+                  ? `Opens ${timeLabel(next.join_opens_at)}`
+                  : "Not ready yet"}
+            </span>
+          )}
         </div>
       </div>
 

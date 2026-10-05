@@ -35,6 +35,64 @@ final class ApplicationController extends Controller
         return EmployerApplicationResource::collection($applications)->response();
     }
 
+    /**
+     * Workspace-wide applications across every job, for the Pipeline page's
+     * List view (PRD-E pipeline kit). The per-job `index()` above can't serve
+     * that view honestly: looping it over every job and flattening client-
+     * side (the pre-redesign board did this) only ever sees the first 25
+     * rows of *each* job and has no way to compute a workspace total.
+     *
+     * `job_id` and `search` scope both `data` and `counts`; `stage` scopes
+     * only `data` — selecting a stage narrows the table without erasing the
+     * other stages' totals in the nav (PRD-E: "does not erase counts for
+     * other stages").
+     */
+    public function indexForWorkspace(Request $request, EmployerWorkspace $workspace): JsonResponse
+    {
+        $this->membershipOrFail($workspace, $request->user());
+
+        $base = EmployerJobApplication::query()
+            ->whereHas('job', fn ($query) => $query->where('employer_workspace_id', $workspace->id));
+
+        if ($request->filled('job_id')) {
+            $base->where('employer_job_id', $request->integer('job_id'));
+        }
+
+        if ($request->filled('search')) {
+            $term = $request->string('search')->toString();
+            $base->whereHas('candidate', fn ($query) => $query->where('name', 'like', "%{$term}%"));
+        }
+
+        $applications = (clone $base)
+            ->with(['candidate', 'job', 'mockInterview'])
+            ->when($request->filled('stage'), fn ($query) => $query->where('stage', $request->string('stage')->toString()))
+            ->ranked()
+            ->paginate(25)
+            ->withQueryString();
+
+        $stageRows = (clone $base)
+            ->selectRaw('stage, count(*) as total')
+            ->groupBy('stage')
+            ->pluck('total', 'stage')
+            ->all();
+
+        $byStage = [];
+        foreach ($stageRows as $stage => $total) {
+            $key = $stage instanceof EmployerApplicationStage ? $stage->value : (string) $stage;
+            $byStage[$key] = (int) $total;
+        }
+
+        $counts = [
+            'total' => (clone $base)->count(),
+            'scored' => (clone $base)->whereNotNull('mock_score')->count(),
+            'unscored' => (clone $base)->whereNull('mock_score')->count(),
+            'hired' => (clone $base)->where('stage', EmployerApplicationStage::Hired->value)->count(),
+            'by_stage' => $byStage,
+        ];
+
+        return EmployerApplicationResource::collection($applications)->additional(['counts' => $counts])->response();
+    }
+
     public function show(Request $request, EmployerWorkspace $workspace, EmployerJob $job, EmployerJobApplication $application): JsonResponse
     {
         $this->membershipOrFail($workspace, $request->user());

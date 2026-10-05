@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\InAppNotificationResource;
 use App\Models\InAppNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,13 +19,14 @@ final class NotificationController extends Controller
     {
         $userId = $request->user()->id;
 
-        $items = InAppNotification::query()
-            ->where('user_id', $userId)
+        $items = $this->visibleScope(InAppNotification::query()->where('user_id', $userId))
             ->orderByDesc('id')
             ->limit(50)
             ->get();
 
-        $unread = InAppNotification::query()->where('user_id', $userId)->whereNull('read_at')->count();
+        $unread = $this->visibleScope(InAppNotification::query()->where('user_id', $userId))
+            ->whereNull('read_at')
+            ->count();
 
         return response()->json([
             'data' => InAppNotificationResource::collection($items),
@@ -43,5 +45,21 @@ final class NotificationController extends Controller
         $query->update(['read_at' => now()]);
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Narrows to the configured `type` allowlist (see
+     * `php artisan notifications:visible-types`) — empty/unset shows
+     * everything, same as before this setting existed, so nothing else
+     * that reads the notification feed changes behaviour by default.
+     *
+     * @param  Builder<InAppNotification>  $query
+     * @return Builder<InAppNotification>
+     */
+    private function visibleScope(Builder $query): Builder
+    {
+        $types = array_filter(explode(',', (string) config('notifications.visible_types', '')));
+
+        return $types === [] ? $query : $query->whereIn('type', $types);
     }
 }

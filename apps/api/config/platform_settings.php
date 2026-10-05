@@ -146,7 +146,9 @@ return [
                     'key' => 'fee_grace_days',
                     'label' => 'Attend without paying (days after due)',
                     'type' => 'select',
-                    'options' => ['0', '3', '5', '7', '10', '14', '21', '30'],
+                    // 1 and 2 added so a short leash is selectable: BrowseJobs locks
+                    // classes and recordings two days after a missed EMI.
+                    'options' => ['0', '1', '2', '3', '5', '7', '10', '14', '21', '30'],
                     'config' => 'fees.ladder.grace_days',
                 ],
                 [
@@ -155,6 +157,19 @@ return [
                     'type' => 'select',
                     'options' => ['3', '5', '7', '10', '14', '21', '30'],
                     'config' => 'fees.ladder.hard_block_after_days',
+                ],
+            ],
+        ],
+
+        'notifications' => [
+            'label' => 'Student Alerts page',
+            'help' => 'Which kinds of notification show on the student Alerts page. Comma-separated type slugs (e.g. "class,chat"). Empty = show everything, uncategorised included.',
+            'fields' => [
+                [
+                    'key' => 'visible_types',
+                    'label' => 'Visible types',
+                    'type' => 'text',
+                    'config' => 'notifications.visible_types',
                 ],
             ],
         ],

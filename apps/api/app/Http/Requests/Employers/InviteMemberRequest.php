@@ -21,7 +21,15 @@ final class InviteMemberRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'max:255'],
-            'role' => ['required', Rule::enum(EmployerRole::class)],
+            // Ownership is granted deliberately, to someone already on the
+            // team (ChangeEmployerMemberRole) — never handed to a stranger by
+            // email through a routine invite form.
+            'role' => ['required', Rule::in([EmployerRole::Recruiter->value, EmployerRole::HiringManager->value])],
+            // A label for the owner's own pending-invites list — never the
+            // invitee's real profile, which they always set themselves when
+            // they accept.
+            'name' => ['nullable', 'string', 'max:150'],
+            'whatsapp' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

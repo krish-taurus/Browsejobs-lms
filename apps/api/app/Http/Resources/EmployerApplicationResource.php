@@ -8,6 +8,8 @@ use App\Enums\EmployerApplicationStage;
 use App\Models\EmployerJobApplication;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 /**
  * Employer-facing application row. Progressive disclosure (PRD-E §8.6):
@@ -45,6 +47,7 @@ final class EmployerApplicationResource extends JsonResource
                 'mock_interview_id' => $this->mockInterview->id,
                 'overall_score' => $this->mockInterview->overall_score,
                 'scorecard' => $this->mockInterview->scorecard,
+                'recording_url' => $this->recordingUrl($this->mockInterview->recording_url),
             ]),
             'timeline' => $this->whenLoaded('transitions', fn (): array => $this->transitions->map(fn ($t): array => [
                 'from' => $t->from_stage,
@@ -55,5 +58,27 @@ final class EmployerApplicationResource extends JsonResource
             ])->all()),
             'applied_at' => $this->created_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * `recording_url` on the interview is either a full URL already (a
+     * future Vapi-hosted recording) or our own S3 key (the room's
+     * webcam+mic upload) — signed here so the raw bucket path never
+     * reaches the browser. Null on any storage hiccup rather than a
+     * broken evidence panel.
+     */
+    private function recordingUrl(?string $stored): ?string
+    {
+        if ($stored === null || $stored === '') {
+            return null;
+        }
+        if (str_starts_with($stored, 'http://') || str_starts_with($stored, 'https://')) {
+            return $stored;
+        }
+        try {
+            return Storage::disk('s3')->temporaryUrl($stored, now()->addMinutes(30));
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

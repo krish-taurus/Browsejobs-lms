@@ -44,6 +44,7 @@ final class EmployerWorkspace extends Model
         'name',
         'slug',
         'website',
+        'social_links',
         'industry',
         'company_size',
         'gstin',
@@ -56,6 +57,7 @@ final class EmployerWorkspace extends Model
     {
         return [
             'locations' => 'array',
+            'social_links' => 'array',
         ];
     }
 

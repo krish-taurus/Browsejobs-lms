@@ -8,6 +8,8 @@ use App\Actions\LiveClasses\JoinLiveSession;
 use App\Enums\BatchMemberStatus;
 use App\Http\Controllers\Controller;
 use App\Models\BatchMember;
+use App\Models\Celebration;
+use App\Models\ContentHubItem;
 use App\Models\LiveSession;
 use App\Support\Fees\FeeGate;
 use App\Support\Tenancy\TenantContext;
@@ -59,6 +61,54 @@ final class MyClassController extends Controller
                     'can_join' => $this->blockedReason($s, $feeOk) === null,
                 ])->all(),
             ]);
+        });
+    }
+
+    /**
+     * The classes page's right rail: the newest consented placement story
+     * that actually has a photo or video to show (a text-only celebration
+     * still shows on the Pulse wall, just not here), plus whichever active
+     * YouTube item has the most real views. view_count is synced in
+     * automatically from the CRM's connected channel (see browsejobs-crm's
+     * content-hub:sync-youtube command) — nothing to add by hand once a
+     * channel is connected there. A manually-added item with no synced
+     * view_count just sorts last, never blocks a real one from winning.
+     */
+    public function sidebar(Request $request): JsonResponse
+    {
+        return app(TenantContext::class)->run($request->user()->tenant, function (): JsonResponse {
+            $goodNews = Celebration::query()
+                ->where('is_active', true)
+                ->whereNotNull('published_at')
+                ->where(fn ($q) => $q->whereNotNull('photo_path')->orWhereNotNull('video_url'))
+                ->with('student:id,name')
+                ->orderByDesc('published_at')
+                ->first();
+
+            $topVideo = ContentHubItem::query()
+                ->where('is_active', true)
+                ->where('kind', 'youtube')
+                ->orderByDesc('view_count')
+                ->orderByDesc('published_at')
+                ->first(['id', 'title', 'url', 'view_count']);
+
+            return response()->json(['data' => [
+                'good_news' => $goodNews === null ? null : [
+                    'id' => $goodNews->id,
+                    'display' => $goodNews->displayName(),
+                    'role_title' => $goodNews->role_title,
+                    'company' => $goodNews->company,
+                    'photo_url' => $goodNews->photoUrl(),
+                    'video_url' => $goodNews->video_url,
+                    'published_at' => $goodNews->published_at?->toDateString(),
+                ],
+                'top_video' => $topVideo === null ? null : [
+                    'id' => $topVideo->id,
+                    'title' => $topVideo->title,
+                    'url' => $topVideo->url,
+                    'views' => (int) ($topVideo->view_count ?? 0),
+                ],
+            ]]);
         });
     }
 

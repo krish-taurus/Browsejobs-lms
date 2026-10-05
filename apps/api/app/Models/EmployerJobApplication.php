@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $jd_mock_id
  * @property int|null $mock_interview_id
  * @property int|null $mock_score
+ * @property int|null $cv_match_pct
  * @property Carbon|null $graded_at
  * @property EmployerApplicationStage $stage
  * @property array<int, array<string, mixed>>|null $knockout_answers
@@ -45,6 +46,9 @@ final class EmployerJobApplication extends Model
         'jd_mock_id',
         'mock_interview_id',
         'mock_score',
+        'cv_match_pct',
+        'mock_attempts',
+        'cv_document_id',
         'graded_at',
         'stage',
         'knockout_answers',

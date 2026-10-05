@@ -32,6 +32,15 @@ final class SyncZoomRecordings extends Command
         $done = Recording::query()->withoutGlobalScope(TenantScope::class)
             ->where('status', 'stored')
             ->whereNotNull('storage_path')
+            // A recording under RegisterCompletedRecording::MIN_REAL_SECONDS
+            // is treated as a stray host test-join, not the real class — it
+            // never counts as "done", so the real recording (once Zoom has
+            // it) still gets picked up on a later run instead of being
+            // permanently skipped.
+            ->where(function ($q) {
+                $q->whereNull('duration_seconds')
+                    ->orWhere('duration_seconds', '>=', RegisterCompletedRecording::MIN_REAL_SECONDS);
+            })
             ->select('live_session_id');
 
         $candidates = LiveSession::query()->withoutGlobalScope(TenantScope::class)
@@ -86,7 +95,17 @@ final class SyncZoomRecordings extends Command
                 try {
                     $bytes = $zoom->downloadRecording((string) $mp4['download_url']);
                     $path = "recordings/{$session->tenant_id}/session-{$session->id}.mp4";
-                    Storage::disk('public')->put($path, $bytes);
+
+                    // put() returns false rather than throwing (filesystems.php
+                    // has 'throw' => false for this disk) — a permissions or
+                    // disk problem would otherwise silently record a
+                    // storage_path pointing at a file that was never actually
+                    // written, permanently stuck since the "already stored"
+                    // check above then skips it on every later run.
+                    if (Storage::disk('public')->put($path, $bytes) === false) {
+                        throw new \RuntimeException("Storage::put() returned false for {$path}");
+                    }
+
                     $recording->update(['storage_path' => $path, 'size_bytes' => strlen($bytes)]);
                     $this->info("Local copy saved for class #{$session->id} (".round(strlen($bytes) / 1_048_576, 1).' MB).');
                 } catch (\Throwable $e) {

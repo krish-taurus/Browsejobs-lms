@@ -30,6 +30,7 @@ final class SlotFinder
     {
         return MentorProfile::query()
             ->where('is_active', true)
+            ->mentoring()
             ->with(['user:id,name', 'availabilities', 'exceptions'])
             ->get()
             ->filter(fn (MentorProfile $mentor) => $courseIds === null || $mentor->coversAnyCourse($courseIds))

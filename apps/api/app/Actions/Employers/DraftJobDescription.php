@@ -53,7 +53,7 @@ final readonly class DraftJobDescription
             $max = $context['experience_max_years'] ?? null;
 
             try {
-                $result = $this->ai->complete($actor, AiPurpose::Content, 'jd_generate', 1, [
+                $result = $this->ai->complete($actor, AiPurpose::Content, 'jd_generate', 2, [
                     'title' => $title,
                     'family' => $family['label'] ?? 'unknown',
                     'family_skills' => $vocabulary === [] ? 'none catalogued' : implode(', ', $vocabulary),

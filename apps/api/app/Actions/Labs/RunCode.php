@@ -28,14 +28,14 @@ final readonly class RunCode
         private PointsService $points,
     ) {}
 
-    public function handle(User $user, CodingLab $lab, string $source, SubmissionKind $kind): CodeSubmission
+    public function handle(User $user, CodingLab $lab, string $source, SubmissionKind $kind, string $stdin = ''): CodeSubmission
     {
-        return app(TenantContext::class)->run($user->tenant, function () use ($user, $lab, $source, $kind): CodeSubmission {
+        return app(TenantContext::class)->run($user->tenant, function () use ($user, $lab, $source, $kind, $stdin): CodeSubmission {
             $languageId = $lab->language->judge0Id();
 
             $outcome = $kind === SubmissionKind::Submit
                 ? $this->grade($lab, $languageId, $source)
-                : $this->run($languageId, $source);
+                : $this->run($languageId, $source, $stdin);
 
             $submission = CodeSubmission::query()->create([
                 'tenant_id' => $user->tenant_id,
@@ -90,9 +90,11 @@ final readonly class RunCode
     /**
      * @return array{stdout: string, stderr: string, status: string, time: int, memory: int, passed: int, total: int}
      */
-    private function run(int $languageId, string $source): array
+    private function run(int $languageId, string $source, string $stdin = ''): array
     {
-        $exec = $this->judge0->execute($languageId, $source);
+        // A lab that reads input fails on Run with nothing on stdin, which reads
+        // to the student as "my code is broken" when it is simply unfed.
+        $exec = $this->judge0->execute($languageId, $source, $stdin === '' ? null : $stdin);
 
         return [
             'stdout' => $exec->stdout, 'stderr' => $exec->stderr, 'status' => $exec->statusText,

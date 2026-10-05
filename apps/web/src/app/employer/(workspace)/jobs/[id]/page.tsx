@@ -30,6 +30,7 @@ import {
   type InterviewRow,
   type JdMockData,
   type TalentPoolCandidate,
+  type TalentPoolCandidateCv,
 } from "@/lib/employer";
 
 type Tab = "applications" | "talent" | "process" | "design" | "mock" | "automation";
@@ -48,7 +49,14 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   const jobId = Number(id);
   const { workspace } = useWorkspace();
   const [job, setJob] = useState<EmployerJobRow | null>(null);
-  const [tab, setTab] = useState<Tab>("applications");
+  // Read once on first render, not via useSearchParams — this page is
+  // already client-only (params is a Promise), and a query-param nudge
+  // right after "Post it live" doesn't need App Router's Suspense machinery.
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window === "undefined") return "applications";
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    return TABS.some((t) => t.id === requested) ? (requested as Tab) : "applications";
+  });
   const [missing, setMissing] = useState(false);
 
   const loadJob = useCallback(() => {
@@ -59,7 +67,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
 
   if (missing) {
     return (
-      <p className="rounded-3xl border border-white/[0.08] bg-[#0a0f1c] p-8 text-sm text-white/60">
+      <p className="rounded-3xl border border-[var(--bj-dash-border)] bg-white p-8 text-sm text-[var(--bj-dash-muted)]">
         This JD does not exist in this workspace.
       </p>
     );
@@ -86,8 +94,8 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
             onClick={() => setTab(t.id)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
               tab === t.id
-                ? "bg-[#0a0f1c] text-white shadow-[0_8px_24px_rgba(10,18,32,0.2)]"
-                : "border border-black/[0.08] bg-[#0a0f1c] text-white/65 hover:border-white/25 hover:text-white"
+                ? "bg-[var(--bj-dash-primary)] text-white shadow-[0_8px_20px_-8px_rgba(26,96,72,0.55)]"
+                : "border border-[var(--bj-dash-border)] bg-white text-[var(--bj-dash-muted)] hover:border-[var(--bj-dash-primary)]/40 hover:text-[var(--bj-dash-primary)]"
             }`}
           >
             {t.label}
@@ -162,8 +170,8 @@ function ApplicationsTab({ jobId }: { jobId: number }) {
   if (rows.length === 0) {
     return (
       <Tile accent={TRUST} className="py-12 text-center" hover={false}>
-        <p className="font-display text-xl font-bold tracking-tight">No applications yet</p>
-        <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
+        <p className="bj-dash-serif text-xl tracking-tight">No applications yet</p>
+        <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[var(--bj-dash-muted)]">
           Candidates can see this JD and apply free. Anyone who completes the job-specific interview
           arrives graded and ranked at the top of this list. Check the talent pool for matched
           candidates you can invite directly.
@@ -174,11 +182,11 @@ function ApplicationsTab({ jobId }: { jobId: number }) {
 
   return (
     <div className="space-y-3">
-      {error && <p className="text-sm text-[#e05561]">{error}</p>}
+      {error && <p className="text-sm text-[var(--bj-dash-score-below)]">{error}</p>}
       {rows.map((row, i) => (
         <ApplicationCard key={row.id} row={row} index={i} jobId={jobId} onChanged={load} onError={setError} />
       ))}
-      <p className="pt-2 font-mono text-[10px] text-white/45">
+      <p className="pt-2 font-mono text-[10px] text-[var(--bj-dash-muted)]">
         Graded applicants rank first by interview score. Contact details unlock at Shortlisted.
       </p>
     </div>
@@ -231,22 +239,22 @@ function ApplicationCard({
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE, delay: Math.min(index, 6) * 0.05 }}
-      className="overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0f1c] shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
+      className="overflow-hidden rounded-3xl border border-[var(--bj-dash-border)] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.18)]"
     >
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-4 text-left" aria-expanded={open}>
           {row.is_graded && row.mock_score !== null ? (
-            <Ring value={row.mock_score} size={62} stroke={8} color={strong ? TRUST : "#94a9c9"}>
+            <Ring value={row.mock_score} size={62} stroke={8} color={strong ? TRUST : "var(--bj-dash-muted)"}>
               <span className="font-display text-sm font-bold">{row.mock_score}</span>
             </Ring>
           ) : (
             <div className="grid h-[62px] w-[62px] shrink-0 place-items-center rounded-full border border-dashed border-black/15">
-              <span className="font-mono text-[8px] uppercase tracking-wider text-white/45">ungraded</span>
+              <span className="font-mono text-[8px] uppercase tracking-wider text-[var(--bj-dash-muted)]">ungraded</span>
             </div>
           )}
           <div>
             <p className="font-display text-lg font-bold tracking-tight">{row.candidate?.name ?? "Candidate"}</p>
-            <p className="mt-0.5 text-[12px] text-white/55">
+            <p className="mt-0.5 text-[12px] text-[var(--bj-dash-muted)]">
               {row.candidate?.email ?? "Contact unlocks at Shortlisted"} · applied{" "}
               {new Date(row.applied_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
             </p>
@@ -257,10 +265,20 @@ function ApplicationCard({
           <Pill tone={terminal ? "neutral" : "trust"}>{STAGE_LABELS[row.stage]}</Pill>
           <Link
             href={`/employer/jobs/${jobId}/candidates/${row.id}`}
-            className="rounded-full border border-white/[0.14] px-3.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-white/30 hover:text-white"
+            className="rounded-full border border-[var(--bj-dash-border)] px-3.5 py-1.5 text-xs font-medium text-[var(--bj-dash-muted)] transition-colors hover:border-[var(--bj-dash-primary)]/40 hover:text-[var(--bj-dash-primary)]"
           >
             Full profile
           </Link>
+          {row.evidence?.recording_url && (
+            <a
+              href={row.evidence.recording_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-[var(--bj-dash-border)] px-3.5 py-1.5 text-xs font-medium text-[var(--bj-dash-muted)] transition-colors hover:border-[var(--bj-dash-primary)]/40 hover:text-[var(--bj-dash-primary)]"
+            >
+              ▶ Recording
+            </a>
+          )}
           {!terminal && forward && (
             <PrimaryButton disabled={busy} onClick={() => void move(forward)} className="!px-4 !py-2 !text-xs">
               Advance to {STAGE_LABELS[forward]}
@@ -279,12 +297,10 @@ function ApplicationCard({
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.35, ease: EASE }}
-          // Was a paper-white panel left over from the light theme, with
-          // white text inside it — the detail was there and unreadable.
-          className="border-t border-white/[0.07] bg-white/[0.02] px-5 py-5 md:px-6"
+          className="border-t border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] px-5 py-5 md:px-6"
         >
           {row.rejection_reason && (
-            <p className="mb-4 rounded-2xl border border-[#e0556155] bg-[#e055611f] px-4 py-3 text-sm text-[#f2a1a7]">
+            <p className="mb-4 rounded-2xl border border-[var(--bj-dash-score-below-bg)] bg-[var(--bj-dash-score-below-bg)] px-4 py-3 text-sm text-[var(--bj-dash-score-below)]">
               Rejected: {row.rejection_reason}
             </p>
           )}
@@ -292,17 +308,17 @@ function ApplicationCard({
           {interviews === null ? (
             <Skeleton className="mt-3 h-24" />
           ) : interviews.length === 0 ? (
-            <p className="mt-3 text-sm text-white/60">
+            <p className="mt-3 text-sm text-[var(--bj-dash-muted)]">
               No interview rounds yet — advance this candidate to L1 to invite them.
             </p>
           ) : (
             <ul className="mt-3 space-y-3">
               {interviews.map((iv) => (
-                <li key={iv.id} className="rounded-2xl border border-white/[0.08] bg-[#0a0f1c] p-5">
+                <li key={iv.id} className="rounded-2xl border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Pill tone="dark">{iv.round}</Pill>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/50">{iv.status}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--bj-dash-muted)]">{iv.status}</span>
                     </div>
                     {iv.overall_score !== null && (
                       <span className="font-display text-2xl font-bold tracking-tight">{iv.overall_score}</span>
@@ -310,7 +326,7 @@ function ApplicationCard({
                   </div>
 
                   {iv.grading_delayed && (
-                    <p className="mt-2 text-xs text-white/60">
+                    <p className="mt-2 text-xs text-[var(--bj-dash-muted)]">
                       Grading is taking longer than usual. Scores appear when it completes — we never fabricate them.
                     </p>
                   )}
@@ -320,11 +336,11 @@ function ApplicationCard({
                       {Object.entries(iv.dimension_scores).map(([key, value]) => (
                         <div key={key}>
                           <div className="flex items-baseline justify-between text-[11px]">
-                            <span className="capitalize text-white/65">{key.replaceAll("_", " ")}</span>
+                            <span className="capitalize text-[var(--bj-dash-muted)]">{key.replaceAll("_", " ")}</span>
                             <span className="font-mono font-semibold">{value}</span>
                           </div>
                           <div className="mt-1">
-                            <SkillMeter pct={value} color={value >= 70 ? TRUST : "#94a9c9"} />
+                            <SkillMeter pct={value} color={value >= 70 ? TRUST : "var(--bj-dash-muted)"} />
                           </div>
                         </div>
                       ))}
@@ -332,7 +348,7 @@ function ApplicationCard({
                   )}
 
                   {iv.grading_summary && (
-                    <p className="mt-4 border-l-2 border-[#4d8ef7] pl-4 text-[13px] leading-relaxed text-white/70">
+                    <p className="mt-4 border-l-2 border-[var(--bj-dash-primary)] pl-4 text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
                       {iv.grading_summary}
                     </p>
                   )}
@@ -353,11 +369,46 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
   const [rows, setRows] = useState<TalentPoolCandidate[] | null>(null);
   const [invited, setInvited] = useState<number[]>([]);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [shortlisted, setShortlisted] = useState<number[]>([]);
+  const [shortlistBusyId, setShortlistBusyId] = useState<number | null>(null);
+  // Which candidate's CV is expanded inline right now, and what it holds
+  // once fetched — null once fetched-but-empty is a real state (no CV on
+  // file), distinct from "not fetched yet" (key absent).
+  const [openCvId, setOpenCvId] = useState<number | null>(null);
+  const [cvById, setCvById] = useState<Record<number, TalentPoolCandidateCv | null>>({});
+  const [recordingBusyId, setRecordingBusyId] = useState<number | null>(null);
+  const [recordingError, setRecordingError] = useState<number | null>(null);
+  // Off by default on every visit, on purpose — never persisted, never
+  // silently on. Merges in synthetic candidates for a demo before real
+  // candidate volume exists; a real employer never sees this unless they
+  // click it themselves, for this one page load.
+  // Sticks on this browser once turned on — every job's Talent Pool tab,
+  // every new tab, even tomorrow — until turned off again here. localStorage
+  // rather than sessionStorage specifically so a fresh tab or a restarted
+  // browser doesn't quietly reset it back to off mid-demo. Still scoped to
+  // this one browser profile, not a server-side default: anyone else's
+  // browser — a real employer's, or this same account from a different
+  // machine — starts at off regardless.
+  const [sampleMode, setSampleModeState] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("talentpool_sample_mode") === "1";
+  });
+  const setSampleMode = useCallback((next: boolean | ((prev: boolean) => boolean)) => {
+    setSampleModeState((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      try {
+        localStorage.setItem("talentpool_sample_mode", value ? "1" : "0");
+      } catch {
+        // Private browsing or storage disabled — the toggle still works for this page, just won't carry over.
+      }
+      return value;
+    });
+  }, []);
 
   useEffect(() => {
     setRows(null);
-    employerApi.talentPool(workspace.id, jobId).then((res) => setRows(res.data)).catch(() => setRows([]));
-  }, [workspace.id, jobId]);
+    employerApi.talentPool(workspace.id, jobId, sampleMode).then((res) => setRows(res.data)).catch(() => setRows([]));
+  }, [workspace.id, jobId, sampleMode]);
 
   async function invite(candidateId: number) {
     setBusyId(candidateId);
@@ -369,30 +420,109 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
     }
   }
 
+  /** Straight from the pool — no invite/apply step. Tells the candidate over WhatsApp they're already picked. */
+  async function shortlist(candidate: TalentPoolCandidate) {
+    // A sample candidate isn't a real person — there's no real
+    // application to record and no real phone to message, so this stays
+    // client-side only: just enough to show what the click does without
+    // hitting an endpoint that has nothing real to act on.
+    if (candidate.is_sample) {
+      setShortlisted((prev) => [...prev, candidate.candidate_id]);
+      return;
+    }
+
+    setShortlistBusyId(candidate.candidate_id);
+    try {
+      await employerApi.shortlistCandidate(workspace.id, jobId, candidate.candidate_id);
+      setShortlisted((prev) => [...prev, candidate.candidate_id]);
+    } finally {
+      setShortlistBusyId(null);
+    }
+  }
+
+  async function toggleCv(candidate: TalentPoolCandidate) {
+    const candidateId = candidate.candidate_id;
+    if (openCvId === candidateId) {
+      setOpenCvId(null);
+      return;
+    }
+    setOpenCvId(candidateId);
+    if (candidate.is_sample) {
+      // Already have it inline — no real CvProfile exists to fetch for a
+      // synthetic candidate_id.
+      setCvById((prev) => ({
+        ...prev,
+        [candidateId]: {
+          summary: candidate.cv_summary ?? null,
+          skills: candidate.matched_skills.concat(candidate.missing_skills),
+          experience: candidate.education ? [{ title: candidate.education }] : [],
+          education: candidate.education ? [{ name: candidate.education }] : [],
+        },
+      }));
+      return;
+    }
+    if (!(candidateId in cvById)) {
+      try {
+        const r = await employerApi.talentPoolCv(workspace.id, jobId, candidateId);
+        setCvById((prev) => ({ ...prev, [candidateId]: r.data }));
+      } catch {
+        setCvById((prev) => ({ ...prev, [candidateId]: null }));
+      }
+    }
+  }
+
+  async function viewRecording(candidateId: number) {
+    setRecordingBusyId(candidateId);
+    setRecordingError(null);
+    try {
+      const r = await employerApi.talentPoolRecording(workspace.id, jobId, candidateId);
+      window.open(r.data.url, "_blank", "noopener,noreferrer");
+    } catch {
+      setRecordingError(candidateId);
+    } finally {
+      setRecordingBusyId(null);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <InkPanel glow={VIOLET}>
-        <Label dark>Matched candidates</Label>
-        <p className="font-display mt-2.5 max-w-2xl text-xl font-bold leading-tight tracking-tight md:text-2xl">
-          Candidates who match this role,{" "}
-          <span className="bg-gradient-to-r from-[#9d6bf5] to-[#4d8ef7] bg-clip-text text-transparent">
-            with a CV on file and a scored history.
-          </span>
-        </p>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
-          Matched on the skills your JD names, weighted by readiness and interview history.
-          Inviting someone is a nudge — they still choose to apply and still sit your job-specific interview.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Label dark>Matched candidates</Label>
+            <p className="bj-dash-serif mt-2.5 max-w-2xl text-xl leading-tight tracking-tight md:text-2xl">
+              Candidates who match this role,{" "}
+              <span className="bg-gradient-to-r from-[var(--bj-dash-focus)] to-[var(--bj-dash-primary)] bg-clip-text text-transparent">
+                with a CV on file and a scored history.
+              </span>
+            </p>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
+              Matched on the skills your JD names, weighted by readiness and interview history.
+              Inviting someone is a nudge — they still choose to apply and still sit your job-specific interview.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSampleMode((v) => !v)}
+            title="Adds synthetic candidates for this view only — never saved, never real, off again next visit unless you click this again."
+            className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+              sampleMode ? "border-amber-400 bg-amber-400/20 text-amber-200" : "border-white/20 text-white/70 hover:border-white/40"
+            }`}
+          >
+            {sampleMode ? "◉ Previewing with sample data" : "Preview with sample data"}
+          </button>
+        </div>
       </InkPanel>
 
       {rows === null ? (
         <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-32" />)}</div>
       ) : rows.length === 0 ? (
         <Tile accent={VIOLET} className="py-12 text-center" hover={false}>
-          <p className="font-display text-xl font-bold tracking-tight">No matches yet</p>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
-            Nobody currently matches the skills on this JD, or everyone who matches has already
-            applied. Add or broaden the skills on the JD to widen the pool.
+          <p className="bj-dash-serif text-xl tracking-tight">No matches yet</p>
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[var(--bj-dash-muted)]">
+            A student needs a matching CV skill, a role/course connected to this JD, and a completed
+            AI Readiness Interview to show up here — or everyone who qualifies has already applied.
+            This pool fills in as more students complete that interview.
           </p>
         </Tile>
       ) : (
@@ -401,27 +531,48 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
             <Tile key={c.candidate_id} accent={c.match_score >= 70 ? VIOLET : TRUST} index={i} hover={false}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-display text-lg font-bold tracking-tight">{c.name}</p>
-                  {c.training && (
-                    <p className="mt-1 text-[12px] text-white/60">
-                      {c.training.course} ·{" "}
-                      <span className={c.training.status === "completed" ? "text-[#0da06e]" : ""}>
-                        {c.training.status}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="font-display text-lg font-bold tracking-tight">{c.name}</p>
+                    {c.bgb_verified && (
+                      <span
+                        title="Label only for now — not tied to a real check yet."
+                        className="rounded-full bg-[var(--bj-dash-score-strong-bg)] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--bj-dash-score-strong)]"
+                      >
+                        ✓ BGB Verified
                       </span>
+                    )}
+                    {c.is_sample && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-amber-700">
+                        Sample
+                      </span>
+                    )}
+                  </div>
+                  {c.is_sample ? (
+                    <p className="mt-1 text-[12px] text-[var(--bj-dash-muted)]">
+                      {c.location} · {c.education}
                     </p>
+                  ) : (
+                    c.training && (
+                      <p className="mt-1 text-[12px] text-[var(--bj-dash-muted)]">
+                        {c.training.course} ·{" "}
+                        <span className={c.training.status === "completed" ? "text-[var(--bj-dash-score-strong)]" : ""}>
+                          {c.training.status}
+                        </span>
+                      </p>
+                    )
                   )}
                 </div>
                 <Ring value={c.match_score} size={64} stroke={8} color={c.match_score >= 70 ? VIOLET : TRUST}>
                   <div className="text-center leading-none">
                     <span className="font-display block text-sm font-bold">{c.match_score}</span>
-                    <span className="font-mono text-[7px] uppercase tracking-wider text-white/45">match</span>
+                    <span className="font-mono text-[7px] uppercase tracking-wider text-[var(--bj-dash-muted)]">match</span>
                   </div>
                 </Ring>
               </div>
 
               <div className="mt-4">
                 <div className="flex items-baseline justify-between text-[11px]">
-                  <span className="text-white/60">Skill coverage</span>
+                  <span className="text-[var(--bj-dash-muted)]">Skill coverage</span>
                   <span className="font-mono font-semibold">{c.skill_match_pct}%</span>
                 </div>
                 <div className="mt-1.5">
@@ -431,18 +582,94 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {c.matched_skills.map((s) => (
-                  <span key={s} className="rounded-full bg-[#e6f7ef] px-2.5 py-1 font-mono text-[10px] text-[#0da06e]">
+                  <span key={s} className="rounded-full bg-[var(--bj-dash-score-strong-bg)] px-2.5 py-1 font-mono text-[10px] text-[var(--bj-dash-score-strong)]">
                     {s}
                   </span>
                 ))}
                 {c.missing_skills.map((s) => (
-                  <span key={s} className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-white/50 line-through">
+                  <span key={s} className="rounded-full bg-[var(--bj-dash-soft)] px-2.5 py-1 font-mono text-[10px] text-[var(--bj-dash-muted)] line-through">
                     {s}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/[0.07] pt-4">
+              <div className="mt-3 flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => void toggleCv(c)}
+                  className="text-[12px] font-semibold text-[var(--bj-dash-primary)]"
+                >
+                  {openCvId === c.candidate_id ? "Hide CV" : "View CV"}
+                </button>
+                {!c.is_sample && (
+                  <button
+                    type="button"
+                    onClick={() => void viewRecording(c.candidate_id)}
+                    disabled={recordingBusyId === c.candidate_id}
+                    className="text-[12px] font-semibold text-[var(--bj-dash-primary)] disabled:opacity-50"
+                  >
+                    {recordingBusyId === c.candidate_id ? "Opening…" : "▶ View AI interview recording"}
+                  </button>
+                )}
+              </div>
+              {c.is_sample && (
+                <p className="mt-1 text-[11px] text-[var(--bj-dash-muted)]">
+                  {c.email} · {c.phone}
+                </p>
+              )}
+              {recordingError === c.candidate_id && (
+                <p className="mt-1 text-[11px] text-[var(--bj-dash-score-below)]">No recording available for this candidate.</p>
+              )}
+
+              {openCvId === c.candidate_id && (
+                <div className="mt-3 rounded-[10px] border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] p-3">
+                  {!(c.candidate_id in cvById) ? (
+                    <p className="text-[12px] text-[var(--bj-dash-muted)]">Loading…</p>
+                  ) : cvById[c.candidate_id] === null ? (
+                    <p className="text-[12px] text-[var(--bj-dash-muted)]">No CV on file.</p>
+                  ) : (
+                    (() => {
+                      const cv = cvById[c.candidate_id] as TalentPoolCandidateCv;
+                      return (
+                        <div className="space-y-3 text-[12px]">
+                          {cv.summary && <p className="leading-relaxed text-[var(--bj-dash-muted)]">{cv.summary}</p>}
+                          {cv.skills.length > 0 && (
+                            <div>
+                              <p className="font-semibold text-[var(--bj-dash-muted)]">Skills</p>
+                              <p className="mt-1 text-[var(--bj-dash-muted)]">{cv.skills.join(", ")}</p>
+                            </div>
+                          )}
+                          {cv.experience.length > 0 && (
+                            <div>
+                              <p className="font-semibold text-[var(--bj-dash-muted)]">Experience</p>
+                              {cv.experience.map((e, idx) => (
+                                <p key={idx} className="mt-1 text-[var(--bj-dash-muted)]">
+                                  {e.title}
+                                  {e.company ? ` · ${e.company}` : ""}
+                                  {e.period ? ` · ${e.period}` : ""}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {cv.education.length > 0 && (
+                            <div>
+                              <p className="font-semibold text-[var(--bj-dash-muted)]">Education</p>
+                              {cv.education.map((e, idx) => (
+                                <p key={idx} className="mt-1 text-[var(--bj-dash-muted)]">{e.name}{e.detail ? ` · ${e.detail}` : ""}</p>
+                              ))}
+                            </div>
+                          )}
+                          {!cv.summary && cv.skills.length === 0 && cv.experience.length === 0 && cv.education.length === 0 && (
+                            <p className="text-[var(--bj-dash-muted)]">Their CV is on file but doesn&apos;t have much filled in yet.</p>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
+                </div>
+              )}
+
+              <div className="mt-5 flex items-end justify-between gap-4 border-t border-[var(--bj-dash-border)] pt-4">
                 <div className="flex gap-5">
                   <div>
                     <p className="font-display text-lg font-bold leading-none">{c.readiness_index}</p>
@@ -456,21 +683,60 @@ function TalentPoolTab({ jobId }: { jobId: number }) {
                   </div>
                   {c.cv_ready && (
                     <div>
-                      <p className="font-display text-lg font-bold leading-none text-[#0da06e]">✓</p>
+                      <p className="font-display text-lg font-bold leading-none text-[var(--bj-dash-score-strong)]">✓</p>
                       <Label>CV ready</Label>
                     </div>
                   )}
+                  {c.cv_mock_score !== null && (
+                    <div>
+                      <p className="font-display text-lg font-bold leading-none text-[var(--bj-dash-primary)]">{c.cv_mock_score}</p>
+                      <Label>AI readiness</Label>
+                    </div>
+                  )}
                 </div>
-                {invited.includes(c.candidate_id) ? (
-                  <Pill tone="verify">Invited</Pill>
+                {c.is_sample ? (
+                  <div className="flex items-center gap-2">
+                    {shortlisted.includes(c.candidate_id) ? (
+                      <Pill tone="verify">✓ Shortlisted</Pill>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void shortlist(c)}
+                        title="Sample candidate — shows what the click does, no real message is sent."
+                        className="rounded-full border border-[var(--bj-dash-primary)] px-4 py-2 text-xs font-semibold text-[var(--bj-dash-primary)] transition"
+                      >
+                        Shortlist
+                      </button>
+                    )}
+                    <span className="text-[11px] italic text-[var(--bj-dash-muted)]">Demo only — not a real applicant</span>
+                  </div>
                 ) : (
-                  <PrimaryButton
-                    disabled={busyId === c.candidate_id}
-                    onClick={() => void invite(c.candidate_id)}
-                    className="!px-4 !py-2 !text-xs"
-                  >
-                    Invite to apply
-                  </PrimaryButton>
+                  <div className="flex items-center gap-2">
+                    {shortlisted.includes(c.candidate_id) ? (
+                      <Pill tone="verify">✓ Shortlisted</Pill>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={shortlistBusyId === c.candidate_id}
+                        onClick={() => void shortlist(c)}
+                        title="Marks them shortlisted and sends a WhatsApp message letting them know — no application needed first."
+                        className="rounded-full border border-[var(--bj-dash-primary)] px-4 py-2 text-xs font-semibold text-[var(--bj-dash-primary)] transition disabled:opacity-50"
+                      >
+                        {shortlistBusyId === c.candidate_id ? "Shortlisting…" : "Shortlist"}
+                      </button>
+                    )}
+                    {invited.includes(c.candidate_id) ? (
+                      <Pill tone="verify">Invited</Pill>
+                    ) : (
+                      <PrimaryButton
+                        disabled={busyId === c.candidate_id}
+                        onClick={() => void invite(c.candidate_id)}
+                        className="!px-4 !py-2 !text-xs"
+                      >
+                        Invite to apply
+                      </PrimaryButton>
+                    )}
+                  </div>
                 )}
               </div>
             </Tile>
@@ -513,7 +779,7 @@ function MockTab({ jobId }: { jobId: number }) {
   if (mock === "none") {
     return (
       <Tile accent={TRUST} hover={false} className="py-10 text-center">
-        <p className="text-sm text-white/60">
+        <p className="text-sm text-[var(--bj-dash-muted)]">
           No interview built yet — it is generated automatically when the JD is published.
         </p>
       </Tile>
@@ -522,24 +788,24 @@ function MockTab({ jobId }: { jobId: number }) {
 
   return (
     <div className="space-y-4 md:space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/[0.08] bg-[#0a0f1c] px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] px-6 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.18)]">
         <p className="flex items-center gap-2.5 text-sm">
           <Pill tone="trust">v{mock.version}</Pill>
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/55">{mock.status}</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--bj-dash-muted)]">{mock.status}</span>
           {mock.source === "fallback" && (
-            <span className="text-xs text-white/55">template-based — regenerate for AI-tailored questions</span>
+            <span className="text-xs text-[var(--bj-dash-muted)]">template-based — regenerate for AI-tailored questions</span>
           )}
         </p>
         <GhostButton disabled={busy || mock.status === "pending"} onClick={() => void regenerate()}>
           {busy ? "Queuing…" : "Regenerate as new version"}
         </GhostButton>
       </div>
-      {error && <p className="text-sm text-[#e05561]">{error}</p>}
+      {error && <p className="text-sm text-[var(--bj-dash-score-below)]">{error}</p>}
 
       {mock.rubric && (
         <Tile accent={DEEP} hover={false}>
           <Label>Grading rubric</Label>
-          <p className="font-display mt-1 text-lg font-bold tracking-tight">How every answer is scored</p>
+          <p className="bj-dash-serif mt-1 text-lg tracking-tight">How every answer is scored</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {mock.rubric.dimensions.map((d, i) => (
               <motion.div
@@ -547,14 +813,14 @@ function MockTab({ jobId }: { jobId: number }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: EASE, delay: i * 0.06 }}
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4"
+                className="rounded-2xl border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] p-4"
               >
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-semibold">{d.label}</p>
-                  <p className="font-display text-lg font-bold text-[#4d8ef7]">{d.weight}%</p>
+                  <p className="font-display text-lg font-bold text-[var(--bj-dash-primary)]">{d.weight}%</p>
                 </div>
                 <div className="mt-2"><SkillMeter pct={d.weight} color={DEEP} /></div>
-                <p className="mt-2.5 text-[12px] leading-relaxed text-white/60">{d.criteria}</p>
+                <p className="mt-2.5 text-[12px] leading-relaxed text-[var(--bj-dash-muted)]">{d.criteria}</p>
               </motion.div>
             ))}
           </div>
@@ -564,7 +830,7 @@ function MockTab({ jobId }: { jobId: number }) {
       {mock.questions && (
         <Tile accent={TRUST} hover={false}>
           <Label>Asked of every applicant · {mock.questions.length} questions</Label>
-          <p className="font-display mt-1 text-lg font-bold tracking-tight">The interview itself</p>
+          <p className="bj-dash-serif mt-1 text-lg tracking-tight">The interview itself</p>
           <ol className="mt-5 space-y-4">
             {mock.questions.map((q, i) => (
               <motion.li
@@ -579,7 +845,7 @@ function MockTab({ jobId }: { jobId: number }) {
                 </span>
                 <div>
                   <p className="text-[15px] leading-snug">{q.text}</p>
-                  <p className="mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/45">
+                  <p className="mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--bj-dash-muted)]">
                     <span>{q.skill}</span>
                     <span>·</span>
                     <span>{q.type}</span>
@@ -633,15 +899,15 @@ function AutomationTab({ jobId }: { jobId: number }) {
     }
   }
 
-  const select = "rounded-full border border-black/[0.1] bg-[#0a0f1c] px-3.5 py-2 text-sm";
+  const select = "rounded-full border border-[var(--bj-dash-border)] bg-white px-3.5 py-2 text-sm text-[var(--bj-dash-ink)] outline-none focus:border-[var(--bj-dash-primary)] focus:ring-4 focus:ring-[var(--bj-dash-primary)]/15";
 
   return (
     <div className="space-y-5">
       <InkPanel glow={TRUST}>
         <Label dark>Run it without you</Label>
-        <p className="font-display mt-2.5 max-w-2xl text-xl font-bold leading-tight tracking-tight md:text-2xl">
+        <p className="bj-dash-serif mt-2.5 max-w-2xl text-xl leading-tight tracking-tight md:text-2xl">
           Set a bar once.{" "}
-          <span className="bg-gradient-to-r from-[#4d8ef7] to-[#9d6bf5] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[var(--bj-dash-primary)] to-[var(--bj-dash-focus)] bg-clip-text text-transparent">
             The pipeline moves itself.
           </span>
         </p>
@@ -654,7 +920,7 @@ function AutomationTab({ jobId }: { jobId: number }) {
       <Tile accent={TRUST} hover={false}>
         <Label>New rule</Label>
         <form onSubmit={create} className="mt-4 flex flex-wrap items-center gap-2.5 text-sm">
-          <span className="text-white/65">When</span>
+          <span className="text-[var(--bj-dash-muted)]">When</span>
           <select value={trigger} onChange={(e) => setTrigger(e.target.value as typeof trigger)} className={select}>
             <option value="application_graded">the job interview is graded</option>
             <option value="interview_graded">a follow-up round is graded</option>
@@ -665,13 +931,13 @@ function AutomationTab({ jobId }: { jobId: number }) {
               <option value="l2">L2</option>
             </select>
           )}
-          <span className="text-white/65">at</span>
+          <span className="text-[var(--bj-dash-muted)]">at</span>
           <input
             type="number" min={0} max={100} value={minScore}
             onChange={(e) => setMinScore(Number(e.target.value))}
-            className="w-20 rounded-full border border-black/[0.1] bg-[#0a0f1c] px-3.5 py-2 text-center font-mono text-sm"
+            className="w-20 rounded-full border border-[var(--bj-dash-border)] bg-white px-3.5 py-2 text-center font-mono text-sm text-[var(--bj-dash-ink)] outline-none focus:border-[var(--bj-dash-primary)] focus:ring-4 focus:ring-[var(--bj-dash-primary)]/15"
           />
-          <span className="text-white/65">% or above, advance to</span>
+          <span className="text-[var(--bj-dash-muted)]">% or above, advance to</span>
           <select value={targetStage} onChange={(e) => setTargetStage(e.target.value)} className={select}>
             <option value="shortlisted">Shortlisted</option>
             <option value="l1">L1</option>
@@ -679,14 +945,14 @@ function AutomationTab({ jobId }: { jobId: number }) {
           </select>
           <PrimaryButton type="submit" disabled={busy}>Add rule</PrimaryButton>
         </form>
-        {error && <p className="mt-3 text-sm text-[#e05561]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--bj-dash-score-below)]">{error}</p>}
       </Tile>
 
       {rules === null ? (
         <Skeleton className="h-24" />
       ) : rules.length === 0 ? (
         <Tile accent={TRUST} hover={false} className="py-10 text-center">
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-[var(--bj-dash-muted)]">
             No rules yet. Add one above — “interview ≥ 70% → auto-shortlist” — and this JD runs itself.
           </p>
         </Tile>
@@ -698,22 +964,22 @@ function AutomationTab({ jobId }: { jobId: number }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: i * 0.05 }}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/[0.08] bg-[#0a0f1c] px-6 py-4 shadow-[0_10px_40px_rgba(10,18,32,0.04)]"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-[var(--bj-dash-border)] bg-white px-6 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.18)]"
             >
               <p className="text-sm">
                 <span className="font-semibold">
                   {rule.trigger === "application_graded" ? "Job interview" : `Round ${rule.round?.toUpperCase()}`}
                 </span>{" "}
-                ≥ <span className="font-mono font-semibold text-[#4d8ef7]">{rule.min_score}%</span> →{" "}
+                ≥ <span className="font-mono font-semibold text-[var(--bj-dash-primary)]">{rule.min_score}%</span> →{" "}
                 {rule.action === "advance" ? `advance to ${rule.target_stage}` : "park for review"}
                 {typeof rule.runs_count === "number" && (
-                  <span className="ml-3 font-mono text-[11px] text-white/45">{rule.runs_count} runs</span>
+                  <span className="ml-3 font-mono text-[11px] text-[var(--bj-dash-muted)]">{rule.runs_count} runs</span>
                 )}
               </p>
               <button
                 onClick={() => employerApi.toggleRule(workspace.id, jobId, rule.id).then(load)}
                 className={`rounded-full px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                  rule.enabled ? "bg-[#e6f7ef] text-[#0da06e]" : "bg-white/[0.06] text-white/55"
+                  rule.enabled ? "bg-[var(--bj-dash-score-strong-bg)] text-[var(--bj-dash-score-strong)]" : "bg-[var(--bj-dash-soft)] text-[var(--bj-dash-muted)]"
                 }`}
               >
                 {rule.enabled ? "On" : "Off"}

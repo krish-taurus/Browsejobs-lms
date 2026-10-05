@@ -44,7 +44,13 @@ final class LabController extends Controller
     public function run(RunCodeRequest $request, int $lesson, RunCode $run): JsonResponse
     {
         $lab = $this->lab($request, $lesson);
-        $submission = $run->handle($request->user(), $lab, $request->string('source')->toString(), SubmissionKind::Run);
+        $submission = $run->handle(
+            $request->user(),
+            $lab,
+            $request->string('source')->toString(),
+            SubmissionKind::Run,
+            $request->string('stdin')->toString(),
+        );
 
         return (new CodeSubmissionResource($submission))->response();
     }

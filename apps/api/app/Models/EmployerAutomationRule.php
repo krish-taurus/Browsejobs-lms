@@ -22,9 +22,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $trigger
  * @property string|null $round
  * @property int $min_score
+ * @property int|null $min_cv_match_pct
  * @property string $action
  * @property string|null $target_stage
  * @property bool $enabled
+ * @property bool $is_default
  */
 final class EmployerAutomationRule extends Model
 {
@@ -58,15 +60,18 @@ final class EmployerAutomationRule extends Model
         'trigger',
         'round',
         'min_score',
+        'min_cv_match_pct',
         'action',
         'target_stage',
         'enabled',
+        'is_default',
     ];
 
     protected function casts(): array
     {
         return [
             'enabled' => 'boolean',
+            'is_default' => 'boolean',
         ];
     }
 

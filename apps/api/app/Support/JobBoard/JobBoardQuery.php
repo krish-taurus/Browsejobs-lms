@@ -8,6 +8,7 @@ use App\Enums\EmployerJobStatus;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\JobFeedItem;
+use App\Models\MockInterview;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -84,23 +85,35 @@ final readonly class JobBoardQuery
             ->get();
 
         $applied = $this->appliedJobIds($jobs->pluck('id')->all());
+        $mockStatuses = $this->mockStatusesByJob($jobs->pluck('id')->all());
 
-        return $jobs->map(fn (EmployerJob $job): array => [
-            'segment' => 'internal',
-            'id' => $job->id,
-            'title' => $job->title,
-            'company' => $job->workspace?->name,
-            'locations' => $job->locations ?? [],
-            'remote' => (bool) $job->remote,
-            'skills' => array_slice($job->skills ?? [], 0, 8),
-            'experience_min_years' => $job->experience_min_years,
-            'experience_max_years' => $job->experience_max_years,
-            'openings' => $job->openings,
-            'posted_at' => $job->published_at?->toIso8601String(),
-            // What makes an internal posting different, stated plainly.
-            'mock_ready' => $job->currentMock() !== null,
-            'has_applied' => in_array($job->id, $applied, true),
-        ])->all();
+        return $jobs->map(function (EmployerJob $job) use ($applied, $mockStatuses): array {
+            $mock = $mockStatuses[$job->id] ?? ['status' => 'none', 'score' => null];
+
+            return [
+                'segment' => 'internal',
+                'id' => $job->id,
+                'title' => $job->title,
+                'company' => $job->workspace?->name,
+                'locations' => $job->locations ?? [],
+                'remote' => (bool) $job->remote,
+                'skills' => array_slice($job->skills ?? [], 0, 8),
+                'experience_min_years' => $job->experience_min_years,
+                'experience_max_years' => $job->experience_max_years,
+                'openings' => $job->openings,
+                'posted_at' => $job->published_at?->toIso8601String(),
+                // What makes an internal posting different, stated plainly.
+                'mock_ready' => $job->currentMock() !== null,
+                'has_applied' => in_array($job->id, $applied, true),
+                // Where the viewer stands on THIS job's own interview — the
+                // step Apply is gated behind (PRD-E F3) — so the card can
+                // show "Take AI interview" / "Resume" / "Apply" instead of
+                // always "View & apply" and finding out it's blocked one
+                // click later.
+                'mock_status' => $mock['status'],
+                'mock_score' => $mock['score'],
+            ];
+        })->all();
     }
 
     /**
@@ -142,5 +155,45 @@ final readonly class JobBoardQuery
             ->whereIn('employer_job_id', $jobIds)
             ->pluck('employer_job_id')
             ->all();
+    }
+
+    /**
+     * The viewer's own interview status against each of these JDs, in one
+     * query rather than one per card (mirrors EmployerJobBrowseController's
+     * per-job myMock(), batched — a completed attempt always wins over a
+     * stale in-progress row from an earlier retake, same rule).
+     *
+     * @param  list<int>  $jobIds
+     * @return array<int, array{status: string, score: int|null}>
+     */
+    private function mockStatusesByJob(array $jobIds): array
+    {
+        if ($this->viewer === null || $jobIds === []) {
+            return [];
+        }
+
+        $interviews = MockInterview::query()
+            ->where('user_id', $this->viewer->id)
+            ->whereHas('blueprint', fn ($q) => $q->whereIn('employer_job_id', $jobIds))
+            ->with('blueprint:id,employer_job_id')
+            ->get()
+            ->groupBy(fn (MockInterview $m) => $m->blueprint?->employer_job_id);
+
+        $statuses = [];
+        foreach ($interviews as $jobId => $attempts) {
+            $completed = $attempts->where('status', MockInterview::STATUS_COMPLETED)->sortByDesc('overall_score')->first();
+            if ($completed !== null) {
+                $statuses[$jobId] = ['status' => 'completed', 'score' => $completed->overall_score];
+
+                continue;
+            }
+
+            $inProgress = $attempts->firstWhere('status', MockInterview::STATUS_IN_PROGRESS);
+            $statuses[$jobId] = $inProgress !== null
+                ? ['status' => 'in_progress', 'score' => null]
+                : ['status' => 'none', 'score' => null];
+        }
+
+        return $statuses;
     }
 }

@@ -10,4 +10,5 @@ enum ProductKind: string
     case Subscription = 'subscription'; // Career+ (recurring)
     case SelfPaced = 'self_paced';      // recorded-course access
     case Upgrade = 'upgrade';           // self-paced → live, pay the difference
+    case CareerBoost = 'career_boost';  // time-boxed Jobs-for-You bundle (mocks + applications + CV + wider-market cap)
 }

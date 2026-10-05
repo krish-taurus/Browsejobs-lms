@@ -44,9 +44,9 @@ class MockInterview extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'status',
+        'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'is_room', 'status',
         'overall_score', 'scorecard', 'scorecard_source', 'started_at', 'completed_at',
-        'provider_session_id', 'join_url', 'duration_seconds', 'cost_micros',
+        'provider_session_id', 'join_url', 'recording_url', 'duration_seconds', 'cost_micros',
     ];
 
     /**

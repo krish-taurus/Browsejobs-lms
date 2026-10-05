@@ -72,4 +72,53 @@ final class FakeRazorpayClient implements RazorpayClient
     {
         $this->cancelled[] = $subscriptionId;
     }
+
+    /**
+     * Link state a test wants `fetchPaymentLink` to report, keyed by link id.
+     *
+     * @var array<string, array{status: string, order_id?: string|null, payment_id?: string|null, method?: string|null}>
+     */
+    public array $linkStatuses = [];
+
+    /** @var list<string> payment links cancelled in this test run */
+    public array $cancelledLinks = [];
+
+    public function fetchOrder(string $orderId): array
+    {
+        // Tests may seed $orders keyed by id; createOrder() appends numerically.
+        $found = $this->orders[$orderId] ?? null;
+
+        if ($found === null) {
+            foreach ($this->orders as $order) {
+                if (is_array($order) && ($order["id"] ?? null) === $orderId) {
+                    $found = $order;
+                    break;
+                }
+            }
+        }
+
+        return [
+            "receipt" => $found["receipt"] ?? null,
+            "amount_paise" => isset($found["amount"]) ? (int) $found["amount"] : ($found["amount_paise"] ?? null),
+            "status" => $found["status"] ?? null,
+        ];
+    }
+
+    public function fetchPaymentLink(string $paymentLinkId): array
+    {
+        $state = $this->linkStatuses[$paymentLinkId] ?? ['status' => 'created'];
+
+        return [
+            'status' => (string) $state['status'],
+            'amount_paise' => $state['amount_paise'] ?? null,
+            'order_id' => $state['order_id'] ?? null,
+            'payment_id' => $state['payment_id'] ?? null,
+            'method' => $state['method'] ?? null,
+        ];
+    }
+
+    public function cancelPaymentLink(string $paymentLinkId): void
+    {
+        $this->cancelledLinks[] = $paymentLinkId;
+    }
 }

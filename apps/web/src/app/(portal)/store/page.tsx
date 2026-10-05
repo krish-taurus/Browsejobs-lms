@@ -14,17 +14,61 @@ type Product = {
   price_paise: number;
   grant_amount: number;
   period_days: number | null;
+  mock_bonus_amount: number | null;
+  job_application_bonus_amount: number | null;
+  wider_market_job_limit: number | null;
 };
 
 type Wallet = { feature: string; balance: number };
 type Entitlement = { key: string; kind: string; expires_at: string | null };
-type Store = { products: Product[]; wallets: Wallet[]; entitlements: Entitlement[] };
+type CareerBoostStatus = {
+  active: boolean;
+  expires_at: string | null;
+  mocks_remaining: number;
+  applications_remaining: number;
+  wider_market_job_limit: number;
+};
+type Store = { products: Product[]; wallets: Wallet[]; entitlements: Entitlement[]; career_boost: CareerBoostStatus };
 
 const FEATURE_LABEL: Record<string, string> = {
   cv: "CV credits",
   voice_mock: "Voice mocks",
   mentor: "Mentor sessions",
 };
+
+function CareerBoostCard({ product, busy, onBuy }: { product: Product; busy: boolean; onBuy: () => void }) {
+  const features = [
+    `+${product.mock_bonus_amount ?? 0} AI mock interview attempts`,
+    `+${product.job_application_bonus_amount ?? 0} job applications`,
+    `+${product.grant_amount} CV creates`,
+    `See up to ${product.wider_market_job_limit ?? 0} matched jobs`,
+    `Valid for ${product.period_days ?? 30} days`,
+  ];
+
+  return (
+    <div className="flex flex-col rounded-[16px] border border-line bg-white p-5">
+      <p className="text-sm font-semibold text-trust">{product.name}</p>
+      <p className="display mt-1 text-2xl text-ink">{formatPaise(product.price_paise)}</p>
+      <hr className="my-3 border-line" />
+      <p className="mono text-[10px] uppercase tracking-widest text-muted">Includes</p>
+      <ul className="mt-2 flex-1 space-y-2">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2 text-sm text-ink">
+            <span aria-hidden className="mt-0.5 text-verify">✓</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={onBuy}
+        disabled={busy}
+        className="mt-4 w-full rounded-full bg-trust py-2.5 text-sm font-semibold text-white hover:bg-deep disabled:opacity-50"
+      >
+        Buy now
+      </button>
+    </div>
+  );
+}
 
 export default function StorePage() {
   const [store, setStore] = useState<Store | null>(null);
@@ -62,6 +106,8 @@ export default function StorePage() {
       "Career+ will not renew.");
 
   const careerActive = store?.entitlements.some((e) => e.key === "career_plus") ?? false;
+  const boostProducts = store?.products.filter((p) => p.kind === "career_boost") ?? [];
+  const boost = store?.career_boost;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -95,9 +141,38 @@ export default function StorePage() {
             ))}
           </div>
 
+          {/* Career Boost */}
+          {boostProducts.length > 0 && (
+            <div className="mt-10">
+              <p className="mono text-[11px] uppercase tracking-widest text-trust">Career Boost</p>
+              <h2 className="display mt-1 text-xl text-ink">Move faster on Jobs for You</h2>
+              <p className="mt-1 text-sm text-muted">
+                Extra AI mock interviews, more job applications, more CV creates, and a wider Wider Market feed —
+                bundled, time-boxed, on top of everything the free tier already gives you.
+              </p>
+
+              {boost?.active && (
+                <div className="mt-4 rounded-[14px] border border-verify/30 bg-verify-bg p-4">
+                  <p className="text-sm font-semibold text-verify">✓ Career Boost active</p>
+                  <p className="mt-1 text-xs text-ink">
+                    {boost.mocks_remaining} mock attempt{boost.mocks_remaining === 1 ? "" : "s"} · {boost.applications_remaining} application{boost.applications_remaining === 1 ? "" : "s"} left ·
+                    sees up to {boost.wider_market_job_limit} jobs
+                    {boost.expires_at && ` · expires ${new Date(boost.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                {boostProducts.map((p) => (
+                  <CareerBoostCard key={p.id} product={p} busy={busy} onBuy={() => buy(p)} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Catalog */}
-          <div className="mt-8 divide-y divide-line rounded-[14px] border border-line bg-white">
-            {store.products.filter((p) => p.kind !== "self_paced" && p.kind !== "upgrade").map((p) => (
+          <div className="mt-10 divide-y divide-line rounded-[14px] border border-line bg-white">
+            {store.products.filter((p) => p.kind !== "self_paced" && p.kind !== "upgrade" && p.kind !== "career_boost").map((p) => (
               <div key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
                 <span className="min-w-40 flex-1">
                   <span className="block font-semibold text-ink">{p.name}</span>

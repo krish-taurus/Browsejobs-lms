@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $action
  * @property string $outcome
  * @property int|null $score_seen
+ * @property int|null $cv_match_seen
  * @property Carbon $occurred_at
  */
 final class EmployerAutomationRun extends Model
@@ -32,6 +33,7 @@ final class EmployerAutomationRun extends Model
         'action',
         'outcome',
         'score_seen',
+        'cv_match_seen',
         'occurred_at',
     ];
 

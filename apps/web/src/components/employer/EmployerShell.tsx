@@ -16,15 +16,47 @@ import { durations, ease } from "@/lib/motion";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { employerApi, type Workspace } from "@/lib/employer";
-import { Mark } from "@/components/brand/Wordmark";
+import { EmployerMark } from "@/components/employer/EmployerMark";
 import { CommandPalette } from "@/components/employer/CommandPalette";
+import {
+  BellIcon,
+  BriefcaseIcon,
+  ChevronDownIcon,
+  GearIcon,
+  HelpIcon,
+  HomeIcon,
+  PipelineIcon,
+  RobotIcon,
+  SearchIcon,
+  UsersIcon,
+} from "@/components/employer/icons";
 
 const NAV = [
-  { href: "/employer/dashboard", label: "Dashboard" },
-  { href: "/employer/jobs", label: "Jobs" },
-  { href: "/employer/pipeline", label: "Pipeline" },
-  { href: "/employer/team", label: "Team" },
+  // Top of the list and the post-login landing page (see app/employer/
+  // page.tsx) — talking to it is meant to be the ordinary way in, per the
+  // Taurus AI kit's own nav placement (Sept 2026). It previously lived
+  // embedded in the Dashboard (see git history), which is now view-only and
+  // has no room for a conversation.
+  { href: "/employer/taurus-ai", label: "Taurus AI", icon: RobotIcon, badge: "AI" },
+  { href: "/employer/dashboard", label: "Dashboard", icon: HomeIcon },
+  { href: "/employer/jobs", label: "Jobs", icon: BriefcaseIcon },
+  { href: "/employer/pipeline", label: "Pipeline", icon: PipelineIcon },
+  { href: "/employer/team", label: "Team", icon: UsersIcon },
 ];
+
+/** Sidebar-bottom utility links — real destinations, not decoration. */
+const UTILITY_NAV = [
+  { href: "/employer/settings", label: "Settings", icon: GearIcon },
+  { href: "/employer/help", label: "Help & Support", icon: HelpIcon },
+];
+
+const titleCase = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** The breadcrumb's second segment — the current section's own nav label, longest-prefix match so a nested route (e.g. /employer/jobs/12) still reads as "Jobs". */
+function currentSectionLabel(pathname: string): string {
+  const match = [...NAV].sort((a, b) => b.href.length - a.href.length).find((item) => pathname.startsWith(item.href));
+  return match?.label ?? "Dashboard";
+}
 
 type WorkspaceState = {
   workspace: Workspace;
@@ -62,38 +94,65 @@ function CreateWorkspaceCard({ onCreated }: { onCreated: () => Promise<void> }) 
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[#05070d] px-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-panel border border-white/[0.10] bg-[#0a0f1c] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.5)]">
-        <p className="mono text-[11px] uppercase tracking-widest text-[#4d8ef7]">Set up your workspace</p>
-        <h1 className="display mt-2 text-2xl text-white">Welcome to BrowseJobs for employers</h1>
-        <p className="mt-2 text-sm text-white/55">
+    <div className="bj-employer-dashboard grid min-h-screen place-items-center px-4" style={{ background: "var(--bj-dash-canvas)" }}>
+      <form onSubmit={submit} className="w-full max-w-md rounded-panel border p-8 shadow-sm" style={{ borderColor: "var(--bj-dash-border)", background: "var(--bj-dash-surface)" }}>
+        <p className="mono text-[11px] uppercase tracking-widest" style={{ color: "var(--bj-dash-primary)" }}>Set up your workspace</p>
+        <h1 className="bj-dash-serif mt-2 text-2xl" style={{ color: "var(--bj-dash-ink)" }}>Welcome to BrowseJobs for employers</h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--bj-dash-muted)" }}>
           Name your company workspace. You can invite your team right after.
         </p>
-        <label className="mt-6 block text-sm font-medium text-white/80" htmlFor="ws-name">Company name</label>
+        <label className="mt-6 block text-sm font-medium" style={{ color: "var(--bj-dash-ink)" }} htmlFor="ws-name">Company name</label>
         <input
           id="ws-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="mt-1 w-full rounded-input border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-shadow placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
+          className="mt-1 w-full rounded-input border bg-white px-3 py-2 text-sm outline-none transition-shadow"
+          style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
           placeholder="Acme Technologies"
         />
-        <label className="mt-4 block text-sm font-medium text-white/80" htmlFor="ws-industry">Industry (optional)</label>
+        <label className="mt-4 block text-sm font-medium" style={{ color: "var(--bj-dash-ink)" }} htmlFor="ws-industry">Industry (optional)</label>
         <input
           id="ws-industry"
           value={industry}
           onChange={(e) => setIndustry(e.target.value)}
-          className="mt-1 w-full rounded-input border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-shadow placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
+          className="mt-1 w-full rounded-input border bg-white px-3 py-2 text-sm outline-none transition-shadow"
+          style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
           placeholder="IT Services"
         />
-        {error && <p className="mt-3 rounded-xl bg-[#e05561]/15 px-3 py-2 text-sm text-[#fca5a5]">{error}</p>}
+        {error && <p className="mt-3 rounded-xl bg-[#fde8e9] px-3 py-2 text-sm text-[#e0242c]">{error}</p>}
         <button
           disabled={busy || name.trim() === ""}
-          className="mt-6 w-full rounded-input bg-[#4d8ef7] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(77,142,247,0.35)] disabled:opacity-50 disabled:shadow-none"
+          className="mt-6 w-full rounded-input px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition disabled:opacity-45 disabled:shadow-none"
+          style={{ background: "var(--bj-dash-primary)" }}
         >
           {busy ? "Creating…" : "Create workspace"}
         </button>
       </form>
+    </div>
+  );
+}
+
+/** What every employer page shows in place of itself while its workspace is suspended. */
+function SuspendedNotice({ name }: { name: string }) {
+  return (
+    <div className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-panel border border-[#f3d5d6] bg-[#fde8e9] px-8 py-14 text-center">
+      <span className="flex size-12 items-center justify-center rounded-full bg-white text-2xl">🔒</span>
+      <h1 className="bj-dash-serif text-xl" style={{ color: "var(--bj-dash-ink)" }}>{name} is deactivated</h1>
+      <p className="max-w-sm text-sm leading-relaxed text-[#65676b]">
+        Your team&rsquo;s access to BrowseJobs has been paused. Nothing has been deleted — your job
+        postings, applicants and history are all still here.
+      </p>
+      <p className="max-w-sm text-sm leading-relaxed text-[#65676b]">
+        Please connect with BrowseJobs admin to restore access.
+      </p>
+      <a
+        href="mailto:support@browsejobs.ai?subject=Reactivate%20our%20workspace"
+        className="mt-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition"
+        style={{ background: "var(--bj-dash-primary)" }}
+      >
+        Contact BrowseJobs admin
+      </a>
     </div>
   );
 }
@@ -104,10 +163,14 @@ function Guarded({ children }: { children: ReactNode }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+    setAccountMenuOpen(false);
+  }, [pathname]);
 
   const loadWorkspaces = useCallback(async () => {
     const res = await employerApi.workspaces();
@@ -134,8 +197,8 @@ function Guarded({ children }: { children: ReactNode }) {
 
   if (loading || !user || workspaces === null) {
     return (
-      <div className="grid min-h-screen place-items-center">
-        <div className="shimmer h-12 w-12 rounded-full" />
+      <div className="bj-employer-dashboard grid min-h-screen place-items-center" style={{ background: "var(--bj-dash-canvas)" }}>
+        <div className="shimmer h-12 w-12 rounded-full" style={{ background: "var(--bj-dash-border)" }} />
       </div>
     );
   }
@@ -145,6 +208,7 @@ function Guarded({ children }: { children: ReactNode }) {
   }
 
   const workspace = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+  const sectionLabel = currentSectionLabel(pathname);
 
   return (
     <WorkspaceContext.Provider
@@ -156,13 +220,19 @@ function Guarded({ children }: { children: ReactNode }) {
       }}
     >
       <CommandPalette workspaceId={workspace.id} />
-      <div className="min-h-screen bg-[#05070d] font-body text-white antialiased selection:bg-[#4d8ef7] selection:text-white md:grid md:grid-cols-[248px_1fr]">
-        <aside className="relative hidden overflow-hidden bg-[#0a0f1c] text-white md:flex md:flex-col">
+      <div
+        className="bj-employer-dashboard min-h-screen font-body antialiased selection:bg-[var(--bj-dash-primary)] selection:text-white md:grid md:grid-cols-[230px_1fr]"
+        style={{ background: "var(--bj-dash-canvas)", color: "var(--bj-dash-ink)" }}
+      >
+        <aside
+          className="relative hidden overflow-hidden border-r bg-white md:flex md:flex-col"
+          style={{ borderColor: "var(--bj-dash-border)" }}
+        >
           <Link href="/" className="flex items-center gap-2 px-6 py-5" aria-label="BrowseJobs home">
-            <Mark tone="dark" />
+            <EmployerMark />
             <div>
-              <span className="display block leading-none">BrowseJobs</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/40">Employer</span>
+              <span className="bj-dash-serif block text-lg leading-none" style={{ color: "var(--bj-dash-ink)" }}>BrowseJobs</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.22em]" style={{ color: "var(--bj-dash-muted)" }}>Employer</span>
             </div>
           </Link>
 
@@ -171,77 +241,220 @@ function Guarded({ children }: { children: ReactNode }) {
               value={workspace.id}
               onChange={(e) => setActiveId(Number(e.target.value))}
               aria-label="Switch workspace"
-              className="mx-3 mb-3 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white"
+              className="mx-3 mb-3 rounded-xl border bg-white px-3 py-2 text-sm"
+              style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
             >
               {workspaces.map((w) => (
-                <option key={w.id} value={w.id} className="text-[#0a1220]">{w.name}</option>
+                <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>
           ) : (
-            <p className="px-6 pb-3 text-sm font-semibold text-white/80">{workspace.name}</p>
+            <div
+              className="mx-3 mb-3 flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-sm font-semibold"
+              style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
+            >
+              {workspace.name}
+              <ChevronDownIcon className="size-3.5 shrink-0 text-[var(--bj-dash-muted)]" />
+            </div>
           )}
 
-          <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4 pt-2">
+          <nav className="space-y-0.5 overflow-y-auto px-3 pb-4 pt-1">
             {NAV.map((item) => {
               const active = pathname.startsWith(item.href);
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group relative flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ${
-                    active
-                      ? "bg-[#0a0f1c]/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                      : "text-white/45 hover:bg-white/[0.04] hover:text-white"
-                  }`}
+                  className="group relative flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all"
+                  style={active
+                    ? { background: "var(--bj-dash-soft)", color: "var(--bj-dash-primary)" }
+                    : { color: "var(--bj-dash-muted)" }}
                 >
+                  <Icon className="size-[18px] shrink-0" />
                   {item.label}
+                  {"badge" in item && item.badge && (
+                    <span
+                      className="ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                      style={active ? { background: "white", color: "var(--bj-dash-primary)" } : { background: "var(--bj-dash-soft)", color: "var(--bj-dash-primary)" }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </nav>
 
-          <p className="px-6 pb-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/25">
-            ⌘K to jump anywhere
-          </p>
+          <div className="mt-auto space-y-0.5 px-3 pb-3">
+            {UTILITY_NAV.map((item) => {
+              const active = pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all"
+                  style={active
+                    ? { background: "var(--bj-dash-soft)", color: "var(--bj-dash-primary)" }
+                    : { color: "var(--bj-dash-muted)" }}
+                >
+                  <Icon className="size-[18px] shrink-0" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Signed-in profile, sidebar-bottom — a real destination
+              (Settings), not decoration. */}
           <Link
-            href="/"
-            className="mx-3 rounded-xl px-3.5 py-2.5 text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white"
+            href="/employer/settings"
+            className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-colors hover:bg-[var(--bj-dash-soft)]"
+            style={{ borderColor: "var(--bj-dash-border)" }}
           >
-            ← Back to browsejobs.ai
+            <span
+              className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold text-white"
+              style={{ background: "var(--bj-dash-primary)" }}
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold" style={{ color: "var(--bj-dash-ink)" }}>{user.name}</span>
+              <span className="block truncate font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: "var(--bj-dash-muted)" }}>
+                {titleCase(workspace.my_role ?? "member")}
+              </span>
+            </span>
           </Link>
-          <button
-            onClick={() => logout().then(() => router.replace("/employer"))}
-            className="m-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white"
-          >
-            Sign out
-          </button>
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.07] bg-[#05070d]/80 px-5 py-3.5 backdrop-blur-xl md:px-8">
-            <p className="flex items-center gap-2.5 text-sm">
-              <span className="font-semibold">{user.name}</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-                {(workspace.my_role ?? "member").replace("_", " ")}
-              </span>
-            </p>
+          <header
+            className="sticky top-0 z-30 flex items-center gap-4 border-b bg-white/90 px-5 py-3 backdrop-blur-xl md:px-8"
+            style={{ borderColor: "var(--bj-dash-border)" }}
+          >
+            <div className="min-w-0 shrink-0 text-sm">
+              <span style={{ color: "var(--bj-dash-muted)" }}>Workspace</span>
+              <span style={{ color: "var(--bj-dash-border)" }} className="mx-2">/</span>
+              <span className="font-semibold" style={{ color: "var(--bj-dash-ink)" }}>{sectionLabel}</span>
+            </div>
+
+            {/* Same jump-to-anywhere index the ⌘K palette already builds —
+                this is a second door onto it, not a second search engine. */}
             <button
-              onClick={() => setMenuOpen((o) => !o)}
-              className="rounded-lg border border-white/[0.14] px-3 py-1.5 text-sm font-medium text-white/80 md:hidden"
-              aria-expanded={menuOpen}
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("bj:open-command-palette"))}
+              className="hidden min-w-0 flex-1 items-center gap-2.5 rounded-full border px-4 py-2 text-left text-sm transition-colors hover:bg-white md:flex md:max-w-md"
+              style={{ borderColor: "var(--bj-dash-border)", background: "var(--bj-dash-canvas)", color: "var(--bj-dash-muted)" }}
             >
-              {menuOpen ? "Close" : "Menu"}
+              <SearchIcon className="size-4 shrink-0" />
+              <span className="truncate">Search jobs and applicants…</span>
+              <span className="ml-auto hidden shrink-0 font-mono text-[10px] uppercase tracking-widest lg:inline">
+                ⌘K
+              </span>
             </button>
+
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              {/* Always-reachable from the top bar, not just the sidebar —
+                  it's the post-login landing page now, so this stays visible
+                  even from a page that's scrolled the sidebar out of view. */}
+              <Link
+                href="/employer/taurus-ai"
+                className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-[var(--bj-dash-soft)]"
+                style={{ borderColor: "var(--bj-dash-primary)", color: "var(--bj-dash-primary)" }}
+              >
+                <RobotIcon className="size-4" />
+                <span className="hidden sm:inline">Taurus AI</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("bj:open-command-palette"))}
+                className="grid size-9 place-items-center rounded-full transition-colors hover:bg-[var(--bj-dash-soft)] md:hidden"
+                style={{ color: "var(--bj-dash-muted)" }}
+                aria-label="Search"
+              >
+                <SearchIcon />
+              </button>
+
+              <Link
+                href="/employer/help"
+                className="grid size-9 place-items-center rounded-full transition-colors hover:bg-[var(--bj-dash-soft)]"
+                style={{ color: "var(--bj-dash-muted)" }}
+                aria-label="Notifications"
+                title="Notifications"
+              >
+                <BellIcon />
+              </Link>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setAccountMenuOpen((o) => !o)}
+                  className="flex items-center gap-1 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-[var(--bj-dash-soft)]"
+                  aria-expanded={accountMenuOpen}
+                  aria-label="Account menu"
+                >
+                  <span className="grid size-8 place-items-center rounded-full text-sm font-semibold text-white" style={{ background: "var(--bj-dash-primary)" }}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                  <ChevronDownIcon className="size-3.5 text-[var(--bj-dash-muted)]" />
+                </button>
+
+                {accountMenuOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close menu"
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setAccountMenuOpen(false)}
+                    />
+                    <div
+                      className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border bg-white py-1.5 shadow-lg"
+                      style={{ borderColor: "var(--bj-dash-border)" }}
+                    >
+                      <div className="border-b px-4 py-2.5" style={{ borderColor: "var(--bj-dash-border)" }}>
+                        <p className="truncate text-sm font-semibold" style={{ color: "var(--bj-dash-ink)" }}>{user.name}</p>
+                        {user.email && <p className="truncate text-xs" style={{ color: "var(--bj-dash-muted)" }}>{user.email}</p>}
+                      </div>
+                      <Link href="/employer/settings" className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--bj-dash-soft)]" style={{ color: "var(--bj-dash-ink)" }}>
+                        <GearIcon className="size-4" />Settings
+                      </Link>
+                      <Link href="/" className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--bj-dash-soft)]" style={{ color: "var(--bj-dash-ink)" }}>
+                        ← Back to browsejobs.ai
+                      </Link>
+                      <button
+                        onClick={() => logout().then(() => router.replace("/employer"))}
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-[var(--bj-dash-soft)]"
+                        style={{ color: "var(--bj-dash-ink)" }}
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                className="rounded-lg border px-3 py-1.5 text-sm font-medium md:hidden"
+                style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
+                aria-expanded={menuOpen}
+              >
+                {menuOpen ? "Close" : "Menu"}
+              </button>
+            </div>
           </header>
 
           {menuOpen && (
-            <div className="border-b border-white/[0.08] bg-[#0a0f1c] px-5 py-4 md:hidden">
+            <div className="border-b bg-white px-5 py-4 md:hidden" style={{ borderColor: "var(--bj-dash-border)" }}>
               <div className="space-y-1">
                 {NAV.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`block py-1 text-sm font-medium ${pathname.startsWith(item.href) ? "text-[#4d8ef7]" : "text-white/70"}`}
+                    className="block py-1 text-sm font-medium"
+                    style={{ color: pathname.startsWith(item.href) ? "var(--bj-dash-primary)" : "var(--bj-dash-muted)" }}
                   >
                     {item.label}
                   </Link>
@@ -249,13 +462,15 @@ function Guarded({ children }: { children: ReactNode }) {
               </div>
               <Link
                 href="/"
-                className="mb-3 block text-sm font-medium text-white/50 transition-colors hover:text-white"
+                className="mb-3 mt-3 block text-sm font-medium transition-colors"
+                style={{ color: "var(--bj-dash-muted)" }}
               >
                 ← Back to browsejobs.ai
               </Link>
               <button
                 onClick={() => logout().then(() => router.replace("/employer"))}
-                className="mt-4 text-sm font-medium text-white/50"
+                className="mt-4 text-sm font-medium"
+                style={{ color: "var(--bj-dash-muted)" }}
               >
                 Sign out
               </button>
@@ -269,7 +484,7 @@ function Guarded({ children }: { children: ReactNode }) {
             transition={{ duration: durations.base, ease }}
             className="flex-1 px-5 py-8 md:px-8 md:py-10"
           >
-            {children}
+            {workspace.status === "suspended" ? <SuspendedNotice name={workspace.name} /> : children}
           </motion.main>
         </div>
       </div>

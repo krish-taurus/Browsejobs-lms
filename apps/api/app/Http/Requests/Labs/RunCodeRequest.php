@@ -20,6 +20,9 @@ final class RunCodeRequest extends FormRequest
     {
         return [
             'source' => ['required', 'string', 'max:100000'],
+            // Run only: what the student types into the input box. Submit
+            // ignores it and uses each test case's own stdin.
+            'stdin' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

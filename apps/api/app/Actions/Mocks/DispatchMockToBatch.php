@@ -28,7 +28,7 @@ final readonly class DispatchMockToBatch
         return app(TenantContext::class)->run($batch->tenant, function () use ($batch, $blueprint): int {
             $occupying = array_map(fn (BatchMemberStatus $s) => $s->value, BatchMemberStatus::occupying());
             $label = $blueprint->skill ?? $blueprint->role_title;
-            $redirect = rtrim((string) config('app.frontend_url', ''), '/')."/mock?start={$blueprint->id}";
+            $redirect = rtrim((string) config('app.frontend_url', ''), '/')."/student-ai-mock?start={$blueprint->id}";
 
             $count = 0;
             foreach ($batch->members()->whereIn('status', $occupying)->with('student')->get() as $member) {
@@ -42,7 +42,7 @@ final readonly class DispatchMockToBatch
                     'user_id' => $student->id,
                     'title' => "New practice: {$label} mock",
                     'body' => 'Your trainer sent you a practice interview — 10 minutes locks it in.',
-                    'url' => "/mock?start={$blueprint->id}",
+                    'url' => "/student-ai-mock?start={$blueprint->id}",
                 ]);
 
                 $this->messenger->send($student, 'mock_nudge', [

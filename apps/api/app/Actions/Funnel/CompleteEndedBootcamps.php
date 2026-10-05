@@ -87,7 +87,9 @@ final readonly class CompleteEndedBootcamps
             ? Carbon::parse($batch->ends_on)->addDay()
             : Carbon::today();
 
-        // The paid stage runs open-ended: the syllabus series below defines it.
+        // The paid stage runs open-ended — no end date; classes are scheduled
+        // manually from the batch page (or, if ever switched on below, on the
+        // funnel's generic defaults rather than this batch's real pattern).
         $batch->forceFill([
             'type' => BatchType::Paid->value,
             'ends_on' => null,
@@ -113,7 +115,16 @@ final readonly class CompleteEndedBootcamps
             $converted++;
         }
 
-        $this->schedulePaidClasses($batch, $paidStart);
+        // A paid batch used to arrive with its whole syllabus already booked,
+        // on generic Mon-Fri 7pm funnel defaults rather than the days/times
+        // this batch actually teaches — a mismatch nobody caught until
+        // students saw two clashing timetables. The batch now arrives with no
+        // classes and the team builds the calendar from the batch page's
+        // "Schedule Class Series"; switching this on restores the old
+        // behaviour exactly.
+        if (config('funnel.auto_schedule_paid_classes')) {
+            $this->schedulePaidClasses($batch, $paidStart);
+        }
 
         $this->audit->log(
             action: 'batch.stage_advanced',

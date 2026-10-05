@@ -23,6 +23,13 @@ use App\Support\Tenancy\TenantContext;
  * immediately and gives the upgrade prompt something honest to stand on:
  * the candidate has already seen what they are buying more of.
  *
+ * The CV count is read from the same CRM-editable cv_free_grants setting
+ * GenerateCvOnCompletion later grants on course completion (Aug 2026 fix) —
+ * it used to read a disconnected env config (monetization.signup.free_cvs,
+ * defaulting to 1) that nothing kept in sync with the "3 free generations"
+ * a Super Admin actually sets, so a student's very first CV credit grant
+ * silently undercut the real free tier before they ever finished a course.
+ *
  * Idempotent by reason string — re-running never double-grants.
  */
 final readonly class GrantSignupCredits
@@ -44,7 +51,7 @@ final readonly class GrantSignupCredits
             }
 
             $mocks = (int) config('monetization.signup.free_mocks', 2);
-            $cvs = (int) config('monetization.signup.free_cvs', 1);
+            $cvs = $this->entitlements->settings()->cv_free_grants;
 
             if ($mocks > 0) {
                 $this->entitlements->grantCredits(

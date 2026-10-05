@@ -21,6 +21,7 @@ use App\Models\Entitlement;
 use App\Models\Product;
 use App\Models\ProductPurchase;
 use App\Models\Subscription;
+use App\Support\Entitlements\ActiveCareerBoost;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,10 @@ use Illuminate\Http\Request;
  */
 final class StoreController extends Controller
 {
-    public function __construct(private readonly EntitlementService $entitlements) {}
+    public function __construct(
+        private readonly EntitlementService $entitlements,
+        private readonly ActiveCareerBoost $boost,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -50,6 +54,13 @@ final class StoreController extends Controller
                 'entitlements' => $entitlements->map(fn ($e) => [
                     'key' => $e->key, 'kind' => $e->kind, 'expires_at' => $e->expires_at?->toIso8601String(),
                 ])->all(),
+                'career_boost' => [
+                    'active' => $this->boost->active($user),
+                    'expires_at' => $this->boost->expiresAt($user)?->toIso8601String(),
+                    'mocks_remaining' => $this->boost->remainingMocks($user),
+                    'applications_remaining' => $this->boost->remainingApplications($user),
+                    'wider_market_job_limit' => $this->boost->widerMarketLimit($user),
+                ],
             ]]);
         });
     }

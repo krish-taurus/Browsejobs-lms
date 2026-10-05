@@ -30,7 +30,7 @@ class InAppNotification extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'user_id', 'title', 'body', 'url', 'read_at',
+        'tenant_id', 'user_id', 'type', 'title', 'body', 'url', 'read_at',
     ];
 
     /**

@@ -13,6 +13,8 @@ Artisan::command('inspire', function () {
 
 // Dunning ladder (PRD §6.8): daily reminders + soft/hard access blocks.
 Schedule::command('fees:run-ladder')->dailyAt('07:00');
+// Webhook safety net: settle any paid Razorpay links the webhook missed.
+Schedule::command('fees:reconcile-links')->everyFifteenMinutes();
 
 // Bootcamp-conversion nudge ladder (PRD §5 Stage 3): daily non-payer nudges.
 Schedule::command('conversions:run-nudges')->dailyAt('08:00');
@@ -20,33 +22,34 @@ Schedule::command('conversions:run-nudges')->dailyAt('08:00');
 // Masterclass → free bootcamp auto-invite (funnel Stage 2→3): daily.
 Schedule::command('bootcamp:invite')->dailyAt('09:00');
 
-// Automated enrolment funnel: build the weekend masterclass batch per course
-// from lead interest, roll each finished masterclass into a 7-day bootcamp
-// (with its paid batch pre-linked), and convert ended bootcamps to paid.
-// Idempotent daily sweep.
+// Automated enrolment funnel: build Saturday masterclass batches from course
+// interest, roll finished masterclasses into 7-day bootcamps (with their paid
+// batch pre-linked), and convert ended bootcamps. Idempotent daily sweep.
 Schedule::command('funnel:advance')->dailyAt('05:15');
 
 // Support-ticket SLA sweep (PRD §6.13): safety net behind the delayed per-ticket jobs.
 Schedule::command('support:check-sla')->hourly();
 
+// Auto-activate Meta-approved WhatsApp templates (config/whatsapp_templates.php):
+// once Meta approves, business-initiated messages leave the 24h-window regime.
+Schedule::command('whatsapp:sync-templates')->hourly();
+
+// Self-heal classes whose Zoom meeting failed to create (bad creds / outage):
+// once credentials are fixed, every pending class repairs itself in ≤1 hour.
+Schedule::command('zoom:backfill')->hourly();
+
+// Pull finished Zoom Cloud recordings for ended classes (webhook fallback for
+// installs Zoom can't call back) — absentees see them on the Recordings page.
+Schedule::command('zoom:sync-recordings')->everyThirtyMinutes();
+
 // Post-class study nudge (PRD §6 daily loop): nudge cohorts to review flashcards
 // for classes that have ended, once the flashcards exist. Idempotent.
 Schedule::command('class:wrapup')->hourly();
 
-// Any future class missing its Zoom meeting gets one — self-heals the fallout
-// from a credentials outage without anybody re-creating classes by hand.
-// Activate a WhatsApp mapping the moment Meta approves the template. Until a
-// key is linked its messages go out as free text, which Meta accepts and then
-// silently drops outside the 24h window — a message nobody receives and no log
-// complains about.
-Schedule::command('whatsapp:sync-templates')->hourly();
-
-Schedule::command('zoom:backfill')->hourly();
-
-// Pull finished Zoom Cloud recordings for classes that have run. This is the
-// webhook fallback, and the only route that works at all while Zoom cannot
-// reach this host: without it a recording never appears in the portal.
-Schedule::command('zoom:sync-recordings')->everyThirtyMinutes();
+// Nothing else marks a class over — Zoom never tells us. Without this a finished
+// class stays "scheduled" for ever: it lingers in the student's Upcoming list and
+// zoom:sync-recordings skips it, so its recording is never self-hosted.
+Schedule::command('classes:close-finished')->everyFifteenMinutes();
 
 // Google Drive review intake (Platform Spec §3): pull new review images from the
 // configured folder into the triage queue. Weekly; a no-op until a service account
@@ -97,9 +100,8 @@ Schedule::command('jobs:nudge')->dailyAt('09:30');
 // P4.8c Apply Assist: daily follow-up nudges on stalled applications.
 Schedule::command('applications:follow-ups')->dailyAt('10:00');
 
-// Market intelligence (landing boards): refresh at midnight so the boards
-// carry the day's figures from the moment the date changes.
-Schedule::command('market:refresh')->dailyAt('00:00');
+// Market intelligence (landing boards): daily snapshot refresh.
+Schedule::command('market:refresh')->dailyAt('05:45');
 
 // Daily Market Brief teaser to open leads, after the morning snapshot refresh.
 Schedule::job(new SendDailyBrief)->dailyAt('08:30');

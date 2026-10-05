@@ -8,6 +8,7 @@ use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
 use App\Models\AccessBlock;
 use App\Models\Batch;
+use App\Models\FeePlan;
 use App\Models\User;
 
 /**
@@ -25,6 +26,12 @@ final class DuesFeeGate implements FeeGate
 {
     public function allowsLiveAccess(User $student, Batch $batch): bool
     {
+        // A granted extension outranks everything: the academic team has
+        // explicitly bought this student more time.
+        if ($this->hasActiveExtension($student, $batch)) {
+            return true;
+        }
+
         $blocked = AccessBlock::query()
             ->withoutGlobalScopes()
             ->where('tenant_id', $student->tenant_id)
@@ -37,6 +44,19 @@ final class DuesFeeGate implements FeeGate
         }
 
         return $this->withinPaymentGrace($student, $batch);
+    }
+
+    /** Whether this student has an unexpired access extension on this batch. */
+    private function hasActiveExtension(User $student, Batch $batch): bool
+    {
+        $plan = FeePlan::query()->withoutGlobalScopes()
+            ->where("user_id", $student->id)
+            ->where("batch_id", $batch->id)
+            ->whereNotNull("access_extended_until")
+            ->latest("id")
+            ->first();
+
+        return $plan?->accessExtensionActive() ?? false;
     }
 
     /**

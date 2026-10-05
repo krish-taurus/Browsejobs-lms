@@ -30,6 +30,30 @@ return [
         'included_live' => 5,          // per paid (live) course
         'included_self_paced' => 2,
     ],
+    // Free-tier attempt caps for the three AI-interview flows, deliberately
+    // separate systems (Aug 2026): a course mock's voice-room attempts are
+    // capped per blueprint, an employer JD's interview is capped per job, the
+    // AI Readiness Interview (general, CV-driven, not tied to a job) gets its
+    // own smaller cap since it's a bigger 15-question investment — using one
+    // never touches another's count, and none draw from the voice_mock
+    // credit wallet above. Hard stop past the cap, no purchase path.
+    // CRM-editable.
+    'mock_attempts' => [
+        'general_per_blueprint' => 3,
+        'employer_per_job' => 3,
+        'cv_readiness' => 2,
+    ],
+    // Free-tier ceiling on how many employer JDs a candidate can apply to.
+    // CRM-editable.
+    'job_applications' => [
+        'free_limit' => 5,
+    ],
+    // "Wider Market" (scraped/external) feed on Jobs for You: shown only once
+    // a candidate has a CV on file — there's nothing to match against
+    // otherwise — capped at a flat number of results. CRM-editable.
+    'wider_market' => [
+        'job_limit' => 20,
+    ],
     'mentor' => [
         'extra_paise' => 49_900,       // ₹499 / extra 1:1
     ],
@@ -53,4 +77,14 @@ return [
     ],
     // Free unmetered text practice. Off by default (founder); CRM-editable.
     'text_practice_enabled' => (bool) env('TEXT_PRACTICE_ENABLED', false),
+    // PRD-E F6 extension (candidate request, Aug 2026): the platform-wide bar
+    // every employer JD gets a default Automation rule at, the moment it's
+    // published — no employer setup required. An employer can still edit or
+    // disable their job's rule from the Automation tab same as any other.
+    // CRM-editable.
+    'auto_shortlist' => [
+        'enabled' => true,
+        'min_score' => 70,          // JD interview score, 0-100
+        'min_cv_match_pct' => 60,   // skill overlap between CV and this JD, 0-100
+    ],
 ];

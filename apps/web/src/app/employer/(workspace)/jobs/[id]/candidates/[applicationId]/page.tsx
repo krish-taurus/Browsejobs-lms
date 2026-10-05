@@ -32,11 +32,11 @@ import {
  */
 
 const VERIFY_TONE: Record<string, { color: string; bg: string; border: string }> = {
-  verified: { color: "#5fd6a6", bg: "#0da06e1f", border: "#0da06e55" },
-  pending: { color: "#e8bf63", bg: "#b07c001f", border: "#b07c0055" },
-  failed: { color: "#f2a1a7", bg: "#e055611f", border: "#e0556155" },
-  expired: { color: "#f2a1a7", bg: "#e055611f", border: "#e0556155" },
-  not_started: { color: "rgba(244,247,251,0.5)", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.10)" },
+  verified: { color: "#0da06e", bg: "#0da06e1f", border: "#0da06e55" },
+  pending: { color: "#b07c00", bg: "#b07c001f", border: "#b07c0055" },
+  failed: { color: "#e05561", bg: "#e055611f", border: "#e0556155" },
+  expired: { color: "#e05561", bg: "#e055611f", border: "#e0556155" },
+  not_started: { color: "#8a8d91", bg: "#f0f2f5", border: "#e4e6eb" },
 };
 
 function tone(status: string) {
@@ -96,11 +96,11 @@ export default function CandidateProfilePage() {
   if (failed) {
     return (
       <Tile accent={TRUST} hover={false}>
-        <p className="text-sm text-white/60">This candidate could not be loaded.</p>
+        <p className="text-sm text-[#65676b]">This candidate could not be loaded.</p>
         <div className="mt-4">
           <Link
             href={`/employer/jobs/${jobId}`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/30"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#e4e6eb] bg-[#fafbfc] px-4 py-2 text-sm font-medium text-[#3a3b3c] transition-colors hover:border-[#1877f2]"
           >
             Back to the JD
           </Link>
@@ -126,7 +126,7 @@ export default function CandidateProfilePage() {
     <div className="w-full min-w-0 space-y-5 pb-12">
       <Link
         href={`/employer/jobs/${jobId}`}
-        className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-white/45 transition-colors hover:text-white"
+        className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[#65676b] transition-colors hover:text-[#050505]"
       >
         ← Back to the JD
       </Link>
@@ -142,11 +142,11 @@ export default function CandidateProfilePage() {
             <div className="flex items-center gap-5">
               {score !== null ? (
                 <Ring value={score} size={78} stroke={9} color={score >= 80 ? VERIFY : score >= 60 ? AMBER : TRUST}>
-                  <span className="font-display text-base font-bold text-white">{score}</span>
+                  <span className="font-display text-base font-bold text-[#050505]">{score}</span>
                 </Ring>
               ) : (
-                <div className="grid h-[78px] w-[78px] shrink-0 place-items-center rounded-full border border-dashed border-white/20">
-                  <span className="font-mono text-[8px] uppercase tracking-wider text-white/45">no score</span>
+                <div className="grid h-[78px] w-[78px] shrink-0 place-items-center rounded-full border border-dashed border-[#dfe3ea]">
+                  <span className="font-mono text-[8px] uppercase tracking-wider text-[#65676b]">no score</span>
                 </div>
               )}
 
@@ -154,7 +154,7 @@ export default function CandidateProfilePage() {
                 <h1 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
                   {candidate.name ?? "Candidate"}
                 </h1>
-                <p className="mt-1 text-[13px] text-white/50">
+                <p className="mt-1 text-[13px] text-[#65676b]">
                   Applied {shortDate(application.applied_at) ?? "—"}
                   {application.mock_attempts > 1 && (
                     <> · {application.mock_attempts} interview attempts, best score shown</>
@@ -171,8 +171,8 @@ export default function CandidateProfilePage() {
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold"
                 style={
                   verification.badge
-                    ? { background: "#0da06e1f", borderColor: "#0da06e55", color: "#5fd6a6" }
-                    : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(244,247,251,0.55)" }
+                    ? { background: "#0da06e1f", borderColor: "#0da06e55", color: "#0da06e" }
+                    : { background: "#f0f2f5", borderColor: "#e4e6eb", color: "#65676b" }
                 }
               >
                 <span aria-hidden>{verification.badge ? "✓" : "○"}</span>
@@ -182,14 +182,14 @@ export default function CandidateProfilePage() {
           </div>
 
           {/* Contact, or the reason there is none. */}
-          <div className="mt-5 border-t border-white/[0.07] pt-4">
+          <div className="mt-5 border-t border-[#e4e6eb] pt-4">
             {candidate.contact_visible ? (
               <div className="flex flex-wrap gap-x-8 gap-y-2">
-                <span className="font-mono text-[13px] text-white/80">{candidate.email ?? "—"}</span>
-                <span className="font-mono text-[13px] text-white/80">{candidate.phone ?? "—"}</span>
+                <span className="font-mono text-[13px] text-[#3a3b3c]">{candidate.email ?? "—"}</span>
+                <span className="font-mono text-[13px] text-[#3a3b3c]">{candidate.phone ?? "—"}</span>
               </div>
             ) : (
-              <p className="text-[13px] text-white/45">
+              <p className="text-[13px] text-[#65676b]">
                 Contact details unlock at Shortlisted. Until then you assess the work, not the person.
               </p>
             )}
@@ -201,7 +201,7 @@ export default function CandidateProfilePage() {
       <Tile accent={VERIFY} hover={false}>
         <Label>Verification</Label>
         <h2 className="font-display mt-2 text-xl font-bold tracking-tight">What has actually been checked</h2>
-        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/50">
+        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[#65676b]">
           Each check reports its result only. BrowseJobs holds the documents behind them; you see
           whether a check passed, not what the candidate submitted.
         </p>
@@ -219,13 +219,13 @@ export default function CandidateProfilePage() {
                 style={{ background: t.bg, borderColor: t.border }}
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-[13px] font-semibold text-white">{check.label}</p>
+                  <p className="text-[13px] font-semibold text-[#050505]">{check.label}</p>
                   {/* Status is named, never colour alone. */}
                   <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: t.color }}>
                     {check.status_label}
                   </span>
                 </div>
-                <p className="mt-1 text-[11px] text-white/40">
+                <p className="mt-1 text-[11px] text-[#8a8d91]">
                   {checkSubtitle(check.status, check.verified_at)}
                 </p>
               </motion.li>
@@ -238,7 +238,7 @@ export default function CandidateProfilePage() {
       {interview === null ? (
         <Tile accent={TRUST} hover={false}>
           <Label>Interview</Label>
-          <p className="mt-2 text-sm text-white/55">
+          <p className="mt-2 text-sm text-[#65676b]">
             This candidate has not sat the interview for this JD yet, so there is nothing to grade.
           </p>
         </Tile>
@@ -251,7 +251,7 @@ export default function CandidateProfilePage() {
             </h2>
 
             {interview.competencies.length === 0 ? (
-              <p className="mt-3 text-sm text-white/50">
+              <p className="mt-3 text-sm text-[#65676b]">
                 The grader returned an overall score without a per-dimension breakdown.
               </p>
             ) : (
@@ -259,8 +259,8 @@ export default function CandidateProfilePage() {
                 {interview.competencies.map((c) => (
                   <li key={c.name}>
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[13px] font-semibold text-white">{c.name}</span>
-                      <span className="font-mono text-[12px] text-white/70">{c.score ?? "—"}</span>
+                      <span className="text-[13px] font-semibold text-[#050505]">{c.name}</span>
+                      <span className="font-mono text-[12px] text-[#3a3b3c]">{c.score ?? "—"}</span>
                     </div>
                     <div className="mt-1.5">
                       <SkillMeter
@@ -274,7 +274,7 @@ export default function CandidateProfilePage() {
             )}
 
             {interview.graded_by && (
-              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
+              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8a8d91]">
                 Graded by {interview.graded_by === "ai" ? "AI against this JD's rubric" : "the fallback rubric"}
               </p>
             )}
@@ -284,12 +284,12 @@ export default function CandidateProfilePage() {
             <Tile accent={VERIFY} hover={false}>
               <Label>What went well</Label>
               {interview.strengths.length === 0 ? (
-                <p className="mt-3 text-[13px] text-white/45">The grader called out no specific strengths.</p>
+                <p className="mt-3 text-[13px] text-[#65676b]">The grader called out no specific strengths.</p>
               ) : (
                 <ul className="mt-3 space-y-2.5">
                   {interview.strengths.map((s, i) => (
-                    <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-white/75">
-                      <span aria-hidden style={{ color: "#5fd6a6" }}>▸</span>
+                    <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-[#3a3b3c]">
+                      <span aria-hidden style={{ color: "#0da06e" }}>▸</span>
                       {s}
                     </li>
                   ))}
@@ -300,12 +300,12 @@ export default function CandidateProfilePage() {
             <Tile accent={AMBER} hover={false}>
               <Label>Where they were weaker</Label>
               {interview.concerns.length === 0 ? (
-                <p className="mt-3 text-[13px] text-white/45">The grader called out no specific concerns.</p>
+                <p className="mt-3 text-[13px] text-[#65676b]">The grader called out no specific concerns.</p>
               ) : (
                 <ul className="mt-3 space-y-2.5">
                   {interview.concerns.map((s, i) => (
-                    <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-white/75">
-                      <span aria-hidden style={{ color: "#e8bf63" }}>▸</span>
+                    <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-[#3a3b3c]">
+                      <span aria-hidden style={{ color: "#b07c00" }}>▸</span>
                       {s}
                     </li>
                   ))}
@@ -319,25 +319,25 @@ export default function CandidateProfilePage() {
             <Label>The session itself</Label>
             <dl className="mt-3 grid gap-4 sm:grid-cols-3">
               <div>
-                <dt className="text-[11px] uppercase tracking-[0.12em] text-white/35">Mode</dt>
-                <dd className="mt-1 font-mono text-[13px] text-white/80">{interview.session.mode ?? "—"}</dd>
+                <dt className="text-[11px] uppercase tracking-[0.12em] text-[#8a8d91]">Mode</dt>
+                <dd className="mt-1 font-mono text-[13px] text-[#3a3b3c]">{interview.session.mode ?? "—"}</dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-[0.12em] text-white/35">Length</dt>
-                <dd className="mt-1 font-mono text-[13px] text-white/80">
+                <dt className="text-[11px] uppercase tracking-[0.12em] text-[#8a8d91]">Length</dt>
+                <dd className="mt-1 font-mono text-[13px] text-[#3a3b3c]">
                   {minutes(interview.session.duration_seconds) ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-[0.12em] text-white/35">Completed</dt>
-                <dd className="mt-1 font-mono text-[13px] text-white/80">
+                <dt className="text-[11px] uppercase tracking-[0.12em] text-[#8a8d91]">Completed</dt>
+                <dd className="mt-1 font-mono text-[13px] text-[#3a3b3c]">
                   {shortDate(interview.session.completed_at) ?? "—"}
                 </dd>
               </div>
             </dl>
 
             {!interview.session.proctoring_captured && (
-              <p className="mt-4 rounded-2xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 text-[12px] leading-relaxed text-white/55">
+              <p className="mt-4 rounded-2xl border border-[#e4e6eb] bg-[#fafbfc] px-4 py-3 text-[12px] leading-relaxed text-[#65676b]">
                 Proctoring signals were not captured for this session. Read the score as an unsupervised
                 assessment — we are not reporting a clean session, we are saying we did not watch one.
               </p>
@@ -352,21 +352,21 @@ export default function CandidateProfilePage() {
       <Tile accent={TRUST} hover={false}>
         <Label>Background</Label>
         {cv === null ? (
-          <p className="mt-3 text-[13px] text-white/45">
+          <p className="mt-3 text-[13px] text-[#65676b]">
             This candidate has not built a CV profile on the platform.
           </p>
         ) : (
           <div className="mt-3 space-y-5">
-            {cv.summary && <p className="max-w-3xl text-[14px] leading-relaxed text-white/70">{cv.summary}</p>}
+            {cv.summary && <p className="max-w-3xl text-[14px] leading-relaxed text-[#3a3b3c]">{cv.summary}</p>}
 
             {cv.skills.length > 0 && (
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">Skills</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8a8d91]">Skills</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {cv.skills.map((s) => (
                     <span
                       key={s}
-                      className="rounded-full border border-white/[0.10] px-2.5 py-1 font-mono text-[10px] text-white/60"
+                      className="rounded-full border border-[#e4e6eb] px-2.5 py-1 font-mono text-[10px] text-[#65676b]"
                     >
                       {s}
                     </span>
@@ -432,7 +432,7 @@ function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId
     return (
       <Tile accent={TRUST} hover={false}>
         <Label>Interview rounds</Label>
-        <p className="mt-2 text-[13px] text-white/50">
+        <p className="mt-2 text-[13px] text-[#65676b]">
           This role runs no platform rounds. Design them on the JD&apos;s Process tab.
         </p>
       </Tile>
@@ -443,7 +443,7 @@ function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId
     <Tile accent={TRUST} hover={false}>
       <Label>Interview rounds</Label>
       <h2 className="font-display mt-2 text-xl font-bold tracking-tight">Send a round</h2>
-      <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/50">
+      <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[#65676b]">
         Each round asks what this candidate has not been asked yet. Sending one does not move their
         stage — that stays a decision you make.
       </p>
@@ -452,11 +452,11 @@ function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId
         {rounds.map((round) => (
           <li
             key={round.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e4e6eb] bg-[#fafbfc] p-4"
           >
             <div>
-              <p className="text-[13px] font-semibold text-white">{round.name}</p>
-              <p className="mt-0.5 font-mono text-[11px] text-white/40">
+              <p className="text-[13px] font-semibold text-[#050505]">{round.name}</p>
+              <p className="mt-0.5 font-mono text-[11px] text-[#8a8d91]">
                 {round.question_count ?? "all matching"} questions · {round.window_hours}h
                 {round.dispatch === "auto" && round.auto_min_score !== null && (
                   <> · automatic at {round.auto_min_score}%</>
@@ -470,7 +470,7 @@ function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId
                 type="button"
                 onClick={() => void send(round)}
                 disabled={busy === round.id}
-                className="rounded-full border border-white/[0.14] px-4 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-white/30 disabled:opacity-40"
+                className="rounded-full border border-[#e4e6eb] px-4 py-1.5 text-xs font-medium text-[#3a3b3c] transition-colors hover:border-[#1877f2] disabled:opacity-40"
               >
                 {busy === round.id ? "Sending…" : "Send"}
               </button>
@@ -479,8 +479,8 @@ function SendRoundPanel({ jobId, applicationId }: { jobId: number; applicationId
         ))}
       </ul>
 
-      {note && <p className="mt-3 text-[13px]" style={{ color: "#6ee7b7" }}>{note}</p>}
-      {error && <p className="mt-3 text-[13px]" style={{ color: "#fca5a5" }}>{error}</p>}
+      {note && <p className="mt-3 text-[13px]" style={{ color: "#0da06e" }}>{note}</p>}
+      {error && <p className="mt-3 text-[13px]" style={{ color: "#e05561" }}>{error}</p>}
     </Tile>
   );
 }
@@ -496,7 +496,7 @@ function CvList({ title, rows }: { title: string; rows: Record<string, unknown>[
 
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">{title}</p>
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8a8d91]">{title}</p>
       <ul className="mt-2 space-y-2.5">
         {rows.map((row, i) => {
           const head = [row.title, row.role, row.degree, row.qualification].find(
@@ -520,16 +520,16 @@ function CvList({ title, rows }: { title: string; rows: Record<string, unknown>[
           );
 
           return (
-            <li key={i} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
-              <p className="text-[13px] font-semibold text-white">{head ?? `${title} entry ${i + 1}`}</p>
+            <li key={i} className="rounded-2xl border border-[#e4e6eb] bg-[#fafbfc] p-4">
+              <p className="text-[13px] font-semibold text-[#050505]">{head ?? `${title} entry ${i + 1}`}</p>
               {(where || when) && (
-                <p className="mt-0.5 text-[12px] text-white/50">
+                <p className="mt-0.5 text-[12px] text-[#65676b]">
                   {[where, when].filter(Boolean).join(" · ")}
                 </p>
               )}
               {rest.map(([k, v]) => (
-                <p key={k} className="mt-1.5 text-[12px] leading-relaxed text-white/55">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-white/30">{k}</span>{" "}
+                <p key={k} className="mt-1.5 text-[12px] leading-relaxed text-[#65676b]">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#8a8d91]">{k}</span>{" "}
                   {v as string}
                 </p>
               ))}

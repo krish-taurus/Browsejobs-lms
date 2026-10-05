@@ -97,6 +97,7 @@ final readonly class RunClassWrapups
             InAppNotification::query()->create([
                 'tenant_id' => $session->tenant_id,
                 'user_id' => $student->id,
+                'type' => 'class',
                 'title' => "Review today's class — {$session->title}.",
                 'body' => 'Your flashcards are ready. A few minutes of recall now is worth an hour of re-reading later.',
                 'url' => "/flashcards/{$lessonId}",

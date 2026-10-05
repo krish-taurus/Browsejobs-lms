@@ -39,14 +39,23 @@ trait ResolvesCrmTargets
 
     private function findStudent(string $identifier): ?User
     {
-        return User::query()->withoutGlobalScope(TenantScope::class)
-            ->where('user_type', 'student')
-            ->when(
-                ctype_digit($identifier),
-                fn ($q) => $q->whereKey((int) $identifier),
-                fn ($q) => $q->where(fn ($w) => $w->where('email', $identifier)->orWhere('phone', $identifier)),
-            )
-            ->first();
+        $base = fn () => User::query()->withoutGlobalScope(TenantScope::class);
+
+        // An id comes straight from a roster the CRM has already rendered, so the
+        // row exists — and a seat is not always held by a `student`: a trainer
+        // taking the course, or an internal test seat, is staff. Insisting on
+        // user_type=student made those rows unmanageable from the CRM, which
+        // surfaced as "Student '7' not found" on a person visibly on the roster.
+        if (ctype_digit($identifier)) {
+            return $base()->whereKey((int) $identifier)->first();
+        }
+
+        $matches = fn ($q) => $q->where('email', $identifier)->orWhere('phone', $identifier);
+
+        // Looking up loosely by phone or email, a real student still wins the tie
+        // — staff and students can share a number in small teams.
+        return $base()->where('user_type', 'student')->where($matches)->first()
+            ?? $base()->where($matches)->first();
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Roster;
 
+use App\Actions\Auth\GrantSignupCredits;
 use App\Models\Scopes\TenantScope;
 use App\Models\Tenant;
 use App\Models\User;
@@ -16,6 +17,8 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class FindOrCreateStudent
 {
+    public function __construct(private GrantSignupCredits $grantCredits) {}
+
     public function handle(Tenant $tenant, string $name, ?string $email = null, ?string $phone = null): User
     {
         $email = $email !== null && $email !== '' ? $email : null;
@@ -44,12 +47,20 @@ final readonly class FindOrCreateStudent
             return $existing;
         }
 
-        return User::query()->create([
+        $user = User::query()->create([
             'tenant_id' => $tenant->id,
             'name' => $name,
             'email' => $email,
             'phone' => $phone,
             'user_type' => 'student',
         ]);
+
+        // Same free tier every other student-creation path grants (Sept 2026
+        // fix) — a roster/CSV-imported student was landing on "0 generations"
+        // with no credit transaction to explain why, same gap RegisterController
+        // already closed for self-registration.
+        $this->grantCredits->handle($user);
+
+        return $user;
     }
 }

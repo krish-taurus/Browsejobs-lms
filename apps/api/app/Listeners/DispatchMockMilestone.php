@@ -57,7 +57,7 @@ final class DispatchMockMilestone implements ShouldQueue
 
             $blueprint = MockBlueprint::activeFor($student);
             $base = rtrim((string) config('app.frontend_url', ''), '/');
-            $redirect = $blueprint !== null ? "{$base}/mock?start={$blueprint->id}" : "{$base}/mock";
+            $redirect = $blueprint !== null ? "{$base}/student-ai-mock?start={$blueprint->id}" : "{$base}/student-ai-mock";
 
             $this->messenger->send($student, 'mock_nudge', [
                 'name' => $student->name,
@@ -74,7 +74,7 @@ final class DispatchMockMilestone implements ShouldQueue
                 'user_id' => $student->id,
                 'title' => "Milestone reached — {$topic->name}. Time for your qualifying mock.",
                 'body' => 'Clear this AI practice interview to move toward the real one. 10 minutes.',
-                'url' => '/mock',
+                'url' => '/student-ai-mock',
             ]);
         });
     }

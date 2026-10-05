@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { INTL_PRICE, useIsInternational } from "@/lib/region";
 import Link from "next/link";
 import Lenis from "lenis";
 import {
@@ -667,6 +668,7 @@ function InterviewIntel({ slug, accent }: { slug: string; accent: string }) {
 
 export default function CourseKeynote({ course }: { course: CourseDetail }) {
   useLenis();
+  const international = useIsInternational();
   const extras = COURSE_EXTRAS[course.slug] ?? COURSE_EXTRAS["data-engineering"];
   const accent = extras.accent;
 
@@ -801,7 +803,7 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
             </a>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="mt-4 text-sm text-fg/35">
-            3 free steps first · ₹30,000 only after the free bootcamp · pay-after-placement path
+            3 free steps first · {international ? `$${INTL_PRICE}` : "₹30,000"} only after the free bootcamp · pay-after-placement path
           </motion.p>
         </div>
       </section>
@@ -977,7 +979,10 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.9 }}
             className="mx-auto mt-6 max-w-md text-white/50"
           >
-            ₹30,000 registration (EMI 3 × ₹10,000) only after the free steps. Placement fee only after you accept an offer.
+            {international
+              ? `$${INTL_PRICE} registration (one payment)`
+              : "₹30,000 registration (EMI 3 × ₹10,000)"}{" "}
+            only after the free steps. Placement fee only after you accept an offer.
             30-day money-back guarantee, in writing.
           </motion.p>
           <motion.div

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Funnel;
 
 use App\Actions\Auth\AssignRoleToUser;
+use App\Actions\Auth\GrantSignupCredits;
 use App\Models\Lead;
 use App\Models\User;
 use App\Support\Crm\PhoneNormalizer;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 final readonly class EnsureStudentAccount
 {
-    public function __construct(private AssignRoleToUser $assignRole) {}
+    public function __construct(private AssignRoleToUser $assignRole, private GrantSignupCredits $grantCredits) {}
 
     public function handle(Lead $lead): ?User
     {
@@ -66,6 +67,12 @@ final readonly class EnsureStudentAccount
             // Role table not seeded in this environment — the membership still
             // works; the role can be granted later.
         }
+
+        // Same free tier every other student-creation path grants (Sept 2026
+        // fix) — a funnel-seated lead was landing on "0 generations" with no
+        // credit transaction to explain why, same gap RegisterController
+        // already closed for self-registration.
+        $this->grantCredits->handle($user);
 
         return $user;
     }

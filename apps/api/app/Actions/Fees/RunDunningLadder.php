@@ -100,6 +100,12 @@ final readonly class RunDunningLadder
             $this->sendReminder($next, $student, "grace-{$overdueDays}", $summary);
         }
 
+        // An access extension pauses blocking entirely — reminders still go out
+        // so the student knows the money is owed, but nothing locks until it ends.
+        if ($plan->accessExtensionActive()) {
+            return;
+        }
+
         // Soft block once the grace window closes; hard block after the window.
         if ($overdueDays >= $graceDays + $hardAfter) {
             $before = $this->activeLevel($student->id);

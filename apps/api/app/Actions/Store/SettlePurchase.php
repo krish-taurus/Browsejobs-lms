@@ -11,6 +11,7 @@ use App\Enums\PurchaseStatus;
 use App\Events\ProductPurchased;
 use App\Jobs\RenderPurchaseReceipt;
 use App\Models\BatchMember;
+use App\Models\CareerBoost;
 use App\Models\ProductPurchase;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
@@ -77,7 +78,40 @@ final readonly class SettlePurchase
             ),
             ProductKind::SelfPaced => $this->grantSelfPaced($purchase, $user),
             ProductKind::Upgrade => $this->grantUpgrade($purchase, $user),
+            ProductKind::CareerBoost => $this->grantCareerBoost($purchase, $user),
         };
+    }
+
+    /**
+     * A Career Boost is two things at once: a running bonus pool (mock
+     * attempts + job applications, spent via ActiveCareerBoost as the
+     * candidate uses Jobs for You) and a plain CV-credit pack (the wallet
+     * already handles that half exactly like any other pack). Buying a
+     * second boost while one is still active does not replace it — see
+     * ActiveCareerBoost for how multiple unexpired rows stack.
+     */
+    private function grantCareerBoost(ProductPurchase $purchase, User $user): void
+    {
+        $product = $purchase->product;
+        if ($product === null) {
+            return;
+        }
+
+        CareerBoost::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'product_purchase_id' => $purchase->id,
+            'mock_bonus_total' => $product->mock_bonus_amount ?? 0,
+            'job_application_bonus_total' => $product->job_application_bonus_amount ?? 0,
+            'wider_market_job_limit' => $product->wider_market_job_limit ?? 0,
+            'expires_at' => now()->addDays((int) ($product->period_days ?? 30)),
+        ]);
+
+        if (($product->grant_amount ?? 0) > 0 && $purchase->feature !== null) {
+            $this->entitlements->grantCredits(
+                $user, (string) $purchase->feature, (int) $product->grant_amount, "purchase:{$purchase->sku}", $purchase,
+            );
+        }
     }
 
     private function grantPack(ProductPurchase $purchase, User $user): void

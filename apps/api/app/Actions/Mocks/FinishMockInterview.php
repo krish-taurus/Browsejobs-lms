@@ -9,7 +9,9 @@ use App\Enums\ActivityType;
 use App\Enums\AiPurpose;
 use App\Enums\PointsSource;
 use App\Events\MockCompleted;
+use App\Models\CvProfile;
 use App\Models\MockInterview;
+use App\Models\User;
 use App\Services\AI\AiGateway;
 use App\Services\AI\JsonOutput;
 use App\Support\Points\PointsService;
@@ -58,6 +60,14 @@ final readonly class FinishMockInterview
         $student = $interview->student;
         $tenantId = (int) $interview->tenant_id;
 
+        // The AI Readiness Interview (blueprint->user_id set) is what makes a
+        // student's profile discoverable in an employer's Talent Pool search
+        // (LmsTalentMatcher) even without applying anywhere — best score
+        // across attempts wins, same as RecordApplicationGrade.
+        if ($interview->blueprint->user_id !== null) {
+            $this->recordCvMockScore($student, (int) $scorecard['overall']);
+        }
+
         $this->activity->handle($student, ActivityType::MockCompleted, $interview, (int) $scorecard['overall']);
 
         $this->points->award(
@@ -102,6 +112,25 @@ final readonly class FinishMockInterview
         }
 
         return [$this->fallback($blueprint->competencies), 'fallback'];
+    }
+
+    /**
+     * Best score across attempts wins, same rule as the JD-mock application
+     * grade — a weaker retake never demotes a student who already cleared a
+     * higher bar. A CvProfile should already exist (starting this interview
+     * requires one, mirroring the JD-mock CV gate); firstOrCreate is only a
+     * safety net, not the expected path.
+     */
+    private function recordCvMockScore(User $student, int $score): void
+    {
+        $profile = CvProfile::query()->firstOrCreate(
+            ['user_id' => $student->id],
+            ['tenant_id' => $student->tenant_id, 'data' => CvProfile::EMPTY],
+        );
+
+        if ($profile->cv_mock_score === null || $score > $profile->cv_mock_score) {
+            $profile->update(['cv_mock_score' => $score, 'cv_mock_completed_at' => now()]);
+        }
     }
 
     /**

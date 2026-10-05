@@ -70,7 +70,7 @@ final class CvProfileData
             ->take(8)
             ->map(fn (CodeSubmission $s) => [
                 'name' => (string) ($s->lesson?->title ?? 'Coding lab'),
-                'detail' => "Passed all {$s->total_tests} tests in {$s->language}"
+                'detail' => "Passed all {$s->total_tests} tests in {$s->language->value}"
                     .$this->labContext($s->lesson_id),
             ])
             ->values()

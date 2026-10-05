@@ -19,9 +19,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $key
  * @property string $name
  * @property string $kind
+ * @property int|null $assigned_member_id
  * @property list<string>|null $focus_skills
  * @property array<string, int>|null $competency_weights
  * @property array<string, int>|null $format_mix
+ * @property list<string>|null $selected_questions
  * @property int|null $question_count
  * @property string|null $notes
  * @property int $window_hours
@@ -67,9 +69,9 @@ final class EmployerJobRound extends Model
     ];
 
     protected $fillable = [
-        'tenant_id', 'employer_job_id', 'position', 'key', 'name', 'kind',
-        'focus_skills', 'competency_weights', 'format_mix', 'question_count',
-        'notes', 'window_hours', 'dispatch', 'auto_min_score', 'enabled',
+        'tenant_id', 'employer_job_id', 'position', 'key', 'name', 'kind', 'assigned_member_id',
+        'focus_skills', 'competency_weights', 'format_mix', 'selected_questions',
+        'question_count', 'notes', 'window_hours', 'dispatch', 'auto_min_score', 'enabled',
     ];
 
     /**
@@ -81,9 +83,11 @@ final class EmployerJobRound extends Model
             'focus_skills' => 'array',
             'competency_weights' => 'array',
             'format_mix' => 'array',
+            'selected_questions' => 'array',
             'question_count' => 'integer',
             'window_hours' => 'integer',
             'auto_min_score' => 'integer',
+            'assigned_member_id' => 'integer',
             'position' => 'integer',
             'enabled' => 'boolean',
         ];
@@ -99,6 +103,16 @@ final class EmployerJobRound extends Model
     public function interviews(): HasMany
     {
         return $this->hasMany(EmployerInterview::class, 'employer_job_round_id');
+    }
+
+    /**
+     * Who actually conducts this round when it is a human one.
+     *
+     * @return BelongsTo<EmployerMember, $this>
+     */
+    public function assignedMember(): BelongsTo
+    {
+        return $this->belongsTo(EmployerMember::class, 'assigned_member_id');
     }
 
     /**

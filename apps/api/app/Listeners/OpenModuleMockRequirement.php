@@ -45,7 +45,7 @@ final class OpenModuleMockRequirement implements ShouldQueue
                 'user_id' => $student->id,
                 'title' => "Mocks unlocked — {$module->name}.",
                 'body' => "Clear {$required} AI mock interview".($required === 1 ? '' : 's').' for this module to keep progressing.',
-                'url' => '/mock',
+                'url' => '/student-ai-mock',
             ]);
         });
     }

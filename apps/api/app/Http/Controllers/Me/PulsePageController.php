@@ -65,7 +65,7 @@ final class PulsePageController extends Controller
                 ->where('is_active', true)
                 ->orderByDesc('published_at')
                 ->limit(20)
-                ->get(['id', 'kind', 'title', 'url', 'published_at']),
+                ->get(['id', 'kind', 'title', 'url', 'view_count', 'published_at']),
         ]]);
     }
 

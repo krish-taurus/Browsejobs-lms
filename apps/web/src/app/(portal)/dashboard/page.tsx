@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth";
+import { DashboardBannerCarousel } from "@/components/portal/DashboardBannerCarousel";
 import { FeeWidget } from "@/components/portal/FeeWidget";
 import { FeeSummary } from "@/components/portal/FeeSummary";
 import { FeeChoiceCard } from "@/components/portal/FeeChoiceCard";
@@ -19,6 +20,10 @@ export default function DashboardPage() {
       <h1 className="display mt-2 text-3xl text-ink">
         Welcome back, {user?.name?.split(" ")[0]}
       </h1>
+
+      {/* Rotating promo carousel — offers, new features, podcast episodes.
+          Entirely CRM-managed; renders nothing when there's nothing live. */}
+      <DashboardBannerCarousel />
 
       <FeeWidget />
 

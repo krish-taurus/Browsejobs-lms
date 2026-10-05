@@ -1,111 +1,230 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspace } from "@/components/employer/EmployerShell";
-import { PageHead, Pill, PrimaryButton, Skeleton, Tile } from "@/components/employer/ui";
-import { DEEP, SKY, TRUST, VERIFY, VIOLET } from "@/components/employer/charts";
-import { employerApi, type EmployerJobRow, type JobStatus } from "@/lib/employer";
+import { TwoPanelBanner } from "@/components/employer/TwoPanelBanner";
+import { employerApi, type EmployerJobCounts, type EmployerJobRow, type EmployerJobsPage as JobsPageData } from "@/lib/employer";
+import { JobsHeader } from "./components/JobsHeader";
+import { JobsSummary } from "./components/JobsSummary";
+import { JobsFilters, type StatusFilter } from "./components/JobsFilters";
+import { PublishedRoles } from "./components/PublishedRoles";
+import { ClosedRoles } from "./components/ClosedRoles";
+import { Pagination } from "./components/Pagination";
 
-const STATUS_TONE: Record<JobStatus, "verify" | "neutral" | "trust" | "warn"> = {
-  published: "verify",
-  draft: "neutral",
-  paused: "trust",
-  closed: "neutral",
-};
-
-const ACCENTS = [TRUST, VIOLET, DEEP, VERIFY, SKY];
-
+/**
+ * Jobs page — PRD-E emerald/ivory redesign (approved kit, Sept 2026).
+ *
+ * "All jobs" needs a published-cards section AND a closed-roles table at
+ * once, but the list endpoint only paginates one status at a time — so
+ * "All jobs" runs two independent, separately-paginated requests (one per
+ * section) rather than one combined page. See IMPLEMENT-JOBS-PAGE.md §8:
+ * "independent group pagination if that is how the API works." `counts`
+ * comes back workspace-wide on every response regardless of filter, so
+ * either request can supply it.
+ */
 export default function EmployerJobsPage() {
   const { workspace } = useWorkspace();
-  const [jobs, setJobs] = useState<EmployerJobRow[] | null>(null);
+
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [publishedPage, setPublishedPage] = useState(1);
+  const [closedPage, setClosedPage] = useState(1);
+
+  const [counts, setCounts] = useState<EmployerJobCounts | null>(null);
+  const [published, setPublished] = useState<JobsPageData | null>(null);
+  const [closed, setClosed] = useState<JobsPageData | null>(null);
+  const [otherJobs, setOtherJobs] = useState<EmployerJobRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  // Debounce the search box — one request per pause in typing, not per keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // A changed filter or search term invalidates whatever page number was in
+  // effect — page 3 of an unrelated result set is not page 3 of this one.
+  const firstRunRef = useRef(true);
+  useEffect(() => {
+    if (firstRunRef.current) { firstRunRef.current = false; return; }
+    setPublishedPage(1);
+    setClosedPage(1);
+  }, [status, search]);
+
+  const needsPublished = status === "all" || status === "published";
+  const needsClosed = status === "all" || status === "closed";
 
   useEffect(() => {
-    setJobs(null);
-    employerApi.jobs(workspace.id).then((res) => setJobs(res.data)).catch(() => setJobs([]));
-  }, [workspace.id]);
+    if (!needsPublished) { setPublished(null); return; }
+    let cancelled = false;
+    employerApi.jobs(workspace.id, { status: "published", search: search || undefined, page: publishedPage })
+      .then((res) => { if (!cancelled) { setPublished(res); setCounts(res.counts); } })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [workspace.id, needsPublished, search, publishedPage]);
+
+  useEffect(() => {
+    if (!needsClosed) { setClosed(null); return; }
+    let cancelled = false;
+    employerApi.jobs(workspace.id, { status: "closed", search: search || undefined, page: closedPage })
+      .then((res) => { if (!cancelled) { setClosed(res); setCounts(res.counts); } })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [workspace.id, needsClosed, search, closedPage]);
+
+  // Draft/paused jobs — not pictured in the approved reference (which only
+  // has published + closed pills), but real statuses this workspace may
+  // actually have. Fetched only when they exist, so the common case (no
+  // draft/paused jobs) renders exactly like the reference with no extra
+  // section. See IMPLEMENT-JOBS-PAGE.md: "keep additional real statuses...
+  // available... rather than dropping them from All jobs."
+  const hasOtherStatuses = counts !== null && counts.total > counts.published + counts.closed;
+  useEffect(() => {
+    if (status !== "all" || !hasOtherStatuses) { setOtherJobs(null); return; }
+    let cancelled = false;
+    Promise.all([
+      employerApi.jobs(workspace.id, { status: "draft", search: search || undefined }),
+      employerApi.jobs(workspace.id, { status: "paused", search: search || undefined }),
+    ])
+      .then(([draft, paused]) => { if (!cancelled) setOtherJobs([...draft.data, ...paused.data]); })
+      .catch(() => { if (!cancelled) setOtherJobs([]); });
+    return () => { cancelled = true; };
+  }, [workspace.id, status, hasOtherStatuses, search]);
+
+  const resultsSummary = useMemo(() => {
+    if (status === "published" && published) {
+      return search
+        ? `Showing ${published.meta.from ?? 0}–${published.meta.to ?? 0} of ${published.meta.total} published jobs matching "${search}".`
+        : `Showing ${published.meta.from ?? 0}–${published.meta.to ?? 0} of ${published.meta.total} published jobs.`;
+    }
+    if (status === "closed" && closed) {
+      return search
+        ? `Showing ${closed.meta.from ?? 0}–${closed.meta.to ?? 0} of ${closed.meta.total} closed jobs matching "${search}".`
+        : `Showing ${closed.meta.from ?? 0}–${closed.meta.to ?? 0} of ${closed.meta.total} closed jobs.`;
+    }
+    if (published && closed) {
+      const total = published.meta.total + closed.meta.total;
+      if (search) return `Showing ${total} matching job${total === 1 ? "" : "s"} for "${search}".`;
+      if (counts && total === counts.total) return `Showing all ${counts.total} job${counts.total === 1 ? "" : "s"}.`;
+      return `Showing ${total} job${total === 1 ? "" : "s"}.`;
+    }
+    return null;
+  }, [status, published, closed, search, counts]);
+
+  const nothingVisible =
+    search !== "" &&
+    (!needsPublished || published?.data.length === 0) &&
+    (!needsClosed || closed?.data.length === 0) &&
+    (published !== null || !needsPublished) &&
+    (closed !== null || !needsClosed);
+
+  if (failed) {
+    return (
+      <p className="rounded-[var(--bj-dash-radius)] border bg-white p-8 text-sm" style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-muted)" }}>
+        The jobs page could not load. Refresh to try again.
+      </p>
+    );
+  }
 
   return (
-    <div className="space-y-7 pb-10">
-      <PageHead
-        kicker="Jobs"
-        title="Your job"
-        highlight="descriptions"
-        sub="Publishing a JD generates its own interview and grading rubric — applicants arrive already scored against it."
-        action={<PrimaryButton href="/employer/jobs/new">Post a JD</PrimaryButton>}
+    <div className="space-y-5 pb-6">
+      <JobsHeader />
+
+      <TwoPanelBanner
+        topLine="Clear roles."
+        italicLine="Great possibilities."
+        subLine="Every published role has its own interview and grading rubric."
+        imageSrc="/img/employer/jobs-planning-banner.png"
+        imageAlt="Two colleagues reviewing a job description together"
+        objectPosition="50% 20%"
       />
 
-      {jobs === null ? (
-        <div className="grid gap-4 md:grid-cols-2 md:gap-5">
-          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-44" />)}
-        </div>
-      ) : jobs.length === 0 ? (
-        <Tile accent={TRUST} className="py-14 text-center" hover={false}>
-          <p className="font-display text-2xl font-bold tracking-tight">No JDs yet</p>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-white/60">
-            Post your first job description. The moment you publish, BrowseJobs writes a job-specific
-            interview and rubric for it, and every applicant is graded against that — not a CV keyword scan.
+      <JobsSummary counts={counts} />
+
+      <JobsFilters status={status} onStatusChange={setStatus} counts={counts} search={searchInput} onSearchChange={setSearchInput} />
+
+      {nothingVisible && (
+        <div className="rounded-[var(--bj-dash-radius)] border bg-white p-8 text-center" style={{ borderColor: "var(--bj-dash-border)" }}>
+          <p className="text-sm" style={{ color: "var(--bj-dash-ink)" }}>
+            No jobs match &quot;{search}&quot;.
           </p>
-          <div className="mt-6 flex justify-center">
-            <PrimaryButton href="/employer/jobs/new">Post your first JD</PrimaryButton>
-          </div>
-        </Tile>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 md:gap-5">
-          {jobs.map((job, i) => {
-            const accent = ACCENTS[i % ACCENTS.length];
-            return (
-              <Link key={job.id} href={`/employer/jobs/${job.id}`} className="group block">
-                <Tile accent={accent} index={i} ghost={String(i + 1).padStart(2, "0")} className="h-full">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-display text-xl font-bold leading-tight tracking-tight transition-colors group-hover:text-[#4d8ef7]">
-                      {job.title}
-                    </p>
-                    <Pill tone={STATUS_TONE[job.status]}>{job.status}</Pill>
-                  </div>
-
-                  <span
-                    aria-hidden
-                    className="mt-2.5 block h-1 w-0 rounded-full transition-all duration-500 group-hover:w-20"
-                    style={{ background: accent }}
-                  />
-
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {(job.skills ?? []).slice(0, 5).map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full bg-black/[0.04] px-2.5 py-1 font-mono text-[10px] text-white/60"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex items-center gap-4 text-[11px] text-white/55">
-                    <span className="font-mono">
-                      <span className="font-semibold text-white">{job.openings}</span> opening
-                      {job.openings === 1 ? "" : "s"}
-                    </span>
-                    <span className="font-mono">
-                      <span className="font-semibold text-white">
-                        {job.experience_min_years}–{job.experience_max_years ?? "∞"}
-                      </span>{" "}
-                      yrs
-                    </span>
-                    {job.locations?.length ? <span>{job.locations.join(", ")}</span> : null}
-                    {job.remote && <span className="text-[#0da06e]">Remote</span>}
-                  </div>
-
-                  {job.current_mock && (
-                    <p className="mt-4 border-t border-white/[0.07] pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
-                      Mock v{job.current_mock.version} · {job.current_mock.status}
-                    </p>
-                  )}
-                </Tile>
-              </Link>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => setSearchInput("")}
+            className="mt-3 rounded-full border px-4 py-2 text-sm font-medium"
+            style={{ borderColor: "var(--bj-dash-primary)", color: "var(--bj-dash-primary)" }}
+          >
+            Clear search
+          </button>
         </div>
+      )}
+
+      {!nothingVisible && needsPublished && (
+        <>
+          <PublishedRoles
+            jobs={published?.data ?? []}
+            count={published?.meta.total ?? counts?.published ?? 0}
+            loading={published === null}
+          />
+          {published && (
+            <Pagination
+              currentPage={published.meta.current_page}
+              lastPage={published.meta.last_page}
+              onChange={setPublishedPage}
+              label="Published roles pages"
+            />
+          )}
+        </>
+      )}
+
+      {!nothingVisible && status === "all" && otherJobs !== null && otherJobs.length > 0 && (
+        <div className="rounded-[var(--bj-dash-radius)] border bg-white p-5 sm:p-6" style={{ borderColor: "var(--bj-dash-border)" }}>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-lg font-semibold" style={{ color: "var(--bj-dash-ink)" }}>Other roles</h2>
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "#fdf1dd", color: "#a5720a" }}>
+              {otherJobs.length}
+            </span>
+            <span className="text-xs" style={{ color: "var(--bj-dash-muted)" }}>Draft or paused — not visible to applicants</span>
+          </div>
+          <ul className="mt-4 space-y-2">
+            {otherJobs.map((job) => (
+              <li key={job.id} className="flex items-center justify-between gap-3 rounded-xl border p-3" style={{ borderColor: "var(--bj-dash-border)" }}>
+                <span className="text-sm font-medium" style={{ color: "var(--bj-dash-ink)" }}>{job.title}</span>
+                <span className="flex items-center gap-2">
+                  <span className="rounded-full px-2.5 py-1 text-xs font-medium capitalize" style={{ background: "#fdf1dd", color: "#a5720a" }}>
+                    {job.status}
+                  </span>
+                  <a href={`/employer/jobs/${job.id}`} className="text-sm font-semibold" style={{ color: "var(--bj-dash-primary)" }}>
+                    View details
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!nothingVisible && needsClosed && (
+        <>
+          <ClosedRoles
+            jobs={closed?.data ?? []}
+            count={closed?.meta.total ?? counts?.closed ?? 0}
+            loading={closed === null}
+          />
+          {closed && (
+            <Pagination
+              currentPage={closed.meta.current_page}
+              lastPage={closed.meta.last_page}
+              onChange={setClosedPage}
+              label="Closed roles pages"
+            />
+          )}
+        </>
+      )}
+
+      {!nothingVisible && resultsSummary && (
+        <p className="text-center text-sm" style={{ color: "var(--bj-dash-muted)" }}>{resultsSummary}</p>
       )}
     </div>
   );

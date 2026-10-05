@@ -28,8 +28,8 @@ final class ScheduleClassSeries extends Command
 
     protected $signature = 'class:schedule-series
         {batch : Batch id or number}
-        {--weekdays=1,2,3,4,5 : ISO weekdays holding class, comma-separated (1=Mon … 7=Sun)}
-        {--time=19:00 : Class start time (HH:MM, 24h)}
+        {--weekdays= : Required. ISO weekdays holding class, comma-separated, e.g. 1,3,5 for Mon/Wed/Fri (1=Mon … 7=Sun)}
+        {--time= : Required. Class start time (HH:MM, 24h) — e.g. 21:00 for 9 PM}
         {--duration=90 : Length in minutes}
         {--count= : Number of classes to create}
         {--until= : ...or schedule pattern days up to this date (Y-m-d)}
@@ -46,6 +46,22 @@ final class ScheduleClassSeries extends Command
 
         if ($batch === null) {
             $this->error("Batch '{$this->argument('batch')}' not found.");
+
+            return self::FAILURE;
+        }
+
+        // No default weekday or time: a run that leaves either blank used to
+        // silently fall back to Mon-Fri at 19:00, which for a batch actually
+        // meeting, say, Mon/Wed/Fri at 9 PM created a whole second series at
+        // the wrong time on the wrong days rather than failing loudly.
+        if (trim((string) $this->option('weekdays')) === '') {
+            $this->error('Give --weekdays (e.g. --weekdays=1,3,5 for Mon/Wed/Fri) — there is no default, so this batch\'s own pattern is never guessed.');
+
+            return self::FAILURE;
+        }
+
+        if (trim((string) $this->option('time')) === '') {
+            $this->error('Give --time (HH:MM, 24h, e.g. --time=21:00) — there is no default, so this batch\'s own class time is never guessed.');
 
             return self::FAILURE;
         }

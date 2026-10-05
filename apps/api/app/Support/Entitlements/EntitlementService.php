@@ -161,8 +161,16 @@ final class EntitlementService
             'cv_free_grants' => (int) config('monetization.cv.free_grants', 3),
             'voice_included_live' => (int) config('monetization.voice_mock.included_live', 5),
             'voice_included_self_paced' => (int) config('monetization.voice_mock.included_self_paced', 2),
+            'general_mock_attempts_per_blueprint' => (int) config('monetization.mock_attempts.general_per_blueprint', 3),
+            'employer_mock_attempts_per_job' => (int) config('monetization.mock_attempts.employer_per_job', 3),
+            'free_job_application_limit' => (int) config('monetization.job_applications.free_limit', 5),
+            'wider_market_job_limit' => (int) config('monetization.wider_market.job_limit', 20),
             'self_paced_pct_bps' => (int) config('monetization.self_paced.pct_bps', 5000),
             'text_practice_enabled' => (bool) config('monetization.text_practice_enabled', false),
+            'auto_shortlist_enabled' => (bool) config('monetization.auto_shortlist.enabled', true),
+            'auto_shortlist_min_score' => (int) config('monetization.auto_shortlist.min_score', 70),
+            'auto_shortlist_min_cv_match_pct' => (int) config('monetization.auto_shortlist.min_cv_match_pct', 60),
+            'cv_mock_attempts_limit' => (int) config('monetization.mock_attempts.cv_readiness', 2),
         ]);
     }
 

@@ -96,6 +96,10 @@ use App\Http\Controllers\Employer\InterviewController as EmployerInterviewContro
 use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController;
+use App\Http\Controllers\Employer\JdIntentController as EmployerJdIntentController;
+use App\Http\Controllers\Employer\JdReviseController as EmployerJdReviseController;
+use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
+use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
@@ -111,6 +115,8 @@ use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\CandidateDashboardController;
 use App\Http\Controllers\Me\CandidateDocumentController;
+use App\Http\Controllers\Me\CvMockController;
+use App\Http\Controllers\Me\DashboardBannerController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
 use App\Http\Controllers\Me\EmployerJobBrowseController;
@@ -135,6 +141,7 @@ use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\BatchChatController;
+use App\Http\Controllers\LinkPreviewController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\MyVoucherController;
@@ -291,6 +298,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Live classes + recordings (PRD §6.3). Join and download are fee/enrolment gated.
     Route::get('me/classes', [MyClassController::class, 'index']);
     Route::post('me/classes/{session}/join', [MyClassController::class, 'join']);
+    Route::get('me/classes/sidebar', [MyClassController::class, 'sidebar']);
     Route::get('me/recordings', [MyRecordingController::class, 'index']);
     Route::get('me/recordings/{recording}/download', [MyRecordingController::class, 'download']);
 
@@ -383,6 +391,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/cv/{cv}/ats-text', [CvController::class, 'atsText']);
     Route::get('me/cv/{cv}', [CvController::class, 'show']);
     Route::patch('me/cv/{cv}', [CvController::class, 'update']);
+    Route::post('me/cv/{cv}/revise', [CvController::class, 'revise'])->middleware('throttle:ai');
     Route::post('me/cv/{cv}/ats', [CvController::class, 'atsCheck'])->middleware('throttle:30,1');
     Route::post('me/cv/{cv}/share', [CvController::class, 'share']);
     Route::delete('me/cv/{cv}/share', [CvController::class, 'unshare']);
@@ -409,6 +418,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/batch-chat', [BatchChatController::class, 'index']);
     Route::get('me/batch-chat/{batchNumber}', [BatchChatController::class, 'show']);
     Route::post('me/batch-chat/{batchNumber}', [BatchChatController::class, 'store'])->middleware('throttle:30,1');
+    // Rich preview (title/description/image) for a URL pasted into batch
+    // chat — matching WhatsApp's own preview cards for the same links.
+    Route::get('me/link-preview', [LinkPreviewController::class, 'show'])->middleware('throttle:60,1');
     Route::get('me/mocks', [MockController::class, 'index']);
     Route::post('me/mocks', [MockController::class, 'store']);
     Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
@@ -418,6 +430,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // when no voice is set up, and the room falls back to the browser's own.
     Route::post('me/mocks/{mock}/speak', SpeakMockQuestion::class)->middleware('throttle:60,1');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
+    Route::post('me/mocks/{mock}/recording', [MockController::class, 'uploadRecording'])->middleware('throttle:10,1');
+    // Candidate's own view of their recording, and the option to remove it —
+    // score/scorecard stay untouched either way.
+    Route::get('me/mocks/{mock}/recording', [MockController::class, 'recording']);
+    Route::delete('me/mocks/{mock}/recording', [MockController::class, 'deleteRecording']);
     // Proctoring close from the interview room — no refund, like walking out.
     Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
     Route::get('me/tutor', [TutorController::class, 'index']);
@@ -429,6 +446,14 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/employer-jobs/{job}/apply', [EmployerJobBrowseController::class, 'apply'])->middleware('throttle:20,1');
     // The mock IS the application: retakes are unlimited while the pack holds.
     Route::post('me/employer-jobs/{job}/mock', [EmployerJobBrowseController::class, 'mock'])->middleware('throttle:ai');
+    Route::get('me/employer-jobs/{job}/my-mock', [EmployerJobBrowseController::class, 'myMock']);
+    // AI Readiness Interview: general, CV-driven, not tied to any job.
+    // Completing it is what makes a student discoverable in an employer's
+    // Talent Pool search without ever applying anywhere.
+    Route::post('me/cv-mock', [CvMockController::class, 'store'])->middleware('throttle:ai');
+    Route::get('me/cv-mock', [CvMockController::class, 'show']);
+    // Dashboard promo carousel — entirely CRM-managed.
+    Route::get('me/banners', [DashboardBannerController::class, 'index']);
 
     // Candidate command centre + verification (PRD-E F9/F11).
     Route::get('me/candidate-dashboard', [CandidateDashboardController::class, 'show']);
@@ -480,7 +505,18 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('invites/accept', [EmployerInviteController::class, 'accept'])->middleware('throttle:10,1');
 
     // Draft a JD from a job title (PRD-E F15). Returns a draft to edit.
+    // Reads what the employer said into fields before anything is drafted.
+    Route::post('workspaces/{workspace}/jd-intent', EmployerJdIntentController::class)->middleware('throttle:ai');
     Route::post('workspaces/{workspace}/jd-draft', [EmployerJdDraftController::class, 'store'])->middleware('throttle:ai');
+    // One spoken change to a draft the employer already has on screen.
+    Route::post('workspaces/{workspace}/jd-revise', EmployerJdReviseController::class)->middleware('throttle:ai');
+
+    // The hiring console answers out loud; this keeps the ElevenLabs key on
+    // the server. 204 when unconfigured, and the console uses the browser voice.
+    Route::post('workspaces/{workspace}/speak', EmployerSpeakController::class)->middleware('throttle:120,1');
+    // Turns a recorded clip into text so the console's mic works in
+    // browsers (Firefox, Safari) that never implemented the Web Speech API.
+    Route::post('workspaces/{workspace}/transcribe', EmployerTranscribeController::class)->middleware('throttle:60,1');
 
     // Shared role vocabulary for title/skill pickers (PRD-E F14).
     Route::get('role-taxonomy', [EmployerRoleTaxonomyController::class, 'index']);
@@ -510,6 +546,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     );
 
     // Applications: graded-first ranking, evidence view, stage moves (PRD-E F3).
+    Route::get('workspaces/{workspace}/applications', [EmployerApplicationController::class, 'indexForWorkspace']);
     Route::get('workspaces/{workspace}/jobs/{job}/applications', [EmployerApplicationController::class, 'index']);
     Route::get('workspaces/{workspace}/jobs/{job}/applications/{application}', [EmployerApplicationController::class, 'show']);
     Route::post('workspaces/{workspace}/jobs/{job}/applications/{application}/stage', [EmployerApplicationController::class, 'moveStage']);
@@ -518,6 +555,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     // Trained LMS students matched to a JD (PRD-E F7).
     Route::get('workspaces/{workspace}/jobs/{job}/talent-pool', [EmployerTalentPoolController::class, 'index']);
     Route::post('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/invite', [EmployerTalentPoolController::class, 'invite'])->middleware('throttle:60,1');
+    Route::post('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/shortlist', [EmployerTalentPoolController::class, 'shortlist'])->middleware('throttle:60,1');
+    // Look before inviting — the candidate's own CV facts and their AI
+    // Readiness Interview recording, without needing an application to exist.
+    Route::get('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/cv', [EmployerTalentPoolController::class, 'cv']);
+    Route::get('workspaces/{workspace}/jobs/{job}/talent-pool/{candidate}/recording', [EmployerTalentPoolController::class, 'recording']);
 
     // Automation rules (PRD-E F6): advance/park only, never reject/offer.
     Route::get('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'index']);
@@ -846,6 +888,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::post('celebrations', [CelebrationController::class, 'store']);
         Route::post('celebrations/{celebration}/publish', [CelebrationController::class, 'publish']);
         Route::delete('celebrations/{celebration}', [CelebrationController::class, 'destroy']);
+        Route::post('celebrations/{celebration}/photo', [CelebrationController::class, 'uploadPhoto']);
         Route::get('pulse', [PulseAdminController::class, 'index']);
         Route::post('pulse/items', [PulseAdminController::class, 'storeItem']);
         Route::delete('pulse/items/{item}', [PulseAdminController::class, 'destroyItem']);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, apiJson } from "@/lib/api";
 
@@ -11,6 +11,8 @@ type CelebrationRow = {
   display_mode: string;
   role_title: string;
   company: string | null;
+  photo_url: string | null;
+  video_url: string | null;
   published_at: string | null;
   is_active: boolean;
 };
@@ -24,9 +26,11 @@ const inputCls =
 export default function AdminEngagementPage() {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const [celebration, setCelebration] = useState({
-    student_id: "", display_mode: "named", anonymous_label: "", role_title: "", company: "", consent: false,
+    student_id: "", display_mode: "named", anonymous_label: "", role_title: "", company: "", video_url: "", consent: false,
   });
   const [pulseItem, setPulseItem] = useState({ title: "", url: "", source_name: "", note: "" });
   const [content, setContent] = useState({ kind: "podcast", title: "", url: "" });
@@ -59,6 +63,24 @@ export default function AdminEngagementPage() {
     onError,
   });
 
+  async function uploadPhoto(celebrationId: number, file: File) {
+    setError(null);
+    setUploadingId(celebrationId);
+    try {
+      const form = new FormData();
+      form.append("photo", file);
+      // apiJson recognises a FormData body and leaves Content-Type to the
+      // browser (so it can set the multipart boundary) while still attaching
+      // the CSRF header and session cookie, same as every other write here.
+      await apiJson(`/api/v1/admin/celebrations/${celebrationId}/photo`, { method: "POST", body: form });
+      await qc.invalidateQueries({ queryKey: ["admin", "celebrations"] });
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Photo upload failed.");
+    } finally {
+      setUploadingId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl">
       <p className="kicker text-trust">Engagement</p>
@@ -75,7 +97,8 @@ export default function AdminEngagementPage() {
         <p className="kicker text-verify">Offer celebrations</p>
         <p className="mt-1 text-xs text-muted">
           Broadcasts require the student&apos;s explicit consent — recorded at creation. Publish sends the in-app
-          celebration to active students once.
+          celebration to active students once. A photo + video (optional) is what makes a celebration eligible for
+          the &quot;Good news&quot; card on the student Classes page — text-only ones still show on the wall here.
         </p>
         <form
           onSubmit={(e) => {
@@ -83,7 +106,7 @@ export default function AdminEngagementPage() {
             act.mutate(
               { path: "/api/v1/admin/celebrations", body: { ...celebration, student_id: Number(celebration.student_id) } },
             );
-            setCelebration({ student_id: "", display_mode: "named", anonymous_label: "", role_title: "", company: "", consent: false });
+            setCelebration({ student_id: "", display_mode: "named", anonymous_label: "", role_title: "", company: "", video_url: "", consent: false });
           }}
           className="mt-4 flex flex-wrap items-end gap-3"
         >
@@ -97,6 +120,7 @@ export default function AdminEngagementPage() {
           )}
           <input required value={celebration.role_title} onChange={(e) => setCelebration({ ...celebration, role_title: e.target.value })} placeholder="Role title" className={`${inputCls} w-44`} />
           <input value={celebration.company} onChange={(e) => setCelebration({ ...celebration, company: e.target.value })} placeholder="Company (optional)" className={`${inputCls} w-40`} />
+          <input value={celebration.video_url} onChange={(e) => setCelebration({ ...celebration, video_url: e.target.value })} placeholder="Video URL (optional, e.g. YouTube)" className={`${inputCls} w-64`} />
           <label className="flex items-center gap-2 text-xs text-muted">
             <input type="checkbox" required checked={celebration.consent} onChange={(e) => setCelebration({ ...celebration, consent: e.target.checked })} className="h-4 w-4 accent-[var(--bj-trust)]" />
             Student consented in writing
@@ -107,8 +131,37 @@ export default function AdminEngagementPage() {
         <div className="mt-4 divide-y divide-line">
           {celebrations.data?.data.map((c) => (
             <div key={c.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
+              {c.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- signed S3 URL, tiny admin-only thumbnail
+                <img src={c.photo_url} alt={c.display} className="size-8 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-paper text-xs font-semibold text-muted">
+                  {c.display.charAt(0).toUpperCase()}
+                </span>
+              )}
               <span className="font-semibold text-ink">{c.display}</span>
               <span className="text-muted">{c.role_title}{c.company ? ` · ${c.company}` : ""}</span>
+              {c.video_url && <span className="mono rounded-full bg-sky px-2 py-0.5 text-[10px] uppercase tracking-widest text-deep">Has video</span>}
+
+              <input
+                ref={(el) => { fileInputs.current[c.id] = el; }}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadPhoto(c.id, file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                onClick={() => fileInputs.current[c.id]?.click()}
+                disabled={uploadingId === c.id}
+                className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink hover:border-trust disabled:opacity-50"
+              >
+                {uploadingId === c.id ? "Uploading…" : c.photo_url ? "Replace photo" : "Add photo"}
+              </button>
+
               <span className="mono ml-auto text-xs text-muted">
                 {c.published_at ? `published ${c.published_at.slice(0, 10)}` : "draft"}
               </span>
@@ -174,8 +227,9 @@ export default function AdminEngagementPage() {
       <section className="mt-6 rounded-[14px] border border-line bg-white p-5">
         <p className="kicker text-trust">Content Hub — releases</p>
         <p className="mt-1 text-xs text-muted">
-          Adding a release notifies active students in-app. YouTube/Instagram auto-ingestion activates once channel
-          credentials are configured.
+          Adding a release notifies active students in-app. The YouTube video students actually watch the most on the
+          platform is surfaced automatically on the Classes page — no manual &quot;featured&quot; pick needed. YouTube/Instagram
+          auto-ingestion activates once channel credentials are configured.
         </p>
         <form
           onSubmit={(e) => {

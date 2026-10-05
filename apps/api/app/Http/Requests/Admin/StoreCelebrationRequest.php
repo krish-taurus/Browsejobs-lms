@@ -25,6 +25,9 @@ final class StoreCelebrationRequest extends FormRequest
             'anonymous_label' => ['required_if:display_mode,anonymous', 'nullable', 'string', 'max:190'],
             'role_title' => ['required', 'string', 'max:190'],
             'company' => ['nullable', 'string', 'max:190'],
+            // A YouTube/Vimeo/Drive link the student handed over — a file
+            // upload is a separate step (uploadPhoto covers the photo only).
+            'video_url' => ['nullable', 'url', 'max:500'],
             // PRD §6.18: broadcast only with the student's explicit consent.
             'consent' => ['accepted'],
         ];

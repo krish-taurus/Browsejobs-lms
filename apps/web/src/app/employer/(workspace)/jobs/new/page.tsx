@@ -96,7 +96,10 @@ export default function NewJobPage() {
       if (publishNow) {
         await employerApi.publishJob(workspace.id, created.data.id);
       }
-      router.push(`/employer/jobs/${created.data.id}`);
+      // Straight to round setup, not the (empty) applications list — the
+      // natural next step right after a JD exists is deciding how many
+      // rounds it runs, not staring at a candidate list with nobody on it.
+      router.push(`/employer/jobs/${created.data.id}?tab=process`);
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
       setBusy(false);

@@ -319,7 +319,7 @@ final class ScoreCalculator
         }
 
         if ($pri >= (int) config('scoring.risk.placement_ready_pri', 70)) {
-            return ['key' => NextActionKey::BookMock->value, 'title' => "You're on track — book a mock interview", 'detail' => 'Pressure-test your readiness before the real thing.', 'href' => '/mock'];
+            return ['key' => NextActionKey::BookMock->value, 'title' => "You're on track — book a mock interview", 'detail' => 'Pressure-test your readiness before the real thing.', 'href' => '/student-ai-mock'];
         }
 
         return ['key' => NextActionKey::NextTopic->value, 'title' => 'Complete your next topic', 'detail' => 'Keep the momentum going.', 'href' => '/classes'];

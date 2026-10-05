@@ -28,6 +28,9 @@ final class ProductResource extends JsonResource
             'grant_amount' => $this->grant_amount,
             'period_days' => $this->period_days,
             'source_batch_id' => $this->source_batch_id,
+            'mock_bonus_amount' => $this->mock_bonus_amount,
+            'job_application_bonus_amount' => $this->job_application_bonus_amount,
+            'wider_market_job_limit' => $this->wider_market_job_limit,
             'active' => $this->active,
         ];
     }

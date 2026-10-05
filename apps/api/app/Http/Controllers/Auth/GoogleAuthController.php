@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AssignRoleToUser;
+use App\Actions\Auth\GrantSignupCredits;
 use App\Http\Controllers\Auth\Concerns\LogsInUsers;
 use App\Http\Controllers\Controller;
 use App\Models\Scopes\TenantScope;
@@ -65,6 +66,12 @@ final class GoogleAuthController extends Controller
                 'user_type' => 'student',
             ]);
             $assignRole->handle($user, 'student', actor: $user);
+
+            // Same free tier a phone/OTP signup gets (Sept 2026 fix) — Google
+            // sign-in was creating the account and skipping this entirely, so
+            // a student who signed up this way landed on "0 generations" with
+            // no credit transaction to explain why.
+            app(GrantSignupCredits::class)->handle($user);
         }
 
         $this->startSession($request, $user);

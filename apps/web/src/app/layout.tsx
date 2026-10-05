@@ -1,12 +1,32 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Sora, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito } from "next/font/google";
 import "./globals.css";
 
 const sora = Sora({
   variable: "--font-sora",
   subsets: ["latin"],
   weight: ["400", "600", "800"],
+  display: "swap",
+});
+
+// Employer portal only (scoped via .bj-employer-dashboard in globals.css) —
+// rounded, friendly faces: Poppins for headings and big numbers, Nunito for
+// body text, chat and controls. Kept separate from --font-sora (used
+// everywhere else as `.display`/`font-display`) so the rest of the site is
+// untouched.
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -68,7 +88,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   verification: {
-    google: "lfmAeInA42ZA8RAzOxlyEz6A83lnwkQkgvnXlTOoL_E",
+    google: "QHbOv9CSjPuuSO0pOOixFp3JFqRO-u6ndy0Q9s4MijM",
   },
 };
 
@@ -78,7 +98,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${sora.variable} ${inter.variable} ${plexMono.variable} antialiased`}
+        className={`${sora.variable} ${inter.variable} ${plexMono.variable} ${poppins.variable} ${nunito.variable} antialiased`}
       >
         {children}
 

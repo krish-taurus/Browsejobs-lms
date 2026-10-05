@@ -20,6 +20,13 @@ return [
     // same seven in one click, on the days and times they actually teach.
     'auto_schedule_bootcamp_classes' => (bool) env('FUNNEL_AUTO_SCHEDULE_BOOTCAMP_CLASSES', false),
 
+    // Whether moving a bootcamp into its paid stage also books its whole
+    // syllabus. OFF means the batch arrives empty and the team schedules it
+    // from the batch page — "Schedule Class Series" builds the series in one
+    // click, on the days and times this batch actually teaches, instead of
+    // the generic Mon-Fri 7pm below landing on top of the batch's real classes.
+    'auto_schedule_paid_classes' => (bool) env('FUNNEL_AUTO_SCHEDULE_PAID_CLASSES', false),
+
     // The daily "simulated live" masterclass showing: the recorded masterclass
     // plays as-if-live at this time every day, so a Monday lead never waits
     // for Saturday. The live weekend masterclass is unaffected.

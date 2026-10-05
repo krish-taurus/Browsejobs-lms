@@ -41,6 +41,8 @@ final class MemberController extends Controller
             $request->user(),
             $request->string('email')->toString(),
             EmployerRole::from($request->string('role')->toString()),
+            $request->filled('name') ? $request->string('name')->toString() : null,
+            $request->filled('whatsapp') ? $request->string('whatsapp')->toString() : null,
         );
 
         return (new EmployerInviteResource($invite))->response()->setStatusCode(201);

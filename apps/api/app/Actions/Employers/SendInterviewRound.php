@@ -138,6 +138,49 @@ final readonly class SendInterviewRound
             $unasked = array_values(array_filter($bank, is_array(...)));
         }
 
+        // Explicit picks override the focus/format steer entirely: the
+        // employer chose these exact questions, so question_count (a limit
+        // for the auto-pick path) does not trim them either, and the order
+        // they were picked in is the order asked. Matched by text, the same
+        // identity SendInterviewRound already uses for "already asked" above
+        // — a bank question carries no stable id across a regenerate, but
+        // its text is how every other part of this file recognises it. A
+        // pick may also be text the employer typed by hand rather than
+        // chose from the bank — that is not a stale selection, it is a
+        // custom question, and it is asked as written rather than dropped
+        // for not matching anything generated.
+        if (! empty($round->selected_questions)) {
+            $byText = collect($bank)->filter(is_array(...))->keyBy('text');
+
+            $picked = array_values(array_filter(array_map(
+                function (string $text) use ($byText, $asked): ?array {
+                    if (in_array($text, $asked, true)) {
+                        return null; // already asked of this candidate in an earlier round
+                    }
+
+                    /** @var array<string, mixed>|null $fromBank */
+                    $fromBank = $byText->get($text);
+
+                    return $fromBank ?? ['text' => $text, 'skill' => null, 'type' => 'custom'];
+                },
+                $round->selected_questions,
+            )));
+
+            // Falls back to including picks already asked only if every one
+            // of them has been — mirrors the fallback just above rather than
+            // sending an empty round.
+            if ($picked === []) {
+                $picked = array_map(
+                    fn (string $text): array => $byText->get($text) ?? ['text' => $text, 'skill' => null, 'type' => 'custom'],
+                    $round->selected_questions,
+                );
+            }
+
+            if ($picked !== []) {
+                return $picked;
+            }
+        }
+
         $focus = array_map(mb_strtolower(...), $round->focus_skills ?? []);
         $formats = array_keys(array_filter($round->format_mix ?? [], static fn (int $w): bool => $w > 0));
 

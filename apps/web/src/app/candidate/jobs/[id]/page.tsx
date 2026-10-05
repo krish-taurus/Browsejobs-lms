@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { JobDescription } from "@/components/jobs/JobDescription";
 import { useCallback, useEffect, useState } from "react";
 import { StatusChip } from "@/components/viz/Chart";
 import {
@@ -20,6 +21,12 @@ type Application = { id: number; employer_job_id: number; stage: string; mock_sc
 
 type Offer = { sku: string; name: string; price_paise: number; grant_amount: number };
 
+type CompletenessItem = { key: string; label: string; done: boolean };
+
+/** Same fixable set as the Jobs for You nudge — kept in one place would be
+ *  nicer, but these two pages don't currently share a components file. */
+const CV_FIXABLE = new Set(["resume", "experience", "education", "summary"]);
+
 export default function CandidateJobDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -31,6 +38,7 @@ export default function CandidateJobDetailPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offers, setOffers] = useState<Offer[] | null>(null);
+  const [completeness, setCompleteness] = useState<CompletenessItem[] | null>(null);
 
   const load = useCallback(() => {
     jobApi
@@ -45,6 +53,14 @@ export default function CandidateJobDetailPage() {
   }, [jobId]);
 
   useEffect(load, [load]);
+
+  // A nudge, not a gate — applying stays free and immediate either way.
+  useEffect(() => {
+    candidateApi
+      .dashboard()
+      .then((r) => setCompleteness(r.data.profile_completeness.items))
+      .catch(() => {});
+  }, []);
 
   async function apply() {
     setBusy(true);
@@ -65,7 +81,7 @@ export default function CandidateJobDetailPage() {
     setOffers(null);
     try {
       const res = await candidateApi.startMock(jobId);
-      router.push(`/mock/${res.data.mock_id}`);
+      router.push(`/student-ai-mock/${res.data.mock_id}`);
     } catch (err) {
       // An empty wallet is an offer, not a failure — show the packs inline.
       if (err instanceof ApiError && err.status === 402) {
@@ -141,6 +157,27 @@ export default function CandidateJobDetailPage() {
                 what the employer ranks you on — and you can retake it as often as your pack allows,
                 with your best attempt standing.
               </p>
+              {completeness && (() => {
+                const missing = completeness.filter((i) => CV_FIXABLE.has(i.key) && !i.done);
+                if (missing.length === 0) return null;
+                return (
+                  <div
+                    className="mt-4 rounded-xl border p-3.5"
+                    style={{ borderColor: "#f2a1a755", background: "#f2a1a71a" }}
+                  >
+                    <p className="text-[13px] font-semibold">
+                      Your CV is missing {missing.map((i) => i.label.toLowerCase()).join(", ")}.
+                    </p>
+                    <p className="mt-1 text-[12px]" style={{ color: INK.muted }}>
+                      This is what the employer opens once you apply. You can still apply now and fix it after.
+                    </p>
+                    <div className="mt-2.5">
+                      <GhostAction href="/cv">Complete my CV</GhostAction>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <PrimaryAction onClick={apply} disabled={busy}>
                   {busy ? "Applying…" : "Apply — free"}
@@ -241,12 +278,11 @@ export default function CandidateJobDetailPage() {
 
         <Card>
           <Kicker>The role</Kicker>
-          <div
-            className="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed"
+          <JobDescription
+            description={job.description}
+            className="mt-3 text-[14px] leading-relaxed"
             style={{ color: INK.secondary }}
-          >
-            {job.description}
-          </div>
+          />
         </Card>
 
         <p className="text-[12px] leading-relaxed" style={{ color: INK.faint }}>

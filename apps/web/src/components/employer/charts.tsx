@@ -125,7 +125,7 @@ export function PipelineBar({
   const total = shown.reduce((a, s) => a + s.count, 0);
 
   if (total === 0) {
-    return <div className="h-2 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />;
+    return <div className="h-2 rounded-full" style={{ background: "#eceef1" }} />;
   }
 
   return (

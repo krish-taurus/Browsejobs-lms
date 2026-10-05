@@ -36,6 +36,7 @@ class FeePlan extends Model
     protected $fillable = [
         'tenant_id', 'user_id', 'batch_id', 'type', 'total_paise', 'discount_paise',
         'gst_rate_bps', 'currency', 'status', 'created_by',
+        'access_extended_until', 'access_extended_reason',
     ];
 
     /**
@@ -49,7 +50,18 @@ class FeePlan extends Model
             'total_paise' => 'integer',
             'discount_paise' => 'integer',
             'gst_rate_bps' => 'integer',
+            'access_extended_until' => 'date',
         ];
+    }
+
+    /**
+     * The academic team has bought this student more time: the dunning ladder
+     * must not block them, and an existing block was lifted when it was granted.
+     */
+    public function accessExtensionActive(): bool
+    {
+        return $this->access_extended_until !== null
+            && $this->access_extended_until->endOfDay()->greaterThanOrEqualTo(now());
     }
 
     /** Net amount payable after any discount (paise). */

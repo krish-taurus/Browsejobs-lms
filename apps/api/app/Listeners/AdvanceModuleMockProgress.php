@@ -55,7 +55,7 @@ final class AdvanceModuleMockProgress implements ShouldQueue
                     'user_id' => $student->id,
                     'title' => 'Module mocks cleared'.($module !== null ? " — {$module->name}." : '.'),
                     'body' => 'You finished every mock this module needed. On to the next.',
-                    'url' => '/mock',
+                    'url' => '/student-ai-mock',
                 ]);
             }
         });

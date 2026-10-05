@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JobDescription } from "@/components/jobs/JobDescription";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell } from "@/components/landing/MarketingShell";
@@ -120,9 +121,10 @@ export default async function PublicJobPage({ params }: { params: Promise<{ id: 
           </div>
         )}
 
-        <div className="mt-10 whitespace-pre-line text-[15px] leading-relaxed text-ink-2">
-          {job.description}
-        </div>
+        <JobDescription
+          description={job.description}
+          className="mt-10 text-[15px] leading-relaxed text-ink-2"
+        />
 
         {/* Both ways in, side by side ---------------------------------- */}
         <section className="mt-14 rounded-[22px] border border-line bg-paper p-7 md:p-9">

@@ -7,6 +7,7 @@ namespace App\Actions\Employers;
 use App\Enums\EmployerJobStatus;
 use App\Enums\JdMockStatus;
 use App\Events\EmployerJobPublished;
+use App\Jobs\RevalidatePublicJobBoard;
 use App\Models\EmployerJob;
 use App\Models\JdMock;
 use App\Models\User;
@@ -53,6 +54,7 @@ final readonly class PublishEmployerJob
             ], $actor);
 
             EmployerJobPublished::dispatch($job->fresh());
+            RevalidatePublicJobBoard::dispatch($job->id);
 
             return $job->fresh();
         });

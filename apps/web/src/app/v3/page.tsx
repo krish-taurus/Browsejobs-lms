@@ -8,6 +8,7 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { INTL_PRICE, useIsInternational } from "@/lib/region";
 import Link from "next/link";
 import Lenis from "lenis";
 import { HomeJobs } from "@/components/landing/HomeJobs";
@@ -225,6 +226,9 @@ function SiteNav() {
           <Link href="/jobs" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
             Jobs
           </Link>
+          <Link href="/employers" className="text-sm font-medium text-fg/50 transition-colors hover:text-ink">
+            Employers
+          </Link>
           <LoginMenu />
         </nav>
 
@@ -290,6 +294,13 @@ function SiteNav() {
                   className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
                 >
                   Jobs
+                </Link>
+                <Link
+                  href="/employers"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-base font-semibold text-fg/50 transition-colors hover:bg-paper"
+                >
+                  Employers
                 </Link>
                 <Link
                   href="/employer"
@@ -944,6 +955,23 @@ const BENTO: { span: string; accent: string; el: React.ReactNode }[] = [
   { span: "md:col-span-3", accent: "#7c3aed", el: <MentorsTile /> },
 ];
 
+/* ------------------------------ pricing by region -------------------------- */
+
+/** Optional extras. The dollar column is the rupee one converted at roughly ₹85 = $1. */
+const EXTRAS: [string, string][] = [
+  ["Extra CV credits", "₹99 / 3"],
+  ["Voice mock interview", "₹249 · ₹599 / 3"],
+  ["Extra 1:1 mentor session", "₹499"],
+  ["Career+ (post-placement)", "₹499 / mo"],
+];
+
+const INTL_EXTRAS: [string, string][] = [
+  ["Extra CV credits", "$2 / 3"],
+  ["Voice mock interview", "$3 · $7 / 3"],
+  ["Extra 1:1 mentor session", "$6"],
+  ["Career+ (post-placement)", "$6 / mo"],
+];
+
 /* ------------------------------ path / journey ----------------------------- */
 
 const PATH_STEPS = [
@@ -957,6 +985,12 @@ const PATH_STEPS = [
 ];
 
 function PathCard({ s, i }: { s: (typeof PATH_STEPS)[number]; i: number }) {
+  const international = useIsInternational();
+  // Step 04 is the only one that quotes a price.
+  const body = international && s.n === "04"
+    ? `Live, instructor-led. $${INTL_PRICE} — one payment.`
+    : s.b;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40, scale: 0.94 }}
@@ -996,7 +1030,7 @@ function PathCard({ s, i }: { s: (typeof PATH_STEPS)[number]; i: number }) {
         )}
       </div>
       <h3 className="font-display mt-6 text-2xl font-bold leading-tight">{s.t}</h3>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-fg/50">{s.b}</p>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-fg/50">{body}</p>
       <div className={`mt-6 h-1 w-full overflow-hidden rounded-full ${s.free ? "bg-[#0ba860]/15" : "bg-fg/[0.06]"}`}>
         <motion.div
           initial={{ width: 0 }}
@@ -1436,6 +1470,8 @@ function ResumeScanDemo() {
 /* ---------------------------------- fees ----------------------------------- */
 
 function FeesSection() {
+  const international = useIsInternational();
+
   return (
     <section id="fees" className="mx-auto max-w-6xl px-6 py-32">
       <motion.p
@@ -1457,11 +1493,17 @@ function FeesSection() {
           className="rounded-3xl border border-fg/[0.07] bg-surface p-9 shadow-[0_10px_40px_rgba(10,18,32,0.05)]"
         >
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-fg/40">01 · Registration</p>
-          <p className="font-display mt-4 text-5xl font-bold">₹<Counter to={30000} /></p>
+          <p className="font-display mt-4 text-5xl font-bold">
+            {international ? "$" : "₹"}
+            <Counter to={international ? INTL_PRICE : 30000} />
+          </p>
           <p className="mt-3 text-fg/50">Payable only after the free masterclass and the free 7-hour bootcamp.</p>
           <div className="mt-5 flex gap-2">
             <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">One payment</span>
-            <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">EMI · 3 × ₹10,000</span>
+            {/* No instalment plan outside India yet, so the EMI chip stays home. */}
+            {!international && (
+              <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">EMI · 3 × ₹10,000</span>
+            )}
           </div>
           <p className="mt-6 rounded-2xl bg-verify-bg px-4 py-3 text-sm font-semibold text-[#0ba860]">
             30-day money-back guarantee — any reason, full refund, in writing.
@@ -1475,9 +1517,11 @@ function FeesSection() {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">02 · Placement fee</p>
           <p className="mt-4 text-lg leading-relaxed text-white/75">
             Your first 3 months&apos; CTC, due <strong className="text-white">only after you accept an offer</strong> — paid as 6 monthly
-            EMIs from your new salary. Your ₹30,000 registration is adjusted inside it.
+            EMIs from your new salary. Your {international ? `$${INTL_PRICE}` : "₹30,000"} registration is adjusted inside it.
           </p>
-          <div className="mt-6 rounded-2xl bg-surface/[0.05] p-5">
+          {/* The worked example is an Indian salary in rupees; it tells a
+              visitor abroad nothing, so only the rule above travels. */}
+          <div className={`mt-6 rounded-2xl bg-surface/[0.05] p-5 ${international ? "hidden" : ""}`}>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Worked example · ₹12 LPA offer</p>
             {[
               ["3 months' CTC", "₹3,00,000"],
@@ -1523,7 +1567,7 @@ function FeesSection() {
         >
           <p className="font-display text-lg font-bold">Optional extras</p>
           <ul className="mt-4 space-y-2.5">
-            {[["Extra CV credits", "₹99 / 3"], ["Voice mock interview", "₹249 · ₹599 / 3"], ["Extra 1:1 mentor session", "₹499"], ["Career+ (post-placement)", "₹499 / mo"]].map(([k, v]) => (
+            {(international ? INTL_EXTRAS : EXTRAS).map(([k, v]) => (
               <li key={k} className="flex items-center justify-between text-sm text-fg/65">
                 <span>{k}</span><span className="font-mono text-xs font-bold text-fg/45">{v}</span>
               </li>

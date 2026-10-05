@@ -30,8 +30,18 @@ export function CommandPalette({ workspaceId }: { workspaceId: number }) {
       }
       if (e.key === "Escape") setOpen(false);
     }
+    // The header search field is a second entry point onto this same
+    // palette rather than a UI that only looks like search — clicking it
+    // fires this instead of standing up a parallel results list.
+    function onOpenRequest() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("bj:open-command-palette", onOpenRequest);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("bj:open-command-palette", onOpenRequest);
+    };
   }, []);
 
   useEffect(() => {

@@ -191,6 +191,57 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Interview-room AI avatar — the interviewer's face, one look per phase
+   (idle/listening/thinking/speaking) rather than a static "AI" glyph. */
+.ai-eye-scan {
+  animation: ai-eye-scan 1.8s ease-in-out infinite;
+}
+@keyframes ai-eye-scan {
+  0%, 100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+.ai-antenna-blink {
+  animation: ai-antenna-blink 0.55s ease-in-out infinite;
+}
+@keyframes ai-antenna-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.ai-ring-spin {
+  animation: ai-ring-spin 2.2s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes ai-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-eq-bar {
+  animation: ai-eq-bar 0.9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes ai-eq-bar {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -206,5 +257,82 @@ body {
   }
   .mask-rise {
     animation: none;
+  }
+  .ai-eye-scan,
+  .ai-antenna-blink,
+  .ai-ring-spin,
+  .ai-eq-bar {
+    animation: none;
+  }
+}
+
+/*
+ * Employer dashboard (PRD-E emerald/ivory redesign, approved kit). Scoped to
+ * .bj-employer-dashboard so it never leaks into the rest of the site's
+ * (navy/trust-blue) theme — see design-tokens.css in the handoff kit this
+ * was adapted from. Fonts point at the site's existing next/font variables
+ * instead of bare family names.
+ */
+.bj-employer-dashboard {
+  --bj-dash-canvas: #f7f8f4;
+  --bj-dash-surface: #ffffff;
+  --bj-dash-ink: #102e27;
+  --bj-dash-muted: #5d7068;
+  --bj-dash-primary: #1a6048;
+  --bj-dash-hero: #103f30;
+  --bj-dash-soft: #edf4e9;
+  --bj-dash-border: #e1e8e2;
+  --bj-dash-status-dot: #c0da6a;
+  --bj-dash-focus: #246f52;
+  --bj-dash-score-strong: #0e6b49;
+  --bj-dash-score-strong-bg: #e8f4ed;
+  --bj-dash-score-fair: #825b0c;
+  --bj-dash-score-fair-bg: #fbf3df;
+  --bj-dash-score-below: #af2638;
+  --bj-dash-score-below-bg: #fdebed;
+  --bj-dash-score-unscored: #5d6865;
+  --bj-dash-score-unscored-bg: #f0f2f1;
+  --bj-dash-serif: var(--font-poppins), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bj-dash-sans: var(--font-nunito), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bj-dash-sidebar-width: 230px;
+  --bj-dash-topbar-height: 50px;
+  --bj-dash-gutter: 30px;
+  --bj-dash-card-gap: 14px;
+  --bj-dash-radius: 13px;
+  --bj-dash-hero-height: 208px;
+  --bj-dash-shadow: 0 2px 8px rgb(16 46 39 / 0.025);
+  --bj-dash-title-size: clamp(2rem, 3.7vw, 3.5rem);
+  --bj-dash-hero-copy-size: clamp(1.9rem, 3.3vw, 3.125rem);
+  --bj-dash-metric-size: clamp(2.75rem, 4.65vw, 4.5rem);
+  color: var(--bj-dash-ink);
+  background: var(--bj-dash-canvas);
+  font-family: var(--bj-dash-sans);
+}
+
+.bj-dash-serif {
+  font-family: var(--bj-dash-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Job detail / candidate / settings pages still use the site's .display and
+   font-display (Sora) — bring them onto the same heading face inside the
+   employer portal so nothing looks mixed. Mono micro-labels are unchanged. */
+.bj-employer-dashboard .font-display,
+.bj-employer-dashboard .display {
+  font-family: var(--bj-dash-serif);
+}
+
+@media (max-width: 1023px) {
+  .bj-employer-dashboard {
+    --bj-dash-gutter: 22px;
+    --bj-dash-card-gap: 14px;
+  }
+}
+
+@media (max-width: 639px) {
+  .bj-employer-dashboard {
+    --bj-dash-gutter: 16px;
+    --bj-dash-card-gap: 12px;
   }
 }

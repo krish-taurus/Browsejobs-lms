@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { CareerBoosters } from "@/components/portal/CareerBoosters";
+import { CvCompare } from "@/components/portal/CvCompare";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -77,6 +78,7 @@ export default function CvPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [jd, setJd] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [importText, setImportText] = useState("");
   const fileRef = useRef<HTMLInputElement | null>(null);
   // The real file input is hidden so it can be styled, and the browser only
@@ -161,6 +163,37 @@ export default function CvPage() {
     }
   }
 
+  /**
+   * One free-text instruction applied to the CURRENT version in place —
+   * "make my experience section shorter", "add a summary section". Costs
+   * a generation because it calls the model; a manual field edit (above)
+   * never does.
+   */
+  async function revise() {
+    if (!cv || !instruction.trim()) return;
+    say(null, null);
+    setBusy("revise");
+    try {
+      const r = await apiJson<{ data: Cv }>(`/api/v1/me/cv/${cv.id}/revise`, {
+        method: "POST",
+        body: JSON.stringify({ instruction: instruction.trim() }),
+      });
+      setCv(r.data);
+      setEditing(false);
+      setInstruction("");
+      say("Applied — the ATS score refreshed.", null);
+      load();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        say(null, "You're out of generations — top up below (manual edits stay free).");
+      } else {
+        say(null, err instanceof ApiError ? (err.firstError ?? err.message) : "Could not apply that change.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function saveEdits() {
     if (!cv || !draft) return;
     setBusy("edit");
@@ -225,15 +258,29 @@ export default function CvPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-baseline justify-between">
-        <h1 className="display text-2xl text-ink">My CV</h1>
-        <span className="mono text-xs text-muted">{data.credits} generation{data.credits === 1 ? "" : "s"} left</span>
+      {/* Hero ------------------------------------------------------- */}
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-sky to-white p-6">
+        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-trust" />
+        <p className="kicker text-trust">My CV</p>
+        <h1 className="display mt-1.5 text-2xl text-ink">
+          Your facts, <span className="text-trust">rebuilt into a CV.</span>
+        </h1>
+        <p className="mt-1.5 max-w-md text-sm text-muted">
+          Import once, edit any time — we combine it with your graded platform work. ATS-safe by
+          construction, and it never mentions where you trained.
+        </p>
       </div>
-      <p className="mt-1 text-sm text-muted">
-        Your CV, your facts: import your existing CV, add your own projects and experience, and we
-        combine them with your graded work here. ATS-safe by construction — and it never mentions
-        where you trained.
-      </p>
+
+      {/* Stat strip -------------------------------------------------- */}
+      <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line">
+        <StatCell
+          label="Experience"
+          value={`${cv?.content.experience?.length ?? 0} role${(cv?.content.experience?.length ?? 0) === 1 ? "" : "s"}`}
+          accent="var(--bj-trust)"
+        />
+        <StatCell label="Projects" value={String(cv?.content.projects?.length ?? 0)} accent="var(--bj-verify)" />
+        <StatCell label="Generations" value={`${data.credits} left`} accent="var(--bj-amber)" />
+      </div>
 
       {error && <p className="mt-3 text-sm text-warn">{error}</p>}
       {notice && <p className="mt-3 text-sm text-verify break-all">{notice}</p>}
@@ -256,7 +303,7 @@ export default function CvPage() {
             <input
               ref={fileRef}
               type="file"
-              accept=".txt,.md,.docx"
+              accept=".pdf,.txt,.md,.docx"
               className="sr-only"
               id="cv-file"
               onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
@@ -269,7 +316,7 @@ export default function CvPage() {
                 {fileName ?? "Choose a file"}
               </span>
               <span className="text-[11px] text-muted">
-                {fileName ? "Ready to import" : ".txt, .md or .docx"}
+                {fileName ? "Ready to import" : ".pdf, .docx, .txt or .md"}
               </span>
             </label>
           </div>
@@ -398,6 +445,30 @@ export default function CvPage() {
           </>
         )}
       </div>
+
+      {cv && !editing && (
+        <div className="mt-4 rounded-2xl border border-line bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Ask AI to change something</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              placeholder='e.g. "make my experience section shorter" or "add a summary section"'
+              className="min-w-[240px] flex-1 rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-trust"
+            />
+            <button
+              onClick={revise}
+              disabled={busy === "revise" || !instruction.trim()}
+              className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {busy === "revise" ? "Applying…" : "Apply (1 credit)"}
+            </button>
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted">
+            Changes only what you ask for — everything else in your CV stays as it is.
+          </p>
+        </div>
+      )}
 
       {data.credits === 0 && data.topups.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -528,6 +599,13 @@ export default function CvPage() {
             )}
           </div>
 
+          {/* Compare — what an AI generation/revision actually changed */}
+          {!editing && (() => {
+            const previous = data.versions.find((v) => v.version === cv.version - 1);
+            if (!previous) return null;
+            return <CvCompare key={cv.id} currentId={cv.id} previousId={previous.id} />;
+          })()}
+
           {/* ATS panel */}
           {cv.ats && !editing && (
             <div className="mt-4 rounded-2xl border border-line bg-white p-6">
@@ -586,6 +664,16 @@ export default function CvPage() {
       )}
 
       <CareerBoosters />
+    </div>
+  );
+}
+
+function StatCell({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="relative bg-white p-4">
+      <span aria-hidden className="absolute inset-y-0 left-0 w-[3px]" style={{ background: accent }} />
+      <p className="kicker text-[10px] text-muted">{label}</p>
+      <p className="display mt-1 text-lg text-ink">{value}</p>
     </div>
   );
 }

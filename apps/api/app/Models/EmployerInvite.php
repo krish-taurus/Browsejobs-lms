@@ -43,6 +43,8 @@ final class EmployerInvite extends Model
         'employer_workspace_id',
         'invited_by_id',
         'email',
+        'name',
+        'whatsapp',
         'role',
         'grants_credential',
         'token',

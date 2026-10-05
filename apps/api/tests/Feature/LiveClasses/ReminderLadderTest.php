@@ -26,16 +26,27 @@ beforeEach(function () {
     });
 });
 
-it('arms the full 12h/2h/1h/5min ladder for a future session', function () {
+it('arms one reminder per configured rung for a future session', function () {
     Queue::fake();
 
     app(ScheduleLiveSession::class)->handle($this->batch, 'Class', now()->addDays(2));
 
-    Queue::assertPushed(SendSessionReminder::class, 4);
+    /** @var list<array{minutes: int, label: string}> $rungs */
+    $rungs = config('live_classes.reminder_offsets');
 
-    foreach (['12h', '2h', '1h', '5min'] as $window) {
-        Queue::assertPushed(SendSessionReminder::class, fn ($job) => $job->window === $window);
+    Queue::assertPushed(SendSessionReminder::class, count($rungs));
+
+    foreach ($rungs as $rung) {
+        Queue::assertPushed(SendSessionReminder::class, fn ($job) => $job->window === $rung['label']);
     }
+});
+
+it('sends students exactly one reminder — 5 minutes before class', function () {
+    // The house rule: one reminder, in the BrowseJobs format. A 12h/2h/1h rung
+    // reappearing would put students back on the generic template wording.
+    expect(config('live_classes.reminder_offsets'))->toBe([
+        ['minutes' => 5, 'label' => '5min'],
+    ]);
 });
 
 it('skips reminder rungs whose time has already passed', function () {

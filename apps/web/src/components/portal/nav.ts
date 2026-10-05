@@ -24,7 +24,7 @@ const RECORDINGS: NavItem = { href: "/recordings", label: "Recordings", icon: "M
 const PRACTICE: NavItem = { href: "/labs", label: "Practice", icon: "M8 6 3 12l5 6M16 6l5 6-5 6M13 4l-2 16", primary: true };
 const QUIZZES: NavItem = { href: "/quizzes", label: "Quizzes", icon: "M9 5h6M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM9 11l2 2 4-4" };
 const TUTOR: NavItem = { href: "/tutor", label: "AI Tutor", icon: "M12 3a7 7 0 0 0-7 7c0 2.4 1.2 4.1 3 5.3V18h8v-2.7c1.8-1.2 3-2.9 3-5.3a7 7 0 0 0-7-7ZM9 21h6" };
-const AI_INTERVIEWS: NavItem = { href: "/mock", label: "AI Interviews", icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8", primary: true, short: "AI Mock" };
+const AI_INTERVIEWS: NavItem = { href: "/student-ai-mock", label: "AI Interviews", icon: "M12 3a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4ZM6 10a6 6 0 0 0 12 0M12 16v3M8 21h8", primary: true, short: "AI Mock" };
 const ONE_TO_ONE: NavItem = { href: "/interviews", label: "One to One Interviews", icon: "M4 6h16v14H4zM8 3v4M16 3v4M4 10h16M9 15l2 2 4-4", primary: true, short: "1:1" };
 
 /** Both kinds of practice interview live under one heading. */
@@ -51,8 +51,8 @@ const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4
 export const navGroups: NavGroup[] = [
   { label: "Learn", items: [DASHBOARD, CLASSES, BATCH_CHAT, RECORDINGS, PRACTICE, QUIZZES, TUTOR] },
   { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
-  { label: "Career", items: [MOCK_INTERVIEWS, MENTORS, PLACEMENT, JOBS, CV] },
-  { label: "You", items: [PULSE, ALERTS, CHECKIN, STORE, SUPPORT, PROFILE] },
+  { label: "Career", items: [MOCK_INTERVIEWS, MENTORS, PLACEMENT, JOBS, CV, STORE] },
+  { label: "You", items: [PULSE, ALERTS, CHECKIN, SUPPORT, PROFILE] },
 ];
 
 /** Flat list of destinations — the ⌘K command palette searches this. */

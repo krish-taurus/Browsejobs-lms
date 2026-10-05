@@ -7,17 +7,16 @@ namespace App\Http\Controllers\Me;
 use App\Actions\Employers\ApplyToEmployerJob;
 use App\Actions\Employers\StartEmployerJobMock;
 use App\Enums\EmployerJobStatus;
-use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employers\ApplyToJobRequest;
 use App\Http\Resources\CandidateApplicationResource;
 use App\Http\Resources\PublicEmployerJobResource;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
-use App\Models\Product;
+use App\Models\MockInterview;
+use App\Support\Entitlements\EntitlementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Candidate-side surface for employer JDs (PRD-E F3): browse published
@@ -60,39 +59,52 @@ final class EmployerJobBrowseController extends Controller
     }
 
     /**
-     * Start (or resume) this JD's mock. Spends one mock credit per fresh
-     * attempt; retakes are unlimited while the package holds and the best
-     * attempt is the one the employer ranks on.
+     * Start (or resume) this JD's mock. Capped at a flat N attempts per job
+     * (CRM-editable) — a plain validation error past the cap, not a 402: no
+     * wallet or purchase is involved in this flow at all (see
+     * StartEmployerJobMock), so there is nothing to offer, just a hard stop.
      */
     public function mock(Request $request, EmployerJob $job, StartEmployerJobMock $start): JsonResponse
     {
         abort_unless($job->status === EmployerJobStatus::Published, 404);
 
-        $user = $request->user();
-
-        try {
-            $interview = $start->handle($user, $job);
-        } catch (ValidationException $e) {
-            // An empty wallet is not a validation failure to the candidate —
-            // it is an offer. 402 carries the packs that unlock a retake.
-            if (array_key_exists('feature', $e->errors())) {
-                return response()->json([
-                    'error' => [
-                        'code' => 'mock_credits_required',
-                        'message' => 'You are out of mock credits for this role.',
-                        'offers' => Product::query()
-                            ->where('feature', EntitlementFeature::VoiceMock->value)
-                            ->where('active', true)
-                            ->get(['sku', 'name', 'price_paise', 'grant_amount'])
-                            ->all(),
-                    ],
-                ], 402);
-            }
-
-            throw $e;
-        }
+        $interview = $start->handle($request->user(), $job);
 
         return response()->json(['data' => ['mock_id' => $interview->id]], 201);
+    }
+
+    /**
+     * Where the candidate stands against this JD's own mock — the signal
+     * the apply page uses to decide whether Apply is even offered (PRD-E
+     * F3): nothing started, an attempt to resume, or a completed one with
+     * its score. A completed attempt always wins over a stale in-progress
+     * row from an earlier retake. Also carries the per-job attempt cap
+     * (CRM-editable) so the apply page can show it before the candidate
+     * ever hits the hard stop in StartEmployerJobMock.
+     */
+    public function myMock(Request $request, EmployerJob $job, EntitlementService $entitlements): JsonResponse
+    {
+        $all = MockInterview::query()
+            ->where('user_id', $request->user()->id)
+            ->whereHas('blueprint', fn ($q) => $q->where('employer_job_id', $job->id))
+            ->get();
+
+        $attempts = [
+            'used' => $all->count(),
+            'limit' => $entitlements->settings()->employer_mock_attempts_per_job,
+        ];
+
+        $completed = $all->where('status', MockInterview::STATUS_COMPLETED)->sortByDesc('overall_score')->first();
+        if ($completed !== null) {
+            return response()->json(['data' => ['status' => 'completed', 'mock_id' => $completed->id, 'score' => $completed->overall_score, 'attempts' => $attempts]]);
+        }
+
+        $inProgress = $all->firstWhere('status', MockInterview::STATUS_IN_PROGRESS);
+        if ($inProgress !== null) {
+            return response()->json(['data' => ['status' => 'in_progress', 'mock_id' => $inProgress->id, 'score' => null, 'attempts' => $attempts]]);
+        }
+
+        return response()->json(['data' => ['status' => 'none', 'mock_id' => null, 'score' => null, 'attempts' => $attempts]]);
     }
 
     public function applications(Request $request): JsonResponse

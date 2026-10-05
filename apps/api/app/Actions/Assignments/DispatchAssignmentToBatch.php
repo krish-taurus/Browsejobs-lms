@@ -34,6 +34,7 @@ final readonly class DispatchAssignmentToBatch
                 InAppNotification::query()->create([
                     'tenant_id' => $student->tenant_id,
                     'user_id' => $student->id,
+                    'type' => 'class',
                     'title' => "New assignment: {$lesson->title}",
                     'body' => 'Your trainer set an assignment from today\'s class.',
                     'url' => "/assignments/{$lesson->id}",

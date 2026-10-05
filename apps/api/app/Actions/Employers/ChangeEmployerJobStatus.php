@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Employers;
 
 use App\Enums\EmployerJobStatus;
+use App\Jobs\RevalidatePublicJobBoard;
 use App\Models\EmployerJob;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
@@ -41,6 +42,11 @@ final readonly class ChangeEmployerJobStatus
                 'from' => $previous->value,
                 'to' => $target->value,
             ], $actor);
+
+            // A pause or close needs this as much as a publish does — the
+            // public board should stop offering a role the moment it stops
+            // being open, not up to a minute later.
+            RevalidatePublicJobBoard::dispatch($job->id);
 
             return $job->fresh();
         });

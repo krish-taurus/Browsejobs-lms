@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { AiMascot } from "@/components/ui/AiMascot";
 
 type Certificate = {
   code: string;
@@ -15,6 +16,29 @@ type Certificate = {
   verify_url: string;
   download: string | null;
 };
+
+function CertificatesEmptyState() {
+  return (
+    <div className="relative mt-8 overflow-hidden rounded-2xl border border-line bg-white px-6 py-14">
+      <div aria-hidden className="pointer-events-none absolute -bottom-10 -left-10 size-40 rounded-full bg-sky/60 blur-2xl" />
+      <div aria-hidden className="pointer-events-none absolute -right-8 top-1/3 size-28 rounded-full bg-trust/10 blur-2xl" />
+
+      <div className="relative mx-auto flex max-w-sm flex-col items-center text-center">
+        <AiMascot variant="certificate" className="h-48 w-full max-w-sm" />
+        <h3 className="display mt-4 text-xl text-ink">No certificates yet</h3>
+        <p className="mt-2 text-sm text-muted">
+          Finish a course and your certificate is issued automatically — it&apos;ll appear here, verifiable by QR.
+        </p>
+        <Link
+          href="/dashboard"
+          className="mt-6 rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-deep"
+        >
+          Back to dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function CertificatesPage() {
   const [certs, setCerts] = useState<Certificate[]>([]);
@@ -43,7 +67,7 @@ export default function CertificatesPage() {
       {loading ? (
         <div className="mt-8 space-y-3">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="shimmer h-28 rounded-2xl" />)}</div>
       ) : certs.length === 0 ? (
-        <div className="mt-8"><EmptyState title="No certificates yet" body="Finish a course and your certificate is issued automatically — it'll appear here, verifiable by QR." /></div>
+        <CertificatesEmptyState />
       ) : (
         <div className="mt-8 space-y-4">
           {certs.map((c) => (

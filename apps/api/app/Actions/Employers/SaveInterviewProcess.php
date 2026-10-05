@@ -6,6 +6,7 @@ namespace App\Actions\Employers;
 
 use App\Models\EmployerJob;
 use App\Models\EmployerJobRound;
+use App\Models\EmployerMember;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Employers\InterviewProcess;
@@ -111,6 +112,24 @@ final readonly class SaveInterviewProcess
             ? max(0, min(100, (int) $raw['auto_min_score']))
             : null;
 
+        // Silently ignored rather than rejected: a stale assignee id (the
+        // member left, or belongs to a different workspace entirely) should
+        // not fail saving the rest of the process — it just leaves the round
+        // unassigned again.
+        $assignedMemberId = isset($raw['assigned_member_id']) && $raw['assigned_member_id'] !== null
+            ? EmployerMember::query()
+                ->where('id', (int) $raw['assigned_member_id'])
+                ->where('employer_workspace_id', $job->employer_workspace_id)
+                ->value('id')
+            : null;
+
+        // Exact picks, not just a steer: trimmed and de-duplicated the same
+        // way a name is, so two clicks on the same question do not double it.
+        $selectedQuestions = array_values(array_unique(array_filter(
+            array_map(static fn ($q): string => trim((string) $q), $raw['selected_questions'] ?? []),
+            static fn (string $q): bool => $q !== '',
+        )));
+
         // Reuses the mock designer's vocabulary filter, so a round cannot
         // carry a competency key the grading prompt has never heard of.
         $design = MockDesign::fromArray([
@@ -125,9 +144,11 @@ final readonly class SaveInterviewProcess
             'position' => $position,
             'name' => mb_substr(trim((string) ($raw['name'] ?? 'Round')), 0, 120) ?: 'Round',
             'kind' => $kind,
+            'assigned_member_id' => $assignedMemberId,
             'focus_skills' => $design->focusSkills,
             'competency_weights' => $design->competencyWeights,
             'format_mix' => $design->formatMix,
+            'selected_questions' => $selectedQuestions,
             'question_count' => $design->questionCount,
             'notes' => $design->notes,
             'window_hours' => max(1, min(720, (int) ($raw['window_hours'] ?? config('employers.interview_window_hours')))),

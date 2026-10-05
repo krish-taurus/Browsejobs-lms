@@ -23,7 +23,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $skill
  * @property list<string> $competencies
  * @property string $opening_question
+ * @property int|null $max_questions
  * @property bool $is_active
+ * @property int|null $user_id
  */
 class MockBlueprint extends Model
 {
@@ -32,7 +34,8 @@ class MockBlueprint extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'tenant_id', 'course_id', 'job_feed_item_id', 'employer_job_id', 'role_title', 'skill', 'competencies', 'opening_question', 'is_active',
+        'tenant_id', 'course_id', 'job_feed_item_id', 'employer_job_id', 'user_id',
+        'role_title', 'skill', 'competencies', 'opening_question', 'max_questions', 'is_active',
     ];
 
     /**
@@ -82,6 +85,12 @@ class MockBlueprint extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /** The student this blueprint belongs to — only set for the AI Readiness Interview kind. */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

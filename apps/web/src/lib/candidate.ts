@@ -101,6 +101,10 @@ export type InternalJob = {
   posted_at: string | null;
   mock_ready: boolean;
   has_applied: boolean;
+  // Where the candidate stands on this JD's own interview — the step Apply
+  // is gated behind. "none" | "in_progress" | "completed".
+  mock_status: "none" | "in_progress" | "completed";
+  mock_score: number | null;
 };
 
 export type ExternalJob = {
@@ -198,10 +202,42 @@ export type PublicJob = {
   published_at: string | null;
 };
 
+export type MyMockStatus = {
+  status: "none" | "in_progress" | "completed";
+  mock_id: number | null;
+  score: number | null;
+  attempts: { used: number; limit: number };
+  has_recording?: boolean;
+};
+
 export const jobApi = {
   show: (id: number) => apiJson<{ data: PublicJob }>(`${base}/me/employer-jobs/${id}`),
   myApplications: () =>
     apiJson<{ data: { id: number; employer_job_id: number; stage: string; mock_score: number | null }[] }>(
       `${base}/me/employer-jobs/applications`,
     ),
+  /** Whether this candidate has a completed/in-progress mock for this JD — the Apply gate. */
+  myMock: (jobId: number) => apiJson<{ data: MyMockStatus }>(`${base}/me/employer-jobs/${jobId}/my-mock`),
+};
+
+/**
+ * The AI Readiness Interview: general, CV-driven, not tied to any job.
+ * Same status shape as a JD's myMock() — completing it is what makes a
+ * student's profile visible in an employer's Talent Pool search, even
+ * without ever applying anywhere.
+ */
+export const cvMockApi = {
+  status: () => apiJson<{ data: MyMockStatus }>(`${base}/me/cv-mock`),
+  start: () => apiJson<{ data: { mock_id: number } }>(`${base}/me/cv-mock`, { method: "POST" }),
+};
+
+/**
+ * A candidate's own view of their interview recording (candidate request,
+ * Aug 2026) — works for any mock interview by id, not just the AI
+ * Readiness one. Deleting removes only the recording file; the score and
+ * scorecard are untouched.
+ */
+export const mockRecordingApi = {
+  view: (mockId: number) => apiJson<{ data: { url: string } }>(`${base}/me/mocks/${mockId}/recording`),
+  remove: (mockId: number) => apiJson<{ ok: boolean }>(`${base}/me/mocks/${mockId}/recording`, { method: "DELETE" }),
 };

@@ -34,8 +34,13 @@ final class JobFeedController extends Controller
         $rows = $feed->for($request->user());
         $confidence = new ConfidenceScorer($request->user());
         $kit = $this->kit($request->user());
+        // JobsForYou itself returns nothing without a CV — this just tells the
+        // frontend *why* the list is empty, so it can point someone at My CV
+        // instead of implying their profile genuinely has no matches.
+        $hasCv = CvDocument::query()->where('user_id', $request->user()->id)->exists();
 
         return app(TenantContext::class)->run($request->user()->tenant, fn (): JsonResponse => response()->json([
+            'has_cv' => $hasCv,
             'data' => array_map(function (array $row) use ($confidence, $kit) {
                 $c = $confidence->for((int) $row['match_pct']);
 

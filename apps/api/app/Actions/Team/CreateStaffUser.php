@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Team;
 
+use App\Actions\Auth\GrantSignupCredits;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
@@ -19,14 +20,14 @@ use Illuminate\Support\Facades\DB;
  */
 final readonly class CreateStaffUser
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(private AuditLogger $audit, private GrantSignupCredits $grantCredits) {}
 
     /**
      * @param  StaffInput  $data
      */
     public function handle(Tenant $tenant, array $data): User
     {
-        return DB::transaction(function () use ($tenant, $data): User {
+        $user = DB::transaction(function () use ($tenant, $data): User {
             $user = User::query()->create([
                 'tenant_id' => $tenant->id,
                 'name' => $data['name'],
@@ -44,5 +45,13 @@ final readonly class CreateStaffUser
 
             return $user->load('roles');
         });
+
+        // Staff get the same free tier a student signup does (Sept 2026) —
+        // a trainer or mentor testing the CV builder or a mock interview
+        // from their own account shouldn't be blocked on "0 generations"
+        // just because they aren't a student.
+        $this->grantCredits->handle($user);
+
+        return $user;
     }
 }

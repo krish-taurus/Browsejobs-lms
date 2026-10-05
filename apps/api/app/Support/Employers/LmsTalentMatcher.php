@@ -26,15 +26,35 @@ use Illuminate\Support\Collection;
  *
  * Deliberately NOT an AI call: it runs per JD view, must be instant and
  * free, and the inputs are already structured.
+ *
+ * Two hard requirements to appear at all (Aug 2026, employer request after
+ * the pool surfaced students with almost no real connection to the role —
+ * e.g. a Data Analytics student showing up for a DevOps JD purely on
+ * knowing "python"):
+ * 1. A completed AI Readiness Interview (cv_mock_completed_at) — see
+ *    caution in forJob()'s own comment: this can leave a JD's pool empty
+ *    while platform-wide adoption of that interview is still low.
+ * 2. Role relevance (roleRelevant()) — the JD's own title/role_family has
+ *    to actually appear somewhere in the student's track/CV, not just an
+ *    incidental skill in common. Skill overlap alone was letting almost
+ *    any technical student surface for almost any technical JD.
  */
 final readonly class LmsTalentMatcher
 {
     /** Weightings for the composite match score (sums to 100). */
-    private const W_SKILLS = 60;
+    private const W_SKILLS = 50;
 
-    private const W_READINESS = 25;
+    private const W_READINESS = 20;
 
     private const W_MOCK = 15;
+
+    private const W_CV_READINESS = 15;
+
+    /**
+     * A word this short (role/course, "AI", "QA") is too generic to prove
+     * relevance on its own — skip it rather than let it match everything.
+     */
+    private const MIN_ROLE_WORD_LENGTH = 4;
 
     /**
      * @return Collection<int, array<string, mixed>>
@@ -65,8 +85,22 @@ final readonly class LmsTalentMatcher
             return collect();
         }
 
+        // Restored hard gate (Aug 2026): must have completed the AI Readiness
+        // Interview to appear at all — an employer request, made knowing this
+        // can leave a JD's pool empty (or thin) while platform-wide
+        // completions of that interview are still low. That tradeoff was
+        // made explicitly, not accidentally — see StartCvReadinessMock for
+        // the interview itself and where a student takes it.
         /** @var Collection<int, CvProfile> $profiles */
-        $profiles = CvProfile::query()->whereIn('user_id', $users->keys()->all())->get();
+        $profiles = CvProfile::query()
+            ->whereIn('user_id', $users->keys()->all())
+            ->whereNotNull('cv_mock_completed_at')
+            ->get()
+            // A CV row can exist with nothing actually in it — require real
+            // content too, not just a completed interview with an empty CV.
+            ->filter(fn (CvProfile $p) => ! empty($p->data['summary'] ?? null)
+                || ! empty($p->data['skills'] ?? [])
+                || ! empty($p->data['experience'] ?? []));
 
         if ($profiles->isEmpty()) {
             return collect();
@@ -83,8 +117,10 @@ final readonly class LmsTalentMatcher
             ->keyBy('user_id');
         $training = $this->trainingByUser($userIds);
 
+        $roleWords = $this->roleWords($job);
+
         return $profiles
-            ->map(function (CvProfile $profile) use ($required, $users, $scores, $mockAverages, $training): ?array {
+            ->map(function (CvProfile $profile) use ($required, $users, $scores, $mockAverages, $training, $roleWords): ?array {
                 $user = $users->get($profile->user_id);
                 if ($user === null) {
                     return null;
@@ -98,15 +134,27 @@ final readonly class LmsTalentMatcher
                     return null;
                 }
 
+                // A skill in common isn't enough — a Data Analytics student
+                // knowing "python" shouldn't surface for a DevOps JD. The
+                // JD's own title/role_family has to actually appear in the
+                // student's track or their CV's most recent role.
+                if (! $this->roleRelevant($roleWords, $profile, $training[$profile->user_id] ?? null)) {
+                    return null;
+                }
+
                 $skillPct = (int) round(count($matched) / count($required) * 100);
                 $readiness = (int) ($scores->get($profile->user_id)?->pri ?? 0);
                 $mockRow = $mockAverages->get($profile->user_id);
                 $mockAvg = $mockRow !== null ? (int) round((float) $mockRow->avg_score) : 0;
+                // 0 when they haven't taken it — surfaces on the other three
+                // components alone, just without this one's points.
+                $cvReadiness = (int) ($profile->cv_mock_score ?? 0);
 
                 $match = (int) round(
                     $skillPct * (self::W_SKILLS / 100)
                     + $readiness * (self::W_READINESS / 100)
                     + $mockAvg * (self::W_MOCK / 100)
+                    + $cvReadiness * (self::W_CV_READINESS / 100)
                 );
 
                 return [
@@ -120,6 +168,7 @@ final readonly class LmsTalentMatcher
                     'mock_attempts' => $mockRow !== null ? (int) $mockRow->attempts : 0,
                     'training' => $training[$profile->user_id] ?? null,
                     'cv_ready' => ! empty($profile->data['summary'] ?? null) || ! empty($profile->data['skills'] ?? []),
+                    'cv_mock_score' => $profile->cv_mock_score,
                 ];
             })
             ->filter()
@@ -135,6 +184,46 @@ final readonly class LmsTalentMatcher
      * @param  list<int>  $userIds
      * @return array<int, array{course: string, status: string}>
      */
+    private function roleWords(EmployerJob $job): array
+    {
+        $text = mb_strtolower(trim($job->title.' '.($job->role_family ?? '')));
+        $words = preg_split('/[^a-z0-9]+/', $text) ?: [];
+
+        return array_values(array_unique(array_filter(
+            $words,
+            fn (string $w) => mb_strlen($w) >= self::MIN_ROLE_WORD_LENGTH,
+        )));
+    }
+
+    /**
+     * True if the JD's own role shows up somewhere real for this student —
+     * their enrolled/completed course, or their CV's own most recent job
+     * title. A JD with no usable role words (title too short/generic) never
+     * excludes anyone on this check; that's a judgement call in favour of
+     * not silently hiding candidates over a JD that gave us nothing to work
+     * with, not a loophole.
+     *
+     * @param  list<string>  $roleWords
+     * @param  array{course: string, status: string}|null  $training
+     */
+    private function roleRelevant(array $roleWords, CvProfile $profile, ?array $training): bool
+    {
+        if ($roleWords === []) {
+            return true;
+        }
+
+        $recentTitle = (string) ($profile->data['experience'][0]['title'] ?? '');
+        $blob = mb_strtolower($recentTitle.' '.($training['course'] ?? ''));
+
+        foreach ($roleWords as $word) {
+            if (str_contains($blob, $word)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function trainingByUser(array $userIds): array
     {
         return BatchMember::query()

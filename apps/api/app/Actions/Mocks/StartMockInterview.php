@@ -17,18 +17,26 @@ use Illuminate\Validation\ValidationException;
  * consumer of that flag. Voice mode (P4.3) adds quota consumption here.
  * The opening question is deterministic from the blueprint: zero AI cost to
  * start, the budget spends only once the candidate engages.
+ *
+ * $isRoom distinguishes the two things this same action powers: plain text
+ * practice (unlimited) versus the spoken interview-room experience (Aug 2026
+ * candidate request) — capped per blueprint, hard stop past the cap, no
+ * purchase path, and entirely separate from the employer-JD interview cap in
+ * {@see \App\Actions\Employers\StartEmployerJobMock}. Deliberately two
+ * independent counters rather than one shared pool.
  */
 final readonly class StartMockInterview
 {
     public function __construct(private EntitlementService $entitlements) {}
 
-    public function handle(User $student, ?int $blueprintId = null): MockInterview
+    public function handle(User $student, ?int $blueprintId = null, bool $isRoom = false): MockInterview
     {
         abort_unless($this->entitlements->settings()->text_practice_enabled, 403, 'Text practice is not enabled.');
 
         $existing = MockInterview::query()
             ->where('user_id', $student->id)
             ->where('mode', MockInterview::MODE_TEXT)
+            ->where('is_room', $isRoom)
             ->where('status', MockInterview::STATUS_IN_PROGRESS)
             ->latest('id')
             ->first();
@@ -39,11 +47,27 @@ final readonly class StartMockInterview
 
         $blueprint = $this->blueprintFor($student, $blueprintId);
 
+        if ($isRoom) {
+            $limit = $this->entitlements->settings()->general_mock_attempts_per_blueprint;
+            $used = MockInterview::query()
+                ->where('user_id', $student->id)
+                ->where('mock_blueprint_id', $blueprint->id)
+                ->where('is_room', true)
+                ->count();
+
+            if ($used >= $limit) {
+                throw ValidationException::withMessages([
+                    'attempts' => "You've used all {$limit} interview attempts for this mock.",
+                ]);
+            }
+        }
+
         $interview = MockInterview::query()->create([
             'tenant_id' => $student->tenant_id,
             'user_id' => $student->id,
             'mock_blueprint_id' => $blueprint->id,
             'mode' => 'text',
+            'is_room' => $isRoom,
             'status' => MockInterview::STATUS_IN_PROGRESS,
             'started_at' => now(),
         ]);

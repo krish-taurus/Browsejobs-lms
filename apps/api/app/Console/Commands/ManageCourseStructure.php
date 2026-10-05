@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Course;
+use App\Models\CoursePrice;
 use App\Models\Lesson;
 use App\Models\Module;
 use App\Models\Tenant;
@@ -88,6 +89,16 @@ final class ManageCourseStructure extends Command
                 'name' => $course->name,
                 'slug' => $course->slug,
                 'fee_paise' => $course->fee_paise,
+                // Prices outside India, so the CRM can show and edit them
+                // alongside the rupee fee. India stays on fee_paise above.
+                'prices' => CoursePrice::query()->where('course_id', $course->id)->orderBy('region')->get()
+                    ->map(fn (CoursePrice $price): array => [
+                        'region' => $price->region,
+                        'currency' => $price->currency,
+                        'amount' => $price->amount(),
+                        'emi_count' => $price->emi_count,
+                        'emi_amount' => $price->emiAmount(),
+                    ])->all(),
                 'subjects' => $subjects->map(function (Module $module): array {
                     $chapters = Topic::query()
                         ->where('module_id', $module->id)

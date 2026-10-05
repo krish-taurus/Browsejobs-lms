@@ -11,8 +11,22 @@ return [
     */
     'registration_paise' => (int) env('FEE_REGISTRATION_PAISE', 3_000_000),
 
-    /** Allowed EMI instalment counts. */
-    'emi_options' => [1, 2, 3],
+    /**
+     * Ceiling for every EMI-creating caller — the CRM's batch onboarding
+     * and fee restructuring included. Students never see this directly;
+     * they get the narrower student_emi_options below.
+     */
+    'emi_options' => [1, 2, 3, 4, 5],
+
+    /**
+     * What a student is actually offered on their own dashboard
+     * ('choose a plan' screen), and the only counts their own API calls
+     * can raise a plan with. Kept separate from emi_options above so the
+     * CRM's manual onboarding can use a wider range (4-5 EMIs, say) for a
+     * one-off negotiated deal without that ever becoming a self-service
+     * choice on the dashboard.
+     */
+    'student_emi_options' => [1, 2, 3],
 
     /** GST is inclusive in the registration price; rate in basis points (18%). */
     'gst_rate_bps' => (int) env('FEE_GST_RATE_BPS', 1800),

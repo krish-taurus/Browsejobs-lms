@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
 import { durations, ease } from "@/lib/motion";
 import { courses } from "@/content/landing";
@@ -50,6 +51,7 @@ function captureUtm(): Record<string, string> {
 
 export function LeadModal() {
   const reduce = useReducedMotion();
+  const router = useRouter();
   const [detail, setDetail] = useState<LeadModalDetail | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -103,6 +105,7 @@ export function LeadModal() {
         }),
       });
       setDone(true);
+      router.push('/thank-you');
     } catch (err) {
       setError(
         err instanceof ApiError

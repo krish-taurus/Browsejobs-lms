@@ -32,7 +32,7 @@ final readonly class BookMentorSession
 
     public function handle(User $student, int $mentorProfileId, CarbonImmutable $startsAt, string $purpose): MentorSession
     {
-        $mentor = MentorProfile::query()->where('is_active', true)->findOrFail($mentorProfileId);
+        $mentor = MentorProfile::query()->where('is_active', true)->mentoring()->findOrFail($mentorProfileId);
 
         if (! in_array($purpose, [MentorSession::PURPOSE_MENTORING, MentorSession::PURPOSE_PLACEMENT], true)) {
             throw ValidationException::withMessages(['purpose' => 'Unknown session purpose.']);

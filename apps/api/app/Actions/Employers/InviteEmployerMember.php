@@ -24,9 +24,15 @@ final readonly class InviteEmployerMember
 {
     public function __construct(private AuditLogger $audit) {}
 
-    public function handle(EmployerWorkspace $workspace, User $inviter, string $email, EmployerRole $role): EmployerInvite
-    {
-        return app(TenantContext::class)->run($workspace->tenant, function () use ($workspace, $inviter, $email, $role): EmployerInvite {
+    public function handle(
+        EmployerWorkspace $workspace,
+        User $inviter,
+        string $email,
+        EmployerRole $role,
+        ?string $name = null,
+        ?string $whatsapp = null,
+    ): EmployerInvite {
+        return app(TenantContext::class)->run($workspace->tenant, function () use ($workspace, $inviter, $email, $role, $name, $whatsapp): EmployerInvite {
             $email = Str::lower(trim($email));
 
             $alreadyMember = $workspace->members()
@@ -55,6 +61,8 @@ final readonly class InviteEmployerMember
                 'employer_workspace_id' => $workspace->id,
                 'invited_by_id' => $inviter->id,
                 'email' => $email,
+                'name' => $name !== null ? trim($name) : null,
+                'whatsapp' => $whatsapp !== null ? trim($whatsapp) : null,
                 'role' => $role->value,
                 'token' => Str::random(64),
                 'expires_at' => now()->addDays((int) config('employers.invite_ttl_days')),

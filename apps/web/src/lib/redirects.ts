@@ -58,6 +58,18 @@ export const aliasRedirects: Redirect[] = [
   { source: "/terms-and-conditions", destination: "/terms", permanent: true },
   { source: "/refunds", destination: "/refund-policy", permanent: true },
   { source: "/refund", destination: "/refund-policy", permanent: true },
+
+  // The employer AI brain used to have its own tab. It moved onto the
+  // dashboard; this keeps old bookmarks and browser history working. Temporary
+  // rather than permanent — nothing external ever linked here, and a 301 would
+  // be cached in people's browsers forever if it ever moves back.
+  { source: "/employer/neural-ops", destination: "/employer/dashboard", permanent: false },
+
+  // AI Interviews renamed from /mock to /student-ai-mock (Sept 2026) — old
+  // bookmarks, sidebar shortcuts and any link already shared with a student
+  // keep working. Temporary for the same reason as neural-ops above.
+  { source: "/mock", destination: "/student-ai-mock", permanent: false },
+  { source: "/mock/:path*", destination: "/student-ai-mock/:path*", permanent: false },
 ];
 
 /**

@@ -4,10 +4,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 /**
- * Shared surface primitives for the employer portal, in the same visual
- * dialect as the marketing site: 24px radii, tinted accent fills with a
- * top-rule, ghost numerals, ink panels with a glow, and one signature
- * easing. Motion is opt-out under prefers-reduced-motion.
+ * Shared surface primitives for the employer portal: white cards, a single
+ * saturated Facebook-blue accent, and one signature easing. Motion is
+ * opt-out under prefers-reduced-motion.
  */
 
 export const EASE = [0.16, 1, 0.3, 1] as const;
@@ -34,7 +33,7 @@ export function PageHead({
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#4d8ef7]"
+          className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--bj-dash-primary)]"
         >
           {kicker}
         </motion.p>
@@ -42,15 +41,13 @@ export function PageHead({
           initial={reduce ? false : { opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
-          className="font-display mt-2.5 text-3xl font-bold leading-[1.05] tracking-[-0.03em] md:text-5xl"
+          className="bj-dash-serif mt-2.5 text-3xl leading-[1.05] tracking-[-0.03em] text-[var(--bj-dash-ink)] md:text-5xl"
         >
           {title}
           {highlight && (
             <>
               {" "}
-              <span className="bg-gradient-to-r from-[#4d8ef7] via-[#7ba9fa] to-[#9d6bf5] bg-clip-text text-transparent">
-                {highlight}
-              </span>
+              <span className="text-[var(--bj-dash-primary)]">{highlight}</span>
             </>
           )}
         </motion.h1>
@@ -59,7 +56,7 @@ export function PageHead({
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-3 max-w-xl text-[15px] leading-relaxed text-white/55"
+            className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--bj-dash-muted)]"
           >
             {sub}
           </motion.p>
@@ -75,7 +72,7 @@ export function PageHead({
  * in the same hue, and an accent top-rule that fades out to the right.
  */
 export function Tile({
-  accent = "#1b6df0",
+  accent = "var(--bj-dash-primary)",
   className = "",
   children,
   index = 0,
@@ -97,11 +94,7 @@ export function Tile({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: EASE, delay: (index % 4) * 0.07 }}
       whileHover={hover && !reduce ? { y: -4 } : undefined}
-      className={`relative overflow-hidden rounded-3xl border p-6 shadow-[0_18px_50px_rgba(0,0,0,0.45)] ${className}`}
-      style={{
-        background: `linear-gradient(158deg, ${accent}14, #0a0f1c 62%)`,
-        borderColor: `${accent}33`,
-      }}
+      className={`relative overflow-hidden rounded-3xl border border-[var(--bj-dash-border)] bg-white p-6 text-[var(--bj-dash-ink)] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.18)] ${className}`}
     >
       <span
         aria-hidden
@@ -111,8 +104,8 @@ export function Tile({
       {ghost !== undefined && (
         <span
           aria-hidden
-          className="font-display pointer-events-none absolute -right-3 -top-8 text-[6.5rem] font-bold leading-none"
-          style={{ color: `${accent}1f` }}
+          className="font-display pointer-events-none absolute -right-1 -top-3 text-[3.75rem] font-bold leading-none"
+          style={{ color: `${accent}14` }}
         >
           {ghost}
         </span>
@@ -122,10 +115,16 @@ export function Tile({
   );
 }
 
-/** Dark panel with a soft accent glow — the loudest surface available. */
+/**
+ * Dark gradient-mesh panel — the loudest surface available, reserved for the
+ * one thing that matters most. A near-black base carries two soft blurred
+ * colour blobs: `glow` (each caller's own accent) and a fixed violet
+ * companion, so every InkPanel gets the same depth without losing the accent
+ * that told the four other pages using this component apart.
+ */
 export function InkPanel({
   children,
-  glow = "#1b6df0",
+  glow = "var(--bj-dash-primary)",
   className = "",
 }: {
   children: ReactNode;
@@ -138,16 +137,17 @@ export function InkPanel({
       initial={reduce ? false : { opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.75, ease: EASE }}
-      className={`relative overflow-hidden rounded-3xl bg-[#111827] p-7 text-white shadow-[0_30px_90px_rgba(10,18,32,0.28)] md:p-8 ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-[var(--bj-dash-hero)] p-7 text-white shadow-[0_24px_60px_-24px_rgba(13,17,23,0.5)] md:p-8 ${className}`}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-24 -top-28 h-[320px] w-[420px] rounded-full blur-[130px]"
-        style={{ background: glow, opacity: 0.22 }}
+        className="pointer-events-none absolute -right-24 -top-28 h-[360px] w-[460px] rounded-full blur-[130px]"
+        style={{ background: glow, opacity: 0.32 }}
       />
-      <span
+      <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+        className="pointer-events-none absolute -left-20 -bottom-24 h-[300px] w-[380px] rounded-full blur-[130px]"
+        style={{ background: "var(--bj-dash-focus)", opacity: 0.16 }}
       />
       <div className="relative">{children}</div>
     </motion.div>
@@ -159,7 +159,7 @@ export function Label({ children, dark = false }: { children: ReactNode; dark?: 
   return (
     <p
       className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
-        dark ? "text-white/40" : "text-white/45"
+        dark ? "text-white/70" : "text-[var(--bj-dash-muted)]"
       }`}
     >
       {children}
@@ -176,12 +176,12 @@ export function Pill({
   children: ReactNode;
 }) {
   const tones: Record<string, string> = {
-    neutral: "bg-white/[0.07] text-white/60",
-    trust: "bg-[#4d8ef7]/18 text-[#9dc2fb]",
-    verify: "bg-[#0da06e]/18 text-[#5fd6a6]",
-    warn: "bg-[#e05561]/18 text-[#f2a1a7]",
-    amber: "bg-[#b07c00]/22 text-[#e8bf63]",
-    dark: "bg-white/10 text-white/70",
+    neutral: "bg-[var(--bj-dash-soft)] text-[var(--bj-dash-muted)]",
+    trust: "bg-[var(--bj-dash-soft)] text-[var(--bj-dash-primary)]",
+    verify: "bg-[var(--bj-dash-score-strong-bg)] text-[var(--bj-dash-score-strong)]",
+    warn: "bg-[var(--bj-dash-score-below-bg)] text-[var(--bj-dash-score-below)]",
+    amber: "bg-[var(--bj-dash-score-fair-bg)] text-[var(--bj-dash-score-fair)]",
+    dark: "bg-[var(--bj-dash-ink)]/[0.06] text-[var(--bj-dash-ink)]/70",
   };
   return (
     <span className={`rounded-full px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] ${tones[tone]}`}>
@@ -206,7 +206,7 @@ export function PrimaryButton({
   className?: string;
   type?: "button" | "submit";
 }) {
-  const cls = `group inline-flex items-center justify-center gap-2 rounded-full bg-[#4d8ef7] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(77,142,247,0.42)] transition-all hover:shadow-[0_16px_46px_rgba(77,142,247,0.58)] disabled:opacity-50 disabled:shadow-none ${className}`;
+  const cls = `group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--bj-dash-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_-8px_rgba(26,96,72,0.55)] transition-all hover:bg-[#144f3c] hover:shadow-[0_14px_34px_-8px_rgba(26,96,72,0.62)] disabled:opacity-45 disabled:shadow-none ${className}`;
 
   if (href) {
     return (
@@ -240,7 +240,7 @@ export function GhostButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/30 disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-[var(--bj-dash-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--bj-dash-ink)] transition-colors hover:border-[var(--bj-dash-primary)] hover:text-[var(--bj-dash-primary)] disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -248,7 +248,7 @@ export function GhostButton({
 }
 
 /** Live pulse dot — used where data updates on its own. */
-export function LiveDot({ color = "#0ba860" }: { color?: string }) {
+export function LiveDot({ color = "var(--bj-dash-score-strong)" }: { color?: string }) {
   return (
     <span className="relative flex h-2 w-2">
       <span className="absolute h-full w-full animate-ping rounded-full opacity-60" style={{ background: color }} />
@@ -259,7 +259,7 @@ export function LiveDot({ color = "#0ba860" }: { color?: string }) {
 
 /** Skeleton block matching the tile radius. */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-3xl bg-white/[0.045] ${className}`} />;
+  return <div className={`animate-pulse rounded-3xl bg-[var(--bj-dash-soft)] ${className}`} />;
 }
 
 /**
@@ -267,7 +267,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
  * ring (never removed), and the same hairline the tiles use.
  */
 export const controlCls =
-  "w-full rounded-2xl border border-white/[0.12] bg-white/[0.05] px-4 py-3 text-sm text-white outline-none transition-shadow placeholder:text-white/25 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25";
+  "w-full rounded-2xl border border-[var(--bj-dash-border)] bg-white px-4 py-3 text-sm text-[var(--bj-dash-ink)] outline-none transition-shadow placeholder:text-[var(--bj-dash-muted)] focus:border-[var(--bj-dash-primary)] focus:ring-4 focus:ring-[var(--bj-dash-primary)]/15";
 
 /** Labelled form field with optional helper text under the label. */
 export function Field({
@@ -283,10 +283,10 @@ export function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-white">
+      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-[var(--bj-dash-ink)]">
         {label}
       </label>
-      {hint && <p className="mb-2 mt-0.5 text-[12px] leading-snug text-white/45">{hint}</p>}
+      {hint && <p className="mb-2 mt-0.5 text-[12px] leading-snug text-[var(--bj-dash-muted)]">{hint}</p>}
       <div className={hint ? "" : "mt-2"}>{children}</div>
     </div>
   );
@@ -308,19 +308,19 @@ export function CheckCard({
     <label
       className="flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors"
       style={{
-        borderColor: checked ? "#4d8ef75c" : "rgba(255,255,255,0.12)",
-        background: checked ? "#4d8ef714" : "rgba(255,255,255,0.03)",
+        borderColor: checked ? "var(--bj-dash-primary)" : "var(--bj-dash-border)",
+        background: checked ? "var(--bj-dash-soft)" : "#ffffff",
       }}
     >
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 accent-[#4d8ef7]"
+        className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
       />
       <span>
-        <span className="block text-[13px] font-semibold text-white">{title}</span>
-        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-white/50">{sub}</span>}
+        <span className="block text-[13px] font-semibold text-[var(--bj-dash-ink)]">{title}</span>
+        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-[var(--bj-dash-muted)]">{sub}</span>}
       </span>
     </label>
   );

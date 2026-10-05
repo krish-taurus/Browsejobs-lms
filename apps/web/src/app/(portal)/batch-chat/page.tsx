@@ -22,10 +22,107 @@ type RoomPayload = {
   messages: ChatMessage[];
 };
 
+type LinkPreview = {
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  site_name: string | null;
+};
+
 function clock(iso: string | null): string {
   if (iso === null) return "";
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+const URL_RE = /https?:\/\/[^\s]+/i;
+
+/** First URL in a message body, if any — batch chat only ever previews one link per message, same as WhatsApp. */
+function firstUrl(body: string): string | null {
+  return body.match(URL_RE)?.[0] ?? null;
+}
+
+/**
+ * A stable colour per sender name, so the same person's initial always
+ * reads as the same colour across every message and every reload — the
+ * same visual cue a WhatsApp group gives for free.
+ */
+const AVATAR_HUES = [210, 150, 265, 25, 335, 175, 45, 290];
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  const hue = AVATAR_HUES[Math.abs(hash) % AVATAR_HUES.length];
+  return `hsl(${hue} 62% 42%)`;
+}
+
+function Avatar({ name }: { name: string }) {
+  const initial = name.trim().charAt(0).toUpperCase() || "?";
+  return (
+    <span
+      className="mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+      style={{ background: avatarColor(name) }}
+      aria-hidden="true"
+    >
+      {initial}
+    </span>
+  );
+}
+
+/**
+ * Rich preview card for the first link in a message — title, description
+ * and image fetched server-side (see /me/link-preview) and cached across
+ * every student who sees the same link. Renders nothing while loading and
+ * nothing at all if the source page couldn't be read; the plain link text
+ * in the message body is never hidden either way.
+ */
+const previewCache = new Map<string, LinkPreview | null>();
+
+function LinkPreviewCard({ url }: { url: string }) {
+  const [preview, setPreview] = useState<LinkPreview | null | undefined>(previewCache.get(url));
+
+  useEffect(() => {
+    if (previewCache.has(url)) return;
+    let cancelled = false;
+
+    apiJson<{ data: LinkPreview | null }>(`/api/v1/me/link-preview?url=${encodeURIComponent(url)}`)
+      .then((r) => {
+        previewCache.set(url, r.data);
+        if (!cancelled) setPreview(r.data);
+      })
+      .catch(() => {
+        previewCache.set(url, null);
+        if (!cancelled) setPreview(null);
+      });
+
+    return () => { cancelled = true; };
+  }, [url]);
+
+  if (preview === undefined || preview === null || (!preview.title && !preview.description)) return null;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 flex overflow-hidden rounded-[10px] border border-black/10 bg-white/95 text-left text-ink no-underline hover:border-black/20"
+    >
+      {preview.image && (
+        // eslint-disable-next-line @next/next/no-img-element -- an arbitrary external image, not something next/image can optimise
+        <img src={preview.image} alt="" className="h-16 w-16 shrink-0 object-cover" />
+      )}
+      <span className="min-w-0 flex-1 px-3 py-2">
+        {preview.site_name && (
+          <span className="mono block text-[10px] uppercase tracking-widest text-muted">{preview.site_name}</span>
+        )}
+        {preview.title && <span className="block truncate text-xs font-semibold">{preview.title}</span>}
+        {preview.description && (
+          <span className="mt-0.5 block overflow-hidden text-[11px] text-muted" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+            {preview.description}
+          </span>
+        )}
+      </span>
+    </a>
+  );
 }
 
 /**
@@ -169,19 +266,24 @@ export default function BatchChatPage() {
               No questions yet. Ask the first one — no doubt is too small.
             </p>
           ) : (
-            room.messages.map((m) => (
-              <div key={m.id} className={m.mine ? "flex justify-end" : "flex justify-start"}>
-                <div className={`max-w-[80%] rounded-[12px] px-3 py-2 ${m.mine ? "bg-trust text-white" : "bg-paper text-ink"}`}>
-                  {!m.mine && (
-                    <p className={`text-[11px] font-semibold ${m.from_staff ? "text-trust" : "text-muted"}`}>
-                      {m.author}{m.from_staff ? " · BrowseJobs" : ""}
-                    </p>
-                  )}
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.body}</p>
-                  <p className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-muted"}`}>{clock(m.sent_at)}</p>
+            room.messages.map((m) => {
+              const link = firstUrl(m.body);
+              return (
+                <div key={m.id} className={`flex gap-2 ${m.mine ? "justify-end" : "justify-start"}`}>
+                  {!m.mine && <Avatar name={m.author} />}
+                  <div className={`max-w-[80%] rounded-[12px] px-3 py-2 ${m.mine ? "bg-trust text-white" : "bg-paper text-ink"}`}>
+                    {!m.mine && (
+                      <p className={`text-[11px] font-semibold ${m.from_staff ? "text-trust" : "text-muted"}`}>
+                        {m.author}{m.from_staff ? " · BrowseJobs" : ""}
+                      </p>
+                    )}
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{m.body}</p>
+                    {link !== null && <LinkPreviewCard url={link} />}
+                    <p className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-muted"}`}>{clock(m.sent_at)}</p>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           <div ref={bottomRef} />
         </div>

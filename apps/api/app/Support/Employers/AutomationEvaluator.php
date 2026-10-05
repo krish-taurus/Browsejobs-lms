@@ -26,13 +26,26 @@ final readonly class AutomationEvaluator
     public function evaluate(EmployerAutomationRule $rule, EmployerJobApplication $application, int $score): void
     {
         if ($score < $rule->min_score) {
-            $this->record($rule, $application, 'skipped_below_threshold', $score);
+            $this->record($rule, $application, 'skipped_below_threshold', $score, $application->cv_match_pct);
+
+            return;
+        }
+
+        // A CV-match floor is optional on a rule (hand-written rules from
+        // before this existed simply don't set one) but, when set, is a hard
+        // gate same as the score — a great interview off a thin or
+        // mismatched CV shouldn't reach an employer's shortlist on talk
+        // alone. No recorded match (older applications, or a trigger this
+        // isn't computed for) fails safe rather than passing silently.
+        if ($rule->min_cv_match_pct !== null
+            && ($application->cv_match_pct === null || $application->cv_match_pct < $rule->min_cv_match_pct)) {
+            $this->record($rule, $application, 'skipped_below_threshold', $score, $application->cv_match_pct);
 
             return;
         }
 
         if ($rule->action === EmployerAutomationRule::ACTION_PARK) {
-            $this->record($rule, $application, 'applied', $score);
+            $this->record($rule, $application, 'applied', $score, $application->cv_match_pct);
 
             return;
         }
@@ -47,24 +60,23 @@ final readonly class AutomationEvaluator
             return;
         }
 
-        $this->move->handle(
-            $application,
-            $target,
-            null,
-            "Automation: score {$score} ≥ {$rule->min_score}",
-            'rule',
-        );
+        $note = $rule->min_cv_match_pct !== null
+            ? "Automation: score {$score} ≥ {$rule->min_score}, CV match {$application->cv_match_pct} ≥ {$rule->min_cv_match_pct}"
+            : "Automation: score {$score} ≥ {$rule->min_score}";
 
-        $this->record($rule, $application, 'applied', $score);
+        $this->move->handle($application, $target, null, $note, 'rule');
+
+        $this->record($rule, $application, 'applied', $score, $application->cv_match_pct);
     }
 
-    private function record(EmployerAutomationRule $rule, EmployerJobApplication $application, string $outcome, int $score): void
+    private function record(EmployerAutomationRule $rule, EmployerJobApplication $application, string $outcome, int $score, ?int $cvMatchPct): void
     {
         $rule->runs()->create([
             'employer_job_application_id' => $application->id,
             'action' => $rule->action,
             'outcome' => $outcome,
             'score_seen' => max(0, min(100, $score)),
+            'cv_match_seen' => $cvMatchPct !== null ? max(0, min(100, $cvMatchPct)) : null,
             'occurred_at' => now(),
         ]);
     }

@@ -30,10 +30,33 @@ final class JobController extends Controller
         $jobs = $workspace->jobs()
             ->with('mocks')
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $term = $request->string('search')->toString();
+                $query->where(function ($q) use ($term) {
+                    $q->where('title', 'like', "%{$term}%")
+                        // Case-insensitive substring match against the skills
+                        // JSON array — JSON_SEARCH's third argument accepts
+                        // SQL LIKE wildcards.
+                        ->orWhereRaw('JSON_SEARCH(LOWER(skills), "one", ?) IS NOT NULL', ['%'.mb_strtolower($term).'%']);
+                });
+            })
             ->latest()
-            ->paginate(25);
+            ->paginate(25)
+            ->withQueryString();
 
-        return EmployerJobResource::collection($jobs)->response();
+        // Workspace-wide, independent of the status/search filters above — the
+        // Jobs page's summary strip and filter-pill counts must never quietly
+        // narrow to whatever the current search happens to match (PRD-E jobs
+        // kit: "these metrics represent the workspace, independent of the
+        // local search and status selection").
+        $counts = [
+            'total' => $workspace->jobs()->count(),
+            'published' => $workspace->jobs()->where('status', EmployerJobStatus::Published->value)->count(),
+            'closed' => $workspace->jobs()->where('status', EmployerJobStatus::Closed->value)->count(),
+            'open_positions' => (int) $workspace->jobs()->where('status', EmployerJobStatus::Published->value)->sum('openings'),
+        ];
+
+        return EmployerJobResource::collection($jobs)->additional(['counts' => $counts])->response();
     }
 
     public function store(StoreJobRequest $request, EmployerWorkspace $workspace, CreateEmployerJob $create): JsonResponse

@@ -20,6 +20,7 @@ use App\Support\Interviews\GapReport;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -47,6 +48,20 @@ final class MockController extends Controller
                 ->get();
 
             $best = (int) $mocks->where('status', MockInterview::STATUS_COMPLETED)->max('overall_score');
+
+            // The room flow's own free-tier cap (separate from the voice_mock
+            // wallet above, and from the employer-JD interview cap) — scoped
+            // to whichever blueprint a fresh "Start a voice interview" click
+            // would actually use, so the portal can show a real count instead
+            // of the unrelated (and, without a telephony provider, unused)
+            // wallet balance.
+            $roomBlueprint = MockBlueprint::activeFor($request->user());
+            $roomAttemptsLimit = $this->entitlements->settings()->general_mock_attempts_per_blueprint;
+            $roomAttemptsUsed = $roomBlueprint === null ? 0 : MockInterview::query()
+                ->where('user_id', $request->user()->id)
+                ->where('mock_blueprint_id', $roomBlueprint->id)
+                ->where('is_room', true)
+                ->count();
 
             return response()->json([
                 'data' => [
@@ -84,6 +99,8 @@ final class MockController extends Controller
                         // spoken interview instead of a button that only ever
                         // fails and refunds the credit.
                         'provider_ready' => (string) config('services.vapi.api_key', '') !== '',
+                        'room_attempts_used' => $roomAttemptsUsed,
+                        'room_attempts_limit' => $roomAttemptsLimit,
                     ],
                     'mocks' => $mocks
                         ->where('status', MockInterview::STATUS_COMPLETED)
@@ -104,6 +121,7 @@ final class MockController extends Controller
             $interview = $this->start->handle(
                 $request->user(),
                 $request->filled('blueprint_id') ? (int) $request->integer('blueprint_id') : null,
+                $request->boolean('is_room'),
             );
 
             return $this->session($interview, 201);
@@ -160,6 +178,74 @@ final class MockController extends Controller
                 return $this->session($interview);
             },
         ));
+    }
+
+    /**
+     * The interview room's own webcam+mic capture, uploaded once the call
+     * ends — the candidate's evidence to the employer (PRD-E), captured
+     * without needing a live-call provider. Silently overwrites a prior
+     * upload for the same interview (a retake from the room re-uploads).
+     */
+    public function uploadRecording(Request $request, int $mock): JsonResponse
+    {
+        $request->validate([
+            'recording' => ['required', 'file', 'max:76800'], // 75MB — ~15 min of webcam+mic at modest bitrate
+        ]);
+
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+            $interview = $this->owned($request, $mock);
+            $file = $request->file('recording');
+            $extension = strtolower($file->getClientOriginalExtension()) ?: 'webm';
+            $path = "mock-recordings/{$interview->tenant_id}/{$interview->id}.{$extension}";
+
+            Storage::disk('s3')->put($path, (string) $file->get());
+            $interview->update(['recording_url' => $path]);
+
+            return response()->json(['ok' => true]);
+        });
+    }
+
+    /**
+     * A signed, time-limited URL to the candidate's own recording (candidate
+     * request, Aug 2026) — same signing pattern EmployerApplicationResource
+     * already uses for the employer's view of it, so the raw bucket path
+     * never reaches the browser either way. This reverses an earlier,
+     * deliberate call ("a recording is the employer's evidence, not
+     * something a candidate re-plays for themselves" — see the migration
+     * that added recording_url) at the candidate's explicit request.
+     */
+    public function recording(Request $request, int $mock): JsonResponse
+    {
+        $interview = $this->owned($request, $mock);
+
+        if ($interview->recording_url === null) {
+            return response()->json(['error' => ['message' => 'No recording for this interview.']], 404);
+        }
+
+        $url = str_starts_with($interview->recording_url, 'http')
+            ? $interview->recording_url
+            : Storage::disk('s3')->temporaryUrl($interview->recording_url, now()->addMinutes(30));
+
+        return response()->json(['data' => ['url' => $url]]);
+    }
+
+    /**
+     * Deletes only the recording file — the interview's score, scorecard,
+     * and transcript are untouched, so this is a storage/privacy choice,
+     * not a way to erase a result.
+     */
+    public function deleteRecording(Request $request, int $mock): JsonResponse
+    {
+        $interview = $this->owned($request, $mock);
+
+        if ($interview->recording_url !== null) {
+            if (! str_starts_with($interview->recording_url, 'http')) {
+                Storage::disk('s3')->delete($interview->recording_url);
+            }
+            $interview->update(['recording_url' => null]);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /**
@@ -223,21 +309,37 @@ final class MockController extends Controller
 
     private function session(MockInterview $interview, int $status = 200): JsonResponse
     {
-        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title']);
-        $max = (int) config('mocks.max_questions', 6);
+        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title,max_questions']);
+        // A blueprint may run longer than the platform default (the AI
+        // Readiness Interview asks 15) — mirrors AnswerMockInterview's own
+        // override so the two never disagree about when the session is done.
+        $max = (int) ($interview->blueprint?->max_questions ?? config('mocks.max_questions', 6));
+        $questionsAsked = $interview->turns->where('role', 'interviewer')->count();
+        // Asked, not answered, is not the same as done: the candidate must
+        // actually have answered every question asked, the final one
+        // included, or "ready to finish" hides the Answer control on it —
+        // asking the last question and being told there's nothing left to
+        // do in the same breath, with no way to ever answer it.
+        $answered = $interview->turns->where('role', 'candidate')->count();
 
         return response()->json([
             'data' => [
                 'id' => $interview->id,
                 'status' => $interview->status,
                 'mode' => $interview->mode,
+                // The plain (non-room) page uses this to redirect a room-kind
+                // interview back to /mock/{id}/room instead of rendering its
+                // own text UI — a candidate landing here (browser back, an
+                // old bookmark, the generic Mock Interviews list) should
+                // never be quietly dropped into the wrong interview format.
+                'is_room' => (bool) $interview->is_room,
                 'join_url' => $interview->status === MockInterview::STATUS_IN_PROGRESS ? $interview->join_url : null,
                 'duration_seconds' => $interview->duration_seconds,
                 'role_title' => $interview->blueprint?->role_title,
-                'questions_asked' => $interview->turns->where('role', 'interviewer')->count(),
+                'questions_asked' => $questionsAsked,
                 'max_questions' => $max,
                 'min_answers' => (int) config('mocks.min_answers', 2),
-                'ready_to_finish' => $interview->turns->where('role', 'interviewer')->count() >= $max,
+                'ready_to_finish' => $questionsAsked >= $max && $answered >= $questionsAsked,
                 'overall_score' => $interview->overall_score,
                 'scorecard' => $interview->scorecard,
                 'scorecard_source' => $interview->scorecard_source,

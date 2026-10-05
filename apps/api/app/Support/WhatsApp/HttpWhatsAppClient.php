@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\WhatsApp;
 
-use App\Support\Crm\PhoneNormalizer;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -30,7 +29,7 @@ final class HttpWhatsAppClient implements WhatsAppClient
             ? $this->templatePayload($to, $body, $templateName, $parameters, $authTemplate)
             : [
                 'messaging_product' => 'whatsapp',
-                'to' => PhoneNormalizer::normalize($to),
+                'to' => WhatsAppPhoneFormatter::toApiFormat($to),
                 'type' => 'text',
                 'text' => ['body' => $body],
             ];
@@ -83,7 +82,7 @@ final class HttpWhatsAppClient implements WhatsAppClient
 
         return [
             'messaging_product' => 'whatsapp',
-            'to' => PhoneNormalizer::normalize($to),
+            'to' => WhatsAppPhoneFormatter::toApiFormat($to),
             'type' => 'template',
             'template' => [
                 'name' => $templateName,

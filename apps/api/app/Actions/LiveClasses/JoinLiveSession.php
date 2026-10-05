@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class JoinLiveSession
 {
-    public function __construct(private FeeGate $feeGate) {}
+    public function __construct(private FeeGate $feeGate, private RecordAttendance $attendance) {}
 
     public function handle(LiveSession $session, User $student): string
     {
@@ -57,6 +57,20 @@ final readonly class JoinLiveSession
             throw ValidationException::withMessages([
                 'session' => 'This class is not ready to join yet.',
             ]);
+        }
+
+        // Marks attendance the moment the student is actually handed the
+        // link, not on a Zoom webhook that mostly never fires for a guest
+        // join with no email attached (Sept 2026 fix — see LMS PRD, "class
+        // attendance never records"). idempotent: participantJoined() only
+        // sets first_joined_at/is_late once, so re-opening the room from
+        // this same portal never overwrites the original join time.
+        // attended_pct is set outright rather than left for a "leave" event
+        // that this flow has no way to observe — same convention the CRM's
+        // own manual present/absent mark already uses.
+        $attendance = $this->attendance->participantJoined($session, $student, now());
+        if ($attendance->attended_pct < 100) {
+            $attendance->update(['attended_pct' => 100]);
         }
 
         return $session->zoom_join_url;

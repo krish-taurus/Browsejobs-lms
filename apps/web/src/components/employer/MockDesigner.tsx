@@ -92,7 +92,7 @@ export function MockDesigner({ jobId }: { jobId: number }) {
   }
 
   if (error && data === null) {
-    return <Tile accent={TRUST} hover={false}><p className="text-sm text-white/60">{error}</p></Tile>;
+    return <Tile accent={TRUST} hover={false}><p className="text-sm text-[var(--bj-dash-muted)]">{error}</p></Tile>;
   }
 
   if (!data) {
@@ -103,10 +103,10 @@ export function MockDesigner({ jobId }: { jobId: number }) {
     <div className="space-y-5">
       <Tile accent={VIOLET} hover={false}>
         <Label>Interview design</Label>
-        <p className="font-display mt-2 text-xl font-bold leading-tight md:text-2xl">
+        <p className="bj-dash-serif mt-2 text-xl leading-tight md:text-2xl">
           Decide what this interview actually tests.
         </p>
-        <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-white/55">
+        <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--bj-dash-muted)]">
           Leave it all blank and the interview is designed from your job description. Set anything
           here and it is followed instead. Weights are ratios — they do not need to add up to
           anything.
@@ -116,7 +116,7 @@ export function MockDesigner({ jobId }: { jobId: number }) {
       {/* Focus skills ------------------------------------------------- */}
       <Tile accent={TRUST} hover={false}>
         <Label>Focus skills</Label>
-        <p className="mt-1.5 text-[13px] text-white/50">
+        <p className="mt-1.5 text-[13px] text-[var(--bj-dash-muted)]">
           The questions lean on these before anything else on the JD.
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -130,9 +130,9 @@ export function MockDesigner({ jobId }: { jobId: number }) {
                 onClick={() => setFocus(on ? focus.filter((s) => s !== skill) : [...focus, skill])}
                 className="rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors"
                 style={{
-                  borderColor: on ? `${TRUST}66` : "rgba(255,255,255,0.14)",
+                  borderColor: on ? `${TRUST}66` : "var(--bj-dash-border)",
                   background: on ? `${TRUST}1f` : "transparent",
-                  color: on ? "#9dc2fb" : "rgba(255,255,255,0.55)",
+                  color: on ? "var(--bj-dash-primary)" : "var(--bj-dash-muted)",
                 }}
               >
                 {on ? "✓ " : "+ "}
@@ -142,7 +142,7 @@ export function MockDesigner({ jobId }: { jobId: number }) {
           })}
         </div>
         {focus.length === 0 && (
-          <p className="mt-3 text-[12px] text-white/35">
+          <p className="mt-3 text-[12px] text-[var(--bj-dash-muted)]">
             None selected — the interview covers the JD&apos;s skills evenly.
           </p>
         )}
@@ -182,9 +182,9 @@ export function MockDesigner({ jobId }: { jobId: number }) {
               value={count}
               onChange={(e) => setCount(e.target.value === "" ? "" : Number(e.target.value))}
               placeholder="Auto"
-              className="mt-2 w-full rounded-2xl border border-white/[0.12] bg-white/[0.05] px-4 py-3 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
+              className="mt-2 w-full rounded-2xl border border-[var(--bj-dash-border)] bg-white px-4 py-3 font-mono text-sm text-[var(--bj-dash-ink)] outline-none placeholder:text-[var(--bj-dash-muted)] focus:border-[var(--bj-dash-primary)] focus:ring-4 focus:ring-[var(--bj-dash-primary)]/15"
             />
-            <p className="mt-1.5 text-[12px] text-white/40">Blank lets the generator decide.</p>
+            <p className="mt-1.5 text-[12px] text-[var(--bj-dash-muted)]">Blank lets the generator decide.</p>
           </div>
           <div className="md:col-span-2">
             <Label>Anything else this interview must cover</Label>
@@ -194,7 +194,7 @@ export function MockDesigner({ jobId }: { jobId: number }) {
               onChange={(e) => setNotes(e.target.value)}
               maxLength={800}
               placeholder="e.g. must be able to explain a migration they led end to end"
-              className="mt-2 w-full resize-y rounded-2xl border border-white/[0.12] bg-white/[0.05] px-4 py-3 text-sm leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25"
+              className="mt-2 w-full resize-y rounded-2xl border border-[var(--bj-dash-border)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--bj-dash-ink)] outline-none placeholder:text-[var(--bj-dash-muted)] focus:border-[var(--bj-dash-primary)] focus:ring-4 focus:ring-[var(--bj-dash-primary)]/15"
             />
           </div>
         </div>
@@ -220,10 +220,10 @@ export function MockDesigner({ jobId }: { jobId: number }) {
         {data.has_mock && <Pill tone="amber">A mock already exists</Pill>}
       </div>
 
-      {saved && <p className="text-[13px]" style={{ color: "#6ee7b7" }}>{saved}</p>}
-      {error && <p className="text-[13px]" style={{ color: "#fca5a5" }}>{error}</p>}
+      {saved && <p className="text-[13px]" style={{ color: "var(--bj-dash-score-strong)" }}>{saved}</p>}
+      {error && <p className="text-[13px]" style={{ color: "var(--bj-dash-score-below)" }}>{error}</p>}
 
-      <p className="text-[12px] leading-relaxed text-white/35">
+      <p className="text-[12px] leading-relaxed text-[var(--bj-dash-muted)]">
         Saving never rewrites an interview a candidate may be part-way through. Regenerate from the
         JD mock tab when you want the new design applied.
       </p>
@@ -253,7 +253,7 @@ function WeightGroup({
   return (
     <Tile accent={accent} hover={false}>
       <Label>{title}</Label>
-      <p className="mt-1.5 text-[13px] text-white/50">{hint}</p>
+      <p className="mt-1.5 text-[13px] text-[var(--bj-dash-muted)]">{hint}</p>
 
       <ul className="mt-4 space-y-3.5">
         {options.map((o) => {
@@ -262,14 +262,14 @@ function WeightGroup({
           return (
             <li key={o.key}>
               <div className="flex items-baseline justify-between gap-3">
-                <label htmlFor={`w-${o.key}`} className="text-[13px] font-semibold text-white">
+                <label htmlFor={`w-${o.key}`} className="text-[13px] font-semibold text-[var(--bj-dash-ink)]">
                   {o.label}
                 </label>
-                <span className="font-mono text-[11px]" style={{ color: value > 0 ? accent : "rgba(255,255,255,0.3)" }}>
+                <span className="font-mono text-[11px]" style={{ color: value > 0 ? accent : "var(--bj-dash-muted)" }}>
                   {anySet ? `${pct}%` : "—"}
                 </span>
               </div>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/35">{o.hint}</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-[var(--bj-dash-muted)]">{o.hint}</p>
               <input
                 id={`w-${o.key}`}
                 type="range"
@@ -284,7 +284,7 @@ function WeightGroup({
                   else next[o.key] = v;
                   onChange(next);
                 }}
-                className="mt-2 w-full accent-[#4d8ef7]"
+                className="mt-2 w-full accent-[var(--bj-dash-primary)]"
                 style={{ accentColor: accent }}
               />
             </li>
@@ -293,7 +293,7 @@ function WeightGroup({
       </ul>
 
       {!anySet && (
-        <p className="mt-3 text-[12px] text-white/35">
+        <p className="mt-3 text-[12px] text-[var(--bj-dash-muted)]">
           Nothing set — the generator picks its own balance.
         </p>
       )}

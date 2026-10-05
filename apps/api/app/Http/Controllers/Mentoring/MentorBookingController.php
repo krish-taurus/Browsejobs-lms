@@ -47,6 +47,7 @@ final class MentorBookingController extends Controller
 
             $mentors = MentorProfile::query()
                 ->where('is_active', true)
+                ->mentoring()
                 ->with('user:id,name')
                 ->get()
                 ->filter(fn (MentorProfile $m) => $m->coversAnyCourse($courseIds))

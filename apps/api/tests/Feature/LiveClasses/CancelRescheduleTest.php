@@ -63,7 +63,9 @@ it('reschedules: updates Zoom, logs old/new, and re-arms the ladder for the new 
         ->and($this->session->reminder_token)->not->toBe('original');
 
     Queue::assertPushed(UpdateZoomMeeting::class);
-    Queue::assertPushed(SendSessionReminder::class, 4); // re-armed ladder for the new time
+    // Re-armed ladder for the new time — one job per configured rung, so this
+    // keeps passing whether the ladder has one rung or five.
+    Queue::assertPushed(SendSessionReminder::class, count(config('live_classes.reminder_offsets')));
 
     $change = SessionChange::withoutGlobalScopes()->where('type', 'rescheduled')->first();
     expect($change)->not->toBeNull()

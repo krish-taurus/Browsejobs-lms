@@ -39,6 +39,7 @@ final class InterviewProcessController extends Controller
         abort_unless($job->employer_workspace_id === $workspace->id, 404);
 
         $suggested = $taxonomy->skillsForTitle($job->title);
+        $mock = $job->currentMock();
 
         return response()->json([
             'data' => EmployerJobRoundResource::collection($process->forJob($job))->resolve(),
@@ -52,7 +53,22 @@ final class InterviewProcessController extends Controller
                     ...$suggested['optional'],
                 ])),
                 'default_window_hours' => (int) config('employers.interview_window_hours'),
-                'has_mock' => $job->currentMock() !== null,
+                'has_mock' => $mock !== null,
+                // The current mock's own bank, so an employer choosing exact
+                // questions for a round picks from what will actually be
+                // asked — not a description of it. Text only: text is the
+                // identity SendInterviewRound matches picks against, and an
+                // id here would imply a stability the bank does not have.
+                'mock_questions' => $mock !== null && is_array($mock->questions)
+                    ? array_values(array_filter(array_map(
+                        static fn ($q): ?array => is_array($q) && is_string($q['text'] ?? null) ? [
+                            'text' => $q['text'],
+                            'skill' => is_string($q['skill'] ?? null) ? $q['skill'] : null,
+                            'type' => is_string($q['type'] ?? null) ? $q['type'] : null,
+                        ] : null,
+                        $mock->questions,
+                    )))
+                    : [],
             ],
         ]);
     }

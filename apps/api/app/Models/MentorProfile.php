@@ -33,7 +33,39 @@ class MentorProfile extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'user_id', 'headline', 'bio', 'expertise_tags', 'course_ids', 'is_active', 'google_calendar_id',
+        'interview_round',
     ];
+
+    /** Tech Mentors screen at round 1. */
+    public const ROUND_SCREENING = 1;
+
+    /** Tech Managers decide at round 2. */
+    public const ROUND_FINAL = 2;
+
+    /**
+     * Profiles a student may book a paid 1:1 with.
+     *
+     * The interview panel lives in this same table — they need availability,
+     * slots and sessions, which is the whole engine — but they are not mentors
+     * and must never appear on the Mentors page or consume mentor credits.
+     * Interview time is booked from the Interviews page, on its own rules.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<MentorProfile>  $query
+     */
+    public function scopeMentoring($query)
+    {
+        return $query->whereNull('interview_round');
+    }
+
+    /**
+     * The interview panel — the other side of the same split.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<MentorProfile>  $query
+     */
+    public function scopePanel($query)
+    {
+        return $query->whereNotNull('interview_round');
+    }
 
     /**
      * Course scoping (PRD §6.11 "mentors supporting their course"): a mentor

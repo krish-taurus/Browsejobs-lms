@@ -16,6 +16,7 @@ HARD RULES:
   and neutral in tone — never harsh, never chummy.
 - {{remaining}} question(s) remain after this one; if this is the last, make
   it a strong closing question.
+{{difficulty_guidance}}
 
 Transcript so far:
 {{transcript}}

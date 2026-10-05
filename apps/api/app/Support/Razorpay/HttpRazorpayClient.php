@@ -88,6 +88,37 @@ final class HttpRazorpayClient implements RazorpayClient
         ])->throw();
     }
 
+    public function fetchOrder(string $orderId): array
+    {
+        $response = $this->request()->get($this->config["base_url"]."/orders/{$orderId}")->throw()->json();
+
+        return [
+            "receipt" => isset($response["receipt"]) ? (string) $response["receipt"] : null,
+            "amount_paise" => isset($response["amount"]) ? (int) $response["amount"] : null,
+            "status" => isset($response["status"]) ? (string) $response["status"] : null,
+        ];
+    }
+
+    public function fetchPaymentLink(string $paymentLinkId): array
+    {
+        $response = $this->request()->get($this->config['base_url']."/payment_links/{$paymentLinkId}")->throw()->json();
+
+        $payment = $response['payments'][0] ?? [];
+
+        return [
+            'status' => (string) ($response['status'] ?? 'created'),
+            'amount_paise' => isset($response['amount']) ? (int) $response['amount'] : null,
+            'order_id' => isset($response['order_id']) ? (string) $response['order_id'] : null,
+            'payment_id' => isset($payment['payment_id']) ? (string) $payment['payment_id'] : null,
+            'method' => isset($payment['method']) ? (string) $payment['method'] : null,
+        ];
+    }
+
+    public function cancelPaymentLink(string $paymentLinkId): void
+    {
+        $this->request()->post($this->config['base_url']."/payment_links/{$paymentLinkId}/cancel")->throw();
+    }
+
     private function request(): PendingRequest
     {
         return Http::withBasicAuth($this->config['key_id'], $this->config['key_secret'])->acceptJson();

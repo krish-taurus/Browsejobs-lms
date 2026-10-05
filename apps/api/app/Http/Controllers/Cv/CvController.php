@@ -17,6 +17,7 @@ use App\Services\AI\JsonOutput;
 use App\Support\Cv\AtsReport;
 use App\Support\Entitlements\EntitlementService;
 use App\Support\Files\DocxExtractor;
+use App\Support\Files\PdfExtractor;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -95,14 +96,99 @@ final class CvController extends Controller
             }
 
             // A spent AI budget degrades to the deterministic assembler inside
-            // GenerateCv — the credit always buys a CV, never an error.
-            $cv = $this->generate->handle(
-                $student,
-                $jd !== null ? CvDocument::SOURCE_TAILORED : CvDocument::SOURCE_MANUAL,
-                $jd,
-            );
+            // GenerateCv, so the credit almost always buys a CV. But the facts
+            // it reads (graded labs, mock history) are real data with real
+            // edge cases — if pulling them throws, the student should never
+            // be billed for a document that was never built.
+            try {
+                $cv = $this->generate->handle(
+                    $student,
+                    $jd !== null ? CvDocument::SOURCE_TAILORED : CvDocument::SOURCE_MANUAL,
+                    $jd,
+                );
+            } catch (Throwable $e) {
+                $this->entitlements->grantCredits($student, EntitlementFeature::Cv->value, 1, 'cv_generation_failed');
+                report($e);
+
+                return response()->json([
+                    'error' => ['code' => 'generation_failed', 'message' => 'Something went wrong building your CV — your credit was not spent. Try again, and contact support if it keeps happening.'],
+                ], 500);
+            }
 
             return response()->json(['data' => $this->row($cv)], 201);
+        });
+    }
+
+    /**
+     * Apply ONE free-text instruction to the current version, in place —
+     * "make my experience section shorter", "add a summary section". Same
+     * revise-don't-restart contract as job-description revision: this
+     * never starts a fresh draft, it edits the one already on screen.
+     *
+     * Costs a credit because it calls the model; refunded if nothing
+     * usable comes back, since a no-op should never be billed. Unlike
+     * GenerateCv there is no deterministic fallback here — a fallback that
+     * ignores the instruction would be worse than a clear failure.
+     */
+    public function revise(Request $request, int $cv): JsonResponse
+    {
+        $validated = $request->validate([
+            'instruction' => ['required', 'string', 'max:500'],
+        ]);
+
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $cv, $validated): JsonResponse {
+            $student = $request->user();
+            $model = $this->owned($request, $cv);
+
+            try {
+                $this->entitlements->consumeCredits($student, EntitlementFeature::Cv->value, 1, 'cv_revision');
+            } catch (ValidationException) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'no_cv_credits',
+                        'message' => 'You are out of CV generations.',
+                        'topups' => $this->topups(),
+                    ],
+                ], 402);
+            }
+
+            try {
+                $result = $this->gateway->complete($student, AiPurpose::Cv, 'cv_revise', 1, [
+                    'current_cv' => json_encode($model->content, JSON_UNESCAPED_UNICODE),
+                    'instruction' => $validated['instruction'],
+                ], ['max_tokens' => 2200]);
+
+                $decoded = JsonOutput::object($result->text);
+            } catch (Throwable) {
+                $decoded = null;
+            }
+
+            if (! is_array($decoded) || empty($decoded['skills']) || ! isset($decoded['summary'])) {
+                $this->entitlements->grantCredits($student, EntitlementFeature::Cv->value, 1, 'cv_revision_failed');
+
+                return response()->json([
+                    'error' => [
+                        'code' => 'revision_failed',
+                        'message' => 'Could not apply that change — try rephrasing it, or use Edit (free) instead.',
+                    ],
+                ], 422);
+            }
+
+            $content = array_merge($model->content, $decoded, [
+                'name' => $model->content['name'] ?? null,
+                'email' => $model->content['email'] ?? null,
+                'phone' => $model->content['phone'] ?? null,
+            ]);
+
+            $model->update([
+                'content' => $content,
+                'ats' => $this->ats->for($content, $model->jd_excerpt),
+                'status' => CvDocument::STATUS_DRAFT,
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+
+            return response()->json(['data' => $this->row($model->refresh())]);
         });
     }
 
@@ -131,10 +217,17 @@ final class CvController extends Controller
                 $text = match (true) {
                     in_array($extension, ['txt', 'md', 'rtf'], true) => $contents,
                     $extension === 'docx' => (new DocxExtractor)->extract($contents),
+                    $extension === 'pdf' => (new PdfExtractor)->extract($contents),
                     default => '',
                 };
 
-                abort_if(trim($text) === '', 422, "Could not read .{$extension} — upload a .docx or .txt, or paste the text.");
+                abort_if(
+                    trim($text) === '',
+                    422,
+                    $extension === 'pdf'
+                        ? 'Could not read that PDF — it may be a scanned image with no selectable text. Try a .docx/.txt export, or paste the text.'
+                        : "Could not read .{$extension} — upload a .pdf, .docx, or .txt, or paste the text.",
+                );
             }
 
             abort_if(trim($text) === '', 422, 'The CV text is empty.');

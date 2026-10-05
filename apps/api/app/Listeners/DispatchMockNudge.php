@@ -39,7 +39,7 @@ final class DispatchMockNudge implements ShouldQueue
                 return;
             }
 
-            $redirect = rtrim((string) config('app.frontend_url', ''), '/').'/mock';
+            $redirect = rtrim((string) config('app.frontend_url', ''), '/').'/student-ai-mock';
 
             $this->messenger->send($student, 'mock_nudge', [
                 'name' => $student->name,
@@ -56,7 +56,7 @@ final class DispatchMockNudge implements ShouldQueue
                 'user_id' => $student->id,
                 'title' => "Nice — {$topic->name} done. Ready to be interviewed on it?",
                 'body' => 'A 10-minute practice interview locks it in while it\'s fresh.',
-                'url' => '/mock',
+                'url' => '/student-ai-mock',
             ]);
         });
     }

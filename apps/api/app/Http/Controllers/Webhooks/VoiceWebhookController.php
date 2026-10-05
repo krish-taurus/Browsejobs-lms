@@ -46,11 +46,24 @@ final class VoiceWebhookController extends Controller
         $costMicros = (int) round(((float) ($message['cost'] ?? 0)) * 1_000_000);
         $duration = (int) round((float) ($message['durationSeconds'] ?? $message['duration'] ?? 0));
 
+        // Vapi's own field name for this has moved around across API
+        // versions, so every path we've seen documented is checked rather
+        // than betting on one — a missing recording should never fail the
+        // whole webhook, it just means recording_url stays null.
+        $recordingUrl = (string) (
+            $message['artifact']['recordingUrl']
+            ?? $message['artifact']['recording']['stereoUrl']
+            ?? $message['recordingUrl']
+            ?? $message['stereoRecordingUrl']
+            ?? ''
+        );
+
         $complete->handle(
             $sessionId,
             $transcript,
             $duration,
             $costMicros,
+            recordingUrl: $recordingUrl !== '' ? $recordingUrl : null,
             failed: $type === 'call.failed',
         );
 

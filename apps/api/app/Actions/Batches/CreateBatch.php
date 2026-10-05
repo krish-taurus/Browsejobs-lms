@@ -51,20 +51,30 @@ final readonly class CreateBatch
     {
         $prefix = strtoupper($course->code).'-'.now()->format('Ym').'-';
 
-        $seq = Batch::query()
+        // The trailing sequence runs across every month this course has ever
+        // had a batch in — not reset back to 100 the moment the calendar
+        // rolls into a new one. Counting only this month's own prefix used
+        // to mean a course's very first batch in October and its fifth
+        // batch overall both landed on "-100", which reads as a duplicate
+        // even though the numbers as full strings differ (the month differs).
+        // The month still appears in the prefix — it just no longer resets
+        // the count.
+        $maxSeq = self::FIRST_SEQUENCE - 1;
+
+        Batch::query()
             ->withoutGlobalScope(TenantScope::class)
             ->where('tenant_id', $course->tenant_id)
-            ->where('number', 'like', $prefix.'%')
-            ->count();
-
-        // Cohort numbering starts at 100 (DE-202608-100), so a batch number is
-        // never confused with a sequence position and there is room to insert
-        // manually created batches below the automated range.
-        $seq = max($seq, self::FIRST_SEQUENCE - 1);
+            ->where('number', 'like', strtoupper($course->code).'-%')
+            ->pluck('number')
+            ->each(function (string $number) use (&$maxSeq): void {
+                if (preg_match('/-(\d+)$/', $number, $m) === 1) {
+                    $maxSeq = max($maxSeq, (int) $m[1]);
+                }
+            });
 
         do {
-            $seq++;
-            $candidate = $prefix.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+            $maxSeq++;
+            $candidate = $prefix.str_pad((string) $maxSeq, 3, '0', STR_PAD_LEFT);
         } while ($this->numberExists($course->tenant_id, $candidate));
 
         return $candidate;

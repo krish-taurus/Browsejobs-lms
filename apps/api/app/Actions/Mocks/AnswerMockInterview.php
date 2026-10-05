@@ -50,23 +50,37 @@ final readonly class AnswerMockInterview
         ]);
 
         $asked = $interview->interviewerQuestions();
-        $max = (int) config('mocks.max_questions', 6);
+        $blueprint = $interview->blueprint;
+        // A blueprint may run longer than the platform default (the AI
+        // Readiness Interview asks 15) — its own max_questions overrides,
+        // same config every other mock kind still falls back to.
+        $max = (int) ($blueprint->max_questions ?? config('mocks.max_questions', 6));
 
         if ($asked >= $max) {
             return ['turn' => null, 'ready_to_finish' => true];
         }
 
-        $blueprint = $interview->blueprint;
         $transcript = $this->transcript($interview);
 
-        // v2 prompt (P4.2): the interviewer prefers questions asked in REAL
-        // interviews for this role — the bank is the product's edge.
-        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 2, [
+        // v3 prompt (Sept 2026): v2 relied on the model inferring "don't
+        // repeat yourself" from the transcript alone — on a long interview
+        // (question 10+ of 15) it sometimes lost track and re-asked an
+        // earlier question verbatim. v3 adds an explicit rule to re-check
+        // every INTERVIEWER line before asking. The bank-question dedup
+        // below is unrelated: it only stops the same BANK question being
+        // suggested twice, not the model repeating a question of its own.
+        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 3, [
             'role_title' => $blueprint->role_title,
             'competencies' => implode(', ', $blueprint->competencies),
             'remaining' => (string) max(0, $max - $asked - 1),
             'bank_questions' => $this->bankQuestions($interview, $transcript),
             'transcript' => $transcript,
+            // Only the AI Readiness Interview (blueprint->user_id set) gets an
+            // explicit difficulty ramp — every other mock kind gets an empty
+            // string here, so its prompt behaviour is unchanged.
+            'difficulty_guidance' => $blueprint->user_id !== null
+                ? $this->difficultyGuidance($asked + 1, $max)
+                : '',
         ], ['max_tokens' => 300]);
 
         $question = trim($result->text);
@@ -82,6 +96,25 @@ final readonly class AnswerMockInterview
         ]);
 
         return ['turn' => $turn, 'ready_to_finish' => $asked + 1 >= $max];
+    }
+
+    /**
+     * A general readiness interview has no experience band to key
+     * difficulty off (unlike a JD's own experience_min/max_years) — so it
+     * ramps by position instead: fundamentals early, applied scenarios
+     * through the middle, advanced judgement calls toward the end.
+     */
+    private function difficultyGuidance(int $questionNumber, int $max): string
+    {
+        $progress = $questionNumber / $max;
+        $band = match (true) {
+            $progress <= 1 / 3 => 'a FUNDAMENTALS question — basic concept checks, definitions, "what is" / "how does X work"',
+            $progress <= 2 / 3 => 'an APPLIED question — a realistic scenario that needs the concept put to use, not just defined',
+            default => 'an ADVANCED question — trade-offs, edge cases, or a judgement call an experienced person would face',
+        };
+
+        return "- This is a {$max}-question general readiness interview built from the candidate's own CV, deliberately ramping in difficulty. ".
+            "You are on question {$questionNumber} of {$max} — make this {$band}.";
     }
 
     /**

@@ -33,6 +33,13 @@ final readonly class RescheduleLiveSession
     ): void {
         $previousStart = $session->scheduled_start->copy();
 
+        // Saving the same slot again is not a reschedule. Without this, a
+        // double-clicked Save button messaged every student in the batch a
+        // second time telling them about a change that never happened.
+        if ($previousStart->equalTo($newStart)) {
+            return;
+        }
+
         $session->update([
             'scheduled_start' => $newStart,
             'scheduled_end' => $newEnd,
