@@ -95,7 +95,9 @@ export function Counter({ to, suffix = "", prefix = "" }: { to: number; suffix?:
 
   return (
     <span ref={ref} className="mono">
-      {prefix}0{suffix}
+      {prefix}
+      {to}
+      {suffix}
     </span>
   );
 }

@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { buildJobPosting } from "@/lib/job-posting";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Open jobs — apply with an interview, not a CV",
   description:
     "Roles hiring directly through BrowseJobs, where you apply by taking that job's mock interview, plus fresh openings from the wider market. Free account to see your match.",
+  alternates: { canonical: canonical("/jobs") },
 };
 
 /**
@@ -36,6 +39,10 @@ type InternalJob = {
   experience_max_years: number | null;
   openings: number | null;
   posted_at: string | null;
+  description?: string | null;
+  expires_at?: string | null;
+  ctc_min_paise?: number | null;
+  ctc_max_paise?: number | null;
   mock_ready: boolean;
 };
 
@@ -48,6 +55,8 @@ type ExternalJob = {
   skills: string[];
   seniority: string | null;
   posted_at: string | null;
+  description?: string | null;
+  expires_at?: string | null;
   question_count: number;
 };
 
@@ -85,51 +94,53 @@ function postedLabel(iso: string | null): string {
 export default async function PublicJobsPage() {
   const board = await fetchBoard();
 
-  // Both segments are real JobPostings for search engines; the difference is
-  // where an application goes, which is a product distinction, not a schema one.
+  const postings = [
+    ...board.internal.map((job) =>
+      buildJobPosting({
+        id: `internal-${job.id}`,
+        title: job.title,
+        description: job.description ?? "",
+        company: job.company,
+        datePosted: job.posted_at,
+        locations: job.locations,
+        remote: job.remote,
+        url: canonical(`/jobs/${job.id}`),
+        directApply: true,
+        salaryMinPaise: job.ctc_min_paise,
+        salaryMaxPaise: job.ctc_max_paise,
+      }),
+    ),
+    ...board.external.map((job) =>
+      buildJobPosting({
+        id: `external-${job.id}`,
+        title: job.title,
+        description: job.description ?? "",
+        company: job.company,
+        datePosted: job.posted_at,
+        validThrough: job.expires_at,
+        locations: job.location ? [job.location] : [],
+        remote:
+          (job.work_mode ?? "").toLowerCase() === "remote" ||
+          /^remote$/i.test((job.location ?? "").trim()),
+      }),
+    ),
+  ].filter((posting): posting is NonNullable<ReturnType<typeof buildJobPosting>> => posting !== null);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: [
-      ...board.internal.map((j) => ({
-        title: j.title,
-        company: j.company ?? "BrowseJobs hiring partner",
-        location: j.remote ? "Remote" : (j.locations[0] ?? null),
-        posted: j.posted_at,
-      })),
-      ...board.external.map((j) => ({
-        title: j.title,
-        company: j.company,
-        location: j.location,
-        posted: j.posted_at,
-      })),
-    ]
-      .slice(0, 25)
-      .map((j, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        item: {
-          "@type": "JobPosting",
-          title: j.title,
-          datePosted: j.posted ?? undefined,
-          hiringOrganization: { "@type": "Organization", name: j.company },
-          jobLocation: j.location
-            ? {
-                "@type": "Place",
-                address: {
-                  "@type": "PostalAddress",
-                  addressLocality: j.location,
-                  addressCountry: "IN",
-                },
-              }
-            : undefined,
-        },
-      })),
+    itemListElement: postings.slice(0, 25).map((posting, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: posting,
+    })),
   };
 
   return (
     <MarketingShell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {postings.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      )}
       <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <ScrollReveal>
           <p className="kicker text-trust">Job board</p>

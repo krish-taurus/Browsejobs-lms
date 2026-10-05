@@ -1,0 +1,33 @@
+# BrowseJobs
+
+> IBrowseJobs Technologies, Whitefield, Bengaluru. Data Engineering, DevOps & Cloud, Python Backend and Data Analytics courses, plus an AI interview product for employers. The syllabus is reverse-engineered from real interviews. Nobody can guarantee employment — the market decides.
+
+## Courses
+
+- [Data Engineering course](https://browsejobs.ai/courses/data-engineering): Pipelines, warehouses, and the modern data stack. Pay after you're hired — the placement fee is due only after an offer is accepted.
+- [DevOps & Cloud](https://browsejobs.ai/courses/devops-cloud): Ship, scale, and run production systems.
+- [Python Backend](https://browsejobs.ai/courses/python-backend): APIs, databases, and production Python.
+- [Data Analytics](https://browsejobs.ai/courses/data-analytics): SQL, dashboards, and decisions from data.
+- [All courses](https://browsejobs.ai/courses)
+
+## Hiring product
+
+- [AI interviews for employers](https://browsejobs.ai/employers): Structure a job description, rank candidates, run AI screening and interview rounds, and hand HR a written brief.
+- [Open jobs](https://browsejobs.ai/jobs): Roles hiring through BrowseJobs, plus openings from the wider market.
+
+## Fees
+
+Three free steps come first: counselling with a written Career Analysis Report, a live masterclass, and a 7-hour Python bootcamp. Registration is ₹30,000 after those steps, or 3 × ₹10,000. The placement fee is the first 3 months' CTC, due only after the student accepts an offer, paid as 6 monthly EMIs, with the ₹30,000 adjusted inside it. 30-day money-back guarantee, any reason, in writing.
+
+## Key pages
+
+- [Home](https://browsejobs.ai/)
+- [Free masterclass](https://browsejobs.ai/masterclass)
+- [Reviews](https://browsejobs.ai/reviews)
+- [Salaries](https://browsejobs.ai/salaries)
+- [Skills](https://browsejobs.ai/skills)
+- [Sitemap](https://browsejobs.ai/sitemap.xml)
+
+## Contact
+
++91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST

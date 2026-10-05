@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { courseDetails, getCourseDetail } from "@/content/courses";
 import CourseKeynote from "@/components/courses/CourseKeynote";
+import { canonical } from "@/lib/seo";
 
 /**
  * Course detail page — keynote template (approved from the /v3 preview):
@@ -22,9 +23,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const course = getCourseDetail((await params).slug);
   if (!course) return {};
+  const title = course.seoTitle ?? `${course.name} Course`;
+  const url = canonical(`/courses/${course.slug}`);
   return {
-    title: `${course.name} Course`,
+    title,
     description: course.hero,
+    alternates: { canonical: url },
+    openGraph: { title, description: course.hero, url },
   };
 }
 
@@ -39,9 +44,14 @@ export default async function CoursePage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: course.name,
+    name: course.headline ?? `${course.name} Course`,
     description: course.hero,
-    provider: { "@type": "EducationalOrganization", name: "BrowseJobs" },
+    url: canonical(`/courses/${course.slug}`),
+    provider: {
+      "@type": "EducationalOrganization",
+      name: "BrowseJobs",
+      url: "https://browsejobs.ai",
+    },
     offers: { "@type": "Offer", category: "Registration", price: "30000", priceCurrency: "INR" },
   };
 

@@ -4,11 +4,13 @@ import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Kicker } from "@/components/brand/Kicker";
 import { skillPages } from "@/content/skills";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Tech Skills in Demand in India — What Interviews Ask",
   description:
     "Which skills Indian tech interviews test right now — demand direction, real interview questions, hiring cities and the salaries behind SQL, Python, Spark, Kubernetes and more.",
+  alternates: { canonical: canonical("/skills") },
 };
 
 /** /skills index — the engine's tracked skills as a browsable set. */

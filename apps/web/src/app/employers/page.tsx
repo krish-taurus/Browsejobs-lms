@@ -2,17 +2,20 @@ import type { Metadata } from "next";
 import { EmployersView } from "@/components/employers/EmployersView";
 import { EMPLOYER_FAQ } from "@/content/employers";
 import { contact } from "@/content/landing";
+import { canonical } from "@/lib/seo";
+
+const TITLE = "AI Interview Platform for Hiring Teams";
+const DESCRIPTION =
+  "AI interviews and a hiring pipeline for employers. Load a job description, rank candidates, run screening and interview rounds, and hand HR a written brief on every finalist. Free for the first six months.";
 
 export const metadata: Metadata = {
-  title: "BrowseJobs for Employers — AI Hiring Pipeline, Free for 6 Months",
-  description:
-    "Load a JD and the AI structures it, ranks candidates, places the screening call, runs L1/L2 or custom rounds, tracks everything in an ATS, runs high-level BGV, and hands HR a written brief on every finalist. Free for the first six months.",
-  alternates: { canonical: "https://browsejobs.ai/employers" },
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: canonical("/employers") },
   openGraph: {
-    title: "BrowseJobs for Employers — Interview the shortlist, not the inbox",
-    description:
-      "An AI hiring pipeline that screens, interviews and background-checks candidates before your panel spends an hour. Free for six months.",
-    url: "https://browsejobs.ai/employers",
+    title: `${TITLE} · BrowseJobs`,
+    description: DESCRIPTION,
+    url: canonical("/employers"),
     type: "website",
   },
 };

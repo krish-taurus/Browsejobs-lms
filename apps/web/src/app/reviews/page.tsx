@@ -6,11 +6,13 @@ import { MonoCounter } from "@/components/motion/MonoCounter";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ReviewWall } from "@/components/reviews/ReviewWall";
 import { reviewAggregates } from "@/content/landing";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Reviews",
   description:
     "Real stories. Real people. Real success. Reviews from BrowseJobs students on Google and WhatsApp.",
+  alternates: { canonical: canonical("/reviews") },
 };
 
 export default function ReviewsPage() {

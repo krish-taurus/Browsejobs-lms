@@ -1,5 +1,26 @@
+import type { Metadata } from "next";
 import { JsonLd } from "@/components/landing/JsonLd";
+import { canonical } from "@/lib/seo";
 import V3Landing from "./v3/page";
+
+const TITLE = "Data Engineering & AI Courses in Bengaluru — Pay After You're Hired | BrowseJobs";
+const DESCRIPTION =
+  "Data Engineering and AI courses from Bengaluru. Three free steps before you pay. The placement fee is due only after you accept an offer. Built from real interviews.";
+
+export const metadata: Metadata = {
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  alternates: { canonical: canonical("/") },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: canonical("/"),
+  },
+  twitter: {
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+};
 
 /**
  * Home — the keynote landing (v3 template, promoted to live): hero → dashboard →
