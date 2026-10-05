@@ -243,7 +243,9 @@ export default function DataEngineeringBangalorePage() {
         </p>
       </MoneySection>
 
-      <PromiseCards />
+      <div className="overflow-x-clip">
+        <PromiseCards />
+      </div>
 
       <MoneyFaq faqs={faqs} />
       <RelatedLinks

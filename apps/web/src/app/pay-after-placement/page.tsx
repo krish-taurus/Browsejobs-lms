@@ -202,7 +202,9 @@ export default function PayAfterPlacementPage() {
         </p>
       </MoneySection>
 
-      <PromiseCards />
+      <div className="overflow-x-clip">
+        <PromiseCards />
+      </div>
       <MoneyFaq faqs={faqs} />
       <RelatedLinks
         links={[
