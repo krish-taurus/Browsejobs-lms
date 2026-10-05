@@ -1274,6 +1274,23 @@ function ProgramsSection() {
           </a>
         ))}
       </motion.div>
+      <p className="mt-10 text-sm text-fg/55">
+        <a href="/data-engineering-course-bangalore" className="font-semibold text-[#1b6df0]">
+          Data Engineering in Bengaluru
+        </a>
+        <span aria-hidden>{" · "}</span>
+        <a href="/data-engineering-course-india" className="font-semibold text-[#1b6df0]">
+          Data Engineering in India
+        </a>
+        <span aria-hidden>{" · "}</span>
+        <a href="/non-it-to-it" className="font-semibold text-[#1b6df0]">
+          Non-IT to IT
+        </a>
+        <span aria-hidden>{" · "}</span>
+        <a href="/pay-after-placement" className="font-semibold text-[#1b6df0]">
+          Pay after placement
+        </a>
+      </p>
     </section>
   );
 }
