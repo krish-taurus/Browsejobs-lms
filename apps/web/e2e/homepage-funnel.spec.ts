@@ -41,7 +41,7 @@ test("homepage hero offers the free AI interview above the fold", async ({ page 
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
   await expect(page.locator('a[href="/courses/cyber-security"]')).toHaveCount(0);
   await expect(page.locator('a[href="/courses/servicenow"]')).toHaveCount(0);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai/");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai");
 
   const main = page.locator("main");
   await expect(main).not.toContainText("98%");
@@ -69,7 +69,9 @@ test("desktop hero keeps the interview form as the first action", async ({ page 
 
 test("counselling modal opens from the miss path", async ({ page }) => {
   await page.goto("/");
-  await page.locator("#gaps").getByRole("button", { name: "Book free counselling" }).click();
+  const counselling = page.locator("#gaps").getByRole("button", { name: "Book free counselling" });
+  await counselling.scrollIntoViewIfNeeded();
+  await counselling.click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("Free counselling");

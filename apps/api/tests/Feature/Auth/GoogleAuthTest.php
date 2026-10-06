@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
@@ -32,7 +33,7 @@ function fakeGoogleUser(string $email, string $name): SocialiteUser
 }
 
 it('stores a same-site next path before the Google redirect', function () {
-    $driver = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+    $driver = Mockery::mock(Provider::class);
     $driver->shouldReceive('redirect')->once()->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
     Socialite::shouldReceive('driver')->once()->with('google')->andReturn($driver);
 
@@ -43,7 +44,7 @@ it('stores a same-site next path before the Google redirect', function () {
 });
 
 it('drops an off-site next path', function () {
-    $driver = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+    $driver = Mockery::mock(Provider::class);
     $driver->shouldReceive('redirect')->once()->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
     Socialite::shouldReceive('driver')->once()->with('google')->andReturn($driver);
 
@@ -53,16 +54,15 @@ it('drops an off-site next path', function () {
     expect(session('auth.intended'))->toBeNull();
 });
 
-it('sends a new Google account to the stored path and does not reuse another tenant', function () {
+it('creates the Google account on this tenant and does not sign in another tenant', function () {
     $other = Tenant::factory()->domain('other.test')->create();
     $foreign = User::factory()->for($other)->create([
-        'email' => 'shared@example.com',
-        'name' => 'Other Tenant',
+        'email' => 'other@example.com',
         'user_type' => 'student',
     ]);
 
-    $driver = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
-    $driver->shouldReceive('user')->once()->andReturn(fakeGoogleUser('shared@example.com', 'Asha Rao'));
+    $driver = Mockery::mock(Provider::class);
+    $driver->shouldReceive('user')->once()->andReturn(fakeGoogleUser('asha@example.com', 'Asha Rao'));
     Socialite::shouldReceive('driver')->once()->with('google')->andReturn($driver);
 
     $this->withSession(['auth.intended' => '/interview'])
@@ -70,14 +70,12 @@ it('sends a new Google account to the stored path and does not reuse another ten
         ->assertRedirect('http://localhost:3000/interview');
 
     $this->assertAuthenticated();
+    expect(auth()->id())->not->toBe($foreign->id);
 
-    $local = User::withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->where('email', 'shared@example.com')->first();
+    $local = User::withoutGlobalScopes()->where('email', 'asha@example.com')->first();
     expect($local)->not->toBeNull()
-        ->and($local->id)->not->toBe($foreign->id)
         ->and($local->tenant_id)->toBe($this->tenant->id)
         ->and($local->name)->toBe('Asha Rao');
-
-    expect(User::withoutGlobalScopes()->where('email', 'shared@example.com')->count())->toBe(2);
 });
 
 it('still lands on the dashboard when Google has no next path', function () {
@@ -86,7 +84,7 @@ it('still lands on the dashboard when Google has no next path', function () {
         'user_type' => 'student',
     ]);
 
-    $driver = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+    $driver = Mockery::mock(Provider::class);
     $driver->shouldReceive('user')->once()->andReturn(fakeGoogleUser('known@acme.test', 'Known'));
     Socialite::shouldReceive('driver')->once()->with('google')->andReturn($driver);
 

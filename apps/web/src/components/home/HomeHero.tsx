@@ -16,7 +16,7 @@ export function HomeHero() {
         <div>
           <p className="kicker text-verify">Free · no card</p>
           <h1 className="display mt-5 text-[clamp(2.5rem,6.2vw,5.2rem)] leading-[0.92] tracking-[-0.045em] text-fg">
-            <MaskReveal>Take a free</MaskReveal>
+            <MaskReveal>Take a free </MaskReveal>
             <MaskReveal index={1}>AI interview.</MaskReveal>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
