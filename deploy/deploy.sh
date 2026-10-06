@@ -32,6 +32,47 @@ die(){ printf "\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
 
 need_root(){ [ "$(id -u)" = "0" ] || die "Run with sudo: sudo ./deploy.sh $1"; }
 
+# Change owner of existing directories. Missing paths are skipped.
+# This never deletes files — do not point it at .env or the database.
+# chown needs root. CI starts `update` with sudo; a sudoer running the
+# script directly still works.
+give_to(){
+  local owner="$1" group="$2"
+  shift 2
+  local path
+  for path in "$@"; do
+    [ -d "$path" ] || continue
+    if [ "$(id -u)" -eq 0 ]; then
+      chown -R "${owner}:${group}" "$path"
+    else
+      sudo chown -R "${owner}:${group}" "$path"
+    fi
+  done
+}
+
+# Composer runs as www-data, the same user as php-fpm and the queue worker.
+# npm runs as whoever executes this script (root under `sudo bash deploy.sh`).
+# A hand deploy follows docs/deploy-quickstart.md and runs `composer install`
+# as root or the login user, so vendor is not www-data's. The next
+# `composer install --no-dev` then dies uninstalling dev packages:
+# "Could not delete .../vendor/webmozart/assert/CHANGELOG.md".
+# Hand the trees each installer rewrites to that installer first.
+prepare_composer_tree(){
+  mkdir -p "${API_DIR}/vendor" "${API_DIR}/bootstrap/cache"
+  give_to www-data www-data \
+    "${API_DIR}/vendor" \
+    "${API_DIR}/bootstrap/cache" \
+    "${API_DIR}/storage/logs" \
+    "${API_DIR}/storage/framework"
+}
+
+prepare_npm_tree(){
+  give_to "$(id -un)" "$(id -gn)" \
+    "${APP_DIR}/node_modules" \
+    "${WEB_DIR}/node_modules" \
+    "${WEB_DIR}/.next"
+}
+
 cmd_setup(){
   need_root setup
   say "Installing system packages (PHP 8.3, Node 20, MySQL, Redis, Nginx)…"
@@ -113,6 +154,7 @@ NEXT
 cmd_install(){
   need_root install
   say "API: dependencies, key, migrate, seed, optimize…"
+  prepare_composer_tree
   cd "${API_DIR}"
   sudo -u www-data composer install --no-dev --optimize-autoloader
   grep -q "^APP_KEY=base64:" .env || php artisan key:generate --force
@@ -130,7 +172,11 @@ cmd_install(){
   # Install from the repo ROOT — the lockfile + npm workspaces live there, so
   # `next` and other binaries are hoisted correctly (a per-package `npm ci`
   # inside apps/web has no lockfile and leaves `next` unlinked → "next: not found").
-  cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web; ok "Web built."
+  prepare_npm_tree
+  cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
+  # next start runs as www-data and writes .next/cache.
+  give_to www-data www-data "${WEB_DIR}/.next"
+  ok "Web built."
 
   say "Installing services (worker + web) + scheduler cron…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
@@ -172,6 +218,7 @@ DONE
 cmd_update(){
   say "Updating from git…"
   git -C "${APP_DIR}" pull --ff-only
+  prepare_composer_tree
   cd "${API_DIR}"; sudo -u www-data composer install --no-dev --optimize-autoloader
   php artisan migrate --force; php artisan optimize
   # Sync canonical message templates (idempotent: templates upsert, demo rows are
@@ -181,7 +228,15 @@ cmd_update(){
   # placement drafts (idempotent updateOrCreate) so the review wall + course pages
   # populate on every deploy, not just a fresh install.
   php artisan db:seed --class=SocialProofSeeder --force
+  # artisan above runs as root and leaves root-owned cache and log files.
+  # Ownership only — storage uploads are not included.
+  give_to www-data www-data \
+    "${API_DIR}/bootstrap/cache" \
+    "${API_DIR}/storage/logs" \
+    "${API_DIR}/storage/framework"
+  prepare_npm_tree
   cd "${APP_DIR}"; npm ci; npm run build --workspace @browsejobs/web
+  give_to www-data www-data "${WEB_DIR}/.next"
   say "Refreshing systemd units (picks up worker timeout/flag changes)…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
