@@ -108,7 +108,7 @@ export function InterviewStartForm({
   }
 
   return (
-    <div id={id} className="mt-8 max-w-md scroll-mt-28">
+    <div id={id} className="mt-5 max-w-md scroll-mt-28 md:mt-8">
       {error && (
         <p className="mb-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn" role="alert">
           {error}

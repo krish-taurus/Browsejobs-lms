@@ -9,17 +9,17 @@ export function HomeHero() {
   );
 
   return (
-    <section id="top" className="relative overflow-hidden px-5 pb-16 pt-6 md:pb-24 md:pt-10">
+    <section id="top" className="relative overflow-hidden px-5 pb-12 pt-2 md:pb-24 md:pt-10">
       <div aria-hidden className="home-grid pointer-events-none absolute inset-0 opacity-80" />
       <div aria-hidden className="home-glow pointer-events-none absolute inset-0" />
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)] lg:gap-8">
         <div>
           <p className="kicker text-verify">Free · no card</p>
-          <h1 className="display mt-5 text-[clamp(2.5rem,6.2vw,5.2rem)] leading-[0.92] tracking-[-0.045em] text-fg">
+          <h1 className="display mt-3 text-[clamp(2.15rem,6.2vw,5.2rem)] leading-[0.92] tracking-[-0.045em] text-fg md:mt-5">
             <MaskReveal>Take a free </MaskReveal>
             <MaskReveal index={1}>AI interview.</MaskReveal>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted md:mt-6 md:text-lg">
             It&apos;s free. Fifteen questions from your CV, scored out of 100. A score of{" "}
             <span className="mono text-fg">75%</span> or more counts as clear and puts you in front of HR with your
             score.
