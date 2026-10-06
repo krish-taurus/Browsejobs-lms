@@ -39,7 +39,7 @@ test("answers hub is indexable", async ({ page }) => {
   for (const item of answerPages) {
     await expect(page.getByRole("link", { name: item.title }).first()).toBeVisible();
   }
-  await expect(page.getByRole("link", { name: "Take the free AI interview" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Take the free AI interview", exact: true })).toBeVisible();
   const types = await jsonLdTypes(page);
   expect(types).toContain("FAQPage");
   expect(types).toContain("BreadcrumbList");
