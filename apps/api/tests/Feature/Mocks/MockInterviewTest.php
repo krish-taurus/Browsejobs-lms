@@ -152,10 +152,13 @@ it('asks an adaptive follow-up per answer and stops at the question cap', functi
     postJson("/api/v1/me/mocks/{$id}/answer", ['answer' => 'I use watermarking and reprocessing windows.'])
         ->assertOk()
         ->assertJsonPath('data.questions_asked', 3)
-        ->assertJsonPath('data.ready_to_finish', true);
+        ->assertJsonPath('data.ready_to_finish', false);
 
-    // Cap reached: another answer is stored but no further AI question is asked.
-    postJson("/api/v1/me/mocks/{$id}/answer", ['answer' => 'A final extra thought.'])->assertOk();
+    // The last question is asked at the cap and still needs an answer.
+    // That answer is stored, and no further AI question is asked.
+    postJson("/api/v1/me/mocks/{$id}/answer", ['answer' => 'A final extra thought.'])
+        ->assertOk()
+        ->assertJsonPath('data.ready_to_finish', true);
     expect(count($this->fake->calls))->toBe(2);
 });
 

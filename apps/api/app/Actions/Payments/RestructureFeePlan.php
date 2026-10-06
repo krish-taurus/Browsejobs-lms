@@ -49,18 +49,18 @@ final readonly class RestructureFeePlan
 
     /**
      * @param  list<int>|null  $customAmountsPaise  Uneven instalments — "₹5,000
-     *                                               then ₹8,000" rather than an
-     *                                               equal split. When given, its
-     *                                               length is the real instalment
-     *                                               count ($count is still
-     *                                               validated but otherwise
-     *                                               ignored), and it must sum to
-     *                                               exactly the outstanding
-     *                                               balance — the "never owe a
-     *                                               different amount" invariant
-     *                                               applies here too, it is just
-     *                                               the operator doing the
-     *                                               dividing instead of intdiv().
+     *                                              then ₹8,000" rather than an
+     *                                              equal split. When given, its
+     *                                              length is the real instalment
+     *                                              count ($count is still
+     *                                              validated but otherwise
+     *                                              ignored), and it must sum to
+     *                                              exactly the outstanding
+     *                                              balance — the "never owe a
+     *                                              different amount" invariant
+     *                                              applies here too, it is just
+     *                                              the operator doing the
+     *                                              dividing instead of intdiv().
      * @return RestructureResult
      */
     public function handle(FeePlan $plan, int $count, ?Carbon $firstDueOn = null, ?User $actor = null, ?int $targetUnpaidPaise = null, ?array $customAmountsPaise = null): array

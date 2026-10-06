@@ -80,6 +80,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\BatchChatController;
 use App\Http\Controllers\Care\CareController;
 use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\CoachController;
@@ -97,20 +98,22 @@ use App\Http\Controllers\Employer\InterviewProcessController as EmployerIntervie
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
 use App\Http\Controllers\Employer\JdDraftController as EmployerJdDraftController;
 use App\Http\Controllers\Employer\JdIntentController as EmployerJdIntentController;
-use App\Http\Controllers\Employer\JdReviseController as EmployerJdReviseController;
-use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
-use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
 use App\Http\Controllers\Employer\JdMockController as EmployerJdMockController;
+use App\Http\Controllers\Employer\JdReviseController as EmployerJdReviseController;
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
 use App\Http\Controllers\Employer\MockDesignController as EmployerMockDesignController;
 use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
+use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
+use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\FeeStatusController;
+use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Labs\LabController;
 use App\Http\Controllers\Leads\LeadController;
+use App\Http\Controllers\LinkPreviewController;
 use App\Http\Controllers\Me\AlumniCheckinController;
 use App\Http\Controllers\Me\BoosterController;
 use App\Http\Controllers\Me\CandidateDashboardController;
@@ -136,12 +139,9 @@ use App\Http\Controllers\Me\MySyllabusController;
 use App\Http\Controllers\Me\PulsePageController;
 use App\Http\Controllers\Me\SalaryBenchmarkController as MeSalaryBenchmarkController;
 use App\Http\Controllers\Me\VerificationController;
-use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
-use App\Http\Controllers\BatchChatController;
-use App\Http\Controllers\LinkPreviewController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\MyVoucherController;
@@ -154,6 +154,7 @@ use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
 use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
+use App\Http\Controllers\Public\MasterclassWatchController;
 use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
@@ -182,7 +183,7 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 // verify from any host, so the lookup is by the globally-unique code (withoutGlobalScopes).
 // Daily simulated-live masterclass showing (public; the CRM WhatsApps this
 // page to interested leads). NO tenant.domain — course resolved by slug.
-Route::get('v1/masterclass/watch/{slug?}', [\App\Http\Controllers\Public\MasterclassWatchController::class, 'show'])
+Route::get('v1/masterclass/watch/{slug?}', [MasterclassWatchController::class, 'show'])
     ->middleware('throttle:60,1');
 
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])

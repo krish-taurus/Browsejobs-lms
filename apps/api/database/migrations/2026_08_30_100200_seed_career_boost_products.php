@@ -14,6 +14,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Tenants are created by DatabaseSeeder, after migrations. A fresh
+        // database has no tenant 1, so the products.tenant_id foreign key
+        // rejects this insert. Production already ran this migration when
+        // that tenant existed. Fresh installs get the same rows from
+        // MonetizationSeeder.
+        if (! DB::table('tenants')->where('id', 1)->exists()) {
+            return;
+        }
+
+        if (DB::table('products')->whereIn('sku', [
+            'career-boost-199',
+            'career-boost-299',
+            'career-boost-499',
+        ])->exists()) {
+            return;
+        }
+
         $now = now();
 
         DB::table('products')->insert([

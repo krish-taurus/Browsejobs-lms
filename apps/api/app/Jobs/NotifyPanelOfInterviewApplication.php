@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Models\MentorProfile;
 use App\Models\MentorSession;
 use App\Models\Scopes\TenantScope;
 use App\Support\Interviews\InterviewPanel;

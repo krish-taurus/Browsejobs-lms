@@ -42,6 +42,7 @@ function trainedStudent(Tenant $tenant, array $skills, int $pri = 0): User
         'tenant_id' => $tenant->id,
         'user_id' => $student->id,
         'data' => ['skills' => $skills, 'summary' => 'Trained on the BrowseJobs programme.'],
+        'cv_mock_completed_at' => now(),
     ]);
 
     if ($pri > 0) {

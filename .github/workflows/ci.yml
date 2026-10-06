@@ -77,6 +77,10 @@ jobs:
       - name: Typecheck (all workspaces)
         run: npm run typecheck
 
+      - name: IndexNow script tests
+        working-directory: apps/web
+        run: node --test scripts/indexnow.test.mjs
+
       - name: Build web
         run: npm run build --workspace @browsejobs/web
 

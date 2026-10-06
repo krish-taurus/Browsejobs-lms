@@ -8,6 +8,7 @@ use App\Actions\LiveClasses\RegisterCompletedRecording;
 use App\Models\LiveSession;
 use App\Models\Recording;
 use App\Models\Scopes\TenantScope;
+use App\Models\Tenant;
 use App\Support\Tenancy\TenantContext;
 use App\Support\Zoom\ZoomClient;
 use Illuminate\Console\Command;
@@ -74,7 +75,7 @@ final class SyncZoomRecordings extends Command
                 continue;
             }
 
-            $tenant = \App\Models\Tenant::query()->find($session->tenant_id);
+            $tenant = Tenant::query()->find($session->tenant_id);
             if ($tenant === null) {
                 continue;
             }

@@ -181,7 +181,7 @@ export default function DataEngineeringBangalorePage() {
           It is a weaker start if your current work is spreadsheets and business reporting and you have not written
           code. That profile is closer to{" "}
           <TextLink href="/courses/data-analytics">Data Analytics</TextLink>, which publishes Excel, SQL, Python,
-          statistics, and Power BI over five to six months. Switching the other way — from analytics into
+          statistics, and Power BI over six months. Switching the other way — from analytics into
           engineering — is a common reason people book counselling. The written Career Analysis Report is free, and
           it is allowed to recommend a path we do not sell.
         </p>

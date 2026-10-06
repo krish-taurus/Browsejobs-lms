@@ -25,12 +25,14 @@ async function signIn(page: import("@playwright/test").Page) {
 test("employer reviews a JD, its mock, and adds an automation rule", async ({ page }) => {
   await signIn(page);
 
-  // Command centre: stat band + pipeline pulse.
+  // Sign-in lands on the employer home. The hiring overview is the next page.
+  await expect(page).toHaveURL(/\/employer\/taurus-ai/);
+  await expect(page.getByRole("heading", { name: "Taurus AI" })).toBeVisible();
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
   await expect(page).toHaveURL(/\/employer\/dashboard/);
-  await expect(page.getByRole("heading", { name: "Acme Technologies" })).toBeVisible();
-  await expect(page.getByText("Active JDs")).toBeVisible();
-  await expect(page.getByText("Pipeline pulse")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Live per JD" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hiring overview" })).toBeVisible();
+  await expect(page.getByText("Active jobs")).toBeVisible();
+  await expect(page.getByText("Acme Technologies")).toBeVisible();
 
   // Jobs list → the seeded published JD.
   // `exact` matters: without it "Jobs" also matches the wordmark's
@@ -38,7 +40,7 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
   // `.first()` to the marketing site instead of the jobs list.
   await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Your job descriptions" })).toBeVisible();
-  await page.getByRole("link", { name: /Data Engineer/ }).first().click();
+  await page.getByRole("link", { name: "View details" }).first().click();
   await expect(page.getByRole("heading", { name: "Data Engineer" })).toBeVisible();
 
   // The JD mock generated at publish time: rubric weights + questions.
@@ -56,13 +58,18 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
 
 test("command palette jumps to a JD", async ({ page }) => {
   await signIn(page);
-  await expect(page).toHaveURL(/\/employer\/dashboard/);
+  await expect(page).toHaveURL(/\/employer\/taurus-ai/);
+  // The URL flips as soon as sign-in navigates. The palette mounts only after
+  // the workspace shell has rendered, so wait for that heading first.
+  await expect(page.getByRole("heading", { name: "Taurus AI" })).toBeVisible();
 
   await page.keyboard.press("ControlOrMeta+k");
   const palette = page.getByRole("dialog", { name: "Command palette" });
   await expect(palette).toBeVisible();
   await palette.getByPlaceholder("Jump to a screen or JD…").fill("Data");
-  await page.keyboard.press("Enter");
+  // Jobs load after the palette opens. Click the JD once it is listed
+  // rather than pressing Enter against an empty result set.
+  await palette.getByRole("button", { name: "Data Engineer" }).click();
 
   await expect(page).toHaveURL(/\/employer\/jobs\/\d+/);
 });

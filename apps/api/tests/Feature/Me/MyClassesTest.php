@@ -75,6 +75,7 @@ it('does not leak the raw join url in the list', function () {
 });
 
 it('hands out the join url to an enrolled student', function () {
+    withinTenant($this->tenant, fn () => $this->session->update(['scheduled_start' => now()]));
     Sanctum::actingAs($this->student);
 
     $this->postJson("/api/v1/me/classes/{$this->session->id}/join")
@@ -109,8 +110,8 @@ it('hands an enrolled student the Zoom cloud watch url and passcode', function (
 
     $this->getJson("/api/v1/me/recordings/{$this->recording->id}/download")
         ->assertOk()
-        ->assertJsonPath('data.watch_url', 'https://zoom.test/play/pandas')
-        ->assertJsonPath('data.passcode', 'abc123');
+        ->assertJsonPath('data.watch_url', 'https://zoom.test/play/pandas?pwd=abc123')
+        ->assertJsonPath('data.passcode', null);
 });
 
 it('denies a recording download to a non-member', function () {

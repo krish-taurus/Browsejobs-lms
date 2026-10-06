@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { founderSameAs, organizationSameAs } from "@/content/entity";
 import { seoMoneyLinks } from "@/content/seo-nav";
 import { FOOTER_LINE, contact, courses } from "@/content/landing";
 
@@ -18,6 +19,22 @@ export function Footer() {
             <p className="mono mt-3 text-sm">{contact.phone}</p>
             <p className="mono mt-1 text-sm">{contact.email}</p>
             <p className="mt-2 text-sm text-sky/60">{contact.hours}</p>
+            <ul className="mt-4 space-y-1.5 text-sm">
+              <li>
+                <a
+                  href={organizationSameAs[0]}
+                  className="text-sky/80 hover:text-white"
+                  rel="noopener noreferrer"
+                >
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a href={founderSameAs[0]} className="text-sky/80 hover:text-white" rel="noopener noreferrer">
+                  Dr Krish Bharggav on LinkedIn
+                </a>
+              </li>
+            </ul>
           </div>
           <div>
             <p className="kicker text-sky/60">Visit</p>
@@ -38,6 +55,16 @@ export function Footer() {
           <div>
             <p className="kicker text-sky/60">Explore</p>
             <ul className="mt-3 space-y-1.5 text-sm">
+              <li>
+                <Link href="/answers" className="text-sky/80 hover:text-white">
+                  Answers
+                </Link>
+              </li>
+              <li>
+                <Link href="/founder" className="text-sky/80 hover:text-white">
+                  Dr Krish Bharggav
+                </Link>
+              </li>
               <li>
                 <Link href="/courses" className="text-sky/80 hover:text-white">
                   Programs

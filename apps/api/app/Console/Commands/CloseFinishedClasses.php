@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Enums\LiveSessionStatus;
 use App\Models\LiveSession;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 
 /**
  * Marks classes finished once their slot has passed.
@@ -59,7 +60,7 @@ final class CloseFinishedClasses extends Command
     }
 
     /** When the slot is considered over, allowing for over-running. */
-    private function finishedAt(LiveSession $session): \Illuminate\Support\Carbon
+    private function finishedAt(LiveSession $session): Carbon
     {
         $end = $session->scheduled_end
             ?? $session->scheduled_start->copy()->addSeconds($session->plannedSeconds());

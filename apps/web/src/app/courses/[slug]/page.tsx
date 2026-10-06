@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { courseDetails, getCourseDetail } from "@/content/courses";
 import CourseKeynote from "@/components/courses/CourseKeynote";
-import { canonical } from "@/lib/seo";
+import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode } from "@/lib/seo";
 
 /**
  * Course detail page — keynote template (approved from the /v3 preview):
@@ -41,19 +41,18 @@ export default async function CoursePage({
   const course = getCourseDetail((await params).slug);
   if (!course || !course.live) notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: course.headline ?? `${course.name} Course`,
-    description: course.hero,
-    url: canonical(`/courses/${course.slug}`),
-    provider: {
-      "@type": "EducationalOrganization",
-      name: "BrowseJobs",
-      url: "https://browsejobs.ai",
-    },
-    offers: { "@type": "Offer", category: "Registration", price: "30000", priceCurrency: "INR" },
-  };
+  const path = `/courses/${course.slug}`;
+  const title = course.seoTitle ?? `${course.name} Course`;
+  const node = courseNode(course.slug);
+  const jsonLd = jsonLdGraph([
+    webPageNode({ path, title, description: course.hero }),
+    breadcrumbNode([
+      { name: "Home", path: "/" },
+      { name: "Courses", path: "/courses" },
+      { name: course.name, path },
+    ]),
+    ...(node ? [node] : []),
+  ]);
 
   return (
     <>

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\EntitlementFeature;
 use App\Events\MockCompleted;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
@@ -113,72 +112,45 @@ it('never shows another tenant postings', function (): void {
     expect($titles)->not->toContain('Secret Role');
 });
 
-it('spends a mock credit to start a JD mock and refuses when the wallet is empty', function (): void {
-    EmployerJobApplication::factory()->for($this->tenant)->create([
-        'employer_job_id' => $this->job->id,
-        'candidate_id' => $this->candidate->id,
-    ]);
-
+it('starts a JD mock before the candidate applies and resumes the same attempt', function (): void {
     Sanctum::actingAs($this->candidate);
 
-    // No credits yet: an empty wallet is an offer, not a validation error.
-    $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")
-        ->assertStatus(402)
-        ->assertJsonPath('error.code', 'mock_credits_required');
-
-    app(EntitlementService::class)->grantCredits(
-        $this->candidate,
-        EntitlementFeature::VoiceMock->value,
-        2,
-        'test',
-    );
-
-    $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")
+    $first = $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")
         ->assertStatus(201)
-        ->assertJsonStructure(['data' => ['mock_id']]);
-
-    expect(app(EntitlementService::class)->balance($this->candidate, EntitlementFeature::VoiceMock->value))
-        ->toBe(1);
-});
-
-it('resumes an attempt in flight instead of charging a second credit', function (): void {
-    EmployerJobApplication::factory()->for($this->tenant)->create([
-        'employer_job_id' => $this->job->id,
-        'candidate_id' => $this->candidate->id,
-    ]);
-
-    app(EntitlementService::class)->grantCredits(
-        $this->candidate,
-        EntitlementFeature::VoiceMock->value,
-        5,
-        'test',
-    );
-
-    Sanctum::actingAs($this->candidate);
-
-    $first = $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")->json('data.mock_id');
-    $second = $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")->json('data.mock_id');
+        ->json('data.mock_id');
+    $second = $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")
+        ->assertStatus(201)
+        ->json('data.mock_id');
 
     expect($second)->toBe($first)
-        ->and(app(EntitlementService::class)->balance($this->candidate, EntitlementFeature::VoiceMock->value))
-        ->toBe(4);
+        ->and(EmployerJobApplication::query()->where('candidate_id', $this->candidate->id)->exists())->toBeFalse();
 });
 
-it('refuses a mock for a role the candidate has not applied to', function (): void {
-    app(EntitlementService::class)->grantCredits(
-        $this->candidate,
-        EntitlementFeature::VoiceMock->value,
-        5,
-        'test',
-    );
+it('refuses another JD mock once the free attempt cap is used', function (): void {
+    withinTenant($this->tenant, fn () => app(EntitlementService::class)->settings()->update(['employer_mock_attempts_per_job' => 1]));
+
+    $blueprint = MockBlueprint::query()->create([
+        'tenant_id' => $this->tenant->id,
+        'employer_job_id' => $this->job->id,
+        'role_title' => $this->job->title,
+        'competencies' => ['python'],
+        'opening_question' => 'Tell me about yourself.',
+        'is_active' => false,
+    ]);
+    MockInterview::query()->create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->candidate->id,
+        'mock_blueprint_id' => $blueprint->id,
+        'mode' => MockInterview::MODE_TEXT,
+        'status' => MockInterview::STATUS_COMPLETED,
+        'overall_score' => 60,
+        'started_at' => now()->subMinutes(20),
+        'completed_at' => now(),
+    ]);
 
     Sanctum::actingAs($this->candidate);
 
     $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/mock")->assertStatus(422);
-
-    // The credit is never spent on a refused attempt.
-    expect(app(EntitlementService::class)->balance($this->candidate, EntitlementFeature::VoiceMock->value))
-        ->toBe(5);
 });
 
 /** Finish a mock spun from this JD's blueprint, as the engine would. */

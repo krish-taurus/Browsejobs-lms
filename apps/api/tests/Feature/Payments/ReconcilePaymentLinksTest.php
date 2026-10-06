@@ -79,7 +79,7 @@ it('mints a fresh link when the stored one is for a different amount', function 
     $this->razorpay->linkStatuses['plink_TESTLINK1'] = ['status' => 'created', 'amount_paise' => $first->amount_paise];
     $first->forceFill(['amount_paise' => 100, 'payment_link_url' => 'https://rzp.io/rzp/OLD'])->save();
 
-    withinTenant($this->tenant, fn () => app(App\Actions\Payments\SendPaymentLink::class)->handle($first->fresh()));
+    withinTenant($this->tenant, fn () => app(SendPaymentLink::class)->handle($first->fresh()));
 
     expect($first->fresh()->razorpay_payment_link_id)->not->toBe('plink_TESTLINK1');
 });
@@ -91,7 +91,7 @@ it('mints a fresh link when Razorpay no longer recognises the stored one', funct
     $first->forceFill(['payment_link_url' => 'https://rzp.io/rzp/TESTMODE'])->save();
     $this->razorpay->linkStatuses['plink_TESTLINK1'] = ['status' => 'cancelled'];
 
-    withinTenant($this->tenant, fn () => app(App\Actions\Payments\SendPaymentLink::class)->handle($first->fresh()));
+    withinTenant($this->tenant, fn () => app(SendPaymentLink::class)->handle($first->fresh()));
 
     expect($first->fresh()->razorpay_payment_link_id)->not->toBe('plink_TESTLINK1');
 });
@@ -102,7 +102,7 @@ it('reuses the stored link when it is still valid for the same amount', function
     $this->razorpay->linkStatuses['plink_TESTLINK1'] = ['status' => 'created', 'amount_paise' => $first->amount_paise];
     $first->forceFill(['payment_link_url' => 'https://rzp.io/rzp/GOOD'])->save();
 
-    withinTenant($this->tenant, fn () => app(App\Actions\Payments\SendPaymentLink::class)->handle($first->fresh()));
+    withinTenant($this->tenant, fn () => app(SendPaymentLink::class)->handle($first->fresh()));
 
     expect($first->fresh()->razorpay_payment_link_id)->toBe('plink_TESTLINK1');
 });

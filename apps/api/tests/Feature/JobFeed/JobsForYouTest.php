@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\CvDocument;
 use App\Models\CvProfile;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSave;
@@ -17,10 +18,13 @@ beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
     $this->student = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
     // The student knows Python and SQL.
-    withinTenant($this->tenant, fn () => CvProfile::query()->create([
-        'tenant_id' => $this->tenant->id, 'user_id' => $this->student->id,
-        'data' => ['skills' => ['Python', 'SQL']],
-    ]));
+    withinTenant($this->tenant, function () {
+        CvProfile::query()->create([
+            'tenant_id' => $this->tenant->id, 'user_id' => $this->student->id,
+            'data' => ['skills' => ['Python', 'SQL']],
+        ]);
+        CvDocument::factory()->create(['user_id' => $this->student->id]);
+    });
 });
 
 function feedItem(Tenant $tenant, array $skills, array $overrides = []): JobFeedItem

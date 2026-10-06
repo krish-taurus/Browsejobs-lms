@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * The candidate's own CV facts (PRD §6.7): experience, personal projects,
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, mixed> $data
  * @property string|null $uploaded_filename
  * @property int|null $cv_mock_score
- * @property \Illuminate\Support\Carbon|null $cv_mock_completed_at
+ * @property Carbon|null $cv_mock_completed_at
  */
 class CvProfile extends Model
 {

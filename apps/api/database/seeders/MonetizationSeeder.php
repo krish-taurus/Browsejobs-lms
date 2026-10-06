@@ -35,20 +35,29 @@ class MonetizationSeeder extends Seeder
                 ['sku' => 'job-kit', 'name' => 'Interview Kit · one job', 'feature' => 'job_kit', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.job_kit.price_paise'), 'grant' => 1, 'period' => null],
                 ['sku' => 'job-kit-mentor', 'name' => 'Interview Kit + mentor 1:1 · one job', 'feature' => 'job_kit', 'kind' => ProductKind::Pack, 'price' => (int) config('monetization.job_kit.mentor_price_paise'), 'grant' => 1, 'period' => null],
                 ['sku' => 'career-plus', 'name' => 'Career+ (monthly)', 'feature' => 'career_plus', 'kind' => ProductKind::Subscription, 'price' => (int) config('monetization.career_plus.price_paise'), 'grant' => 0, 'period' => (int) config('monetization.career_plus.period_days')],
+                ['sku' => 'career-boost-199', 'name' => 'Career Boost — 30 Days', 'feature' => 'cv', 'kind' => ProductKind::CareerBoost, 'price' => 19900, 'grant' => 5, 'period' => 30, 'mock' => 10, 'jobs' => 10, 'wider' => 50],
+                ['sku' => 'career-boost-299', 'name' => 'Career Boost Plus — 30 Days', 'feature' => 'cv', 'kind' => ProductKind::CareerBoost, 'price' => 29900, 'grant' => 10, 'period' => 30, 'mock' => 20, 'jobs' => 20, 'wider' => 100],
+                ['sku' => 'career-boost-499', 'name' => 'Career Boost Pro — 30 Days', 'feature' => 'cv', 'kind' => ProductKind::CareerBoost, 'price' => 49900, 'grant' => 20, 'period' => 30, 'mock' => 40, 'jobs' => 40, 'wider' => 200],
             ];
 
             foreach ($catalog as $p) {
+                $attributes = [
+                    'name' => $p['name'],
+                    'feature' => $p['feature'],
+                    'kind' => $p['kind']->value,
+                    'price_paise' => $p['price'],
+                    'grant_amount' => $p['grant'],
+                    'period_days' => $p['period'],
+                    'active' => true,
+                ];
+                if (isset($p['mock'])) {
+                    $attributes['mock_bonus_amount'] = $p['mock'];
+                    $attributes['job_application_bonus_amount'] = $p['jobs'];
+                    $attributes['wider_market_job_limit'] = $p['wider'];
+                }
                 Product::query()->updateOrCreate(
                     ['tenant_id' => $tenant->id, 'sku' => $p['sku']],
-                    [
-                        'name' => $p['name'],
-                        'feature' => $p['feature'],
-                        'kind' => $p['kind']->value,
-                        'price_paise' => $p['price'],
-                        'grant_amount' => $p['grant'],
-                        'period_days' => $p['period'],
-                        'active' => true,
-                    ],
+                    $attributes,
                 );
             }
         });

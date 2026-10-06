@@ -722,6 +722,13 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
       <section className="relative overflow-hidden px-6 pb-20 pt-32 md:pb-28 md:pt-40">
         <div aria-hidden className="absolute -top-40 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full blur-[140px]" style={{ background: `${accent}22` }} />
         <div className="relative mx-auto max-w-4xl text-center">
+          <nav aria-label="Breadcrumb" className="mono mb-6 text-[11px] text-fg/50">
+            <Link href="/" className="hover:text-ink">Home</Link>
+            <span aria-hidden>{" / "}</span>
+            <Link href="/courses" className="hover:text-ink">Courses</Link>
+            <span aria-hidden>{" / "}</span>
+            <span className="text-ink/80">{course.name}</span>
+          </nav>
           <motion.div
             initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, duration: 0.6, ease: "backOut" }}
             className="mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold"

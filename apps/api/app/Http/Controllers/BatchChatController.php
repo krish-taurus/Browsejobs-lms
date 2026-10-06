@@ -6,10 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\BatchMemberStatus;
 use App\Models\Batch;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use App\Support\Tenancy\TenantContext;
 
 /**
  * The student's side of the batch chat: one room per batch they are seated in,

@@ -93,7 +93,7 @@ it('dispatches a specific mock to the batch', function () {
 
     $note = InAppNotification::withoutGlobalScopes()->where('user_id', $this->student->id)->firstOrFail();
     expect($note->title)->toContain('Python')
-        ->and($note->url)->toBe("/mock?start={$this->python->id}");
+        ->and($note->url)->toBe("/student-ai-mock?start={$this->python->id}");
 });
 
 it('dispatches a specific assignment to the batch', function () {

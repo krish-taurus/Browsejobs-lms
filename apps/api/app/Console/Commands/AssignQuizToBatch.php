@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Enums\BatchMemberStatus;
 use App\Jobs\CheckQuizCompletion;
+use App\Listeners\DispatchModuleQuiz;
 use App\Models\Batch;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
@@ -20,7 +21,7 @@ use Throwable;
  * Give a quiz to every student in a batch.
  *
  * Until now a quiz only reached a student when they completed the module it
- * hangs off ({@see \App\Listeners\DispatchModuleQuiz}), which is no use when a
+ * hangs off ({@see DispatchModuleQuiz}), which is no use when a
  * trainer wants to set a test for a running batch. This assigns it directly:
  * one attempt per seated student, each with a deadline, a WhatsApp/email link
  * to sit it, and the usual reminder and flag jobs.

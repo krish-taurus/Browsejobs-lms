@@ -9,6 +9,7 @@ use App\Models\EmployerWorkspace;
 use App\Support\Employers\ResolvesMembership;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -50,7 +51,7 @@ final class TranscribeController extends Controller
             ], 422);
         }
 
-        /** @var \Illuminate\Http\UploadedFile $file */
+        /** @var UploadedFile $file */
         $file = $validated['audio'];
 
         $response = Http::withHeaders(['xi-api-key' => $apiKey])

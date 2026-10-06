@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BatchMemberStatus;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,7 +51,7 @@ class MentorProfile extends Model
      * and must never appear on the Mentors page or consume mentor credits.
      * Interview time is booked from the Interviews page, on its own rules.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<MentorProfile>  $query
+     * @param  Builder<MentorProfile>  $query
      */
     public function scopeMentoring($query)
     {
@@ -60,7 +61,7 @@ class MentorProfile extends Model
     /**
      * The interview panel — the other side of the same split.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<MentorProfile>  $query
+     * @param  Builder<MentorProfile>  $query
      */
     public function scopePanel($query)
     {

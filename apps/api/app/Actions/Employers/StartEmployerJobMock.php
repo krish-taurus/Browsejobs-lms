@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Employers;
 
+use App\Actions\Mocks\StartMockInterview;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\MockBlueprint;
@@ -31,7 +32,7 @@ use Illuminate\Validation\ValidationException;
  *
  * Capped at a flat N attempts per job (CRM-editable), hard stop past the
  * cap — deliberately its own counter, separate from the course-mock room
- * cap in {@see \App\Actions\Mocks\StartMockInterview} and from the
+ * cap in {@see StartMockInterview} and from the
  * voice_mock credit wallet: taking this job's interview never touches a
  * shared pool, so it can never be confused with, or starved by, unrelated
  * course-mock usage. Past the free cap, a purchased Career Boost's bonus

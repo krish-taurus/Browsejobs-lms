@@ -15,14 +15,14 @@ async function signIn(page: import("@playwright/test").Page) {
   await page.getByLabel("Work email").fill("employer@example.com");
   await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/employer\/dashboard/);
+  await expect(page).toHaveURL(/\/employer\/taurus-ai/);
 }
 
 test("employer reviews the designed interview process", async ({ page }) => {
   await signIn(page);
 
   await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
-  await page.getByRole("link", { name: /Data Engineer/ }).first().click();
+  await page.getByRole("link", { name: "View details" }).first().click();
   await page.getByRole("tab", { name: "Process" }).click();
 
   await expect(page.getByRole("heading", { name: /rounds this role runs/ })).toBeVisible();
@@ -49,7 +49,8 @@ test("a human round can never be set to send itself", async ({ page }) => {
 test("employer sends a round to a candidate", async ({ page }) => {
   await signIn(page);
   await page.goto("/employer/pipeline");
-  await page.getByRole("link", { name: "Open" }).first().click();
+  await page.getByRole("button", { name: "Ananya Iyer" }).click();
+  await page.getByRole("link", { name: /View full application/ }).click();
   await expect(page).toHaveURL(/\/candidates\/\d+/);
 
   await expect(page.getByRole("heading", { name: "Send a round" })).toBeVisible();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +23,7 @@ return new class extends Migration
                     'category' => 'utility',
                     'name' => null,
                     'subject' => null,
-                    'body' => "Hi {{name}}, good news — your CV has been shortlisted for the {{role}} role at {{company}} on BrowseJobs. Please be ready: an interview call can happen any time. Keep an eye on your phone and email.",
+                    'body' => 'Hi {{name}}, good news — your CV has been shortlisted for the {{role}} role at {{company}} on BrowseJobs. Please be ready: an interview call can happen any time. Keep an eye on your phone and email.',
                     'locale' => 'en',
                     'active' => true,
                     'created_at' => now(),

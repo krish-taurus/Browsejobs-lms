@@ -19,7 +19,6 @@ use Carbon\CarbonInterface;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
-use RuntimeException;
 
 beforeEach(function () {
     Queue::fake(); // don't dispatch real Zoom jobs
@@ -118,6 +117,11 @@ it('surfaces the Zoom error when meeting creation fails', function () {
         public function downloadRecording(string $url): string
         {
             return '';
+        }
+
+        public function meetingRecordings(string $meetingId): ?array
+        {
+            return null;
         }
     });
     Sanctum::actingAs($this->admin);

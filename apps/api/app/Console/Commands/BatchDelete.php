@@ -9,6 +9,7 @@ use App\Models\BatchMember;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -87,8 +88,8 @@ final class BatchDelete extends Command
     /**
      * Which of these accounts may be deleted along with the batch.
      *
-     * @param  \Illuminate\Support\Collection<int, int>  $memberIds
-     * @return \Illuminate\Support\Collection<int, int>
+     * @param  Collection<int, int>  $memberIds
+     * @return Collection<int, int>
      */
     private function accountsSafeToDelete($memberIds, int $batchId)
     {

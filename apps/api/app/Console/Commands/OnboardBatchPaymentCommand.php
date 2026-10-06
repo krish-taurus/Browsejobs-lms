@@ -33,7 +33,7 @@ final class OnboardBatchPaymentCommand extends Command
         {--proof-url= : Optional URL to an uploaded proof image}
         {--amount= : Agreed total in rupees, when it differs from the course price — the gap is booked as a discount, same as Set Amount}';
 
-    protected $description = "Raise a fee plan for a student who already paid, and settle its first instalment";
+    protected $description = 'Raise a fee plan for a student who already paid, and settle its first instalment';
 
     public function handle(OnboardBatchPayment $onboard): int
     {

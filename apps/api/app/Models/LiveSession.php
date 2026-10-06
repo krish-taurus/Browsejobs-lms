@@ -178,7 +178,7 @@ class LiveSession extends Model
      * students cannot sit in an empty room hours early. Null when the session
      * has no scheduled start.
      */
-    public function joinOpensAt(): ?\Illuminate\Support\Carbon
+    public function joinOpensAt(): ?Carbon
     {
         if ($this->scheduled_start === null) {
             return null;

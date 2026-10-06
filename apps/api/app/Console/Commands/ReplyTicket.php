@@ -7,9 +7,9 @@ namespace App\Console\Commands;
 use App\Actions\Support\PostTicketReply;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Console\Command;
 
 /**
  * Posts a staff reply on a support ticket — driven by the CRM Support page.

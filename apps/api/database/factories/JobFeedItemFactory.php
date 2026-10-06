@@ -20,7 +20,9 @@ class JobFeedItemFactory extends Factory
     public function definition(): array
     {
         $title = 'Data Engineer';
-        $company = fake()->company();
+        // Company names repeat, and the fingerprint is company + title + city.
+        // A loop of identical roles then collides on the unique index.
+        $company = fake()->company().' '.fake()->unique()->numerify('#####');
 
         return [
             'title' => $title,

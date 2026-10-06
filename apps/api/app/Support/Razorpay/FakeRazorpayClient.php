@@ -90,7 +90,7 @@ final class FakeRazorpayClient implements RazorpayClient
 
         if ($found === null) {
             foreach ($this->orders as $order) {
-                if (is_array($order) && ($order["id"] ?? null) === $orderId) {
+                if (is_array($order) && ($order['id'] ?? null) === $orderId) {
                     $found = $order;
                     break;
                 }
@@ -98,9 +98,9 @@ final class FakeRazorpayClient implements RazorpayClient
         }
 
         return [
-            "receipt" => $found["receipt"] ?? null,
-            "amount_paise" => isset($found["amount"]) ? (int) $found["amount"] : ($found["amount_paise"] ?? null),
-            "status" => $found["status"] ?? null,
+            'receipt' => $found['receipt'] ?? null,
+            'amount_paise' => isset($found['amount']) ? (int) $found['amount'] : ($found['amount_paise'] ?? null),
+            'status' => $found['status'] ?? null,
         ];
     }
 

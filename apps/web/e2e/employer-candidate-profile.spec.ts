@@ -19,14 +19,14 @@ async function signIn(page: import("@playwright/test").Page) {
   await page.getByLabel("Work email").fill("employer@example.com");
   await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/employer\/dashboard/);
+  await expect(page).toHaveURL(/\/employer\/taurus-ai/);
 }
 
 test("employer opens a candidate's full profile from the JD", async ({ page }) => {
   await signIn(page);
 
   await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
-  await page.getByRole("link", { name: /Data Engineer/ }).first().click();
+  await page.getByRole("link", { name: "View details" }).first().click();
   await page.getByRole("link", { name: "Full profile" }).first().click();
 
   await expect(page).toHaveURL(/\/employer\/jobs\/\d+\/candidates\/\d+/);
@@ -52,7 +52,7 @@ test("contact details stay hidden until the candidate is shortlisted", async ({ 
   await signIn(page);
 
   await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
-  await page.getByRole("link", { name: /Data Engineer/ }).first().click();
+  await page.getByRole("link", { name: "View details" }).first().click();
 
   // Sneha Nair is seeded at Graded and Rahul Verma at Shortlisted, so the
   // pair proves the gate opens rather than that it is simply always shut.
