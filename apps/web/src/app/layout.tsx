@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito } from "next/font/google";
+import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import "./globals.css";
 
 const sora = Sora({
@@ -100,6 +101,7 @@ export default function RootLayout({
       <body
         className={`${sora.variable} ${inter.variable} ${plexMono.variable} ${poppins.variable} ${nunito.variable} antialiased`}
       >
+        <SiteJsonLd />
         {children}
 
         {/* Google Analytics */}
@@ -123,51 +125,6 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 })(window, document, "clarity", "script", "xiomzak7ll");`}
         </Script>
 
-        {/* Organization schema */}
-        <Script
-          id="organization-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              "@id": "https://browsejobs.ai/#organization",
-              name: "Browsejobs",
-              alternateName: "BrowseJobs",
-              url: "https://browsejobs.ai",
-              logo: "https://browsejobs.ai/logo.png",
-              image: "https://browsejobs.ai/logo.png",
-              description:
-                "Browsejobs is a career development platform focused on Data Engineering. We empower aspiring data engineers with industry-aligned training, real-world projects, interview preparation, resume building, LinkedIn optimization, and placement support to help them build successful careers in data engineering.",
-              knowsAbout: [
-                "Data Engineering",
-                "Python",
-                "SQL",
-                "PySpark",
-                "Apache Spark",
-                "ETL",
-                "Data Warehousing",
-                "Azure Data Factory",
-                "Azure Databricks",
-                "Azure Data Lake",
-                "AWS Glue",
-                "Amazon S3",
-                "Amazon Redshift",
-                "Apache Airflow",
-                "Snowflake",
-                "Interview Preparation",
-                "Resume Building",
-                "Career Development",
-              ],
-              sameAs: [
-                "https://www.linkedin.com/company/browsejobsconsultants/posts/?feedView=all",
-                "https://www.instagram.com/browsejobs_6666/",
-                "https://www.facebook.com/people/BrowseJobs-Transform-Your-Career/61573831853161/",
-                "https://www.youtube.com/@Browsejobs",
-              ],
-            }),
-          }}
-        />
       </body>
     </html>
   );

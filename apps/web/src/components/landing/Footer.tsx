@@ -39,6 +39,11 @@ export function Footer() {
             <p className="kicker text-sky/60">Explore</p>
             <ul className="mt-3 space-y-1.5 text-sm">
               <li>
+                <Link href="/answers" className="text-sky/80 hover:text-white">
+                  Answers
+                </Link>
+              </li>
+              <li>
                 <Link href="/courses" className="text-sky/80 hover:text-white">
                   Programs
                 </Link>

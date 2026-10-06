@@ -27,7 +27,11 @@ for (const page of seoMoneyLinks) {
 
     const html = await browserPage.content();
     expect(html).toContain('"@type":"FAQPage"');
+    expect(html).toContain('"@type":"BreadcrumbList"');
     expect(html).toContain(page.title);
+    for (const raw of await browserPage.locator('script[type="application/ld+json"]').allTextContents()) {
+      expect(JSON.parse(raw)["@context"]).toBe("https://schema.org");
+    }
 
     if (page.path.startsWith("/data-engineering-course")) {
       expect(html).toContain('"@type":"Course"');

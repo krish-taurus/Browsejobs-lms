@@ -88,6 +88,11 @@ export default function CoursesPage() {
                     </Link>
                   </li>
                 ))}
+              <li>
+                <Link href="/answers" className="font-semibold text-trust hover:underline">
+                  Straight answers
+                </Link>
+              </li>
             </ul>
           </div>
         </ScrollReveal>

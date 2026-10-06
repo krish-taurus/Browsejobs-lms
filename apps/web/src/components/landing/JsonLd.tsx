@@ -1,59 +1,19 @@
-import { contact, courses, faqs } from "@/content/landing";
-import { canonical } from "@/lib/seo";
+import { courses, faqs } from "@/content/landing";
+import { courseNode, faqNode, jsonLdGraph } from "@/lib/seo";
 
 /**
- * JSON-LD (spec §11): EducationalOrganization + the live Courses + FAQPage.
+ * Homepage graph: live Course entities plus FAQPage.
+ * Organization, WebSite, and the founder Person are emitted once from the root layout.
  */
 export function JsonLd() {
-  const data = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "EducationalOrganization",
-        name: "BrowseJobs",
-        legalName: contact.entity,
-        url: "https://browsejobs.ai",
-        telephone: contact.phone,
-        email: contact.email,
-        address: {
-          "@type": "PostalAddress",
-          addressLocality: "Bengaluru",
-          addressRegion: "Karnataka",
-          postalCode: "560066",
-          addressCountry: "IN",
-        },
-        description:
-          "AI-driven IT skilling & placement platform. The syllabus is reverse-engineered from real interviews.",
-      },
-      ...courses
-        .filter((c) => c.live)
-        .map((c) => ({
-          "@type": "Course",
-          name: c.slug === "data-engineering" ? "Data Engineering Course with Placement" : `${c.name} Course`,
-          description: c.tagline,
-          url: canonical(`/courses/${c.slug}`),
-          provider: {
-            "@type": "EducationalOrganization",
-            name: "BrowseJobs",
-            url: "https://browsejobs.ai",
-          },
-          offers: {
-            "@type": "Offer",
-            category: "Registration",
-            price: "30000",
-            priceCurrency: "INR",
-          },
-        })),
-      {
-        "@type": "FAQPage",
-        mainEntity: faqs.map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      },
-    ],
-  };
+  const data = jsonLdGraph([
+    ...courses.flatMap((course) => {
+      if (!course.live) return [];
+      const node = courseNode(course.slug);
+      return node ? [node] : [];
+    }),
+    faqNode(faqs),
+  ]);
 
   return (
     <script

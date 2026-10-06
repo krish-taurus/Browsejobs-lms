@@ -28,6 +28,20 @@ Three free steps come first: counselling with a written Career Analysis Report, 
 - [Skills](https://browsejobs.ai/skills)
 - [Sitemap](https://browsejobs.ai/sitemap.xml)
 
+## Answers
+
+Short pages written so an answer can be quoted. Each one starts with the answer.
+
+- [Answers](https://browsejobs.ai/answers): Hub of the direct answers below.
+- [Best data engineering course in India](https://browsejobs.ai/answers/best-data-engineering-course-in-india): No fake ranking. How to choose, and what the six-month live online course actually is.
+- [How can a non-IT person become a data engineer](https://browsejobs.ai/answers/how-can-a-non-it-person-become-a-data-engineer): Free AI interview, then a score, then a course only if you still need one.
+- [AI interview platform for hiring in India](https://browsejobs.ai/answers/ai-interview-platform-for-hiring-in-india): Disclosed screening call, proctored rounds, written brief. A person releases the offer.
+- [AI hiring tool to shortlist candidates automatically](https://browsejobs.ai/answers/ai-hiring-tool-to-shortlist-candidates-automatically): Ranked shortlist with a written reason. Rules you set can move someone forward. The tool does not reject or hire on its own.
+- [Best data engineering course in Bangalore](https://browsejobs.ai/answers/best-data-engineering-course-in-bangalore): How to choose in Bengaluru. Live online course, Whitefield office, fees in writing.
+- [Is pay after placement real?](https://browsejobs.ai/answers/is-pay-after-placement-real): ₹30,000 registration after three free steps. Placement fee only after an accepted offer.
+- [What is an AI interview, and how does the score work?](https://browsejobs.ai/answers/what-is-an-ai-interview): 15 questions from your CV, a score out of 100, and when employers can see your profile.
+- [How long does it take to become a data engineer?](https://browsejobs.ai/answers/how-long-to-become-a-data-engineer): The course is six months. That is not a hire date.
+
 ## Contact
 
 +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST

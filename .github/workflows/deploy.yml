@@ -33,3 +33,20 @@ jobs:
             sudo bash /var/www/browsejobs/deploy/deploy.sh update
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+
+  # Pings IndexNow with the live sitemap after production is updated.
+  # Unreachable API must not fail the deploy. Pull requests never run this workflow.
+  indexnow:
+    name: IndexNow
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Submit sitemap URLs
+        working-directory: apps/web
+        run: node scripts/indexnow.mjs --soft
