@@ -2,10 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { safeNextPath } from "@/lib/safeNext";
+
+function afterLogin(): string {
+  return safeNextPath(new URLSearchParams(window.location.search).get("next")) ?? "/dashboard";
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,6 +22,11 @@ export default function RegisterPage() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [nextPath, setNextPath] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setNextPath(safeNextPath(new URLSearchParams(window.location.search).get("next")) ?? undefined);
+  }, []);
 
   const payload = () => ({
     name,
@@ -52,7 +62,7 @@ export default function RegisterPage() {
         method: "POST",
         body: JSON.stringify({ ...payload(), code }),
       });
-      router.push("/dashboard");
+      router.push(afterLogin());
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
     } finally {
@@ -107,7 +117,7 @@ export default function RegisterPage() {
                   {busy ? "Sending…" : "Send code"}
                 </button>
               </form>
-              <GoogleButton />
+              <GoogleButton next={nextPath} />
             </>
           ) : (
             <form onSubmit={verify} className="mt-6 space-y-4">

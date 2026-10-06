@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/landing/JsonLd";
+import { MarketingShell } from "@/components/landing/MarketingShell";
+import { HomeHero } from "@/components/home/HomeHero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { GapFork } from "@/components/home/GapFork";
+import { CourseStrip } from "@/components/home/CourseStrip";
+import { ProofAndPay } from "@/components/home/ProofAndPay";
+import { HomeClose } from "@/components/home/HomeClose";
+import { homeNav } from "@/content/home";
 import { canonical } from "@/lib/seo";
-import V3Landing from "./v3/page";
 
-const TITLE = "Data Engineering & AI Courses in Bengaluru — Pay After You're Hired | BrowseJobs";
+const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
 const DESCRIPTION =
-  "Data Engineering and AI courses from Bengaluru. Three free steps before you pay. The placement fee is due only after you accept an offer. Built from real interviews.";
+  "Take a free AI interview. Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear and puts you in front of HR with your score. Counselling and a course come only if you still need them.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -23,18 +30,21 @@ export const metadata: Metadata = {
 };
 
 /**
- * Home — the keynote landing (v3 template, promoted to live): hero → dashboard →
- * manifesto → path → AI scenes → bento → programs → career report → fees →
- * verify → stories (LLM question bank) → reviews → market signals → CTA.
- * /v3 remains as a preview alias of the same component. The previous section
- * components (MarketPulse, IntelBoard, SalaryExplorer, …) remain available
- * under components/landing for reuse inside the template.
+ * Home — night job-first funnel. The document title, description and
+ * canonical stay the production homepage metadata. /v3 keeps the keynote.
  */
 export default function Home() {
   return (
     <>
       <JsonLd />
-      <V3Landing />
+      <MarketingShell links={homeNav} ctaLabel="Take your free AI interview" ctaHref="#interview-start" tone="night">
+        <HomeHero />
+        <HowItWorks />
+        <GapFork />
+        <CourseStrip />
+        <ProofAndPay />
+        <HomeClose />
+      </MarketingShell>
     </>
   );
 }

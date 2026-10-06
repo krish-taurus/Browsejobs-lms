@@ -264,6 +264,119 @@ body {
   .ai-eq-bar {
     animation: none;
   }
+  .home-orbit,
+  .home-scan {
+    animation: none;
+  }
+  .home-beat {
+    animation: none;
+    opacity: 0;
+  }
+  .home-beat:first-child {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Homepage canvas. A night product surface for `/` only — deeper than the
+ * light marketing pages, still the brand blue / green / amber roles.
+ * Scoped so other routes keep the paper theme.
+ */
+.home-canvas {
+  --bj-paper: #05070d;
+  --bj-surface: #101826;
+  --bj-fg: #f5f7fb;
+  --bj-muted: #9aabc4;
+  --bj-line: rgba(226, 236, 255, 0.14);
+  --bj-ink2: #d7e2f2;
+  --bj-trust: #4d8ef7;
+  --bj-deep: #b9d4ff;
+  --bj-verify: #3dcca0;
+  --bj-verify-bg: rgba(61, 204, 160, 0.16);
+  --bj-sky: #b7d4ff;
+  --bj-amber: #e8bf63;
+  --bj-warn: #f0a8ae;
+  background-color: #05070d;
+  color: var(--bj-fg);
+  min-height: 100vh;
+}
+
+.home-grid {
+  background-image:
+    linear-gradient(to right, rgba(226, 236, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 236, 255, 0.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+.home-glow {
+  background:
+    radial-gradient(520px 320px at 78% 18%, rgba(77, 142, 247, 0.28), transparent 70%),
+    radial-gradient(420px 280px at 8% 80%, rgba(14, 63, 169, 0.35), transparent 70%);
+}
+
+.home-orbit {
+  animation: home-orbit 16s linear infinite;
+}
+
+@keyframes home-orbit {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.home-scan {
+  animation: home-scan 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes home-scan {
+  0% {
+    transform: translate3d(0, -120%, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(0, 640%, 0);
+    opacity: 0;
+  }
+}
+
+/* Four portrait captions. Each holds ~1/4 of a 14s loop. */
+.home-beat {
+  animation: home-beat 14s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.home-beat:nth-child(2) {
+  animation-delay: -10.5s;
+}
+
+.home-beat:nth-child(3) {
+  animation-delay: -7s;
+}
+
+.home-beat:nth-child(4) {
+  animation-delay: -3.5s;
+}
+
+@keyframes home-beat {
+  0%,
+  16% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  22%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
+.home-frame {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 80px rgba(27, 109, 240, 0.22);
 }
 
 /*

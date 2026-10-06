@@ -16,17 +16,20 @@ export function BookCta({
   variant = "masterclass",
   courseSlug,
   ghost = false,
+  size = "md",
   className = "",
 }: {
   children?: ReactNode;
   variant?: LeadVariant;
   courseSlug?: string;
   ghost?: boolean;
+  size?: "sm" | "md";
   className?: string;
 }) {
+  const pad = size === "sm" ? "px-4 py-2 text-sm" : "px-6 py-3";
   const base = ghost
-    ? "rounded-full border border-line bg-white px-6 py-3 font-semibold text-ink transition-colors hover:border-trust"
-    : "group inline-flex items-center justify-center gap-2.5 rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-all duration-300 hover:bg-deep hover:shadow-[0_8px_32px_rgba(27,109,240,0.45)] active:scale-[0.98]";
+    ? `rounded-full border border-line bg-white ${pad} font-semibold text-ink transition-colors hover:border-trust`
+    : `group inline-flex items-center justify-center gap-2.5 rounded-full bg-trust ${pad} font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-all duration-300 hover:bg-deep hover:shadow-[0_8px_32px_rgba(27,109,240,0.45)] active:scale-[0.98]`;
 
   const button = (
     <button
