@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\Concerns\LogsInUsers;
 use App\Http\Controllers\Controller;
 use App\Models\Scopes\TenantScope;
 use App\Models\User;
+use App\Support\Auth\SafeNextPath;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,9 +26,14 @@ final class GoogleAuthController extends Controller
 {
     use LogsInUsers;
 
-    public function redirect(): RedirectResponse
+    public function redirect(Request $request): RedirectResponse
     {
         abort_unless($this->enabled(), 404);
+
+        $next = SafeNextPath::check($request->query('next'));
+        if ($next !== null) {
+            $request->session()->put('auth.intended', $next);
+        }
 
         return Socialite::driver('google')->redirect();
     }
@@ -76,7 +82,12 @@ final class GoogleAuthController extends Controller
 
         $this->startSession($request, $user);
 
-        return redirect()->to($frontend.'/dashboard');
+        return redirect()->to($frontend.$this->intendedPath($request));
+    }
+
+    private function intendedPath(Request $request): string
+    {
+        return SafeNextPath::check($request->session()->pull('auth.intended')) ?? '/dashboard';
     }
 
     private function enabled(): bool

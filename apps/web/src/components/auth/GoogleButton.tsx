@@ -9,7 +9,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
  * "Continue with Google" — renders only when the API reports Google auth is
  * configured (spec §7: optional Google sign-in).
  */
-export function GoogleButton() {
+export function GoogleButton({ next }: { next?: string } = {}) {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function GoogleButton() {
         <span className="h-px flex-1 bg-line" />
       </div>
       <a
-        href={`${API_BASE}/auth/google/redirect`}
+        href={`${API_BASE}/auth/google/redirect${next ? `?next=${encodeURIComponent(next)}` : ""}`}
         className="flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white py-3 font-semibold text-ink transition-colors hover:border-trust"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
