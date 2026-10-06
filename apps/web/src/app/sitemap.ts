@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...liveCourseSlugs.map((slug) => dated(`/courses/${slug}`, 0.8)),
     dated("/masterclass", 0.9),
     dated("/employers", 0.9),
+    dated("/get-hired", 0.9),
     dated("/jobs", 0.8),
     dated("/brief", 0.8),
     dated("/salaries", 0.8),

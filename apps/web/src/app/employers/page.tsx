@@ -2,7 +2,7 @@
 
 /**
  * /employers — cinematic enterprise-AI landing page for the employer side
- * (Taurus AI, Jobs, Pipeline, Team, Dashboard). Self-contained page, styled
+ * (AI interviews, Jobs, Pipeline, Team, Dashboard). Self-contained page, styled
  * with a local dark/electric-blue palette (scoped CSS vars below) distinct
  * from the public site's own light --bj-* tokens, matching the brief's
  * "premium investor-ready SaaS" direction. Reuses the shared Wordmark and
@@ -264,7 +264,7 @@ function CockpitChatPanel() {
         <span className="grid size-6 place-items-center rounded-full bg-gradient-to-br from-[var(--eb-blue2)] to-[var(--eb-blue)] text-white">
           <RobotIcon className="size-3" />
         </span>
-        <span className="text-xs font-semibold text-white">Taurus AI</span>
+        <span className="text-xs font-semibold text-white">AI interview</span>
         <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[var(--eb-blue2)]">
           <span className="size-1.5 animate-pulse rounded-full bg-[var(--eb-blue2)]" /> interview in progress
         </span>
@@ -519,7 +519,7 @@ function Workspace() {
         </Reveal>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-12">
-          {/* Taurus AI — large */}
+          {/* AI interviews — large */}
           <Reveal className="lg:col-span-6">
             <BentoShell className="h-full">
               <div className="grid h-full gap-5 sm:grid-cols-[.78fr_1.22fr] sm:items-center">
@@ -527,7 +527,7 @@ function Workspace() {
                   <IconBadge>
                     <RobotIcon className="size-4" />
                   </IconBadge>
-                  <h3 className="font-display mt-3 text-xl font-bold tracking-tight">Taurus AI Interviews</h3>
+                  <h3 className="font-display mt-3 text-xl font-bold tracking-tight">AI interviews</h3>
                   <p className="mt-1 max-w-sm text-sm leading-relaxed text-[var(--eb-navy2)]">
                     AI conducts realistic, role-specific interviews with every applicant.
                   </p>
@@ -545,7 +545,7 @@ function Workspace() {
                     <span className="grid size-6 place-items-center rounded-full bg-gradient-to-br from-[var(--eb-blue2)] to-[var(--eb-blue)] text-white">
                       <RobotIcon className="size-3" />
                     </span>
-                    <span className="text-xs font-semibold text-[var(--eb-ink)]">Taurus AI</span>
+                    <span className="text-xs font-semibold text-[var(--eb-ink)]">AI interview</span>
                     <span className="ml-auto size-1.5 rounded-full bg-[#24c78f]" />
                   </div>
                   <div className="relative mt-3 max-w-[88%] rounded-xl rounded-tl-sm bg-white p-3 text-[12px] leading-snug text-[var(--eb-ink)] shadow-sm">
@@ -700,7 +700,7 @@ function Workspace() {
 /* -------------------------------- how it works ----------------------------- */
 
 const STEPS = [
-  { n: "01", icon: DocumentIcon, title: "Post the role", body: "Tell Taurus AI about the role — skills, experience, and what good looks like." },
+  { n: "01", icon: DocumentIcon, title: "Post the role", body: "Tell us about the role — skills, experience, and what good looks like." },
   { n: "02", icon: RobotIcon, title: "Real interviews", body: "Every applicant takes a job-specific, AI-led interview with tailored questions." },
   { n: "03", icon: TrendUpIcon, title: "Score & transcript", body: "Get a clear score, full transcript, and skill breakdown for every candidate." },
   { n: "04", icon: UsersIcon, title: "You decide", body: "Review the ranked shortlist and move forward with confidence." },
@@ -939,7 +939,7 @@ const FOOTER_COLS = [
   {
     title: "Product",
     links: [
-      { label: "Taurus AI", href: "#workspace" },
+      { label: "AI interviews", href: "#workspace" },
       { label: "Jobs", href: "/jobs" },
       { label: "Pipeline", href: "#workspace" },
     ],

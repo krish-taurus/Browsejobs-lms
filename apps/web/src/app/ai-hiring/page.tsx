@@ -25,11 +25,11 @@ const page = SEO_PAGES.aiHiring;
 const faqs = [
   {
     q: "What does the AI hiring platform actually do?",
-    a: "You paste a job description, or start from a title and notes. The AI drafts a structured role — skills, experience band, locations, knockout questions — and you publish it. Applicants are ranked with a written reason. An AI caller screens the shortlist and files a transcript and a recording. L1 and L2, or rounds you design, run async and proctored. Your team gets a graded report before anyone meets the candidate. Offer release is a human action. It is never automated.",
+    a: "You paste a job description, or start from a title and notes. The AI drafts a structured role — skills, experience band, locations, knockout questions — and you publish it. Applicants are ranked with a written reason. What runs next is an async, role-specific AI interview, spoken or typed, graded against that job's rubric. A human round is a conversation your team holds. It is not generated. Your team gets a graded report before anyone meets the candidate. Scores stay empty until grading finishes. Offer release is a human action. It is never automated.",
   },
   {
     q: "Is this a replacement for our recruiters?",
-    a: "No. It takes the first-pass work — structuring the JD, ranking, the screening call, and the async rounds — off the hours your team currently spends on the inbox. Your recruiters and hiring managers still set the bar, read the evidence, and decide. Automation can park someone for review. It cannot terminally reject them, and it cannot release an offer.",
+    a: "No. It takes the first-pass work — structuring the JD, ranking, and the async AI interview — off the hours your team currently spends on the inbox. Your recruiters and hiring managers still set the bar, read the evidence, and decide. Automation can park someone for review. It cannot terminally reject them, and it cannot release an offer.",
   },
   {
     q: "Can we hire people who have already been interviewed?",
@@ -45,7 +45,7 @@ const faqs = [
   },
   {
     q: "Do you run background verification?",
-    a: "Not the full check. A Trust Score built from DigiLocker ID, PAN, education certificates, and EPFO employment history is on the roadmap and is not available. What you get today is interview evidence: video replay, transcript, per-rubric scores, and the proctoring record. A flag never auto-rejects anyone.",
+    a: "Not the full check. A Trust Score built from DigiLocker ID, PAN, education certificates, and EPFO employment history is on the roadmap and is not available. What you get today is the interview: the answers, per-rubric scores once graded, and a written read of what was strong and what was thin. Camera and window-switch checks are not captured, so a blank panel is not a pass. A flag, when you have one, never auto-rejects anyone.",
   },
   {
     q: "Will this connect to the ATS we already pay for?",
@@ -78,7 +78,7 @@ export default function AiHiringPage() {
       },
       areaServed: "IN",
       description:
-        "AI hiring pipeline for teams: JD structuring, ranked applicants, an AI screening call, proctored interview rounds, and a written brief. Offer release stays with a human. Free for six months.",
+        "AI hiring pipeline for teams: JD structuring, ranked applicants, a role-specific AI interview, and a written brief. Scores stay empty until graded. Offer release stays with a human. Free for six months.",
     },
     faqNode(faqs),
   ]);
@@ -94,10 +94,10 @@ export default function AiHiringPage() {
         lede={
           <p>
             BrowseJobs AI hiring is a pipeline for teams, not a student course. You bring a role. The product
-            structures the job description, ranks applicants with a written reason, places a screening call, runs L1
-            and L2 or a round you design, and hands your HR team a graded brief before a human meeting. The first
-            six months are free. We do not publish a hire rate, a time-to-fill, or a claim that this beats another
-            ATS.
+            structures the job description, ranks applicants with a written reason, runs a role-specific AI
+            interview, and hands your HR team a graded brief before a human meeting. The first six months are free.
+            We do not publish a hire rate, a time-to-fill, or a claim that this beats another ATS. An outbound
+            phone dialler is not connected.
           </p>
         }
       />
@@ -121,7 +121,7 @@ export default function AiHiringPage() {
         <p>
           Every stage below is copied from the employer product that ships at <TextLink href="/employers">/employers</TextLink>.
           If a capability is missing from this list, it is not something you can buy today. The interview-specific
-          page — what the candidate hears, how rounds are proctored, what the brief contains — is{" "}
+          page — what the candidate sits, what the brief contains, and what is not captured — is{" "}
           <TextLink href="/ai-interview-platform">the AI interview platform</TextLink>.
         </p>
         <EmployerPipeline />
@@ -155,7 +155,7 @@ export default function AiHiringPage() {
         <p>
           Onboard, connect roles, and run the pipeline at no cost for six months. No card. No lock-in. Before that
           period ends we meet and agree what happens next. Agency is 8% of annual CTC per successful hire. The
-          per-interview alternative, including the AI caller, is priced against your volume on that call — the site
+          per-interview alternative is priced against your volume on that call — the site
           does not print a rupee figure for it, so this page will not invent one. Interview-only hiring is available
           on that second model. Nothing is charged without a written agreement.
         </p>
@@ -184,7 +184,7 @@ export default function AiHiringPage() {
       <RelatedLinks
         links={[
           { href: "/employers", label: "Employers", note: "The product page, with the pipeline and the enquiry form." },
-          { href: "/ai-interview-platform", label: "AI interview platform", note: "Screening calls, proctored rounds, and the brief." },
+          { href: "/ai-interview-platform", label: "AI interview platform", note: "Role-specific interviews, empty until graded, and the brief." },
           { href: "/employer", label: "Employer sign in", note: "Workspace for teams already onboarded." },
         ]}
       />

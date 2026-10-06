@@ -13,7 +13,7 @@ export const metadata: Metadata = moneyMetadata({
   path: "/employers",
   title: "Hire from Real, Scored AI Interviews",
   description:
-    "Post a role with Taurus AI, set up your interview rounds, and review a scored interview transcript for every applicant before you decide who to talk to.",
+    "Post a role, set up your interview rounds, and review a scored interview transcript for every applicant before you decide who to talk to.",
 });
 
 export default function EmployersLayout({ children }: { children: React.ReactNode }) {
