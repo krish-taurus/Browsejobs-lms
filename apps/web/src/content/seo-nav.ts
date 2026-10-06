@@ -40,7 +40,7 @@ export const SEO_PAGES = {
     path: "/ai-hiring",
     title: "AI Hiring Platform for Teams in India",
     description:
-      "AI hiring for teams: structure the JD, rank applicants, run a screening call and interview rounds, then read a written brief. Free for six months. You still make the hire.",
+      "AI hiring for teams: structure the JD, rank applicants, run a role-specific AI interview, then read a written brief. Free for six months. You still make the hire.",
     footerLabel: "AI hiring",
     priority: 0.8,
   },
@@ -48,7 +48,7 @@ export const SEO_PAGES = {
     path: "/ai-interview-platform",
     title: "AI Interview Platform for Hiring Teams",
     description:
-      "Screening calls that tell the candidate it is an AI, proctored L1 and L2 rounds, and a written brief. Automation never releases an offer.",
+      "Role-specific AI interviews, scored only after grading, then a written brief. Camera checks are not captured. Automation never releases an offer.",
     footerLabel: "AI interview platform",
     priority: 0.75,
   },

@@ -58,11 +58,7 @@ export function EmployerPricing() {
         <p className="mt-2 text-sm leading-relaxed text-ink2">{PRICING.free.body}</p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink2">
           {PRICING.free.points.map((point) => (
-            <li key={point}>
-              {point === "High-level BGV on finalists"
-                ? "Interview evidence on finalists: replays, transcripts, per-rubric scores, and the proctoring record. A full background check (DigiLocker, PAN, education, EPFO) is on the roadmap and is not available yet."
-                : point}
-            </li>
+            <li key={point}>{point}</li>
           ))}
         </ul>
       </div>
