@@ -1,4 +1,6 @@
+import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScreenScroll } from "@/components/home/ScreenScroll";
+import { CLEAR_PICKUP } from "@/content/home";
 
 export function HowItWorks() {
   return (
@@ -11,8 +13,12 @@ export function HowItWorks() {
         <p className="mt-4 max-w-2xl text-lg text-muted">
           You take the interview. You get a score. Then one of two things happens. A course comes later, and only if you need it.
         </p>
+        <div className="mt-8 max-w-3xl rounded-[14px] border border-white/10 bg-white/5 p-5 md:p-6">
+          <p className="text-base leading-relaxed text-fg md:text-lg">{CLEAR_PICKUP}</p>
+          <Disclaimer className="mt-3" />
+        </div>
       </div>
-      <div className="mx-auto max-w-6xl px-5 pb-8">
+      <div className="mx-auto max-w-6xl px-5 pb-16 md:pb-24">
         <ScreenScroll />
       </div>
     </section>

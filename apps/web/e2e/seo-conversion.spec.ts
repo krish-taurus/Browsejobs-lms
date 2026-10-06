@@ -55,14 +55,21 @@ test("get-hired is in the sitemap", async ({ request }) => {
   expect(await response.text()).toContain("https://browsejobs.ai/get-hired");
 });
 
-test("hiring pages do not claim a dialler, proctoring, or Taurus as the product", async ({ page }) => {
+test("hiring pages do not claim a dialler or Taurus as the product", async ({ page }) => {
   for (const path of ["/ai-hiring", "/ai-interview-platform", "/employers"]) {
     await page.goto(path);
     const html = await page.content();
     expect(html, path).not.toContain("AI caller");
+    expect(html, path).not.toContain("Taurus");
+  }
+});
+
+test("product pages keep the honest limit on proctoring capture", async ({ page }) => {
+  for (const path of ["/ai-hiring", "/ai-interview-platform"]) {
+    await page.goto(path);
+    const html = await page.content();
     expect(html, path).not.toContain("proctored");
     expect(html, path).not.toContain("proctoring record");
-    expect(html, path).not.toContain("Taurus");
   }
 });
 

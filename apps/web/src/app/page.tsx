@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/landing/JsonLd";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { EmployerBand } from "@/components/home/EmployerBand";
 import { GapFork } from "@/components/home/GapFork";
 import { CourseStrip } from "@/components/home/CourseStrip";
 import { ProofAndPay } from "@/components/home/ProofAndPay";
@@ -40,6 +41,7 @@ export default function Home() {
       <MarketingShell links={homeNav} ctaLabel="Take your free AI interview" ctaHref="#interview-start" tone="night">
         <HomeHero />
         <HowItWorks />
+        <EmployerBand />
         <GapFork />
         <CourseStrip />
         <ProofAndPay />

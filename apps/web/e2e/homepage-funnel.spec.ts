@@ -67,6 +67,52 @@ test("desktop hero keeps the interview form as the first action", async ({ page 
   );
 });
 
+test("how it works scrolls into the employer section without a pin", async ({ page }) => {
+  for (const width of [390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+
+    const stickyInsideSteps = await page.locator("#how *").evaluateAll((nodes) =>
+      nodes.some((node) => getComputedStyle(node).position === "sticky"),
+    );
+    expect(stickyInsideSteps, `sticky pin at ${width}`).toBe(false);
+
+    await expect(page.locator("#how")).toContainText("500%");
+    await expect(page.locator("#how")).toContainText("pre-qualified for the interview");
+
+    const card = page.getByText("Walk me through a pipeline you would ship this month");
+    const next = page.locator("#for-employers");
+    await expect(card).toBeAttached();
+    await expect(next).toBeAttached();
+
+    const cardBox = await card.boundingBox();
+    const nextBox = await next.boundingBox();
+    expect(cardBox, `interview card at ${width}`).not.toBeNull();
+    expect(nextBox, `employer section at ${width}`).not.toBeNull();
+    expect(nextBox!.y).toBeGreaterThan(cardBox!.y + cardBox!.height);
+
+    await next.scrollIntoViewIfNeeded();
+    const heading = next.getByRole("heading", { level: 2 });
+    const headingBox = await heading.boundingBox();
+    expect(headingBox).not.toBeNull();
+    const coveredBySteps = await page.evaluate(({ x, y }) => {
+      const top = document.elementFromPoint(x, y);
+      return top?.closest("#how") != null;
+    }, { x: headingBox!.x + 12, y: headingBox!.y + 12 });
+    expect(coveredBySteps, `steps covering employer heading at ${width}`).toBe(false);
+  }
+});
+
+test("homepage employer CTA opens the employer page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  const cta = page.getByRole("link", { name: "Hire with BrowseJobs" });
+  await cta.scrollIntoViewIfNeeded();
+  await cta.click();
+  await expect(page).toHaveURL(/\/employers$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/reverse-engineered hiring/i);
+});
+
 test("counselling modal opens from the miss path", async ({ page }) => {
   await page.goto("/");
   const counselling = page.locator("#gaps").getByRole("button", { name: "Book free counselling" });

@@ -61,6 +61,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/employers" className="text-sky/80 hover:text-white">
+                  For employers
+                </Link>
+              </li>
+              <li>
                 <Link href="/answers" className="text-sky/80 hover:text-white">
                   Answers
                 </Link>

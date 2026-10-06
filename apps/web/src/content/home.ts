@@ -69,6 +69,13 @@ export const homeNav = [
   { href: "/jobs", label: "Jobs" },
 ] as const;
 
+/**
+ * Krish's claim, rendered once in the steps section with the shared disclaimer.
+ * Do not paraphrase the 500% figure or add a second rate.
+ */
+export const CLEAR_PICKUP =
+  "If you clear the AI interview (75% or more), your CV is 500% more likely to get picked. You are pre-qualified for the interview.";
+
 export const screenSteps = [
   {
     id: "step-interview",
