@@ -8,6 +8,7 @@ use App\Enums\ProductKind;
 use App\Models\Batch;
 use App\Models\BatchMember;
 use App\Models\Course;
+use App\Models\CvDocument;
 use App\Models\CvProfile;
 use App\Models\JobFeedItem;
 use App\Models\JobFeedSource;
@@ -34,10 +35,13 @@ use function Pest\Laravel\postJson;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
     $this->student = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
-    withinTenant($this->tenant, fn () => CvProfile::query()->create([
-        'tenant_id' => $this->tenant->id, 'user_id' => $this->student->id,
-        'data' => ['skills' => ['Python', 'SQL']],
-    ]));
+    withinTenant($this->tenant, function () {
+        CvProfile::query()->create([
+            'tenant_id' => $this->tenant->id, 'user_id' => $this->student->id,
+            'data' => ['skills' => ['Python', 'SQL']],
+        ]);
+        CvDocument::factory()->create(['user_id' => $this->student->id]);
+    });
 });
 
 function prepItem(Tenant $tenant, array $overrides = []): JobFeedItem

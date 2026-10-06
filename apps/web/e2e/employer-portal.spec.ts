@@ -38,7 +38,7 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
   // `.first()` to the marketing site instead of the jobs list.
   await page.getByRole("link", { name: "Jobs", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Your job descriptions" })).toBeVisible();
-  await page.getByRole("link", { name: /Data Engineer/ }).first().click();
+  await page.getByRole("link", { name: "View details" }).first().click();
   await expect(page.getByRole("heading", { name: "Data Engineer" })).toBeVisible();
 
   // The JD mock generated at publish time: rubric weights + questions.
@@ -62,7 +62,9 @@ test("command palette jumps to a JD", async ({ page }) => {
   const palette = page.getByRole("dialog", { name: "Command palette" });
   await expect(palette).toBeVisible();
   await palette.getByPlaceholder("Jump to a screen or JD…").fill("Data");
-  await page.keyboard.press("Enter");
+  // Jobs load after the palette opens. Click the JD once it is listed
+  // rather than pressing Enter against an empty result set.
+  await palette.getByRole("button", { name: "Data Engineer" }).click();
 
   await expect(page).toHaveURL(/\/employer\/jobs\/\d+/);
 });

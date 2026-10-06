@@ -30,10 +30,10 @@ it('clamps EMI due dates at month end (31 Jan -> 28 Feb)', function () {
     expect($rows[1]['due_on'])->toBe('2026-02-28');
 });
 
-it('applies a discount to instalment 1, still summing to net', function () {
+it('spreads a discount across every instalment, still summing to net', function () {
     $rows = app(PreviewSchedule::class)->handle(FeePlanType::Emi, 3, 3_000_000, 300_000, Carbon::parse('2026-07-16'));
 
-    expect($rows[0]['amount_paise'])->toBe(700_000)
+    expect(array_column($rows, 'amount_paise'))->toBe([900_000, 900_000, 900_000])
         ->and(array_sum(array_column($rows, 'amount_paise')))->toBe(2_700_000);
 });
 

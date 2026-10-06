@@ -50,10 +50,10 @@ final class DuesFeeGate implements FeeGate
     private function hasActiveExtension(User $student, Batch $batch): bool
     {
         $plan = FeePlan::query()->withoutGlobalScopes()
-            ->where("user_id", $student->id)
-            ->where("batch_id", $batch->id)
-            ->whereNotNull("access_extended_until")
-            ->latest("id")
+            ->where('user_id', $student->id)
+            ->where('batch_id', $batch->id)
+            ->whereNotNull('access_extended_until')
+            ->latest('id')
             ->first();
 
         return $plan?->accessExtensionActive() ?? false;

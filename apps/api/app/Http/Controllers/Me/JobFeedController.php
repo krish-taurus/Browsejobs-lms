@@ -31,43 +31,48 @@ final class JobFeedController extends Controller
 {
     public function index(Request $request, JobsForYou $feed): JsonResponse
     {
-        $rows = $feed->for($request->user());
-        $confidence = new ConfidenceScorer($request->user());
-        $kit = $this->kit($request->user());
-        // JobsForYou itself returns nothing without a CV — this just tells the
-        // frontend *why* the list is empty, so it can point someone at My CV
-        // instead of implying their profile genuinely has no matches.
-        $hasCv = CvDocument::query()->where('user_id', $request->user()->id)->exists();
+        // me/ routes carry no tenant context. Ranking reads monetization
+        // settings, which are tenant-owned, so the whole response runs inside
+        // the student's tenant.
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $feed): JsonResponse {
+            $rows = $feed->for($request->user());
+            $confidence = new ConfidenceScorer($request->user());
+            $kit = $this->kit($request->user());
+            // JobsForYou itself returns nothing without a CV — this just tells the
+            // frontend *why* the list is empty, so it can point someone at My CV
+            // instead of implying their profile genuinely has no matches.
+            $hasCv = CvDocument::query()->where('user_id', $request->user()->id)->exists();
 
-        return app(TenantContext::class)->run($request->user()->tenant, fn (): JsonResponse => response()->json([
-            'has_cv' => $hasCv,
-            'data' => array_map(function (array $row) use ($confidence, $kit) {
-                $c = $confidence->for((int) $row['match_pct']);
+            return response()->json([
+                'has_cv' => $hasCv,
+                'data' => array_map(function (array $row) use ($confidence, $kit) {
+                    $c = $confidence->for((int) $row['match_pct']);
 
-                return [
-                    'id' => $row['item']->id,
-                    'title' => $row['item']->title,
-                    'company' => $row['item']->company,
-                    'location' => $row['item']->location,
-                    'work_mode' => $row['item']->work_mode,
-                    'source_kind' => $row['item']->source_kind,
-                    'apply_url' => $row['item']->apply_url,
-                    'posted_at' => $row['item']->posted_at?->toDateString(),
-                    'match_pct' => $row['match_pct'],
-                    'matched' => $row['matched'],
-                    'gap' => $row['gap'],
-                    'saved' => $row['saved'],
-                    'confidence_pct' => $c['confidence_pct'],
-                    'confidence_based_on' => $c['based_on'],
-                    'has_mock_signal' => $confidence->hasMock(),
-                    'unlocked' => $kit->unlockedFor($row['item']),
-                ];
-            }, $rows),
-            'kit' => [
-                'credits' => $kit->creditBalance(),
-                'offers' => $kit->offers(),
-            ],
-        ]));
+                    return [
+                        'id' => $row['item']->id,
+                        'title' => $row['item']->title,
+                        'company' => $row['item']->company,
+                        'location' => $row['item']->location,
+                        'work_mode' => $row['item']->work_mode,
+                        'source_kind' => $row['item']->source_kind,
+                        'apply_url' => $row['item']->apply_url,
+                        'posted_at' => $row['item']->posted_at?->toDateString(),
+                        'match_pct' => $row['match_pct'],
+                        'matched' => $row['matched'],
+                        'gap' => $row['gap'],
+                        'saved' => $row['saved'],
+                        'confidence_pct' => $c['confidence_pct'],
+                        'confidence_based_on' => $c['based_on'],
+                        'has_mock_signal' => $confidence->hasMock(),
+                        'unlocked' => $kit->unlockedFor($row['item']),
+                    ];
+                }, $rows),
+                'kit' => [
+                    'credits' => $kit->creditBalance(),
+                    'offers' => $kit->offers(),
+                ],
+            ]);
+        });
     }
 
     /** How many questions a locked viewer sees for free. */

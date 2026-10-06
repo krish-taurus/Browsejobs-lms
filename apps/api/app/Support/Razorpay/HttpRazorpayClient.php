@@ -90,12 +90,12 @@ final class HttpRazorpayClient implements RazorpayClient
 
     public function fetchOrder(string $orderId): array
     {
-        $response = $this->request()->get($this->config["base_url"]."/orders/{$orderId}")->throw()->json();
+        $response = $this->request()->get($this->config['base_url']."/orders/{$orderId}")->throw()->json();
 
         return [
-            "receipt" => isset($response["receipt"]) ? (string) $response["receipt"] : null,
-            "amount_paise" => isset($response["amount"]) ? (int) $response["amount"] : null,
-            "status" => isset($response["status"]) ? (string) $response["status"] : null,
+            'receipt' => isset($response['receipt']) ? (string) $response['receipt'] : null,
+            'amount_paise' => isset($response['amount']) ? (int) $response['amount'] : null,
+            'status' => isset($response['status']) ? (string) $response['status'] : null,
         ];
     }
 

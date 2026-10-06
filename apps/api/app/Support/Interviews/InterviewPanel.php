@@ -7,6 +7,7 @@ namespace App\Support\Interviews;
 use App\Models\MentorProfile;
 use App\Models\MentorSession;
 use App\Models\Scopes\TenantScope;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -60,7 +61,7 @@ final class InterviewPanel
             return 'a time to be confirmed';
         }
 
-        return \Illuminate\Support\Carbon::instance(
+        return Carbon::instance(
             \DateTimeImmutable::createFromInterface($at)
         )->timezone('Asia/Kolkata')->format('D, d M Y · g:i A').' IST';
     }

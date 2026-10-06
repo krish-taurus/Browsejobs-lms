@@ -69,7 +69,7 @@ final readonly class CreateEmployerJob
      * (and its mock interview) is ever created, whether the request came from
      * the manual form or Neural Ops dictating one out loud.
      *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     private function guardAgainstDuplicate(EmployerWorkspace $workspace, array $attributes): void
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\Employers\RecordApplicationGrade;
 use App\Enums\EmployerApplicationStage;
+use App\Models\CvDocument;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
@@ -36,9 +37,31 @@ it('lets a candidate browse and apply free, once', function (): void {
         ->assertOk()
         ->assertJsonPath('data.0.id', $this->job->id);
 
+    withinTenant($this->tenant, function () {
+        CvDocument::factory()->create(['user_id' => $this->candidate->id]);
+        $blueprint = MockBlueprint::query()->create([
+            'tenant_id' => $this->tenant->id,
+            'employer_job_id' => $this->job->id,
+            'role_title' => $this->job->title,
+            'competencies' => ['python'],
+            'opening_question' => 'Tell me about yourself.',
+            'is_active' => false,
+        ]);
+        MockInterview::query()->create([
+            'tenant_id' => $this->tenant->id,
+            'user_id' => $this->candidate->id,
+            'mock_blueprint_id' => $blueprint->id,
+            'mode' => MockInterview::MODE_TEXT,
+            'status' => MockInterview::STATUS_COMPLETED,
+            'overall_score' => 70,
+            'started_at' => now()->subMinutes(20),
+            'completed_at' => now(),
+        ]);
+    });
+
     $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/apply")
         ->assertCreated()
-        ->assertJsonPath('data.stage', 'applied');
+        ->assertJsonPath('data.stage', 'graded');
 
     // Duplicate application is refused.
     $this->postJson("/api/v1/me/employer-jobs/{$this->job->id}/apply")

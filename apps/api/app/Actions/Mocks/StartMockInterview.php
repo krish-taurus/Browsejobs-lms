@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Mocks;
 
+use App\Actions\Employers\StartEmployerJobMock;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\MockTurn;
@@ -22,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  * practice (unlimited) versus the spoken interview-room experience (Aug 2026
  * candidate request) — capped per blueprint, hard stop past the cap, no
  * purchase path, and entirely separate from the employer-JD interview cap in
- * {@see \App\Actions\Employers\StartEmployerJobMock}. Deliberately two
+ * {@see StartEmployerJobMock}. Deliberately two
  * independent counters rather than one shared pool.
  */
 final readonly class StartMockInterview

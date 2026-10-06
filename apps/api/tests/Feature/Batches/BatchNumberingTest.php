@@ -22,8 +22,8 @@ it('auto-generates the {COURSE}-{YYYYMM}-{seq} number and increments it', functi
     $first = app(CreateBatch::class)->handle($this->course, BatchType::Bootcamp);
     $second = app(CreateBatch::class)->handle($this->course, BatchType::Bootcamp);
 
-    expect($first->number)->toBe('DE-202608-01')
-        ->and($second->number)->toBe('DE-202608-02');
+    expect($first->number)->toBe('DE-202608-100')
+        ->and($second->number)->toBe('DE-202608-101');
 });
 
 it('accepts a manual number override', function () {

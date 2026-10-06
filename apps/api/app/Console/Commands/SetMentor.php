@@ -8,6 +8,7 @@ use App\Console\Commands\Concerns\ResolvesCrmTargets;
 use App\Models\Course;
 use App\Models\MentorProfile;
 use App\Models\Scopes\TenantScope;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Console\Command;
 
@@ -50,7 +51,7 @@ final class SetMentor extends Command
         // Mentors flow). Id lookups never auto-create.
         if ($user === null && ! ctype_digit($identifier) && $this->option('name')) {
             $user = User::query()->create([
-                'tenant_id' => \App\Models\Tenant::query()->value('id'),
+                'tenant_id' => Tenant::query()->value('id'),
                 'name' => (string) $this->option('name'),
                 'email' => $identifier,
                 'phone' => $this->option('phone') ?: null,

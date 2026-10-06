@@ -77,4 +77,5 @@ final class LeadController extends Controller
                 'phone' => 'This number is already booked. Check your WhatsApp for the link — message us if it has not arrived.',
             ]);
         }
-    }}
+    }
+}

@@ -16,7 +16,7 @@ beforeEach(function (): void {
 });
 
 it('starts a new job seeker on the free tier', function (): void {
-    config(['monetization.signup.free_mocks' => 2, 'monetization.signup.free_cvs' => 1]);
+    config(['monetization.signup.free_mocks' => 2, 'monetization.cv.free_grants' => 1]);
 
     $seeker = User::factory()->for($this->tenant)->create(['user_type' => 'student']);
     app(GrantSignupCredits::class)->handle($seeker);

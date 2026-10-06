@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Models\Topic;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Throwable;
 
 /**
@@ -310,8 +311,8 @@ final class ManageCourseStructure extends Command
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Course>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Course>
+     * @param  Builder<Course>  $query
+     * @return Builder<Course>
      */
     private function scopeToCourse($query)
     {

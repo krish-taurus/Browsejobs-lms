@@ -55,12 +55,12 @@ it('signs a student in via OTP and starts a session', function () {
     $this->assertAuthenticated();
 });
 
-it('rejects OTP verify for an unknown account', function () {
-    spaPost('/api/v1/auth/otp/request', ['identifier' => 'ghost@acme.test'])->assertOk();
-    $code = $this->codes['ghost@acme.test'];
+it('rejects OTP request for an unknown account', function () {
+    spaPost('/api/v1/auth/otp/request', ['identifier' => 'ghost@acme.test'])
+        ->assertStatus(422)
+        ->assertJsonPath('errors.identifier.0', "We don't have an account with these details yet — create an account first.");
 
-    spaPost('/api/v1/auth/otp/verify', ['identifier' => 'ghost@acme.test', 'code' => $code])
-        ->assertStatus(422);
+    expect(isset($this->codes['ghost@acme.test']))->toBeFalse();
 });
 
 it('signs staff in directly when 2FA is off', function () {
