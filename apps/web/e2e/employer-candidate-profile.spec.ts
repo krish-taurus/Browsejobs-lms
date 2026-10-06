@@ -19,7 +19,7 @@ async function signIn(page: import("@playwright/test").Page) {
   await page.getByLabel("Work email").fill("employer@example.com");
   await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/employer\/dashboard/);
+  await expect(page).toHaveURL(/\/employer\/taurus-ai/);
 }
 
 test("employer opens a candidate's full profile from the JD", async ({ page }) => {
