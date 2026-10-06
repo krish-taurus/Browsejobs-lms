@@ -23,9 +23,20 @@ test("sitewide entity graph parses and names the founder", () => {
   expect(raw).toContain('"name":"BrowseJobs"');
   expect(raw).toContain("Dr Krish Bharggav");
   expect(raw).toContain("https://browsejobs.ai/logo.svg");
-  expect(raw).not.toContain("sameAs");
+  expect(raw).toContain("https://browsejobs.ai/founder");
+  expect(raw).toContain('"@type":"NewsArticle"');
   expect(raw).not.toContain("logo.png");
   expect(raw).not.toContain("[Krish:");
+  const graph = parsed["@graph"] ?? [];
+  const org = graph.find((node) => node["@type"] === "EducationalOrganization") as { sameAs?: string[] } | undefined;
+  const person = graph.find((node) => node["@type"] === "Person") as { sameAs?: string[]; url?: string } | undefined;
+  expect(org?.sameAs).toEqual(["https://www.instagram.com/browsejobs.ai"]);
+  expect(person?.url).toBe("https://browsejobs.ai/founder");
+  expect(person?.sameAs).toEqual([
+    "https://www.linkedin.com/in/dr-krish-bharggav-2072109a",
+    "https://www.instagram.com/theofferletter6",
+    "https://www.youtube.com/@theofferletter6",
+  ]);
 });
 
 test("live course JSON-LD includes provider, fee, mode and duration", () => {
@@ -80,6 +91,27 @@ for (const slug of ["data-engineering", "devops-cloud", "python-backend", "data-
     expect(html).not.toContain("/courses/agentic-ai");
   });
 }
+
+test("/founder is indexable and links the press coverage", async ({ page, request }) => {
+  const response = await page.goto("/founder");
+  expect(response?.ok()).toBeTruthy();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dr Krish Bharggav");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai/founder");
+  await expect(page.getByRole("heading", { name: "Dr Krish Bharggav in the news" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Pioneer Edge" })).toHaveAttribute(
+    "href",
+    "https://pioneeredge.in/technology-skills-and-careers-how-dr-krish-bharggav-is-bridging-the-employment-gap/",
+  );
+  await expect(page.getByRole("link", { name: "The Offer Letter on YouTube" })).toBeVisible();
+  const html = await page.content();
+  expect(html).toContain('"@type":"NewsArticle"');
+  expect(html).toContain("https://browsejobs.ai/founder");
+  expect(html).not.toContain("[Krish:");
+  const sitemap = await request.get("/sitemap.xml");
+  expect(await sitemap.text()).toContain("https://browsejobs.ai/founder");
+  const llms = await request.get("/llms.txt");
+  expect(await llms.text()).toContain("https://browsejobs.ai/founder");
+});
 
 test("IndexNow key file is public and matches its name", async ({ request }) => {
   const response = await request.get(`/${INDEXNOW_KEY}.txt`);

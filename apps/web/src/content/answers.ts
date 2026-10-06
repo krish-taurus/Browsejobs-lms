@@ -88,7 +88,7 @@ export const answerPages: readonly AnswerPage[] = [
       },
       {
         q: "Do I have to take the course to be seen by HR?",
-        a: "No. Take the free AI interview first. Finish it and employers browsing BrowseJobs can see your profile. A course is for the gap the score shows, and only after free counselling. Hiring is still not guaranteed.",
+        a: "No. Take the free AI interview first. A score of 75% or more counts as clear and puts you in front of HR with your score. A course is for the gap the score shows, and only after free counselling. Hiring is still not guaranteed.",
       },
     ],
     related: [
@@ -107,21 +107,21 @@ export const answerPages: readonly AnswerPage[] = [
     kicker: "Career switch",
     audience: "student",
     directAnswer:
-      "Take the free AI interview. It is 15 questions from your CV, and you get a score out of 100. Finish it and employers can see your profile. If the score shows a gap, book free counselling. A data engineering course comes only if you still need one. Nobody can guarantee the job.",
+      "Take the free AI interview. It is 15 questions from your CV, and you get a score out of 100. Scoring 75% or more counts as clear and puts you in front of HR with your score. If the score shows a gap, book free counselling. A course comes only if you still need one.",
     sections: [
       {
         id: "path",
         heading: "The path, in order",
         paragraphs: [
           "Do not start by paying for the longest course. Start with the free AI interview. You need a free account and a CV. The interview is 15 questions built from that CV. It is not tied to one job. You get a score out of 100. Your best attempt is the one that is kept.",
-          "Finish it, with a CV that lists real work or skills, and employers browsing the BrowseJobs talent pool can see your profile, including for roles you have not applied to. A skill in common is not enough. The role has to match the work on your CV or the track you trained in. If the score shows a gap, the next conversation is free counselling and a written Career Analysis Report. The report is allowed to point away from our courses.",
+          "A score of 75% or more counts as clear. That puts you in front of HR with your score, including for roles you have not applied to, when the CV lists real work or skills and the role matches. A skill in common is not enough. The role has to match the work on your CV or the track you trained in. If the score shows a gap, the next conversation is free counselling and a written Career Analysis Report. The report is allowed to point away from our courses.",
         ],
       },
       {
         id: "which",
         heading: "Data engineering, analytics, or DevOps",
         paragraphs: [
-          "Data engineering is the heavier data track. The published syllabus is SQL, Python, Spark, Databricks, AWS, Azure and Airflow, over six months. If your work today is Excel, accounts, or reporting, [Data Analytics](/courses/data-analytics) is usually the closer start. That syllabus is Excel, SQL, Python for analysis, statistics and Power BI, over five to six months. A data analyst turns numbers into a decision. A data engineer builds the pipelines that move and store the data.",
+          "Data engineering is the heavier data track. The published syllabus is SQL, Python, Spark, Databricks, AWS, Azure and Airflow, over six months. If your work today is Excel, accounts, or reporting, [Data Analytics](/courses/data-analytics) is usually the closer start. That syllabus is Excel, SQL, Python for analysis, statistics and Power BI, over six months. A data analyst turns numbers into a decision. A data engineer builds the pipelines that move and store the data.",
           "DevOps is a different job. The published tools are Linux, Docker, Kubernetes, Terraform, Jenkins and AWS. Pick it if you want to ship and run software, not if you want warehouses. The [DevOps and Cloud course](/courses/devops-cloud) is six months and live. [Python Backend](/courses/python-backend) is for API and database work. Its full module list is not on the site yet. The longer guide is [Non-IT to IT](/non-it-to-it).",
         ],
       },
@@ -408,11 +408,11 @@ export const answerPages: readonly AnswerPage[] = [
     slug: "what-is-an-ai-interview",
     title: "What is an AI interview, and how does the score work?",
     description:
-      "The BrowseJobs AI interview for candidates: 15 questions from your CV, a score out of 100, and when employers can see your profile.",
+      "The BrowseJobs AI interview for candidates: 15 questions from your CV, a score out of 100, and a 75% pass mark that puts you in front of HR.",
     kicker: "For candidates",
     audience: "student",
     directAnswer:
-      "An AI interview at BrowseJobs is free and built from your CV: 15 questions, not tied to one job. You get a score out of 100. Your best attempt is kept. Finish it and employers browsing the talent pool can see your profile. If the score shows a gap, book free counselling. A course comes only if you need one.",
+      "An AI interview at BrowseJobs is free and built from your CV: 15 questions, not tied to one job. You get a score out of 100. Your best attempt is kept. A score of 75% or more counts as clear, and puts you in front of HR with that score. If the score shows a gap, book free counselling.",
     sections: [
       {
         id: "what",
@@ -426,8 +426,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "score",
         heading: "What the score does",
         paragraphs: [
-          "Finishing the interview is what makes your profile visible to employers browsing BrowseJobs talent, even for jobs you have not applied to. The CV needs real content: a summary, skills, or experience. An empty profile does not appear. A shared skill such as Python is not enough on its own. The role has to match your track or the recent work on your CV.",
-          "There is no published pass mark for this interview. [Krish: finishing the AI Readiness Interview is what makes a profile visible to employers. There is no published pass mark. If “clear” should be a score out of 100, say the number and this page will use it.]",
+          "A score of 75% or more counts as clear. That puts you in front of HR with your score. The CV needs real content: a summary, skills, or experience. An empty profile does not appear. A shared skill such as Python is not enough on its own. The role has to match your track or the recent work on your CV.",
         ],
       },
       {
@@ -446,7 +445,7 @@ export const answerPages: readonly AnswerPage[] = [
       },
       {
         q: "How does the score work?",
-        a: "The score is out of 100. A retake replaces it only when the new score is higher. Finishing the interview, with a CV that has real content, is what lets employers browsing the talent pool see your profile. There is no published cutoff score.",
+        a: "The score is out of 100. A retake replaces it only when the new score is higher. Scoring 75% or more counts as clear and puts you in front of HR with that score. The CV still needs real content.",
       },
       {
         q: "Does a good score mean I will be hired?",
@@ -487,7 +486,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "start",
         heading: "Where you start changes the clock",
         paragraphs: [
-          "If you already write SQL and small scripts, six months is a deepening of work you have touched. If you are coming from a non-IT job, the same six months is a steeper climb, and [Data Analytics](/courses/data-analytics) — five to six months — may be the honest first course. DevOps is also six months, and it is a different job. Read [how a non-IT person becomes a data engineer](/answers/how-can-a-non-it-person-become-a-data-engineer).",
+          "If you already write SQL and small scripts, six months is a deepening of work you have touched. If you are coming from a non-IT job, the same six months is a steeper climb, and [Data Analytics](/courses/data-analytics) — six months — may be the honest first course. DevOps is also six months, and it is a different job. Read [how a non-IT person becomes a data engineer](/answers/how-can-a-non-it-person-become-a-data-engineer).",
           "Take the free AI interview before you block six months. The score tells you the gap. Counselling puts it in a written report. Then decide. The India overview is [Best data engineering course in India](/answers/best-data-engineering-course-in-india).",
         ],
       },
@@ -511,7 +510,7 @@ export const answerPages: readonly AnswerPage[] = [
       },
       {
         q: "Is six months enough if I am from a non-IT background?",
-        a: "Sometimes. It is the heavier track. If your work is spreadsheets and reporting, Data Analytics is usually the closer start, and that programme is published as five to six months. Take the free AI interview and the counselling report before you commit.",
+        a: "Sometimes. It is the heavier track. If your work is spreadsheets and reporting, Data Analytics is usually the closer start, and that programme is six months. Take the free AI interview and the counselling report before you commit.",
       },
       {
         q: "What happens if I miss classes?",

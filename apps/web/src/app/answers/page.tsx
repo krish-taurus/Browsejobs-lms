@@ -51,9 +51,9 @@ export default function AnswersHubPage() {
           Updated <time dateTime={ANSWERS_UPDATED}>6 Oct 2026</time>
         </p>
         <p className="mt-6 text-lg leading-relaxed text-ink2">
-          Each page starts with the answer. Take the free AI interview and read the score. Employers can see you
-          when you finish. A course comes only if you still need one. Hiring teams have two pages of their own,
-          further down.
+          Each page starts with the answer. Take the free AI interview and read the score. A score of 75% or more
+          counts as clear and puts you in front of HR. A course comes only if you still need one. Hiring teams
+          have two pages of their own, further down.
         </p>
         <Link
           href="/register"

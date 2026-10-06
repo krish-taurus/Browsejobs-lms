@@ -192,7 +192,7 @@ export default function NonItToItPage() {
 
       <MoneySection id="tracks" kicker="The four live tracks" heading="What you would actually study">
         <p>
-          <TextLink href="/courses/data-analytics">Data Analytics</TextLink> is five to six months. The published
+          <TextLink href="/courses/data-analytics">Data Analytics</TextLink> is six months. The published
           tools are Excel, SQL, Python, NumPy, Pandas, Power BI, Power Query, DAX, and statistics. The projects are
           dashboards: retail sales, HR attrition, e-commerce, financial performance, and an executive KPI view.
           Roles named on the page are Data Analyst, Business Analyst, Senior Data Analyst, and BI Analyst. This is

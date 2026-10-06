@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...skillPages.map((page) => dated(`/skills/${page.slug}`, 0.7)),
     dated("/reviews", 0.6),
     ...seoMoneyLinks.map((page) => dated(page.path, page.priority)),
+    dated("/founder", 0.5),
     dated("/answers", 0.75),
     ...answerPages.map((page) => dated(answerPath(page.slug), priorityAnswerSlugs.has(page.slug) ? 0.8 : 0.7)),
   ];

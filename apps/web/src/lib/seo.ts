@@ -5,6 +5,7 @@ import type {
   EducationalOrganization,
   FAQPage,
   Graph,
+  NewsArticle,
   Person,
   Thing,
   WebPage,
@@ -15,8 +16,10 @@ import {
   LOGO_PATH,
   founder,
   founderProfileUrl,
-  officialProfileUrls,
+  founderSameAs,
   organizationDescription,
+  organizationSameAs,
+  pressCoverage,
   publishedAddress,
   publishedHours,
 } from "@/content/entity";
@@ -196,20 +199,33 @@ export function organizationNode(): EducationalOrganization {
       closes: publishedHours.closes,
     },
     founder: { "@id": FOUNDER_ID },
-    ...(officialProfileUrls.length > 0 ? { sameAs: officialProfileUrls } : {}),
+    sameAs: [...organizationSameAs],
   } satisfies EducationalOrganization;
 
   return node;
 }
 
 export function founderNode(): Person {
+  const subjectOf: NewsArticle[] = pressCoverage.map((article) => ({
+    "@type": "NewsArticle",
+    headline: article.headline,
+    url: article.url,
+    ...(article.datePublished ? { datePublished: article.datePublished } : {}),
+    publisher: {
+      "@type": "Organization",
+      name: article.publication,
+    },
+  }));
+
   return {
     "@type": "Person",
     "@id": FOUNDER_ID,
     name: founder.name,
     jobTitle: founder.jobTitle,
+    url: absoluteUrl(founderProfileUrl),
     worksFor: { "@id": ORGANIZATION_ID },
-    ...(founderProfileUrl ? { url: founderProfileUrl } : {}),
+    sameAs: [...founderSameAs],
+    subjectOf,
   };
 }
 

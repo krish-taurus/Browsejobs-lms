@@ -377,7 +377,7 @@ export const courseDetails: CourseDetail[] = [
     tagline: "SQL, dashboards, and decisions from data.",
     live: true,
     hero: "From data to decisions. Turn information into impact. A career-focused program whose syllabus is rebuilt every month from real Data Analyst interviews — Excel, SQL, Python, Statistics, Power BI.",
-    duration: "5–6 months",
+    duration: "6 months",
     format: "Live online + recordings",
     access: "1 year unlimited",
     projectsLabel: "5 CV-ready",
