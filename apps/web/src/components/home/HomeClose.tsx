@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { BookCta } from "@/components/landing/BookCta";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -120,12 +121,12 @@ export function HomeClose() {
             </h2>
             <p className="mx-auto mt-4 max-w-md text-lg text-muted">The course can wait until you know what to fix.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="#interview-start"
+              <Link
+                href="/#interview-start"
                 className="inline-flex items-center justify-center rounded-full bg-trust px-8 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
               >
                 Take your free AI interview
-              </a>
+              </Link>
               <BookCta ghost variant="masterclass">
                 Book the free masterclass
               </BookCta>

@@ -127,7 +127,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "What do we actually receive?",
-    a: "A full performance report and the CV. The report has the overall score, a skill breakdown, a proctoring summary, communication notes, strengths and risks, transcript excerpts, and BGV status. The sample on this page is an example, not a real person.",
+    a: "A full performance report and the CV. The report has the overall score, a skill breakdown, a proctoring summary, communication notes, strengths and risks, transcript excerpts, and BGV status. The sample on the how-it-works page is an example, not a real person.",
   },
   {
     q: "Are the interviews proctored?",
@@ -139,7 +139,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "Can we hire with you, or use the tool ourselves?",
-    a: "Both. You can onboard BrowseJobs as your hiring partner, and we run the path with you. Or your team can use the tool for your own hiring. Use the two buttons on this page to tell us which one you want.",
+    a: "Both. You can onboard BrowseJobs as your hiring partner, and we run the path with you. Or your team can use the tool for your own hiring. The two links on the employers page tell us which one you want.",
   },
   {
     q: "Do you guarantee a hire?",

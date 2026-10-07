@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/landing/JsonLd";
-import { MarketingShell } from "@/components/landing/MarketingShell";
-import { HomeHero } from "@/components/home/HomeHero";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { EmployerBand } from "@/components/home/EmployerBand";
-import { GapFork } from "@/components/home/GapFork";
-import { CourseStrip } from "@/components/home/CourseStrip";
-import { ProofAndPay } from "@/components/home/ProofAndPay";
-import { HomeClose } from "@/components/home/HomeClose";
-import { RecruiterStage } from "@/components/home/RecruiterStage";
-import { HomeStages } from "@/components/home/HomeStages";
-import { homeNav } from "@/content/home";
+import { AppleHome } from "@/components/apple/AppleHome";
+import { AppleShell } from "@/components/apple/AppleShell";
 import { canonical } from "@/lib/seo";
 
 const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
@@ -32,25 +23,13 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Home — night job-first funnel. The document title, description and
- * canonical stay the production homepage metadata. /v3 keeps the keynote.
- */
 export default function Home() {
   return (
     <>
       <JsonLd />
-      <MarketingShell links={homeNav} ctaLabel="Take your free AI interview" ctaHref="#interview-start" tone="night">
-        <HomeHero />
-        <HowItWorks />
-        <EmployerBand />
-        <RecruiterStage />
-        <HomeStages />
-        <GapFork />
-        <CourseStrip />
-        <ProofAndPay />
-        <HomeClose />
-      </MarketingShell>
+      <AppleShell>
+        <AppleHome />
+      </AppleShell>
     </>
   );
 }

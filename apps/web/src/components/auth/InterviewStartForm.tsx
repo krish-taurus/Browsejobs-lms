@@ -20,9 +20,11 @@ type Step = "phone" | "details" | "code";
 export function InterviewStartForm({
   next = AFTER_AUTH,
   id = "interview-start",
+  tone = "night",
 }: {
   next?: string;
   id?: string;
+  tone?: "night" | "apple";
 }) {
   const router = useRouter();
   const destination = safeNextPath(next) ?? AFTER_AUTH;
@@ -35,8 +37,13 @@ export function InterviewStartForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const inputCls =
-    "w-full rounded-[10px] border border-white/15 bg-white/5 px-4 py-3 text-fg outline-none placeholder:text-muted focus:border-trust";
+  const apple = tone === "apple";
+  const inputCls = apple
+    ? "h-12 w-full rounded-full border border-black/15 bg-white px-5 text-[17px] text-[#1d1d1f] outline-none placeholder:text-[#6e6e73] focus-visible:border-[#1b6df0] focus-visible:ring-2 focus-visible:ring-[#1b6df0]"
+    : "w-full rounded-[10px] border border-white/15 bg-white/5 px-4 py-3 text-fg outline-none placeholder:text-muted focus:border-trust";
+  const labelCls = apple ? "sr-only" : "mono text-[11px] uppercase tracking-[0.14em] text-muted";
+  const buttonCls =
+    "inline-flex h-12 w-full items-center justify-center rounded-full bg-trust px-7 text-[17px] font-semibold text-white transition-colors hover:bg-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b6df0] disabled:opacity-50";
 
   function fail(err: unknown, fallback: string) {
     setError(err instanceof ApiError ? (err.firstError ?? err.message) : fallback);
@@ -108,7 +115,7 @@ export function InterviewStartForm({
   }
 
   return (
-    <div id={id} className="mt-5 max-w-md scroll-mt-28 md:mt-8">
+    <div id={id} className={apple ? "mx-auto mt-5 w-full max-w-[26rem] scroll-mt-28 text-left" : "mt-5 max-w-md scroll-mt-28 md:mt-8"}>
       {error && (
         <p className="mb-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn" role="alert">
           {error}
@@ -118,9 +125,9 @@ export function InterviewStartForm({
       {step === "phone" && (
         <form onSubmit={requestLogin} className="space-y-3">
           <label className="block">
-            <span className="mono text-[11px] uppercase tracking-[0.14em] text-muted">Phone number</span>
+            <span className={labelCls}>Phone number</span>
             <input
-              autoFocus
+              autoFocus={!apple}
               required
               name="phone"
               value={phone}
@@ -130,16 +137,16 @@ export function InterviewStartForm({
               minLength={8}
               placeholder="10-digit mobile number"
               aria-label="Phone number"
-              className={`${inputCls} mt-2`}
-            />
+            className={`${inputCls} ${apple ? "mt-0" : "mt-2"}`}
+          />
           </label>
           <button
             disabled={busy}
-            className="inline-flex w-full items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep disabled:opacity-50"
+            className={apple ? buttonCls : "inline-flex w-full items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep disabled:opacity-50"}
           >
             {busy ? "Checking…" : "Take your free AI interview"}
           </button>
-          <p className="text-sm text-muted">Free. One code by SMS. No card.</p>
+          <p className={apple ? "text-center text-[13px] text-[#6e6e73]" : "text-sm text-muted"}>Free. One code by SMS. No card.</p>
         </form>
       )}
 

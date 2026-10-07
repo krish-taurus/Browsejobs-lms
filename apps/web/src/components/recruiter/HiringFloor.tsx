@@ -9,7 +9,7 @@ import { createHoloLab, type HoloLab } from "./holo-lab";
 import type { AgentState, BgvStatus, FloorCandidate, FloorStageId, Interest, JobBrief } from "./types";
 import "./taurus-floor.css";
 
-type Variant = "full" | "embed" | "console";
+type Variant = "full" | "embed" | "console" | "shot";
 type Sheet = "filters" | "log" | "talk" | "metrics" | "dossier" | null;
 type Bubble = { who: "you" | "ai"; text: string };
 
@@ -130,10 +130,13 @@ export function HiringFloor({
   variant = "full",
   frozenAtMs = null,
   initialElapsedMs,
+  credit = true,
 }: {
   variant?: Variant;
   frozenAtMs?: number | null;
   initialElapsedMs?: number;
+  /** The employers marketing page must not name Taurus. The demo and homepage may. */
+  credit?: boolean;
 }) {
   const reduced = useReducedMotion() ?? false;
   const reducedRef = useRef(reduced);
@@ -421,7 +424,13 @@ export function HiringFloor({
           <div>
             <Title className="brand-title">BrowseJobs AI Recruiter</Title>
             <p className="brand-sub">
-              Powered by <span className="accent">Taurus AI</span>
+              {credit ? (
+                <>
+                  Powered by <span className="accent">Taurus AI</span>
+                </>
+              ) : (
+                "Demo data"
+              )}
             </p>
           </div>
         </div>

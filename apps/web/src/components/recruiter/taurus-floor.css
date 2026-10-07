@@ -269,6 +269,7 @@ noscript{position:absolute;inset:40% 10% auto;z-index:50;text-align:center;color
 .bj-lab{--f-ui:var(--font-inter),Inter,system-ui,sans-serif;--f-mono:var(--font-plex-mono),'IBM Plex Mono',ui-monospace,monospace}
 .bj-lab [hidden]{display:none!important}
 .bj-lab.is-full{height:100dvh}
+.bj-lab.is-shot{height:800px;min-height:0;border-radius:0}
 .bj-lab.is-embed{height:min(920px,88dvh);min-height:640px;border-radius:22px;border:1px solid rgba(255,255,255,.1)}
 .bj-lab.is-console{height:calc(100dvh - 4.5rem)}
 .bj-lab .brand-title{font-size:13px;letter-spacing:.08em}

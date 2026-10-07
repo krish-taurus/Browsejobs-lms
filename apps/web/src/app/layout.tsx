@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito } from "next/font/google";
+import { Analytics } from "@/components/analytics/Analytics";
 import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import "./globals.css";
 
@@ -9,6 +9,7 @@ const sora = Sora({
   subsets: ["latin"],
   weight: ["400", "600", "800"],
   display: "swap",
+  preload: false,
 });
 
 // Employer portal only (scoped via .bj-employer-dashboard in globals.css) —
@@ -22,6 +23,7 @@ const poppins = Poppins({
   weight: ["500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
+  preload: false,
 });
 
 const nunito = Nunito({
@@ -29,6 +31,7 @@ const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
+  preload: false,
 });
 
 const inter = Inter({
@@ -43,6 +46,7 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
+  preload: false,
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://browsejobs.ai";
@@ -103,28 +107,7 @@ export default function RootLayout({
       >
         <SiteJsonLd />
         {children}
-
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-WGGL1MS701"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-WGGL1MS701');`}
-        </Script>
-
-        {/* Microsoft Clarity */}
-        <Script id="microsoft-clarity" strategy="afterInteractive">
-          {`(function(c,l,a,r,i,t,y){
-c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "xiomzak7ll");`}
-        </Script>
-
+        <Analytics />
       </body>
     </html>
   );

@@ -1,0 +1,197 @@
+/* Apple-grade marketing pages. Inter, tight tracking, two surfaces. */
+.apple-site {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.apple-site.is-dark {
+  background: #000;
+}
+.apple-site a,
+.apple-site button,
+.apple-site summary {
+  cursor: pointer;
+}
+.apple-site :focus-visible {
+  outline: 2px solid #1b6df0;
+  outline-offset: 3px;
+}
+.apple-nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 40;
+  min-height: 48px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.apple-nav.is-dark {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.72);
+  color: #f5f5f7;
+}
+.apple-nav-bar {
+  display: flex;
+  height: 48px;
+  align-items: center;
+}
+.apple-nav a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms ease, opacity 150ms ease;
+}
+.apple-links a {
+  color: rgba(0, 0, 0, 0.8);
+}
+.apple-links a:hover {
+  color: #1d1d1f;
+}
+.apple-nav.is-dark .apple-links a {
+  color: rgba(255, 255, 255, 0.8);
+}
+.apple-nav.is-dark .apple-links a:hover {
+  color: #fff;
+}
+.apple-menu {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  padding: 0.35rem 1.25rem 0.75rem;
+}
+.apple-nav.is-dark .apple-menu {
+  border-top-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.94);
+}
+.apple-display {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.apple-sub {
+  max-width: 34rem;
+  margin-inline: auto;
+  font-size: 19px;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+@media (min-width: 768px) {
+  .apple-sub { font-size: 21px; }
+}
+.apple-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 44px;
+  padding-inline: 0.15rem;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #1b6df0;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.apple-more:hover { text-decoration: underline; }
+.apple-dark .apple-more { color: #2997ff; }
+.apple-pill {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 980px;
+  background: #1b6df0;
+  padding: 0 1.35rem;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+.apple-pill:hover { background: #0e3fa9; }
+.apple-tile {
+  padding: 5.5rem 1.25rem;
+}
+@media (min-width: 768px) {
+  .apple-tile { padding: 7.5rem 1.5rem; }
+}
+.apple-note {
+  max-width: 36rem;
+  margin-inline: auto;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6e6e73;
+}
+.apple-note .mono {
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0;
+  color: #6e6e73;
+}
+.apple-dark .apple-note,
+.apple-dark .apple-note .mono {
+  color: #a1a1a6;
+}
+.apple-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.15rem;
+  margin: 2.75rem auto 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.apple-steps li {
+  white-space: nowrap;
+}
+.apple-steps li:not(:last-child)::after {
+  content: "→";
+  margin-inline: 0.7rem;
+  color: #6e6e73;
+  font-weight: 400;
+}
+.apple-subnav {
+  scrollbar-width: none;
+}
+.apple-subnav::-webkit-scrollbar { display: none; }
+.apple-foot {
+  background: #f5f5f7;
+  color: #6e6e73;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.apple-foot a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.apple-foot a:hover { text-decoration: underline; color: #1d1d1f; }
+.apple-foot h2 {
+  margin: 0 0 0.35rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #1d1d1f;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .apple-rise {
+      animation: apple-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 32%;
+    }
+  }
+}
+@keyframes apple-rise {
+  from { opacity: 0.4; transform: translateY(16px) scale(0.975); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apple-rise { animation: none; }
+}
