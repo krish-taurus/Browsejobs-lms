@@ -188,8 +188,8 @@ function PortalShellInner({ children, lockedFeatures }: { children: ReactNode; l
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
       <CommandPalette />
 
-      {/* Desktop sidebar */}
-      <aside className="hidden border-r border-line bg-white md:flex md:flex-col">
+      {/* Desktop sidebar: sticky and full height, so it stays put while the page scrolls */}
+      <aside className="hidden border-r border-line bg-white md:sticky md:top-0 md:flex md:h-screen md:flex-col md:self-start">
         <div className="flex items-center gap-2 px-6 py-5">
           <Mark />
           <span className="display text-ink">BrowseJobs</span>
@@ -265,8 +265,8 @@ function PortalShellInner({ children, lockedFeatures }: { children: ReactNode; l
       </aside>
 
       <div className="flex min-h-screen flex-col">
-        {/* Top bar */}
-        <header className="flex items-center justify-between border-b border-line bg-white/80 px-5 py-3 backdrop-blur-md">
+        {/* Top bar: pinned to the top, the page content scrolls under it */}
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-white/80 px-5 py-3 backdrop-blur-md">
           <p className="text-sm text-muted">
             Hi, <span className="font-semibold text-ink">{user.name}</span>
           </p>
