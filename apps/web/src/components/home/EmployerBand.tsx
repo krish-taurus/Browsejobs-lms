@@ -15,7 +15,7 @@ export function EmployerBand() {
       <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <ScrollReveal>
           <p className="kicker text-trust">For employers</p>
-          <h2 className="display mt-3 max-w-3xl text-4xl text-fg md:text-6xl">
+          <h2 className="display mt-4 max-w-4xl text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.98] text-fg">
             Cut hiring time from <span className="mono">90</span> days to <span className="mono">3</span> days.
           </h2>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">

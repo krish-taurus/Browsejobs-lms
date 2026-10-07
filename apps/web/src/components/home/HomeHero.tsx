@@ -25,6 +25,13 @@ export function HomeHero() {
             score.
           </p>
           <InterviewStartForm />
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
+            Hiring a team?{" "}
+            <a href="#ai-recruiter" className="font-semibold text-sky underline-offset-4 hover:underline">
+              Watch the BrowseJobs AI Recruiter
+            </a>
+            . The floor on this page is demo data.
+          </p>
         </div>
         <div className="hidden lg:block lg:pt-4">
           <KineticPortrait src={embedSrc} />

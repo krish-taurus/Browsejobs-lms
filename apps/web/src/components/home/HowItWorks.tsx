@@ -7,7 +7,7 @@ export function HowItWorks() {
     <section id="how" className="scroll-mt-28 border-t border-white/10">
       <div className="mx-auto max-w-6xl px-5 pt-16 md:pt-24">
         <p className="kicker text-trust">How it works</p>
-        <h2 className="display mt-3 max-w-3xl text-4xl text-fg md:text-6xl">
+        <h2 className="display mt-4 max-w-4xl text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.98] text-fg">
           Three steps you can tell a friend.
         </h2>
         <p className="mt-4 max-w-2xl text-lg text-muted">

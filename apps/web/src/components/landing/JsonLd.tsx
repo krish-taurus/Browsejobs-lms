@@ -1,3 +1,4 @@
+import { recruiterFaqs } from "@/content/home";
 import { courses, faqs } from "@/content/landing";
 import { courseNode, faqNode, jsonLdGraph } from "@/lib/seo";
 
@@ -12,7 +13,7 @@ export function JsonLd() {
       const node = courseNode(course.slug);
       return node ? [node] : [];
     }),
-    faqNode(faqs),
+    faqNode([...recruiterFaqs, ...faqs]),
   ]);
 
   return (

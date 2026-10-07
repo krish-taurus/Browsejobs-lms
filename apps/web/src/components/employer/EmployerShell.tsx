@@ -38,6 +38,7 @@ const NAV = [
   // embedded in the Dashboard (see git history), which is now view-only and
   // has no room for a conversation.
   { href: "/employer/taurus-ai", label: "Taurus AI", icon: RobotIcon, badge: "AI" },
+  { href: "/employer/ai-recruiter", label: "AI Recruiter", icon: RobotIcon, badge: "Demo" },
   { href: "/employer/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/employer/jobs", label: "Jobs", icon: BriefcaseIcon },
   { href: "/employer/pipeline", label: "Pipeline", icon: PipelineIcon },

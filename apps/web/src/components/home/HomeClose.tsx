@@ -1,6 +1,7 @@
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { BookCta } from "@/components/landing/BookCta";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { recruiterFaqs } from "@/content/home";
 import { faqs, freeLadder, promisesKept, promisesNever } from "@/content/landing";
 
 export function HomeClose() {
@@ -74,8 +75,24 @@ export function HomeClose() {
       <section id="faq" className="scroll-mt-28 border-t border-white/10">
         <div className="mx-auto max-w-3xl px-5 py-16 md:py-24">
           <p className="kicker text-trust">Questions</p>
-          <h2 className="display mt-3 text-3xl text-fg md:text-4xl">Straight answers.</h2>
+          <h2 className="display mt-3 text-4xl text-fg md:text-6xl">Straight answers.</h2>
           <div className="mt-8 divide-y divide-white/10 border-y border-white/10">
+            {recruiterFaqs.map((item) => (
+              <details key={item.q} className="group py-5">
+                <summary className="cursor-pointer list-none text-lg font-semibold text-fg [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-start justify-between gap-4">
+                    {item.q}
+                    <span aria-hidden className="mono inline-block text-muted transition-transform group-open:rotate-45">
+                      +
+                    </span>
+                  </span>
+                </summary>
+                <p className="mt-3 text-base leading-relaxed text-muted">{item.a}</p>
+              </details>
+            ))}
+          </div>
+          <Disclaimer className="mt-4" />
+          <div className="mt-2 divide-y divide-white/10 border-b border-white/10">
             {faqs.map((item) => (
               <details key={item.q} className="group py-4">
                 <summary className="cursor-pointer list-none text-base font-semibold text-fg [&::-webkit-details-marker]:hidden">

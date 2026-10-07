@@ -95,6 +95,13 @@ export function EmployersPage() {
             <Disclaimer className="mt-4 max-w-2xl" />
           </ScrollReveal>
           <HiringJourney />
+          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-ink2">
+            The hiring floor is a preview with fictional names. AI calls, background checks, offers, and joining chats are not live yet.{" "}
+            <Link href="/employers/mission-control-demo" className="font-semibold text-trust hover:text-deep">
+              Open the demo
+            </Link>
+            .
+          </p>
         </div>
       </section>
 

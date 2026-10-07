@@ -63,10 +63,30 @@ export const explainerBeats = [
 
 export const homeNav = [
   { href: "#how", label: "How it works" },
+  { href: "#for-employers", label: "Hire" },
   { href: "#gaps", label: "If you miss" },
   { href: "#courses", label: "Courses" },
   { href: "#fees", label: "Fees" },
   { href: "/jobs", label: "Jobs" },
+] as const;
+
+/**
+ * Questions that sit on the homepage next to the existing fee FAQ.
+ * Honest about what is live. No extra rates.
+ */
+export const recruiterFaqs = [
+  {
+    q: "What is the free AI interview?",
+    a: "Fifteen questions drawn from your CV, scored out of 100. A score of 75% or more counts as clear. That score is what we put in front of HR. It is not a promise of a job.",
+  },
+  {
+    q: "How does an employer hire?",
+    a: "They tell the BrowseJobs AI Recruiter the role, by typing or by voice. The floor shows the job, the shortlist from the BrowseJobs pool and the client's own files, then the AI interview, L1, L2, an optional human round, pre-BGV, the offer, and joining. AI calls, background checks, offers, and joining chats are a demo. They are not live yet.",
+  },
+  {
+    q: "Is the hiring floor live data?",
+    a: "No. The names, calls, and scores on the floor are demo data. Nothing is sent to a candidate. Jobs, the pipeline, and the team pages stay as they are until this desk is wired to them.",
+  },
 ] as const;
 
 /**
