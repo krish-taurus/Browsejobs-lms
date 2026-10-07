@@ -111,7 +111,7 @@ export function HomeClose() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-t border-white/10">
+      <section id="close" className="relative scroll-mt-28 overflow-hidden border-t border-white/10">
         <div aria-hidden className="home-glow pointer-events-none absolute inset-0" />
         <div className="relative mx-auto max-w-4xl px-5 py-28 text-center md:py-40">
           <ScrollReveal>

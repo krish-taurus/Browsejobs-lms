@@ -26,6 +26,10 @@ test("homepage demo is labelled and links to the full floor", async ({ page }) =
   await stage.scrollIntoViewIfNeeded();
   await expect(stage.getByText("Demo data").first()).toBeVisible();
   await expect(stage.getByRole("heading", { level: 2, name: "Watch every stage." })).toBeVisible();
+  const stages = page.locator("#stages");
+  await expect(stages).toContainText("Needs your approval");
+  await expect(stages).toContainText("A person must always release the offer letter");
+  await expect(stages.getByText("Not live").first()).toBeVisible();
   const full = stage.getByRole("link", { name: "Open the full demo" });
   await expect(full).toHaveAttribute("href", "/employers/mission-control-demo");
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
