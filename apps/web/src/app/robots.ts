@@ -7,6 +7,7 @@ import { SITE_ORIGIN } from "@/lib/seo";
  * `Disallow: /employer`.
  */
 const PRIVATE = [
+  "/employers/mission-control-demo",
   "/admin",
   "/api/",
   "/candidate",
