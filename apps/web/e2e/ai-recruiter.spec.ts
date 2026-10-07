@@ -85,9 +85,26 @@ test("hiring floor stays readable on a phone", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/employers/mission-control-demo?at=52");
   await expect(page.getByText("Demo data").first()).toBeVisible();
-  await expect(page.getByRole("list", { name: "Stage counts" })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+  await page.getByRole("button", { name: "Candidates" }).click();
+  await expect(page.getByRole("list", { name: "Stage counts" })).toBeVisible();
   await page.getByRole("button", { name: "Open Sample Asha Iyer" }).click();
   await expect(page.getByRole("dialog")).toContainText("Timeline");
+});
+
+test("talk answers a floor question from demo data", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/employers/mission-control-demo?at=52");
+  await page.getByRole("button", { name: "Talk", exact: true }).click();
+  const talk = page.getByRole("region", { name: "Talk to Recruiter" });
+  await talk.getByLabel("Ask the recruiter").fill("how many are at L2?");
+  await talk.getByRole("button", { name: "Ask", exact: true }).click();
+  await expect(talk).toContainText("at L2");
+  await talk.getByLabel("Ask the recruiter").fill("who's interested?");
+  await talk.getByRole("button", { name: "Ask", exact: true }).click();
+  await expect(talk).toContainText("Sample Asha Iyer");
+  await talk.getByLabel("Ask the recruiter").fill("BGV status for Asha?");
+  await talk.getByRole("button", { name: "Ask", exact: true }).click();
+  await expect(talk).toContainText("Verified");
 });

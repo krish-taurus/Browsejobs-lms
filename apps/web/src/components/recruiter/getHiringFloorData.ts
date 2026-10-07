@@ -18,6 +18,9 @@ import {
 import {
   FLOOR_STAGES,
   type FloorAgent,
+  type FloorCandidate,
+  type FloorCall,
+  type FloorMetrics,
   type FloorStageId,
   type HiringFloorQuery,
   type HiringFloorSnapshot,
@@ -46,50 +49,175 @@ function activeStage(t: number): FloorStageId {
   return "joining";
 }
 
+function bot(
+  id: string,
+  name: string,
+  stage: FloorStageId,
+  state: FloorAgent["state"],
+  task: string,
+  progress: number,
+): FloorAgent {
+  return { id, name, stage, state, task, progress };
+}
+
 function agents(t: number, autonomous: boolean): FloorAgent[] {
-  const scout: FloorAgent =
+  const scout =
     t < 4_000
-      ? { id: "scout", name: "Sourcing", stage: "job", state: "thinking", task: "Waiting for the role to land." }
+      ? bot("scout", "Sourcer", "sourcing", "thinking", "Waiting for the role to land.", 20)
       : t < 12_000
-        ? { id: "scout", name: "Sourcing", stage: "sourcing", state: "working", task: "Ranking the pool and the client file." }
-        : { id: "scout", name: "Sourcing", stage: "sourcing", state: "idle", task: "Sample shortlist is on the desk." };
+        ? bot("scout", "Sourcer", "sourcing", "working", "Ranking the pool and the client file.", 64)
+        : bot("scout", "Sourcer", "sourcing", "idle", "Sample shortlist is on the desk.", 0);
 
-  const caller: FloorAgent =
+  const caller =
     t < 12_000
-      ? { id: "caller", name: "Caller", stage: "calls", state: "idle", task: "Idle until sourcing finishes." }
+      ? bot("caller", "Caller", "calls", "idle", "Idle until sourcing finishes. This dialler is not live.", 0)
       : t < 18_000
-        ? {
-            id: "caller",
-            name: "Caller",
-            stage: "calls",
-            state: autonomous ? "working" : "approval",
-            task: autonomous ? "Autonomous is on. Sample calls start without a pause." : "Waiting for a yes before any call.",
-          }
-        : { id: "caller", name: "Caller", stage: "calls", state: "working", task: "Sample calls are on the log. This dialler is not live." };
+        ? bot(
+            "caller",
+            "Caller",
+            "calls",
+            autonomous ? "working" : "approval",
+            autonomous ? "Autonomous is on. Sample calls start without a pause. The dialler is not live." : "Waiting for a yes before any call. The dialler is not live.",
+            autonomous ? 40 : 100,
+          )
+        : bot("caller", "Caller", "calls", "working", "Sample calls are on the log. This dialler is not live.", 62);
 
-  const interviewer: FloorAgent =
+  const interviewer =
     t < 18_000
-      ? { id: "interview", name: "Interviewer", stage: "ai", state: "idle", task: "AI interview opens after a call says yes." }
-      : t < 24_000
-        ? { id: "interview", name: "Interviewer", stage: "ai", state: "working", task: "Two sample candidates are in the AI interview." }
-        : t < 30_000
-          ? { id: "interview", name: "Interviewer", stage: "l1", state: "working", task: "L1 is open." }
-          : t < 36_000
-            ? { id: "interview", name: "Interviewer", stage: "l2", state: "working", task: "L2 is open." }
-            : { id: "interview", name: "Interviewer", stage: "l2", state: "idle", task: "Later rounds are with the people who cleared." };
+      ? bot("interview", "AI Interviewer", "ai", "idle", "AI interview opens after a call says yes.", 0)
+      : t < 30_000
+        ? bot("interview", "AI Interviewer", "ai", "working", "Sample candidates are in the AI interview. Clear mark is 75.", 58)
+        : bot("interview", "AI Interviewer", "ai", "thinking", "Reading the latest sample AI interview.", 30);
 
-  const closer: FloorAgent =
+  const l1 =
+    t < 24_000
+      ? bot("l1", "L1 Evaluator", "l1", "idle", "L1 opens after the AI interview.", 0)
+      : t < 32_000
+        ? bot("l1", "L1 Evaluator", "l1", "working", "L1 is open for the people who cleared.", 44)
+        : bot("l1", "L1 Evaluator", "l1", "idle", "L1 scores are on the people who sat it.", 0);
+
+  const l2 =
+    t < 30_000
+      ? bot("l2", "L2 Evaluator", "l2", "idle", "L2 opens after L1.", 0)
+      : t < 40_000
+        ? bot("l2", "L2 Evaluator", "l2", "working", "L2 is open. Clear mark is 75.", 48)
+        : bot("l2", "L2 Evaluator", "l2", "idle", "L2 scores are on the desk.", 0);
+
+  const scheduler =
     t < 36_000
-      ? { id: "closer", name: "Closer", stage: "human", state: "idle", task: "Human round, BGV, offer, and joining are later." }
-      : t < 42_000
-        ? { id: "closer", name: "Closer", stage: "human", state: "working", task: "Asking for a sample slot. Zoom is not sent for real." }
-        : t < 48_000
-          ? { id: "closer", name: "Closer", stage: "bgv", state: "working", task: "Pre-BGV preview. Vendors are not connected." }
-          : t < 54_000
-            ? { id: "closer", name: "Closer", stage: "offer", state: "approval", task: "Needs your approval. A person always releases the offer." }
-            : { id: "closer", name: "Closer", stage: "joining", state: "error", task: "Sample dropout alert. The joining chat is not live." };
+      ? bot("scheduler", "Scheduler", "human", "idle", "Human round is later. Zoom is not sent.", 0)
+      : t < 44_000
+        ? bot("scheduler", "Scheduler", "human", "working", "Asking for a sample slot. Zoom is not sent for real.", 36)
+        : bot("scheduler", "Scheduler", "human", "idle", "Human rounds booked stay on the log. Zoom is not sent.", 0);
 
-  return [scout, caller, interviewer, closer];
+  const bgv =
+    t < 42_000
+      ? bot("bgv", "BGV Checker", "bgv", "idle", "Pre-BGV is not live. EPFO and DigiLocker are not connected.", 0)
+      : bot("bgv", "BGV Checker", "bgv", "working", "Pre-BGV preview. EPFO and DigiLocker are not live.", 55);
+
+  const offer = bot("offer", "Offer Desk", "offer", "approval", "Needs your approval. A person always releases the offer.", 100);
+
+  const engagement =
+    t < 48_000
+      ? bot("engagement", "Engagement", "joining", "idle", "Joining chat is not live.", 0)
+      : t < 50_000
+        ? bot("engagement", "Engagement", "joining", "working", "Sample joining note. The chat is not live.", 22)
+        : bot("engagement", "Engagement", "joining", "error", "Sample Rohan Mehta went quiet. Dropout risk 74. The joining chat is not live.", 0);
+
+  return [scout, caller, interviewer, l1, l2, scheduler, bgv, offer, engagement];
+}
+
+function parseDuration(value: string): number {
+  const match = /^(\d+):(\d{2})$/.exec(value);
+  if (!match) return 0;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function formatDuration(seconds: number): string {
+  const rounded = Math.round(seconds);
+  const min = Math.floor(rounded / 60);
+  const sec = rounded % 60;
+  return `${min}:${String(sec).padStart(2, "0")}`;
+}
+
+const PAST_BGV: readonly FloorStageId[] = ["bgv", "offer", "joining"];
+
+function metrics(t: number, candidates: FloorCandidate[], calls: FloorCall[]): FloorMetrics {
+  const ranked = candidates.filter((person) => !person.timeline.every((step) => /still being ranked/i.test(step.label))).length;
+  const interested = calls.filter((call) => call.outcome === "Interested").length;
+  const notInterested = calls.filter((call) => call.outcome === "Not interested").length;
+  const noAnswer = calls.filter((call) => call.outcome === "No answer").length;
+  const durations = calls.map((call) => parseDuration(call.duration)).filter((value) => value > 0);
+  const avg = durations.length ? durations.reduce((sum, value) => sum + value, 0) / durations.length : 0;
+  const atBgv = candidates.filter((person) => PAST_BGV.includes(person.stage));
+  const days = (t / LOOP_MS) * 3;
+
+  return {
+    sourced: candidates.length,
+    ranked,
+    callsMade: calls.length,
+    connected: interested + notInterested,
+    interested,
+    notInterested,
+    noAnswer,
+    avgCallDuration: durations.length ? formatDuration(avg) : "—",
+    interviewsTaken: candidates.filter((person) => person.scores.ai != null).length,
+    interviewsCleared: candidates.filter((person) => person.scores.ai != null && person.scores.ai >= 75).length,
+    l1Cleared: candidates.filter((person) => person.scores.l1 != null && person.scores.l1 >= 75).length,
+    l2Cleared: candidates.filter((person) => person.scores.l2 != null && person.scores.l2 >= 75).length,
+    humanBooked: candidates.filter((person) => person.timeline.some((step) => /human round/i.test(step.label))).length,
+    bgvVerified: atBgv.filter((person) => person.bgv === "verified").length,
+    bgvPending: atBgv.filter((person) => person.bgv === "pending" || person.bgv === "in_progress").length,
+    bgvFlagged: atBgv.filter((person) => person.bgv === "flagged").length,
+    offersWaiting: candidates.filter((person) => person.stage === "offer").length,
+    offersReleased: 0,
+    offersAccepted: 0,
+    joined: candidates.filter((person) => person.stage === "joining" && person.dropoutRisk == null).length,
+    dropoutAlerts: candidates.filter((person) => person.dropoutRisk != null).length,
+    elapsedLabel: `${days.toFixed(1)} demo days`,
+    targetLabel: "3-day target",
+  };
+}
+
+/**
+ * Answers a status question from the snapshot already on screen.
+ * Hire lines are handled by the view via parseHiringPrompt.
+ */
+export function answerFloorQuestion(question: string, floor: HiringFloorSnapshot): string {
+  const q = question.toLowerCase();
+  const stageCount = (id: FloorStageId) => floor.stages.find((stage) => stage.id === id)?.count ?? 0;
+
+  if (/bgv/.test(q) && /asha/.test(q)) {
+    const asha = floor.candidates.find((person) => person.id === "asha");
+    if (!asha) return "Sample Asha Iyer is not on the floor yet. Demo data.";
+    const step = asha.timeline.find((row) => /bgv|epfo|digilocker/i.test(row.label));
+    const word = asha.bgv === "verified" ? "Verified" : asha.bgv === "flagged" ? "Flagged" : asha.bgv === "in_progress" ? "In progress" : "Pending";
+    return `Sample Asha Iyer · BGV ${word}. ${step ? step.label : "No BGV step on her timeline yet."} Demo data. EPFO and DigiLocker are not connected.`;
+  }
+
+  if (/l2/.test(q) && /how many|count|at l2|on l2/.test(q)) {
+    const n = stageCount("l2");
+    return `${n} sample ${n === 1 ? "candidate is" : "candidates are"} at L2. Demo data. The clear mark used in this story is 75.`;
+  }
+
+  if (/who/.test(q) && /interest/.test(q)) {
+    const names = floor.candidates.filter((person) => person.interest === "interested").map((person) => person.name);
+    if (!names.length) return "Nobody is marked interested yet in this demo.";
+    return `Interested in this demo: ${names.join(", ")}.`;
+  }
+
+  if (/offer/.test(q)) {
+    const waiting = floor.metrics.offersWaiting;
+    return `${waiting} sample ${waiting === 1 ? "offer is" : "offers are"} awaiting approval. Released 0. Accepted 0. A person always releases the offer. Nothing is emailed.`;
+  }
+
+  if (/dropout|quiet/.test(q)) {
+    const names = floor.candidates.filter((person) => person.dropoutRisk != null);
+    if (!names.length) return "No dropout-risk alert on this pass of the demo.";
+    return names.map((person) => `${person.name} · dropout risk ${person.dropoutRisk}. Sample alert. The joining chat is not live.`).join(" ");
+  }
+
+  return "I can answer from this demo: how many are at L2, who's interested, BGV status for Asha, and whether an offer is waiting. Demo data. Nothing here is live.";
 }
 
 export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot {
@@ -126,6 +254,16 @@ export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot
     count: stage.id === "job" ? (t >= 1_200 ? 1 : 0) : candidates.filter((person) => person.stage === stage.id).length,
   }));
 
+  const calls = DEMO_CALLS.filter((call) => call.at <= t).map((call) => ({
+    id: call.id,
+    candidateId: call.candidateId,
+    name: call.name,
+    when: call.when,
+    duration: call.duration,
+    outcome: call.outcome,
+    snippet: call.snippet,
+  }));
+
   return {
     source: "demo",
     label: "Demo data",
@@ -135,15 +273,7 @@ export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot
     autonomous: query.autonomous,
     stages,
     candidates,
-    calls: DEMO_CALLS.filter((call) => call.at <= t).map((call) => ({
-      id: call.id,
-      candidateId: call.candidateId,
-      name: call.name,
-      when: call.when,
-      duration: call.duration,
-      outcome: call.outcome,
-      snippet: call.snippet,
-    })),
+    calls,
     approvals: [
       {
         id: "outreach",
@@ -167,6 +297,7 @@ export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot
         text: item.text,
       })),
     agents: agents(t, query.autonomous),
+    metrics: metrics(t, candidates, calls),
     activeStage: activeStage(t),
     elapsedMs: t,
     loopMs: LOOP_MS,

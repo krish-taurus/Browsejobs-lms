@@ -88,6 +88,37 @@ export type FloorAgent = {
   stage: FloorStageId;
   state: AgentState;
   task: string;
+  /** 0–100. Drawn on the hologram. Derived from the demo clock, not a live meter. */
+  progress: number;
+};
+
+/** Counts taken from the candidates and calls already on the floor. */
+export type FloorMetrics = {
+  sourced: number;
+  ranked: number;
+  callsMade: number;
+  connected: number;
+  interested: number;
+  notInterested: number;
+  noAnswer: number;
+  avgCallDuration: string;
+  interviewsTaken: number;
+  interviewsCleared: number;
+  l1Cleared: number;
+  l2Cleared: number;
+  humanBooked: number;
+  bgvVerified: number;
+  bgvPending: number;
+  bgvFlagged: number;
+  offersWaiting: number;
+  /** Always 0 in the demo. A person has not released a letter. */
+  offersReleased: number;
+  /** Always 0 in the demo. Nothing is emailed or accepted. */
+  offersAccepted: number;
+  joined: number;
+  dropoutAlerts: number;
+  elapsedLabel: string;
+  targetLabel: string;
 };
 
 export type HiringFloorSnapshot = {
@@ -105,6 +136,7 @@ export type HiringFloorSnapshot = {
   approvals: FloorApproval[];
   activity: FloorActivity[];
   agents: FloorAgent[];
+  metrics: FloorMetrics;
   activeStage: FloorStageId;
   elapsedMs: number;
   loopMs: number;

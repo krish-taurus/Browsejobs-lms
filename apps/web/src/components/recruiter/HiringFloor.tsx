@@ -1,17 +1,62 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { durations, ease } from "@/lib/motion";
+import { useReducedMotion } from "framer-motion";
 import { parseHiringPrompt, SAMPLE_PROMPTS, SHOWCASE_MS } from "./demo-data";
-import { getHiringFloorData } from "./getHiringFloorData";
-import { HoloStage } from "./HoloStage";
-import type { BgvStatus, FloorCall, FloorCandidate, Interest, JobBrief } from "./types";
+import { answerFloorQuestion, getHiringFloorData } from "./getHiringFloorData";
+import { createHoloLab, type HoloLab } from "./holo-lab";
+import type { AgentState, BgvStatus, FloorCandidate, FloorStageId, Interest, JobBrief } from "./types";
+import "./taurus-floor.css";
 
 type Variant = "full" | "embed" | "console";
-type Decision = "yes" | "no" | null;
-type Panel = "calls" | "activity" | "approvals";
+type Sheet = "filters" | "log" | "talk" | "metrics" | "dossier" | null;
+type Bubble = { who: "you" | "ai"; text: string };
+
+const ZONE_BY_STAGE: Record<FloorStageId, string> = {
+  job: "Sourcing",
+  sourcing: "Sourcing",
+  calls: "AI Calls",
+  ai: "AI Interview",
+  l1: "L1",
+  l2: "L2",
+  human: "Human round",
+  bgv: "Pre-BGV",
+  offer: "Offer",
+  joining: "Joining",
+};
+
+const BOT_ZONE: Record<string, string> = {
+  scout: "Sourcing",
+  caller: "AI Calls",
+  interview: "AI Interview",
+  l1: "L1",
+  l2: "L2",
+  scheduler: "Human round",
+  bgv: "Pre-BGV",
+  offer: "Offer",
+  engagement: "Joining",
+};
+
+const BOT_SIGN: Record<string, string> = {
+  scout: "SRC",
+  caller: "CALL",
+  interview: "INT",
+  l1: "L1",
+  l2: "L2",
+  scheduler: "SCH",
+  bgv: "BGV",
+  offer: "OFR",
+  engagement: "ENG",
+};
+
+const CANVAS_STATE: Record<AgentState, string> = {
+  idle: "idle",
+  working: "working",
+  thinking: "thinking",
+  approval: "waiting",
+  error: "error",
+};
 
 const INTEREST: Record<Interest, string> = {
   interested: "Interested",
@@ -26,6 +71,8 @@ const BGV: Record<BgvStatus, string> = {
   verified: "Verified",
   flagged: "Flagged",
 };
+
+const SOURCES = ["BrowseJobs pool", "Client file", "Email"] as const;
 
 type SpeechRec = {
   lang: string;
@@ -46,6 +93,39 @@ function speechCtor(): (new () => SpeechRec) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+function callsign(name: string): string {
+  return name
+    .replace(/^Sample\s+/, "")
+    .split(/\s+/)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+}
+
+function useMaxWidth(px: number): boolean {
+  const [match, setMatch] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${px}px)`);
+    const apply = () => setMatch(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [px]);
+  return match;
+}
+
+function useClock(): Date | null {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
+}
+
 export function HiringFloor({
   variant = "full",
   frozenAtMs = null,
@@ -56,26 +136,46 @@ export function HiringFloor({
   initialElapsedMs?: number;
 }) {
   const reduced = useReducedMotion() ?? false;
+  const reducedRef = useRef(reduced);
+  reducedRef.current = reduced;
   const embed = variant === "embed";
   const frozen = frozenAtMs != null;
+  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const portraitRef = useRef<HTMLCanvasElement>(null);
+  const labRef = useRef<HoloLab | null>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const [elapsed, setElapsed] = useState(frozen ? frozenAtMs : (initialElapsedMs ?? SHOWCASE_MS));
   const [playToken, setPlayToken] = useState(0);
   const [autonomous, setAutonomous] = useState(false);
   const [brief, setBrief] = useState<JobBrief | null>(null);
   const [prompt, setPrompt] = useState("");
+  const [talkText, setTalkText] = useState("");
   const [promptError, setPromptError] = useState<string | null>(null);
-  const [panel, setPanel] = useState<Panel>("calls");
+  const [sheet, setSheet] = useState<Sheet>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [outreach, setOutreach] = useState<Decision>(null);
-  const [offer, setOffer] = useState<Decision>(null);
+  const [botId, setBotId] = useState<string | null>(null);
+  const [stageFilter, setStageFilter] = useState<FloorStageId | "all">("all");
+  const [sourceFilter, setSourceFilter] = useState<(typeof SOURCES)[number] | "all">("all");
   const [listening, setListening] = useState(false);
-  const [micNote, setMicNote] = useState<string | null>(null);
-  const [micReady, setMicReady] = useState(false);
+  const [handsFree, setHandsFree] = useState(false);
+  const [mute, setMute] = useState(false);
+  const [offerYes, setOfferYes] = useState(false);
+  const [messages, setMessages] = useState<Bubble[]>([
+    {
+      who: "ai",
+      text: "Demo data. Ask how many are at L2, who's interested, or BGV status for Asha. A person always releases the offer.",
+    },
+  ]);
+  const muteRef = useRef(mute);
+  muteRef.current = mute;
+  const handsRef = useRef(handsFree);
+  handsRef.current = handsFree;
   const recRef = useRef<SpeechRec | null>(null);
-
-  useEffect(() => {
-    setMicReady(speechCtor() !== null);
-  }, []);
+  const mid = useMaxWidth(1099);
+  const narrow = useMaxWidth(760);
+  const now = useClock();
+  const titleId = useId();
 
   const elapsedRef = useRef(elapsed);
   elapsedRef.current = elapsed;
@@ -85,10 +185,10 @@ export function HiringFloor({
     let frame = 0;
     let last = 0;
     const origin = performance.now() - elapsedRef.current;
-    const tick = (now: number) => {
-      if (now - last > 200) {
-        last = now;
-        setElapsed(now - origin);
+    const tick = (time: number) => {
+      if (time - last > 200) {
+        last = time;
+        setElapsed(time - origin);
       }
       frame = requestAnimationFrame(tick);
     };
@@ -97,37 +197,146 @@ export function HiringFloor({
   }, [frozen, playToken]);
 
   useEffect(() => {
-    if (!openId) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenId(null);
+      if (event.key !== "Escape") return;
+      setOpenId(null);
+      setBotId(null);
+      setSheet((current) => (current === "dossier" || current === "talk" || current === "metrics" ? null : current));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openId]);
+  }, []);
 
   const floor = useMemo(
     () => getHiringFloorData({ elapsedMs: elapsed, autonomous, brief }),
     [elapsed, autonomous, brief],
   );
-  const open = floor.candidates.find((person) => person.id === openId) ?? null;
+  const floorRef = useRef(floor);
+  floorRef.current = floor;
 
-  function applyPrompt(text: string) {
-    const parsed = parseHiringPrompt(text);
-    if (!parsed) {
+  const open = floor.candidates.find((person) => person.id === openId) ?? null;
+  const bot = floor.agents.find((agent) => agent.id === botId) ?? null;
+  const dossierOpen = Boolean(open || bot);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const root = rootRef.current;
+    if (!canvas || !root) return;
+    const lab = createHoloLab(canvas, {
+      reduced: () => reducedRef.current,
+      onSelect: (agent) => {
+        if (!agent) {
+          setOpenId(null);
+          setBotId(null);
+          setSheet((current) => (current === "dossier" ? null : current));
+          return;
+        }
+        if (agent.id.startsWith("c-")) {
+          setOpenId(agent.id.slice(2));
+          setBotId(null);
+        } else {
+          setBotId(agent.id);
+          setOpenId(null);
+        }
+        setSheet("dossier");
+      },
+    });
+    labRef.current = lab;
+    const observer = new ResizeObserver(() => lab.resize());
+    observer.observe(root);
+    return () => {
+      observer.disconnect();
+      lab.destroy();
+      labRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    for (const stage of floor.stages) {
+      if (stage.id === "job") continue;
+      counts[ZONE_BY_STAGE[stage.id].toUpperCase()] = stage.count;
+    }
+    labRef.current?.sync(
+      [
+        ...floor.agents.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+          zone: BOT_ZONE[agent.id] ?? "Sourcing",
+          status: CANVAS_STATE[agent.state],
+          task: agent.task,
+          progress: agent.progress,
+          platform: "native",
+          role: agent.task,
+          callsign: BOT_SIGN[agent.id] ?? agent.name.slice(0, 3).toUpperCase(),
+          color: agent.state === "approval" ? "#ffb627" : "#7ee8ff",
+        })),
+        ...floor.candidates.map((person) => ({
+          id: `c-${person.id}`,
+          name: person.name,
+          zone: ZONE_BY_STAGE[person.stage],
+          status: "active",
+          task: person.timeline[person.timeline.length - 1]?.label ?? "",
+          platform: "native",
+          role: person.source,
+          callsign: callsign(person.name),
+          color: "#7ef0ff",
+          token: true,
+        })),
+      ],
+      counts,
+    );
+    if (openId) labRef.current?.select(`c-${openId}`);
+    else if (botId) labRef.current?.select(botId);
+  }, [floor, openId, botId]);
+
+  useEffect(() => {
+    labRef.current?.setSheet(narrow && sheet != null);
+  }, [narrow, sheet]);
+
+  useEffect(() => {
+    labRef.current?.setPortrait(dossierOpen ? portraitRef.current : null);
+  }, [dossierOpen, openId, botId]);
+
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
+  }, [messages, sheet]);
+
+  function speak(text: string) {
+    if (muteRef.current || typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-IN";
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function submitLine(text: string) {
+    const trimmed = text.replace(/\s+/g, " ").trim();
+    if (trimmed.length < 8) {
       setPromptError("Name a role. Try: Hire 3 React developers in Bangalore, 2-4 yrs, notice under 30 days.");
       return;
     }
     setPromptError(null);
-    setBrief(parsed);
+    const parsed = parseHiringPrompt(trimmed);
+    const answer = parsed
+      ? `Role set to ${parsed.title} · ${parsed.city} · ${parsed.openings} openings. The sample floor is running. Demo data. AI calls, pre-BGV, offers, and joining are not live yet.`
+      : answerFloorQuestion(trimmed, floorRef.current);
+    if (parsed) {
+      setBrief(parsed);
+      if (!frozen) {
+        setElapsed(0);
+        setPlayToken((value) => value + 1);
+      }
+    }
     setPrompt("");
+    setTalkText("");
+    setMessages((rows) => [...rows, { who: "you", text: trimmed }, { who: "ai", text: answer }]);
+    speak(answer);
   }
 
   function toggleMic() {
     const Ctor = speechCtor();
-    if (!Ctor) {
-      setMicNote("This browser has no microphone speech. Use a sample prompt. Nothing is sent to a server.");
-      return;
-    }
+    if (!Ctor) return;
     if (listening && recRef.current) {
       recRef.current.stop();
       setListening(false);
@@ -138,598 +347,626 @@ export function HiringFloor({
     rec.interimResults = false;
     rec.onresult = (event) => {
       const said = event.results[0]?.[0]?.transcript ?? "";
-      if (said) {
+      if (!said) return;
+      if (handsRef.current) submitLine(said);
+      else {
+        setTalkText(said);
         setPrompt(said);
-        applyPrompt(said);
       }
     };
-    rec.onerror = () => {
-      setListening(false);
-      setMicNote("The microphone did not start. Use a sample prompt. No account and no key are required.");
-    };
+    rec.onerror = () => setListening(false);
     rec.onend = () => setListening(false);
     recRef.current = rec;
     try {
       rec.start();
       setListening(true);
-      setMicNote(null);
     } catch {
-      setMicNote("The microphone did not start. Use a sample prompt.");
+      setListening(false);
     }
   }
 
-  const Title = embed ? "p" : "h1";
-  const shell = embed
-    ? "rounded-[22px] border border-line bg-paper p-3 sm:p-4"
-    : variant === "console"
-      ? "min-h-[820px] rounded-[22px] border border-line bg-paper"
-      : "min-h-screen lg:h-screen lg:overflow-hidden";
+  function openPerson(id: string) {
+    setOpenId(id);
+    setBotId(null);
+    setSheet("dossier");
+    labRef.current?.select(`c-${id}`);
+  }
+
+  function toggleSheet(next: Exclude<Sheet, null>) {
+    setSheet((current) => (current === next ? null : next));
+  }
+
+  const people = floor.candidates.filter((person) => {
+    if (stageFilter !== "all" && person.stage !== stageFilter) return false;
+    if (sourceFilter !== "all" && person.source !== sourceFilter) return false;
+    return true;
+  });
+
+  const timeLabel = now
+    ? new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(now)
+    : "--:--:--";
+  const dateLabel = now
+    ? new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Kolkata",
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(now)
+    : "";
+
+  const ticker = [...floor.activity.map((item) => `${item.time} ${item.agent} ${item.text}`), ...floor.calls.map((call) => `${call.name} ${call.outcome}`)];
+  const tickerLoop = ticker.length ? [...ticker, ...ticker] : ["Demo data · not live yet"];
+  const Title = variant === "full" ? "h1" : "p";
+  const leftOpen = !mid || sheet === "filters";
+  const rightOpen = !narrow || sheet === "log";
+  const noticeOf = (id: string) => floor.candidates.find((person) => person.id === id)?.notice ?? "";
 
   return (
-    <div data-theme="dark" className={`relative text-fg ${shell}`}>
-      <div className={`flex min-w-0 max-w-full flex-col gap-3 ${embed ? "" : "h-full p-2 sm:p-3"}`}>
-        <header className="flex flex-wrap items-start justify-between gap-3 rounded-[14px] border border-line bg-surface/80 px-3 py-3 backdrop-blur-md">
-          <div className="min-w-0">
-            <p className="kicker text-trust">Demo data</p>
-            <Title className="display mt-1 text-2xl leading-none text-fg sm:text-3xl">BrowseJobs AI Recruiter</Title>
-            <p className="mono mt-2 text-[10px] uppercase tracking-[0.16em] text-muted">Powered by Taurus AI</p>
-          </div>
-          <div className="max-w-md text-right">
-            <p className="text-sm text-fg">{floor.company}</p>
-            <p className="mt-1 text-sm text-muted" aria-live="polite">
-              {floor.job.title} · {floor.job.city} · {floor.job.openings} openings · {floor.job.experience} · notice {floor.job.notice}
+    <div ref={rootRef} className={`bj-lab is-${variant}`}>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@500;600;700&family=Orbitron:wght@700;800&display=swap"
+      />
+      <canvas id="lab" ref={canvasRef} className="lab" aria-label="Hiring floor" />
+      <div className="fx" id="fx-scan" />
+      <div className="fx" id="fx-vig" />
+      <div className="fx" id="fx-hex" />
+
+      <header id="hud-top">
+        <div className="brand">
+          <BrandMark />
+          <div>
+            <Title className="brand-title">BrowseJobs AI Recruiter</Title>
+            <p className="brand-sub">
+              Powered by <span className="accent">Taurus AI</span>
             </p>
-            <p className="mt-1 text-xs text-muted">AI calls, pre-BGV, offers, and joining chats are not live yet.</p>
           </div>
-        </header>
-
-        <ul aria-label="Stage counts" className="flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1">
-          {floor.stages.map((stage) => (
-            <li
-              key={stage.id}
-              className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 ${stage.id === floor.activeStage ? "border-trust bg-trust/15" : "border-line bg-surface/60"}`}
-            >
-              <span className="mono text-sm text-fg">{stage.count}</span>
-              <span className="text-xs font-medium text-muted">{stage.label}</span>
-              {stage.id === "offer" ? (
-                <span className="text-[10px] font-semibold text-fg">Needs your approval</span>
-              ) : stage.comingSoon ? (
-                <span className="mono text-[9px] uppercase tracking-[0.12em] text-muted">Soon</span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-
-        <div className={`grid min-h-0 flex-1 gap-3 ${embed ? "" : "lg:grid-cols-[16rem_minmax(0,1fr)_20rem]"}`}>
-          {embed ? null : (
-            <CandidateList people={floor.candidates} onOpen={setOpenId} className="hidden lg:flex" />
-          )}
-
-          <div className="flex min-h-0 min-w-0 flex-col gap-3">
-            <HoloStage stages={floor.stages} agents={floor.agents} active={floor.activeStage} compact={embed} />
-            <CommandBar
-              prompt={prompt}
-              error={promptError}
-              listening={listening}
-              micReady={micReady}
-              micNote={micNote}
-              embed={embed}
-              autonomous={autonomous}
-              frozen={frozen}
-              onPrompt={setPrompt}
-              onSubmit={() => applyPrompt(prompt)}
-              onSample={(line) => applyPrompt(line)}
-              onMic={toggleMic}
-              onToggle={() => setAutonomous((value) => !value)}
-              onReplay={() => {
-                if (frozen) return;
-                setElapsed(0);
-                setPlayToken((value) => value + 1);
-              }}
-            />
-          </div>
-
-          {embed ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              <CallsLog calls={floor.calls.slice(0, 4)} />
-              <div className="flex flex-col gap-3">
-                <CandidateList people={floor.candidates.slice(0, 6)} onOpen={setOpenId} />
-                <Approvals
-                  autonomous={autonomous}
-                  outreach={outreach}
-                  offer={offer}
-                  onOutreach={setOutreach}
-                  onOffer={setOffer}
-                />
-              </div>
-            </div>
-          ) : (
-            <DeskPanels
-              panel={panel}
-              onPanel={setPanel}
-              calls={floor.calls}
-              activity={floor.activity}
-              autonomous={autonomous}
-              outreach={outreach}
-              offer={offer}
-              onOutreach={setOutreach}
-              onOffer={setOffer}
-              className="hidden lg:flex"
-            />
-          )}
         </div>
-
-        {embed ? (
-          <p className="text-sm text-muted">
-            <Link href="/employers/mission-control-demo" className="font-semibold text-trust hover:text-deep">
+        <div className="counts" aria-label="Hiring metrics">
+          <Metric n={floor.metrics.sourced} label="CVs" short="CV" color="#00d4ff" />
+          <Metric n={floor.metrics.callsMade} label="CALLS" short="CALL" color="#7ee8ff" />
+          <Metric n={floor.metrics.interviewsCleared} label="CLEAR" short="CLR" color="#6ec8e8" />
+          <Metric n={floor.metrics.offersWaiting} label="OFFER" short="OFR" color="#ffb627" />
+        </div>
+        <div className="hud-right">
+          {embed ? (
+            <Link href="/employers/mission-control-demo" className="full-demo">
               Open the full demo
             </Link>
-            <span> · fictional names · nothing is sent</span>
-          </p>
-        ) : (
-          <div className="grid gap-3 lg:hidden">
-            <CandidateList people={floor.candidates} onOpen={setOpenId} />
-            <DeskPanels
-              panel={panel}
-              onPanel={setPanel}
-              calls={floor.calls}
-              activity={floor.activity}
-              autonomous={autonomous}
-              outreach={outreach}
-              offer={offer}
-              onOutreach={setOutreach}
-              onOffer={setOffer}
-            />
+          ) : null}
+          <button type="button" className="usage-btn voice-btn" id="btn-voice" onClick={() => toggleSheet("talk")}>
+            <MicIcon /> Talk
+          </button>
+          <button type="button" className={`usage-btn${sheet === "metrics" ? " on" : ""}`} onClick={() => toggleSheet("metrics")}>
+            <span className="lg">Metrics</span>
+            <span className="sm">Stats</span>
+          </button>
+          <div className="mode demo" title="Demo data. Every figure on this floor is sample data.">
+            <i />
+            DEMO DATA
           </div>
-        )}
+          <div className="clock">
+            <div id="clock-time">
+              {timeLabel} <small>IST</small>
+            </div>
+            <div id="clock-date">{dateLabel}</div>
+          </div>
+        </div>
+      </header>
+
+      <div id="ticker">
+        <div className="tk-label demo">DEMO · SIMULATED</div>
+        <div className="tk-track">
+          <div id="tk-inner" className="bj-marquee">
+            {tickerLoop.map((line, index) => (
+              <span className="tk" key={`${line}-${index}`}>
+                <b>Floor</b> {line}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <AnimatePresence>
-        {open ? (
-          <CandidateDrawer person={open} reduced={reduced} call={floor.calls.find((row) => row.candidateId === open.id) ?? null} onClose={() => setOpenId(null)} />
-        ) : null}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function CandidateList({
-  people,
-  onOpen,
-  className = "",
-}: {
-  people: FloorCandidate[];
-  onOpen: (id: string) => void;
-  className?: string;
-}) {
-  return (
-    <section aria-label="Candidates" className={`min-h-0 flex-col rounded-[14px] border border-line bg-surface/70 ${className || "flex"}`}>
-      <header className="flex items-center justify-between px-3 py-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Candidates</h2>
-        <span className="mono text-[10px] uppercase tracking-[0.14em] text-muted">Demo data</span>
-      </header>
-      <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
-        {people.map((person) => (
-          <li key={person.id}>
-            <button
-              type="button"
-              onClick={() => onOpen(person.id)}
-              className="flex w-full items-center justify-between gap-2 rounded-[10px] px-2 py-2 text-left hover:bg-white/5"
-            >
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium text-fg">Open {person.name}</span>
-                <span className="block truncate text-xs text-muted">
-                  {person.source} · {person.stage === "ai" ? "AI interview" : person.stage}
-                </span>
-              </span>
-              <span className="mono text-xs text-fg">{person.match}</span>
+      <aside id="left-panel" className={`panel${leftOpen ? " open" : ""}`}>
+        <div className="panel-head">
+          Filters <span className="tag sim">Demo data</span>
+        </div>
+        <p className="job-line">
+          {floor.job.title} · {floor.job.city} · {floor.job.openings} openings
+        </p>
+        <p className="sub-head">Job</p>
+        <div className="chips">
+          <span className="chip on">{floor.job.title}</span>
+        </div>
+        <p className="sub-head">Stage</p>
+        <div className="chips">
+          <button type="button" className={`chip${stageFilter === "all" ? " on" : ""}`} onClick={() => setStageFilter("all")}>
+            All
+          </button>
+          {floor.stages
+            .filter((stage) => stage.id !== "job")
+            .map((stage) => (
+              <button
+                key={stage.id}
+                type="button"
+                className={`chip${stageFilter === stage.id ? " on" : ""}`}
+                onClick={() => setStageFilter(stage.id)}
+              >
+                {stage.label}
+              </button>
+            ))}
+        </div>
+        <p className="sub-head">Source</p>
+        <div className="chips">
+          <button type="button" className={`chip${sourceFilter === "all" ? " on" : ""}`} onClick={() => setSourceFilter("all")}>
+            All
+          </button>
+          {SOURCES.map((source) => (
+            <button key={source} type="button" className={`chip${sourceFilter === source ? " on" : ""}`} onClick={() => setSourceFilter(source)}>
+              {source}
             </button>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function CallsLog({ calls }: { calls: FloorCall[] }) {
-  return (
-    <section aria-label="Calls" className="rounded-[14px] border border-line bg-surface/70">
-      <header className="flex items-center justify-between px-3 py-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Calls</h2>
-        <span className="mono text-[10px] uppercase tracking-[0.14em] text-muted">Demo · not live</span>
-      </header>
-      {calls.length === 0 ? (
-        <p className="px-3 pb-3 text-sm text-muted">No sample calls yet on this pass of the story.</p>
-      ) : (
-        <ul className="max-h-72 space-y-2 overflow-y-auto px-3 pb-3">
-          {calls.map((call) => (
-            <li key={call.id} className="border-t border-line pt-2 first:border-t-0 first:pt-0">
-              <p className="text-sm font-medium text-fg">{call.name}</p>
-              <p className="mono mt-0.5 text-[11px] text-muted">
-                {call.when} · {call.duration} · {call.outcome}
-              </p>
-              <p className="mt-1 text-sm leading-snug text-muted">{call.snippet}</p>
+          ))}
+        </div>
+        <p className="sub-head">Stages</p>
+        <ul aria-label="Stage counts" className="stage-counts">
+          {floor.stages.map((stage) => (
+            <li key={stage.id}>
+              <span className="mono">{stage.count}</span>
+              <span>{stage.label}</span>
+              {stage.id === "offer" ? <span className="apr">Needs your approval</span> : stage.comingSoon ? <span className="soon">soon</span> : null}
             </li>
           ))}
         </ul>
-      )}
-    </section>
-  );
-}
-
-function ActivityFeed({ items }: { items: { id: string; time: string; agent: string; text: string }[] }) {
-  return (
-    <section aria-label="Activity" className="min-h-0 flex-1 overflow-y-auto">
-      <h2 className="sr-only">Activity</h2>
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={item.id} className="border-t border-line pt-2 first:border-t-0">
-            <p className="mono text-[11px] text-muted">
-              {item.time} · {item.agent}
-            </p>
-            <p className="mt-0.5 text-sm leading-snug text-fg">{item.text}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function Approvals({
-  autonomous,
-  outreach,
-  offer,
-  onOutreach,
-  onOffer,
-}: {
-  autonomous: boolean;
-  outreach: Decision;
-  offer: Decision;
-  onOutreach: (value: Decision) => void;
-  onOffer: (value: Decision) => void;
-}) {
-  return (
-    <section aria-label="Approvals" className="rounded-[14px] border border-line bg-surface/70 p-3">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Approvals</h2>
-      <p className="mt-1 text-xs text-muted">
-        {autonomous
-          ? "Autonomous walks the earlier steps in this demo. Offers always need a human."
-          : "Outreach and the offer need a yes. Default is ask first. Offers always need a human."}
-      </p>
-      <ApprovalRow
-        title="Start outreach"
-        detail="Call the sample shortlist. The dialler is not live, so yes only marks the demo."
-        decision={outreach}
-        onYes={() => onOutreach("yes")}
-        onNo={() => onOutreach("no")}
-        yesLabel="Approve outreach"
-        noLabel="Decline outreach"
-      />
-      <ApprovalRow
-        title="Release offer"
-        detail="Sample offer for Sample Asha Iyer. Nothing is emailed."
-        decision={offer}
-        pendingLabel="Needs your approval"
-        onYes={() => onOffer("yes")}
-        onNo={() => onOffer("no")}
-        yesLabel="Approve offer"
-        noLabel="Decline offer"
-      />
-    </section>
-  );
-}
-
-function ApprovalRow({
-  title,
-  detail,
-  decision,
-  pendingLabel,
-  onYes,
-  onNo,
-  yesLabel,
-  noLabel,
-}: {
-  title: string;
-  detail: string;
-  decision: Decision;
-  pendingLabel?: string;
-  onYes: () => void;
-  onNo: () => void;
-  yesLabel: string;
-  noLabel: string;
-}) {
-  return (
-    <div className="mt-3 border-t border-line pt-3">
-      <p className="text-sm font-medium text-fg">{title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted">{detail}</p>
-      {pendingLabel && !decision ? (
-        <p className="mt-2 text-xs font-semibold text-fg" role="status">
-          {pendingLabel}
-        </p>
-      ) : null}
-      <div className="mt-2 flex flex-wrap gap-2">
-        <button type="button" onClick={onYes} className="rounded-full border border-trust px-3 py-1.5 text-xs font-semibold text-fg">
-          {yesLabel}
-        </button>
-        <button type="button" onClick={onNo} className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-muted">
-          {noLabel}
-        </button>
-      </div>
-      {decision ? (
-        <p className="mt-2 text-xs text-fg" role="status">
-          {decision === "yes" ? "Marked yes in this demo. Nothing was sent." : "Marked no. The demo waits."}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function DeskPanels({
-  panel,
-  onPanel,
-  calls,
-  activity,
-  autonomous,
-  outreach,
-  offer,
-  onOutreach,
-  onOffer,
-  className = "",
-}: {
-  panel: Panel;
-  onPanel: (panel: Panel) => void;
-  calls: FloorCall[];
-  activity: { id: string; time: string; agent: string; text: string }[];
-  autonomous: boolean;
-  outreach: Decision;
-  offer: Decision;
-  onOutreach: (value: Decision) => void;
-  onOffer: (value: Decision) => void;
-  className?: string;
-}) {
-  const tabs: { id: Panel; label: string }[] = [
-    { id: "calls", label: "Calls" },
-    { id: "activity", label: "Activity" },
-    { id: "approvals", label: "Approvals" },
-  ];
-  return (
-    <div className={`min-h-0 flex-col rounded-[14px] border border-line bg-surface/70 ${className || "flex"}`}>
-      <div className="flex gap-1 p-2" role="tablist" aria-label="Floor panels">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={panel === tab.id}
-            onClick={() => onPanel(tab.id)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${panel === tab.id ? "bg-trust text-white" : "text-muted"}`}
-          >
-            {tab.label}
+        <div className="bj-human">
+          <button type="button" aria-pressed={autonomous} onClick={() => setAutonomous((value) => !value)}>
+            {autonomous ? "Autonomous on" : "Ask before each step"}
           </button>
-        ))}
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-        {panel === "calls" ? <CallsLog calls={calls} /> : null}
-        {panel === "activity" ? <ActivityFeed items={activity} /> : null}
-        {panel === "approvals" ? (
-          <Approvals autonomous={autonomous} outreach={outreach} offer={offer} onOutreach={onOutreach} onOffer={onOffer} />
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function CommandBar({
-  prompt,
-  error,
-  listening,
-  micReady,
-  micNote,
-  embed,
-  autonomous,
-  frozen,
-  onPrompt,
-  onSubmit,
-  onSample,
-  onMic,
-  onToggle,
-  onReplay,
-}: {
-  prompt: string;
-  error: string | null;
-  listening: boolean;
-  micReady: boolean;
-  micNote: string | null;
-  embed: boolean;
-  autonomous: boolean;
-  frozen: boolean;
-  onPrompt: (value: string) => void;
-  onSubmit: () => void;
-  onSample: (line: string) => void;
-  onMic: () => void;
-  onToggle: () => void;
-  onReplay: () => void;
-}) {
-  return (
-    <form
-      className="rounded-[14px] border border-line bg-surface/80 p-3"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-    >
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Tell the recruiter</span>
-        <span className="mt-2 flex gap-2">
-          <input
-            value={prompt}
-            onChange={(event) => onPrompt(event.target.value)}
-            placeholder="Hire 3 React developers in Bangalore, 2-4 yrs, notice under 30 days"
-            aria-label="Tell the recruiter"
-            className="min-w-0 flex-1 rounded-[10px] border border-line bg-paper px-3 py-2 text-sm text-fg outline-none placeholder:text-muted focus:border-trust"
-          />
-          <button
-            type="submit"
-            className={
-              embed
-                ? "rounded-full border border-trust px-4 py-2 text-sm font-semibold text-fg"
-                : "rounded-full bg-trust px-4 py-2 text-sm font-semibold text-white"
-            }
-          >
-            Ask
-          </button>
-        </span>
-      </label>
-      {error ? (
-        <p className="mt-2 text-sm text-warn" role="alert">
-          {error}
-        </p>
-      ) : null}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {SAMPLE_PROMPTS.map((line) => (
-          <button key={line} type="button" onClick={() => onSample(line)} className="max-w-full rounded-full border border-line px-2.5 py-1 text-left text-[11px] text-muted hover:border-trust">
-            {line}
-          </button>
-        ))}
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={onMic}
-          aria-pressed={listening}
-          className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-fg"
+          <p>Offers always need a human.</p>
+          <p className="metric-note">AI calls, pre-BGV, offers, and joining chats are not live yet.</p>
+        </div>
+        <div className="roster" aria-label="Candidates">
+          {people.map((person) => (
+            <button key={person.id} type="button" className="r-item" aria-label={`Open ${person.name}`} onClick={() => openPerson(person.id)}>
+              <i className="r-dot" style={{ color: person.interest === "interested" ? "#7ee8ff" : "#6ec8e8" }} />
+              <span>
+                <span className="r-name">{person.name}</span>
+                <span className="r-sub">
+                  {person.source} · {floor.stages.find((stage) => stage.id === person.stage)?.label}
+                </span>
+              </span>
+              <span className="r-st">{INTEREST[person.interest]}</span>
+            </button>
+          ))}
+        </div>
+        <form
+          className="bj-ask"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitLine(prompt);
+          }}
         >
-          {listening ? "Stop mic" : micReady ? "Use mic" : "Mic unavailable"}
-        </button>
-        <button type="button" onClick={onToggle} aria-pressed={autonomous} className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-fg">
-          {autonomous ? "Autonomous on" : "Ask before each step"}
-        </button>
-        <span className="text-[11px] text-muted">Offers always need a human.</span>
-        {frozen ? null : (
-          <button type="button" onClick={onReplay} className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-muted">
-            Replay from the start
-          </button>
-        )}
-        <span className="text-[11px] text-muted">Voice stays in this browser. No key, and no audio is uploaded.</span>
-      </div>
-      {micNote ? <p className="mt-2 text-xs text-muted">{micNote}</p> : null}
-    </form>
-  );
-}
+          <label>
+            Tell the recruiter
+            <span className="row">
+              <input
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                aria-label="Tell the recruiter"
+                placeholder="Hire 3 React developers in Bangalore…"
+              />
+              <button type="submit">Ask</button>
+            </span>
+          </label>
+          {promptError ? (
+            <p className="metric-note" role="alert">
+              {promptError}
+            </p>
+          ) : null}
+        </form>
+      </aside>
 
-function CandidateDrawer({
-  person,
-  call,
-  reduced,
-  onClose,
-}: {
-  person: FloorCandidate;
-  call: FloorCall | null;
-  reduced: boolean;
-  onClose: () => void;
-}) {
-  const titleId = useId();
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    closeRef.current?.focus();
-  }, [person.id]);
+      <aside id="right-panel" className={`panel${rightOpen ? " open" : ""}`}>
+        <div className="panel-head">
+          Mission log <span className="tag sim">Simulated</span>
+        </div>
+        <section aria-label="Calls" className="log">
+          {floor.calls.length === 0 ? <p className="empty-note">No sample calls yet on this pass.</p> : null}
+          {floor.calls.map((call) => (
+            <article key={call.id} className="li">
+              <time className="li-time">{call.when.replace("Day 1 · ", "")}</time>
+              <div>
+                <div className="li-head">
+                  <span className="li-agent">{call.name}</span>
+                  <span className="li-st" style={{ color: call.outcome === "Interested" ? "#7ee8ff" : "#ffb627" }}>
+                    {call.outcome}
+                  </span>
+                </div>
+                <p className="li-msg">
+                  {call.duration} · notice {noticeOf(call.candidateId)} · {call.snippet}
+                </p>
+              </div>
+            </article>
+          ))}
+          {floor.activity.map((item) => (
+            <article key={item.id} className="li">
+              <time className="li-time">{item.time}</time>
+              <div>
+                <div className="li-head">
+                  <span className="li-agent">{item.agent}</span>
+                </div>
+                <p className="li-msg">{item.text}</p>
+              </div>
+            </article>
+          ))}
+        </section>
+      </aside>
 
-  return (
-    <motion.div
-      className="fixed inset-0 z-[70] flex justify-end bg-ink/50"
-      initial={reduced ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: durations.fast, ease }}
-      onClick={onClose}
-    >
-      <motion.aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        initial={reduced ? false : { x: 24, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={reduced ? undefined : { x: 24, opacity: 0 }}
-        transition={{ duration: durations.base, ease }}
-        className="h-full w-full max-w-md overflow-y-auto border-l border-line bg-paper p-5 text-fg shadow-soft"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="kicker text-trust">Demo data</p>
-            <h2 id={titleId} className="display mt-1 text-2xl text-fg">
-              {person.name}
-            </h2>
-            <p className="mt-1 text-sm text-muted">Fictional candidate. Not a real person.</p>
+      {dossierOpen ? (
+        <aside id="agent-panel" className="panel open" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+          <div className="panel-head">
+            {open ? "Candidate" : "Recruiter bot"}
+            <button
+              type="button"
+              className="close-btn"
+              onClick={() => {
+                setOpenId(null);
+                setBotId(null);
+                setSheet((current) => (current === "dossier" ? null : current));
+              }}
+            >
+              ×
+            </button>
           </div>
-          <button ref={closeRef} type="button" onClick={onClose} className="rounded-full border border-line px-3 py-1 text-sm text-fg">
-            Close
+          {open ? <CandidateDossier person={open} titleId={titleId} call={floor.calls.find((row) => row.candidateId === open.id) ?? null} portraitRef={portraitRef} /> : null}
+          {bot ? <BotDossier name={bot.name} task={bot.task} state={bot.state} titleId={titleId} portraitRef={portraitRef} /> : null}
+        </aside>
+      ) : null}
+
+      <aside id="usage-panel" className={`panel${sheet === "metrics" ? " open" : ""}`} hidden={sheet !== "metrics"}>
+        <div className="panel-head">
+          Metrics <span className="tag sim">Demo data</span>
+          <button type="button" className="close-btn" onClick={() => setSheet(null)}>
+            ×
           </button>
         </div>
+        <div className="up-body">
+          <p className="metric-note">
+            Counted from the sample people on this floor. {floor.metrics.elapsedLabel} of a {floor.metrics.targetLabel}. Demo clock, not a promise that a hire finishes in 3 days.
+          </p>
+          <MetricCard title="Sourcing" rows={[["CVs sourced", floor.metrics.sourced], ["Ranked", floor.metrics.ranked]]} />
+          <MetricCard
+            title="AI calls · soon"
+            rows={[
+              ["Made", floor.metrics.callsMade],
+              ["Connected", floor.metrics.connected],
+              ["Interested", floor.metrics.interested],
+              ["Not interested", floor.metrics.notInterested],
+              ["No answer", floor.metrics.noAnswer],
+              ["Avg duration", floor.metrics.avgCallDuration],
+            ]}
+          />
+          <MetricCard
+            title="Interviews · clear mark 75"
+            rows={[
+              ["AI interviews taken", floor.metrics.interviewsTaken],
+              ["AI interviews cleared", floor.metrics.interviewsCleared],
+              ["L1 cleared", floor.metrics.l1Cleared],
+              ["L2 cleared", floor.metrics.l2Cleared],
+              ["Human round booked", floor.metrics.humanBooked],
+            ]}
+          />
+          <MetricCard
+            title="Pre-BGV · soon"
+            rows={[
+              ["Verified", floor.metrics.bgvVerified],
+              ["Pending", floor.metrics.bgvPending],
+              ["Flagged", floor.metrics.bgvFlagged],
+            ]}
+            note="EPFO and DigiLocker are not connected."
+          />
+          <MetricCard
+            title="Offer · soon"
+            rows={[
+              ["Awaiting approval", floor.metrics.offersWaiting],
+              ["Released", floor.metrics.offersReleased],
+              ["Accepted", floor.metrics.offersAccepted],
+              ["Joined", floor.metrics.joined],
+              ["Dropout alerts", floor.metrics.dropoutAlerts],
+            ]}
+            note="A person always releases the offer. Nothing is emailed."
+          />
+          {offerYes ? <p className="metric-note">Marked yes in this demo. Nothing was emailed. The offer desk still needs a person.</p> : null}
+          <button type="button" className="usage-btn" onClick={() => setOfferYes(true)}>
+            Record a yes for the sample offer
+          </button>
+        </div>
+      </aside>
 
-        <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-          <Fact k="Source" v={person.source} />
-          <Fact k="City" v={person.city} />
-          <Fact k="Notice" v={person.notice} />
-          <Fact k="Match" v={String(person.match)} />
-          <Fact k="Interest" v={INTEREST[person.interest]} />
-          <Fact k="BGV" v={BGV[person.bgv]} tone={person.bgv} />
-        </dl>
+      <aside id="voice-panel" className={`panel${sheet === "talk" ? " open" : ""}`} hidden={sheet !== "talk"} aria-label="Talk to Recruiter">
+        <div className="panel-head">
+          Talk to Recruiter
+          <button type="button" className="close-btn" onClick={() => setSheet((current) => (current === "talk" ? null : current))}>
+            ×
+          </button>
+        </div>
+        <div className={`vp-status${listening ? " listening" : ""}`}>
+          <i />
+          <span id="vp-state">{listening ? "Listening…" : "Ready"}</span>
+          <span className="vp-hint">Demo data · stays in this browser</span>
+        </div>
+        <div className="vp-log" ref={logRef}>
+          {messages.map((bubble, index) => (
+            <div key={`${bubble.who}-${index}`} className={`vm ${bubble.who}`}>
+              <small>{bubble.who === "you" ? "You" : "Recruiter"}</small>
+              {bubble.text}
+            </div>
+          ))}
+        </div>
+        <form
+          className="vp-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitLine(talkText);
+          }}
+        >
+          <button type="button" className={`vp-mic${listening ? " on" : ""}`} aria-label="Microphone" aria-pressed={listening} onClick={toggleMic}>
+            <MicIcon />
+          </button>
+          <input
+            id="vp-input"
+            value={talkText}
+            onChange={(event) => setTalkText(event.target.value)}
+            placeholder="Ask about the floor…"
+            aria-label="Ask the recruiter"
+          />
+          <button type="submit" className="vp-send">
+            Ask
+          </button>
+        </form>
+        <div className="vp-opts">
+          <label>
+            <input type="checkbox" checked={handsFree} onChange={(event) => setHandsFree(event.target.checked)} /> Hands-free
+          </label>
+          <label>
+            <input type="checkbox" checked={mute} onChange={(event) => setMute(event.target.checked)} /> Mute replies
+          </label>
+          {SAMPLE_PROMPTS.slice(0, 1).map((line) => (
+            <button key={line} type="button" className="vp-link" onClick={() => submitLine(line)}>
+              {line}
+            </button>
+          ))}
+        </div>
+      </aside>
 
-        <h3 className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Scores</h3>
-        <ul className="mt-2 space-y-1 text-sm">
+      <div id="legend">
+        <span style={{ color: "#00d4ff" }}>
+          <i /> Working
+        </span>
+        <span style={{ color: "#b591ff" }}>
+          <i /> Thinking
+        </span>
+        <span style={{ color: "#ffb627" }}>
+          <i /> Needs approval
+        </span>
+        <span style={{ color: "#ff3d57" }}>
+          <i /> Error
+        </span>
+        <span style={{ color: "#34e8a8" }}>
+          <i /> Active
+        </span>
+        <span style={{ color: "#6ec8e8" }}>
+          <i /> Idle
+        </span>
+        <span className="hint">Click agent · Drag · Scroll zoom</span>
+        <button type="button" id="btn-recenter" onClick={() => labRef.current?.recenter()}>
+          Recenter
+        </button>
+      </div>
+
+      <nav id="mnav" aria-label="Floor sections">
+        <button type="button" className={sheet === "filters" ? "on" : ""} onClick={() => toggleSheet("filters")}>
+          Candidates
+        </button>
+        <button type="button" className={sheet === "log" ? "on" : ""} onClick={() => toggleSheet("log")}>
+          Mission log
+        </button>
+        <button type="button" className={sheet === "talk" ? "on" : ""} onClick={() => toggleSheet("talk")}>
+          Talk
+        </button>
+        <button type="button" className={sheet === "metrics" ? "on" : ""} onClick={() => toggleSheet("metrics")}>
+          Metrics
+        </button>
+        <button type="button" onClick={() => labRef.current?.recenter()}>
+          Recenter
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+function Metric({ n, label, short, color }: { n: number; label: string; short: string; color: string }) {
+  return (
+    <span className="cnt" style={{ color }}>
+      <i />
+      <b>{n}</b>
+      <span>{label}</span>
+      <s>{short}</s>
+    </span>
+  );
+}
+
+function MetricCard({ title, rows, note }: { title: string; rows: [string, number | string][]; note?: string }) {
+  return (
+    <div className="uc">
+      <div className="uc-top">
+        <span className="uc-name">{title}</span>
+        <span className="chip-st st-no-usage-api">Demo</span>
+      </div>
+      <div className="uc-grid">
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <div className="uc-k">{label}</div>
+            <div className="uc-v">{value}</div>
+          </div>
+        ))}
+      </div>
+      {note ? <p className="uc-d">{note}</p> : null}
+    </div>
+  );
+}
+
+function CandidateDossier({
+  person,
+  titleId,
+  call,
+  portraitRef,
+}: {
+  person: FloorCandidate;
+  titleId: string;
+  call: { when: string; duration: string; outcome: string; snippet: string } | null;
+  portraitRef: RefObject<HTMLCanvasElement | null>;
+}) {
+  return (
+    <div className="ap-body">
+      <div className="ap-top">
+        <canvas id="ap-portrait" ref={portraitRef} width={72} height={92} />
+        <div>
+          <p className="kicker">Demo data</p>
+          <h2 id={titleId} className="ap-name">
+            {person.name}
+          </h2>
+          <p className="ap-val">Fictional candidate. Not a real person.</p>
+          <div className="ap-badges">
+            <span className="badge zone">{person.source}</span>
+            <span className="badge">{BGV[person.bgv]}</span>
+          </div>
+        </div>
+      </div>
+      <div className="ap-section ap-row">
+        <div>
+          <div className="ap-label">City</div>
+          <div className="ap-val">{person.city}</div>
+        </div>
+        <div>
+          <div className="ap-label">Notice</div>
+          <div className="ap-val">{person.notice}</div>
+        </div>
+        <div>
+          <div className="ap-label">Match</div>
+          <div className="ap-val mono">{person.match}</div>
+        </div>
+        <div>
+          <div className="ap-label">Interest</div>
+          <div className="ap-val">{INTEREST[person.interest]}</div>
+        </div>
+      </div>
+      <div className="ap-section">
+        <div className="ap-label">Scores · clear mark 75 · fictional</div>
+        <div className="ap-row">
           <Score label="AI interview" value={person.scores.ai} />
           <Score label="L1" value={person.scores.l1} />
           <Score label="L2" value={person.scores.l2} />
-        </ul>
-        <p className="mt-2 text-xs text-muted">Fictional demo scores. Not a real result and not a promise of an outcome.</p>
-
-        <h3 className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Call notes</h3>
+        </div>
+      </div>
+      <div className="ap-section">
+        <div className="ap-label">Call</div>
         {call ? (
-          <p className="mt-2 text-sm leading-relaxed text-fg">
-            <span className="mono text-xs text-muted">
-              {call.when} · {call.duration} · {call.outcome}
-            </span>
-            <span className="mt-1 block">{call.snippet}</span>
+          <p className="ap-val">
+            {call.when} · {call.duration} · {call.outcome}. {call.snippet}
           </p>
         ) : (
-          <p className="mt-2 text-sm text-muted">No sample call on this person yet.</p>
+          <p className="ap-val">No sample call on this person yet.</p>
         )}
-
-        {person.dropoutRisk != null ? (
-          <p className="mt-4 rounded-[10px] border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-fg">
-            Dropout risk {person.dropoutRisk}. Sample alert only. The joining chat is not live.
-          </p>
-        ) : null}
-
-        <h3 className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Timeline</h3>
-        <ol className="mt-2 space-y-2">
+      </div>
+      {person.dropoutRisk != null ? (
+        <p className="ap-val">Dropout risk {person.dropoutRisk}. Sample alert. The joining chat is not live.</p>
+      ) : null}
+      <div className="ap-section">
+        <div className="ap-label">Timeline</div>
+        <ol className="ap-act">
           {person.timeline.map((step) => (
-            <li key={step.label} className="border-l-2 border-trust pl-3 text-sm text-fg">
-              {step.label}
+            <li key={step.label} className="act">
+              <i style={{ color: "#00d4ff" }} />
+              <p>{step.label}</p>
             </li>
           ))}
         </ol>
-      </motion.aside>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-function Fact({ k, v, tone }: { k: string; v: string; tone?: BgvStatus }) {
-  const color = tone === "verified" ? "text-verify" : tone === "flagged" ? "text-warn" : "text-fg";
+function BotDossier({
+  name,
+  task,
+  state,
+  titleId,
+  portraitRef,
+}: {
+  name: string;
+  task: string;
+  state: AgentState;
+  titleId: string;
+  portraitRef: RefObject<HTMLCanvasElement | null>;
+}) {
+  const label = state === "approval" ? "Needs your approval" : state;
   return (
-    <div>
-      <dt className="text-[11px] uppercase tracking-[0.12em] text-muted">{k}</dt>
-      <dd className={`mt-0.5 font-medium ${color}`}>{v}</dd>
+    <div className="ap-body">
+      <div className="ap-top">
+        <canvas id="ap-portrait" ref={portraitRef} width={72} height={92} />
+        <div>
+          <p className="kicker">Demo data</p>
+          <h2 id={titleId} className="ap-name">
+            {name}
+          </h2>
+          <p className="ap-status" style={{ color: state === "approval" ? "#ffb627" : "#00d4ff" }}>
+            <i /> {label}
+          </p>
+        </div>
+      </div>
+      <div className="ap-section">
+        <div className="ap-label">Now</div>
+        <p className="ap-val strong">{task}</p>
+      </div>
     </div>
   );
 }
 
 function Score({ label, value }: { label: string; value: number | null }) {
+  const cleared = value != null && value >= 75;
   return (
-    <li className="flex items-center justify-between">
-      <span className="text-muted">{label}</span>
-      <span className="mono text-fg">{value == null ? "—" : value}</span>
-    </li>
+    <div>
+      <div className="ap-label">{label}</div>
+      <div className="ap-val mono">
+        {value == null ? "—" : value}
+        {cleared ? " · cleared" : ""}
+      </div>
+    </div>
+  );
+}
+
+function BrandMark() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="none" stroke="#00d4ff" strokeWidth="1.4" />
+      <circle cx="16" cy="16" r="6" fill="none" stroke="#c9a227" strokeWidth="1.2" />
+      <circle cx="16" cy="16" r="2" fill="#00d4ff" />
+    </svg>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+      <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M6 11a6 6 0 0 0 12 0M12 17v4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
   );
 }
