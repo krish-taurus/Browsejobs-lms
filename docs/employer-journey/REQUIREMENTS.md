@@ -1,7 +1,7 @@
 # Employer WhatsApp hiring journey — requirements
 
 **Status:** Draft for Dr Krish Bharggav
-**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate data connectors)
+**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate connectors, mission control)
 **Evidence:** `GAP-ANALYSIS.md` in this folder (what the repo does today)
 **Does not replace** `browsejobs-lms-requirements.md` (the LMS) or `docs/employer-module-requirements.md` (the website hiring desk). Where this document disagrees with the employer desk — mainly “a person always releases the offer” — the disagreement is listed under Open questions. Do not build the conflicting part until that decision is made.
 
@@ -23,6 +23,7 @@ BrowseJobs already has a website where a company logs in, posts a job, and works
 8. Optional: “Run pre-BGV?” The bot calls an employment-history check (EPFO/PF) and a document check (DigiLocker) and shows HR a short summary.
 9. On yes, it fills the company’s offer template and emails it to the candidate.
 10. From offer until after joining, a WhatsApp bot talks to the candidate the way a careful HR person would. If the replies suggest they may not join, HR is alerted, with a rank. Joining date, place, and what to bring go out before the day.
+11. On the website, a live mission-control desk shows the same job: which phase it is in, who is in each phase, and what each bot is doing right now. WhatsApp stays the remote control. The desk is the window.
 
 **What we will not claim**
 
@@ -38,7 +39,7 @@ Six phases. The first one is the only one that must exist before anything else i
 
 | Phase | What HR can do at the end of it | Size |
 |---|---|---|
-| 1 — MVP | Connect by QR. Send a role. Get ranked BrowseJobs CVs on WhatsApp. | Medium. Mostly new conversation code on top of the job and talent-pool code. |
+| 1 — MVP | Connect by QR. Send a role. Get ranked BrowseJobs CVs on WhatsApp. The desk already shows the job, the sourcing column, and the WhatsApp thread moving. | Medium. Mostly new conversation code on top of the job and talent-pool code. |
 | 1b — Their files | Drop an Excel on the website, send a file in WhatsApp, or forward mail to a company address. Those people are ranked in the same list, labelled with their source. | Medium. Parsing tools exist. The private pool and the WhatsApp/email doors do not. |
 | 2 — Calls | Approve outreach. Bot phones candidates and reports interest. | Large. New phone vendor, new consent, new cost control. |
 | 3 — L1 and L2 | Approve interviews. Candidates sit them. HR gets the clearance note and the write-up. | Medium. The interview and grading code exist; delivery and the candidate screen do not. |
@@ -49,6 +50,8 @@ Six phases. The first one is the only one that must exist before anything else i
 | 8 — Job boards | Bring in Naukri or LinkedIn **only** through the client’s export or an official partner agreement. | Contract first, then a medium build. There is no public API to switch on. |
 
 Size means how much new product this is, next to the employer desk already in the repo. It is not a calendar promise.
+
+The mission-control screen is not an extra hiring step. It is the window onto the steps above. A look-only preview, with sample names and a looping story, is at `/employers/mission-control-demo`. It is not linked from the public site and it is not indexed. The real desk replaces that preview one phase at a time.
 
 **Decisions needed before phase 1 starts**
 
@@ -172,7 +175,7 @@ Matching is useless if the only people in it are BrowseJobs students. The client
 
 **Rule for every source.** The client’s people live in a **private pool** for that company. They are never copied into the shared BrowseJobs student database. Another company cannot search them. We de-duplicate inside the company (same email or same phone → one person). We link a private row to a BrowseJobs student only when the email matches **and** that student has agreed to be shown to employers. The client’s notes do not become part of the student’s profile.
 
-**Rule for the client’s permission.** Before the first import, the owner confirms a short sentence: they have a proper reason to share these people’s data with BrowseJobs, and those people have been told or will be told before anyone calls them. We store that confirmation. A call still needs the candidate’s own yes (section 10.5). Uploading a file is not consent to be phoned.
+**Rule for the client’s permission.** Before the first import, the owner confirms a short sentence: they have a proper reason to share these people’s data with BrowseJobs, and those people have been told or will be told before anyone calls them. We store that confirmation. A call still needs the candidate’s own yes (section 11.5). Uploading a file is not consent to be phoned.
 
 **Sync, in two speeds.**
 
@@ -240,7 +243,7 @@ Phase 8 starts when a customer contract requires a live Naukri or LinkedIn conne
 
 ### What HR sees after any of these
 
-The match list (section 4.2) gains a source on every line:
+The match list (section 5.2) gains a source on every line:
 
 “1. Asha — 86% — BrowseJobs — Python, Django — gap: Kubernetes”
 “2. Ravi — 81% — your Excel (12 Oct) — Python, SQL”
@@ -249,7 +252,74 @@ From `matched` onward, Ravi is in the same outreach → L1 → L2 path as Asha. 
 
 ---
 
-## 4. WhatsApp conversations
+## 4. Live hiring mission control
+
+HR can run the job from WhatsApp. They should also be able to open the website and **see it happening**: CVs being scored, a call in progress, an interview, a slot being picked, a BGV check, a chat before joining. The feel to aim for is a calm operations room — dark, precise, alive — not a cartoon and not a second product with a new colour system.
+
+A scripted preview of that room already exists so the look can be judged before it is wired up: `/employers/mission-control-demo`. Every name on it is a sample. It loops a full story in about 90 seconds. It does not call an API.
+
+### Where it lives in the product we already have
+
+The signed-in employer home is `apps/web/src/app/employer/(workspace)/dashboard/page.tsx`, inside `EmployerShell` (sidebar: Taurus AI, Dashboard, Jobs, Pipeline, Team). That page is a quiet summary today: counts, open roles, a chart. Pipeline stages already exist on `apps/web/src/app/employer/(workspace)/pipeline/page.tsx`.
+
+Mission control **replaces the quiet summary** as the dashboard, for one selected job, with a switcher if the company has several roles. Jobs, pipeline, and team stay where they are. Taurus AI stays the place to dictate a role on the web. The demo route is not that dashboard. Do not link the demo from the public nav, the sitemap, or the employer sidebar.
+
+### Layout
+
+Dark surface, the existing ink / trust-blue tokens, mono for every count and timer, one primary blue. Glass panels, a faint grid, motion only on opacity and transform. `prefers-reduced-motion` stops the motion and still updates the facts.
+
+1. **Phase rail.** Nine stages, in order: Job raised, Sourcing (including the company’s own files), AI calls, L1, L2, Human round, Pre-BGV, Offer, Joining. Each stage shows a live count and the people in it (initials, not photos). The stage the bot is working is the one that glows.
+2. **Agent cards.** One card per bot: screening, calls, interview, scheduler, BGV, engagement. Status is idle, working, or waiting for HR. A live call shows the person’s sample-style name, a timer, a short waveform, and the latest transcript line.
+3. **Activity feed.** One line at a time, newest first. Examples: “Screening bot: matched 142 CVs, 18 above 80%.” “Call bot: speaking with Sample Rahul (0:42), interested, notice 30 days.”
+4. **WhatsApp mirror.** The same thread HR has on their phone, on the side of the desk, so a person at a laptop and a person on WhatsApp are looking at one conversation.
+5. **Approval queue.** When autonomous mode is off, the next yes/no sits here and on WhatsApp. When it is on, the queue is empty and the toggle says so. The toggle is per job (section 2).
+6. **Candidate drawer.** Click a person: timeline of stages, match score and source, call transcript, L1/L2 dials, BGV outcome, engagement chat, dropout risk if it has fired. Phone numbers are masked (`+91 98••• ••21`). No document images in the drawer.
+
+On a 1280-wide screen the rail is one row and the cards sit beside the feed and the WhatsApp mirror. At 390 the rail scrolls sideways, the cards stack, and the drawer is a full-height sheet. Nothing should require horizontal zoom to read a sentence.
+
+### Real time
+
+There is no websocket stack in the API today. Do not pretend the dashboard polls “feels live” by refreshing the whole page.
+
+Recommended first transport: **server-sent events** from the Laravel API (`text/event-stream`), one stream per company, filtered to the job on screen. It fits the current VPS deploy (one app, Redis already there) and only needs to push. Add **Laravel Reverb** later if we need the browser to push as well, or if the number of open desks makes SSE connections a problem.
+
+Every bot action already wants a queued job. When that job changes a fact, it also emits one event. Suggested payload:
+
+- `company_id`, `job_id`, `candidate_id` (optional)
+- `phase` (the nine stages)
+- `bot` (screening, call, interview, scheduler, bgv, engagement, whatsapp)
+- `kind` (stage_entered, call_started, transcript_line, score_ready, approval_needed, approval_given, alert)
+- `text` (one short line, safe to show)
+- `at` (ISO time)
+
+The feed, the rail, and the agent card all read this same event. The WhatsApp mirror reads the message log we already store. If the stream drops, the desk refetches the current snapshot and says “reconnected”, rather than freezing on a lie.
+
+### Performance and privacy
+
+- First paint of the desk under 2 seconds on a normal laptop. Events patch one card. They do not reload the page.
+- A company with 200 people in sourcing shows counts plus the top few avatars, not 200 faces.
+- The stream is authenticated as the member, company-scoped, and tenant-scoped. Another company never receives the events.
+- Mask phone and email in the rail, the feed, and the drawer. Reveal the full number only on the drawer, for a recruiter or owner, and write an audit row when they do.
+- Call audio is not played on the desk in v1. Transcript text is enough. A waveform can be a level meter, not a recording.
+- Sample and demo routes stay labelled and stay out of search engines. The live desk never uses the demo’s fake people.
+
+### What ships when
+
+| When | What the desk shows for real |
+|---|---|
+| Phase 1 | Job raised, sourcing counts and sources, activity lines, WhatsApp mirror |
+| Phase 1b | Client-file imports landing in the sourcing column, tagged with their source |
+| Phase 2 | Call card, waveform, transcript snippet, approval queue |
+| Phase 3 | L1 and L2 counts and score dials |
+| Phase 4 | Scheduler card and the booked slot |
+| Phase 5 | BGV ticks and the offer line |
+| Phase 6 | Engagement chat and the dropout alert |
+
+Until a phase is real, that card stays idle and says so. It does not invent a call.
+
+---
+
+## 5. WhatsApp conversations
 
 One bot number for BrowseJobs employers. People are recognised by their WhatsApp id, stored against an employer member. Candidates are a **different** conversation on the same number (or a second number — see Open questions). The bot must not mix them: an employer message never receives the candidate script.
 
@@ -257,7 +327,7 @@ Messages that start a new topic use an approved WhatsApp template. Replies insid
 
 Quiet hours for **calls** are 9:00–19:00 IST, matching the contact hours already on the site. WhatsApp updates may go until 21:00 IST; marketing-style nudges keep the existing 21:00–09:00 block.
 
-### 4.1 Employer: connect
+### 5.1 Employer: connect
 
 QR encodes a WhatsApp link with a one-time company code, for example a prefilled “JOIN ABC123”.
 
@@ -267,7 +337,7 @@ QR encodes a WhatsApp link with a one-time company code, for example a prefilled
 
 The website can also show the QR after the company exists, so the first owner can still be created by ops (the admin onboard screen already does this) and then move to WhatsApp.
 
-### 4.2 Employer: raise a job
+### 5.2 Employer: raise a job
 
 Accept text or a voice note.
 
@@ -278,7 +348,7 @@ Bot:
 1. Immediately: “Got it. I’m reading that and searching CVs.”
 2. Parse title, skills, city, salary, openings, remote. If salary or city is missing, ask one question, not five.
 3. Show the reading back: “Role: Software engineer. Location: Bengaluru. Salary: ₹12 LPA. Openings: 2. Reply YES to search, or correct me.”
-4. On YES, score the pool and send the top matches (speed target in section 10.1).
+4. On YES, score the pool and send the top matches (speed target in section 11.1).
 
 Each match, in one bubble or a short list:
 
@@ -295,7 +365,7 @@ Voice notes: download the media from Meta, transcribe with the same speech-to-te
 
 Do not wait for the JD mock generator before sending CVs. That job can run in the background after the job is saved.
 
-### 4.3 Employer: outreach result
+### 5.3 Employer: outreach result
 
 After calls finish, or at a cutoff (for example two hours, or sooner if everyone has answered):
 
@@ -307,7 +377,7 @@ Interested:
 
 “Shall I set up L1 for these 5?”
 
-### 4.4 Employer: L1 and L2
+### 5.4 Employer: L1 and L2
 
 “L1 closed. 5 were invited, 4 attended, 3 cleared the bar (70). Send L2 to those 3?”
 
@@ -319,7 +389,7 @@ After L2:
 
 The bar (default 70) is per job and editable (“set L1 bar to 75”).
 
-### 4.5 Employer: human round
+### 5.5 Employer: human round
 
 “Set up a human round for these 2?”
 
@@ -333,7 +403,7 @@ When one slot is taken, tell the others it is gone. Then create the meeting and 
 - Interviewer: time, link, CV link, the L1/L2 summary
 - HR: the same, plus who booked it
 
-### 4.6 Employer: pre-BGV and offer
+### 5.6 Employer: pre-BGV and offer
 
 “Run pre-BGV on Asha? This checks employment history (EPFO) and documents (DigiLocker). She will be asked to consent. We do not start without that.”
 
@@ -345,14 +415,14 @@ On yes (and if autonomous is off, this yes is a person): generate the letter and
 
 If the template is missing: do not invent one. Say “Upload your offer template on the website, then say offer again.”
 
-### 4.7 Candidate: before and during the process
+### 5.7 Candidate: before and during the process
 
 - First contact is a template that says who is calling (BrowseJobs, for {company}), that the next call may be an AI, that it can be recorded, and that they can reply STOP.
 - No call until that consent is on file, except where the candidate has already given this exact consent in the product.
-- L1/L2 arrive as a link, with a deadline. The interview itself runs on the existing AI interview (section 8), not as an endless WhatsApp quiz.
+- L1/L2 arrive as a link, with a deadline. The interview itself runs on the existing AI interview (section 9), not as an endless WhatsApp quiz.
 - STOP, or “don’t call me”, ends the candidate on that job and is audited.
 
-### 4.8 Candidate: from offer to joining
+### 5.8 Candidate: from offer to joining
 
 Tone: short, warm, direct. Like a competent HR person. Not a cheerleader.
 
@@ -368,7 +438,7 @@ After joining day, one check-in the next week (“How was day one?”) and then 
 
 ---
 
-## 5. Data we need to add
+## 6. Data we need to add
 
 New tables, all with `tenant_id`, and foreign keys to company, job, and candidate where those apply. Do not edit old migrations; add new ones.
 
@@ -402,7 +472,7 @@ The talent-pool match does not need a new score formula in phase 1. Store the li
 
 ---
 
-## 6. API
+## 7. API
 
 Keep the existing `/api/v1/employer/...` website API. Add the following. All of them check tenant and company membership, same as today (`ResolvesMembership`).
 
@@ -451,7 +521,7 @@ Candidate interview endpoints stay under `/api/v1/me/employer-interviews`. Phase
 
 ---
 
-## 7. Background jobs
+## 8. Background jobs
 
 Every send, call, AI grade, PDF, and vendor check is a queued job. The request that receives a WhatsApp webhook only stores the message and returns 200. Meta retries if we are slow.
 
@@ -484,7 +554,7 @@ Suggested queues: `whatsapp-in` (fast), `matching` (fast), `calls` (slow, rate l
 
 ---
 
-## 8. Reuse the AI interview and the proctoring code
+## 9. Reuse the AI interview and the proctoring code
 
 **Use this for L1 and L2. Do not build a second interviewer.**
 
@@ -516,7 +586,7 @@ Phone-call L1 (another outbound call, deeper than the screen) is **not** the pla
 
 ---
 
-## 9. Dropout risk
+## 10. Dropout risk
 
 **Do not use `risk_dropout` on `student_scores`.** That number is for a student in a batch: low activity, stalled lessons, blocked fees (`ScoreCalculator`). A candidate who might skip joining is a different question. Mixing them would alert the wrong people for the wrong reasons.
 
@@ -541,9 +611,9 @@ The engagement bot’s own replies come from a versioned prompt in `resources/pr
 
 ---
 
-## 10. Non-functional requirements
+## 11. Non-functional requirements
 
-### 10.1 The 4–5 second CV reply
+### 11.1 The 4–5 second CV reply
 
 This target is for **text**, on a warm pool, after the employer has confirmed the reading of the role.
 
@@ -564,7 +634,7 @@ Never block the CV list on mock generation, grading, or a vendor.
 
 If the pool is empty because almost nobody has finished the readiness interview, say that in the chat. Do not backfill with sample candidates. Sample data stays behind the existing `?sample=1` demo flag.
 
-### 10.2 Reliability
+### 11.2 Reliability
 
 - Webhook idempotent on provider message id.
 - Call placement idempotent on (job, candidate).
@@ -574,7 +644,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - BGV vendor down → pending, never “failed”. The existing providers already do this. Keep it.
 - Grades: if the model fails, no fabricated score. `GradeEmployerInterview` already does this.
 
-### 10.3 Cost
+### 11.3 Cost
 
 - Per job, cap outreach calls (default 15 completions, configurable by the owner).
 - Per candidate, max 2 call attempts.
@@ -582,7 +652,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - Record cost in paise on the call row and in `ai_events` for model calls.
 - Autonomous mode must not be a blank cheque. The cap applies there too. When the cap is hit, the bot stops and tells the owner.
 
-### 10.4 Security
+### 11.4 Security
 
 - Verify WhatsApp, voice, Zoom, and BGV signatures before any work. Existing middleware pattern.
 - Join codes are single-purpose, expiring, stored hashed if they grant ownership.
@@ -592,7 +662,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - Cross-tenant and cross-company tests are part of done, as on every employer feature today.
 - No secrets in code or in this document. Keys live in admin settings or `.env`, names only in `.env.example`.
 
-### 10.5 Consent, DPDP, and calls
+### 11.5 Consent, DPDP, and calls
 
 India. Treat this as a gate, not a footer.
 
@@ -608,7 +678,7 @@ India. Treat this as a gate, not a footer.
 
 ---
 
-## 11. Third parties
+## 12. Third parties
 
 Rough public prices, in INR, for planning. They move. Get a written quote before phase 2 and phase 5. Paise in the ledger; these notes are ranges only. Spreadsheet, Drive, ATS, Naukri, and LinkedIn options, including Merge, Kombo, and Apideck price bands, are in section 3.
 
@@ -649,7 +719,7 @@ No new vendor for text AI.
 | Retell | Named in `.env.example` and unused. Only consider it if we are already leaving Vapi. | Similar. |
 | Exotel / Knowlarity alone | Human call-centre stacks. Wrong tool for an AI caller, right tool for the phone number and DLT. | Number rental plus per-minute. |
 
-15 calls × 3 minutes × ₹8 is on the order of ₹360 for one role’s first screen. Caps in section 10.3 exist so autonomous mode cannot do this all day.
+15 calls × 3 minutes × ₹8 is on the order of ₹360 for one role’s first screen. Caps in section 11.3 exist so autonomous mode cannot do this all day.
 
 ### Video meetings (phase 4)
 
@@ -689,7 +759,7 @@ Phase 5 acceptance is: candidate replies ACCEPT on WhatsApp or clicks the link i
 
 ---
 
-## 12. Phased delivery
+## 13. Phased delivery
 
 Each phase is demoable on its own. Later phases do not start by rewriting the earlier ones. Tests: Pest for the API (happy path, auth, cross-tenant, cross-company) and one Playwright path for the website bits. WhatsApp itself is tested with the fake client already used in `FakeWhatsAppClient`.
 
@@ -697,7 +767,7 @@ Each phase is demoable on its own. Later phases do not start by rewriting the ea
 
 **HR can:** scan QR, join a company, send a text or voice note, confirm the reading, receive the top matches on WhatsApp, open a CV link.
 
-**Build:** join codes and QR, webhook branch for employer sessions, voice-note download, call `ReadHiringIntent` and ElevenLabs, persist the job, ranked matches, WhatsApp list, YES/NO stored. Tighten the matcher so it does not load the entire student table. Empty-pool message.
+**Build:** join codes and QR, webhook branch for employer sessions, voice-note download, call `ReadHiringIntent` and ElevenLabs, persist the job, ranked matches, WhatsApp list, YES/NO stored. Tighten the matcher so it does not load the entire student table. Empty-pool message. On the dashboard, the mission-control frame for this phase: the phase rail through sourcing, the activity feed, and the WhatsApp mirror, fed by server-sent events (section 4).
 
 **Reuse:** workspaces, members, `ReadHiringIntent`, `TranscribeController`’s vendor, `LmsTalentMatcher`, `Messenger`.
 
@@ -781,13 +851,17 @@ Each phase is demoable on its own. Later phases do not start by rewriting the ea
 
 **Size:** The contract is the long part. The import itself is the phase 1b path plus a scheduled pull.
 
+### Mission control, across the phases
+
+The look is previewed at `/employers/mission-control-demo` (sample data, no API, noindex). The real screen is the employer dashboard, filled in as each phase above starts emitting events. See section 4. Do not wait until phase 6 to show an empty room: phase 1 already shows the job, the sourcing column, and the HR thread.
+
 ### What we deliberately leave on the website
 
 Pipeline board, team page, automation rules already shipped, admin BGV queue, message log. The bot writes the same tables the board reads.
 
 ---
 
-## 13. Open questions
+## 14. Open questions
 
 These need a decision from the founder (and, where marked, a vendor or a lawyer). Engineering should not guess.
 
@@ -840,7 +914,7 @@ Also: the production webhook URLs must be reachable from Meta, Vapi, Zoom, and t
 
 ---
 
-## 14. Done, for each phase
+## 15. Done, for each phase
 
 The repo’s definition of done still applies: migration, action, API, screen where a screen is needed, queued jobs, Pest tests including cross-tenant denial, seed data, no secrets in git.
 

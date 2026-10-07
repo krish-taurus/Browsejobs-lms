@@ -1,6 +1,6 @@
 # Employer WhatsApp journey — gap analysis
 
-**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate data connectors)
+**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate connectors). The mission-control preview is specified in `REQUIREMENTS.md` and sketched at `/employers/mission-control-demo`.
 **Scope:** Read-only review of the monorepo (`apps/web`, `apps/api`, migrations, jobs, services, env examples, public copy). No application code was changed.
 **Question:** For the founder’s ten-step, WhatsApp-first employer hiring journey, what already exists in code, what is only a label or a marketing sentence, and what is missing?
 
