@@ -7,10 +7,10 @@ const rupee = (n: number) => "₹" + n.toLocaleString("en-IN");
 export function ProofAndPay() {
   return (
     <section id="proof" className="scroll-mt-28 border-t border-white/10">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-2">
+      <div className="mx-auto grid max-w-6xl items-center gap-16 px-5 py-28 md:py-40 lg:grid-cols-2">
         <ScrollReveal>
           <p className="kicker text-verify">Proof before HR</p>
-          <h2 className="display mt-3 text-4xl text-fg md:text-6xl">
+          <h2 className="display mt-6 text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
             HR sees your scored interview. Not a CV on its own.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted">

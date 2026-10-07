@@ -9,10 +9,12 @@ export function CourseStrip() {
 
   return (
     <section id="courses" className="scroll-mt-28 border-t border-white/10 bg-surface/40">
-      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
         <ScrollReveal>
           <p className="kicker text-trust">Only if the interview says you need one</p>
-          <h2 className="display mt-3 max-w-3xl text-4xl text-fg md:text-6xl">Courses that fix a specific gap.</h2>
+          <h2 className="display mt-6 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
+            Courses that fix a specific gap.
+          </h2>
           <p className="mt-4 max-w-2xl text-lg text-muted">
             These are not the front door. We point you here only when the interview shows that skill
             is where you&apos;re stuck. Every link is a live course page.

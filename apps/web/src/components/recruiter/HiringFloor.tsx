@@ -191,7 +191,11 @@ export function HiringFloor({
             >
               <span className="mono text-sm text-fg">{stage.count}</span>
               <span className="text-xs font-medium text-muted">{stage.label}</span>
-              {stage.comingSoon ? <span className="mono text-[9px] uppercase tracking-[0.12em] text-muted">Soon</span> : null}
+              {stage.id === "offer" ? (
+                <span className="text-[10px] font-semibold text-fg">Needs your approval</span>
+              ) : stage.comingSoon ? (
+                <span className="mono text-[9px] uppercase tracking-[0.12em] text-muted">Soon</span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -388,7 +392,9 @@ function Approvals({
     <section aria-label="Approvals" className="rounded-[14px] border border-line bg-surface/70 p-3">
       <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Approvals</h2>
       <p className="mt-1 text-xs text-muted">
-        {autonomous ? "Autonomous is on for this demo job, so these questions do not wait." : "Outreach and the offer need a yes. Default is ask first."}
+        {autonomous
+          ? "Autonomous walks the earlier steps in this demo. Offers always need a human."
+          : "Outreach and the offer need a yes. Default is ask first. Offers always need a human."}
       </p>
       <ApprovalRow
         title="Start outreach"
@@ -401,8 +407,9 @@ function Approvals({
       />
       <ApprovalRow
         title="Release offer"
-        detail="Sample offer for Sample Asha Iyer. A person still releases it. Nothing is emailed."
+        detail="Sample offer for Sample Asha Iyer. Nothing is emailed."
         decision={offer}
+        pendingLabel="Needs your approval"
         onYes={() => onOffer("yes")}
         onNo={() => onOffer("no")}
         yesLabel="Approve offer"
@@ -416,6 +423,7 @@ function ApprovalRow({
   title,
   detail,
   decision,
+  pendingLabel,
   onYes,
   onNo,
   yesLabel,
@@ -424,6 +432,7 @@ function ApprovalRow({
   title: string;
   detail: string;
   decision: Decision;
+  pendingLabel?: string;
   onYes: () => void;
   onNo: () => void;
   yesLabel: string;
@@ -433,6 +442,11 @@ function ApprovalRow({
     <div className="mt-3 border-t border-line pt-3">
       <p className="text-sm font-medium text-fg">{title}</p>
       <p className="mt-1 text-xs leading-relaxed text-muted">{detail}</p>
+      {pendingLabel && !decision ? (
+        <p className="mt-2 text-xs font-semibold text-fg" role="status">
+          {pendingLabel}
+        </p>
+      ) : null}
       <div className="mt-2 flex flex-wrap gap-2">
         <button type="button" onClick={onYes} className="rounded-full border border-trust px-3 py-1.5 text-xs font-semibold text-fg">
           {yesLabel}
@@ -590,6 +604,7 @@ function CommandBar({
         <button type="button" onClick={onToggle} aria-pressed={autonomous} className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-fg">
           {autonomous ? "Autonomous on" : "Ask before each step"}
         </button>
+        <span className="text-[11px] text-muted">Offers always need a human.</span>
         {frozen ? null : (
           <button type="button" onClick={onReplay} className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-muted">
             Replay from the start

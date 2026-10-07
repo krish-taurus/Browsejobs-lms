@@ -106,7 +106,7 @@ test("how it works scrolls into the employer section without a pin", async ({ pa
 test("homepage employer CTA opens the employer page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const cta = page.getByRole("link", { name: "Hire with BrowseJobs" });
+  const cta = page.getByRole("link", { name: "Hire with BrowseJobs" }).first();
   await cta.scrollIntoViewIfNeeded();
   await cta.click();
   await expect(page).toHaveURL(/\/employers$/);

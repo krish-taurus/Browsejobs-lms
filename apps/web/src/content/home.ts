@@ -62,11 +62,11 @@ export const explainerBeats = [
 ] as const;
 
 export const homeNav = [
-  { href: "#how", label: "How it works" },
+  { href: "#how", label: "Candidates" },
   { href: "#for-employers", label: "Hire" },
-  { href: "#gaps", label: "If you miss" },
-  { href: "#courses", label: "Courses" },
-  { href: "#fees", label: "Fees" },
+  { href: "#ai-recruiter", label: "Floor" },
+  { href: "#stages", label: "Stages" },
+  { href: "#faq", label: "Questions" },
   { href: "/jobs", label: "Jobs" },
 ] as const;
 
@@ -81,7 +81,7 @@ export const recruiterFaqs = [
   },
   {
     q: "How does an employer hire?",
-    a: "They tell the BrowseJobs AI Recruiter the role, by typing or by voice. The floor shows the job, the shortlist from the BrowseJobs pool and the client's own files, then the AI interview, L1, L2, an optional human round, pre-BGV, the offer, and joining. AI calls, background checks, offers, and joining chats are a demo. They are not live yet.",
+    a: "They tell the BrowseJobs AI Recruiter the role, by typing or by voice. The floor shows the job, the shortlist, the AI interview, calls, L1, L2, an optional human round, pre-BGV, the offer, and joining. A person must always release the offer letter, even in autonomous mode. Calls, background checks, offers, and joining chats are a demo. They are not live yet.",
   },
   {
     q: "Is the hiring floor live data?",
@@ -121,6 +121,50 @@ export const screenSteps = [
 ] as const;
 
 export type ScreenMode = (typeof screenSteps)[number]["mode"];
+
+/** One line per hiring stage. Live means a candidate can do it today. */
+export const hiringStages = [
+  {
+    name: "AI interview",
+    live: true,
+    body: "Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear.",
+  },
+  {
+    name: "Calls",
+    live: false,
+    body: "The recruiter would phone people who match. The dialler is not live.",
+  },
+  {
+    name: "L1",
+    live: false,
+    body: "A scored round after the call. Not live.",
+  },
+  {
+    name: "L2",
+    live: false,
+    body: "A second scored round. Not live.",
+  },
+  {
+    name: "Human round",
+    live: false,
+    body: "Optional. Someone on the hiring team meets them. Not live.",
+  },
+  {
+    name: "Pre-BGV",
+    live: false,
+    body: "A check before any letter. The vendors are not connected.",
+  },
+  {
+    name: "Offer",
+    live: false,
+    body: "Needs your approval. A person must always release the offer letter, even in autonomous mode. Nothing is emailed from this demo.",
+  },
+  {
+    name: "Joining",
+    live: false,
+    body: "A chat until they join. Not live.",
+  },
+] as const;
 
 /** Why a live course is suggested — only rendered when that course URL is live. */
 const GAP_WHEN: Record<string, string> = {

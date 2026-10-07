@@ -86,7 +86,7 @@ function agents(t: number, autonomous: boolean): FloorAgent[] {
         : t < 48_000
           ? { id: "closer", name: "Closer", stage: "bgv", state: "working", task: "Pre-BGV preview. Vendors are not connected." }
           : t < 54_000
-            ? { id: "closer", name: "Closer", stage: "offer", state: "approval", task: "Offer release needs a person." }
+            ? { id: "closer", name: "Closer", stage: "offer", state: "approval", task: "Needs your approval. A person always releases the offer." }
             : { id: "closer", name: "Closer", stage: "joining", state: "error", task: "Sample dropout alert. The joining chat is not live." };
 
   return [scout, caller, interviewer, closer];
@@ -153,7 +153,7 @@ export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot
       {
         id: "offer",
         title: "Release offer",
-        detail: "Send the sample offer to Sample Asha Iyer? A person still has to say yes.",
+        detail: "Needs your approval. A person always releases the offer, even in autonomous mode.",
       },
     ],
     activity: DEMO_ACTIVITY.filter((item) => item.at <= t)

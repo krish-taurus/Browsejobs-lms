@@ -6,9 +6,9 @@ import { RecruiterPreview } from "@/components/home/RecruiterPreview";
 export function RecruiterStage() {
   return (
     <section id="ai-recruiter" className="scroll-mt-28 border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-5 pb-8 pt-20 md:pb-10 md:pt-32">
+      <div className="mx-auto max-w-6xl px-5 pb-10 pt-28 md:pb-12 md:pt-40">
         <p className="kicker text-trust">BrowseJobs AI Recruiter</p>
-        <h2 className="display mt-4 max-w-4xl text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.95] text-fg">
+        <h2 className="display mt-6 max-w-4xl text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">
           Watch every stage.
         </h2>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">

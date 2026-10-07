@@ -27,7 +27,7 @@ test("employer reviews a JD, its mock, and adds an automation rule", async ({ pa
 
   // Sign-in lands on the employer home. The hiring overview is the next page.
   await expect(page).toHaveURL(/\/employer\/taurus-ai/);
-  await expect(page.getByRole("heading", { name: "Taurus AI" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI Recruiter voice" })).toBeVisible();
   await page.getByRole("link", { name: "Dashboard", exact: true }).click();
   await expect(page).toHaveURL(/\/employer\/dashboard/);
   await expect(page.getByRole("heading", { name: "Hiring overview" })).toBeVisible();
@@ -61,7 +61,7 @@ test("command palette jumps to a JD", async ({ page }) => {
   await expect(page).toHaveURL(/\/employer\/taurus-ai/);
   // The URL flips as soon as sign-in navigates. The palette mounts only after
   // the workspace shell has rendered, so wait for that heading first.
-  await expect(page.getByRole("heading", { name: "Taurus AI" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI Recruiter voice" })).toBeVisible();
 
   await page.keyboard.press("ControlOrMeta+k");
   const palette = page.getByRole("dialog", { name: "Command palette" });

@@ -8,10 +8,10 @@ export function HomeClose() {
   return (
     <>
       <section id="verify" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
           <ScrollReveal>
             <p className="kicker text-trust">In writing</p>
-            <h2 className="display mt-3 max-w-2xl text-4xl text-fg md:text-5xl">
+            <h2 className="display mt-6 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
               What we promise — and what we never will
             </h2>
           </ScrollReveal>
@@ -45,10 +45,10 @@ export function HomeClose() {
       </section>
 
       <section id="free-steps" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
           <ScrollReveal>
             <p className="kicker text-verify">Three free steps first</p>
-            <h2 className="display mt-3 max-w-3xl text-4xl text-fg md:text-5xl">
+            <h2 className="display mt-6 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
               You pay nothing until you have seen the work.
             </h2>
           </ScrollReveal>
@@ -73,9 +73,9 @@ export function HomeClose() {
       </section>
 
       <section id="faq" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-3xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-5 py-28 md:py-40">
           <p className="kicker text-trust">Questions</p>
-          <h2 className="display mt-3 text-4xl text-fg md:text-6xl">Straight answers.</h2>
+          <h2 className="display mt-6 text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">Straight answers.</h2>
           <div className="mt-8 divide-y divide-white/10 border-y border-white/10">
             {recruiterFaqs.map((item) => (
               <details key={item.q} className="group py-5">
@@ -113,9 +113,11 @@ export function HomeClose() {
 
       <section className="relative overflow-hidden border-t border-white/10">
         <div aria-hidden className="home-glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-3xl px-5 py-24 text-center md:py-32">
+        <div className="relative mx-auto max-w-4xl px-5 py-28 text-center md:py-40">
           <ScrollReveal>
-            <h2 className="display text-5xl text-fg md:text-7xl">Start with the interview.</h2>
+            <h2 className="display text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">
+              Start with the interview.
+            </h2>
             <p className="mx-auto mt-4 max-w-md text-lg text-muted">The course can wait until you know what to fix.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a

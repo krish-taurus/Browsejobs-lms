@@ -9,6 +9,7 @@ import { CourseStrip } from "@/components/home/CourseStrip";
 import { ProofAndPay } from "@/components/home/ProofAndPay";
 import { HomeClose } from "@/components/home/HomeClose";
 import { RecruiterStage } from "@/components/home/RecruiterStage";
+import { HomeStages } from "@/components/home/HomeStages";
 import { homeNav } from "@/content/home";
 import { canonical } from "@/lib/seo";
 
@@ -44,6 +45,7 @@ export default function Home() {
         <HowItWorks />
         <EmployerBand />
         <RecruiterStage />
+        <HomeStages />
         <GapFork />
         <CourseStrip />
         <ProofAndPay />

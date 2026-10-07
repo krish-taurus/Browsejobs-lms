@@ -47,6 +47,12 @@ test("hiring floor shows demo data, stage counts, calls, and a candidate drawer"
   await expect(counts.getByText("L2", { exact: true })).toBeVisible();
   await expect(counts.getByText("BGV", { exact: true })).toBeVisible();
   await expect(counts.getByText("Offer", { exact: true })).toBeVisible();
+  await expect(counts.getByText("Needs your approval")).toBeVisible();
+  await expect(page.getByText("Offers always need a human.").first()).toBeVisible();
+  await page.getByRole("button", { name: "Ask before each step" }).click();
+  await expect(page.getByRole("button", { name: "Autonomous on" })).toBeVisible();
+  await expect(page.getByText("Offers always need a human.").first()).toBeVisible();
+  await expect(page.getByText("Needs your approval").first()).toBeVisible();
 
   const calls = page.getByRole("region", { name: "Calls" });
   await expect(calls).toBeVisible();

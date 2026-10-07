@@ -3,7 +3,7 @@
 **Status:** Draft for Dr Krish Bharggav
 **Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate connectors, mission control)
 **Evidence:** `GAP-ANALYSIS.md` in this folder (what the repo does today)
-**Does not replace** `browsejobs-lms-requirements.md` (the LMS) or `docs/employer-module-requirements.md` (the website hiring desk). Where this document disagrees with the employer desk — mainly “a person always releases the offer” — the disagreement is listed under Open questions. Do not build the conflicting part until that decision is made.
+**Does not replace** `browsejobs-lms-requirements.md` (the LMS) or `docs/employer-module-requirements.md` (the website hiring desk). The offer rule now agrees with the employer desk: a person always releases the offer letter, including when autonomous mode is on. That decision is recorded in section 2 and under Decided.
 
 ---
 
@@ -18,10 +18,10 @@ BrowseJobs already has a website where a company logs in, posts a job, and works
 3. It asks “Shall I start reaching out?” On yes, it phones matched candidates, checks interest, and reports who said yes.
 4. On yes, those people sit an L1 AI interview built from their CV and what they said on the call. HR gets “who attended, who cleared.”
 5. Same for L2. HR then gets a short written report on each person who cleared both.
-6. A switch on the job can skip the yes/no questions and run the steps on its own. Default is **ask first**.
+6. A switch on the job can skip the yes/no questions and run the earlier steps on its own. Default is **ask first**. It always stops before the offer.
 7. Optional: “Set up a human round?” The bot asks the interviewers on WhatsApp for a slot, then sends one meeting link to the candidate, the interviewer, and HR.
 8. Optional: “Run pre-BGV?” The bot calls an employment-history check (EPFO/PF) and a document check (DigiLocker) and shows HR a short summary.
-9. On yes, it fills the company’s offer template and emails it to the candidate.
+9. A person must say yes before any offer goes out, even when autonomous mode is on. On that yes, it fills the company’s offer template and emails it to the candidate.
 10. From offer until after joining, a WhatsApp bot talks to the candidate the way a careful HR person would. If the replies suggest they may not join, HR is alerted, with a rank. Joining date, place, and what to bring go out before the day.
 11. On the website, a live mission-control desk shows the same job: which phase it is in, who is in each phase, and what each bot is doing right now. WhatsApp stays the remote control. The desk is the window.
 
@@ -56,7 +56,7 @@ The mission-control screen is not an extra hiring step. It is the window onto th
 **Decisions needed before phase 1 starts**
 
 1. Whose BrowseJobs CVs may we show, and does the client confirm they have the right to upload their own people?
-2. May the bot send an offer with no human click, or does autonomous mode stop before the offer?
+2. ~~May the bot send an offer with no human click?~~ **Decided:** no. A person always releases the offer letter, even in autonomous mode.
 3. Which WhatsApp number, and who owns the Meta Business account?
 4. Written consent for calls and for this bot, separate from student marketing opt-in.
 5. Naukri and LinkedIn: start with the client’s own export (phase 1b), and only chase a partner API if a customer contract needs it.
@@ -69,7 +69,7 @@ The full list is at the end.
 
 | Person | How they enter | What they may do |
 |---|---|---|
-| **Owner** | First QR, or the existing website signup | Connect the company, invite others, upload the offer template, turn autonomous mode on, approve offers if the company requires a person |
+| **Owner** | First QR, or the existing website signup | Connect the company, invite others, upload the offer template, turn autonomous mode on, and release every offer. Autonomous mode does not send the letter. |
 | **Recruiter / HR** | QR or invite | Raise jobs, approve each step (unless autonomous), read reports, decide pre-BGV and offers |
 | **Hiring manager** | QR or invite | Read shortlists and reports, approve or reject a person, comment |
 | **Interviewer** | Invite, new role | Receive slot requests for rounds they are on. They do not see the whole pipeline. |
@@ -89,7 +89,7 @@ Rules:
 
 Two switches sit on the **job**:
 
-- **Autonomous** — off by default. When off, the bot stops at every question in the list below. When on, it walks the same states and only stops for a hard failure (no consent, vendor down, nobody free for a human round, offer template missing).
+- **Autonomous** — off by default. When off, the bot stops at every question in the list below. When on, it walks the earlier states and only stops for a hard failure (no consent, vendor down, nobody free for a human round, offer template missing) **and always stops before the offer**. A person must release the offer letter. Autonomous mode never sends it.
 - **Human round** — off by default. When off, clearing L2 goes to the offer question (or straight to pre-BGV if that is also on). When on, clearing L2 asks for a human round first.
 
 ### Job states
@@ -165,7 +165,7 @@ Every move stores who caused it: a person, the autonomous switch, or a vendor ca
 
 Each question has Yes, No, and “show me more” (next page of CVs, or the transcript). Silence does not mean yes. A reminder goes the next business morning, once, then the job waits.
 
-**Autonomous mode** still sends the same updates (“I spoke to 10, 5 are interested, L1 is booked”) so HR is never surprised. It does not wait.
+**Autonomous mode** still sends the same updates (“I spoke to 10, 5 are interested, L1 is booked”) so HR is never surprised. It does not wait on questions 1–5. Question 6 always waits. A person must release the offer letter, even when autonomous mode is on.
 
 ---
 
@@ -272,7 +272,7 @@ Dark surface, the existing ink / trust-blue tokens, mono for every count and tim
 2. **Agent cards.** One card per bot: screening, calls, interview, scheduler, BGV, engagement. Status is idle, working, or waiting for HR. A live call shows the person’s sample-style name, a timer, a short waveform, and the latest transcript line.
 3. **Activity feed.** One line at a time, newest first. Examples: “Screening bot: matched 142 CVs, 18 above 80%.” “Call bot: speaking with Sample Rahul (0:42), interested, notice 30 days.”
 4. **WhatsApp mirror.** The same thread HR has on their phone, on the side of the desk, so a person at a laptop and a person on WhatsApp are looking at one conversation.
-5. **Approval queue.** When autonomous mode is off, the next yes/no sits here and on WhatsApp. When it is on, the queue is empty and the toggle says so. The toggle is per job (section 2).
+5. **Approval queue.** When autonomous mode is off, the next yes/no sits here and on WhatsApp. When it is on, earlier steps do not wait, and the toggle says so. The offer stays in the queue either way, labelled so a person can see it needs their approval. A person always releases the offer letter. The toggle is per job (section 2).
 6. **Candidate drawer.** Click a person: timeline of stages, match score and source, call transcript, L1/L2 dials, BGV outcome, engagement chat, dropout risk if it has fired. Phone numbers are masked (`+91 98••• ••21`). No document images in the drawer.
 
 On a 1280-wide screen the rail is one row and the cards sit beside the feed and the WhatsApp mirror. At 390 the rail scrolls sideways, the cards stack, and the drawer is a full-height sheet. Nothing should require horizontal zoom to read a sentence.
@@ -411,7 +411,7 @@ Later:
 
 “Pre-BGV for Asha: identity matched, 2 employers on PF over 4 years, education document matched. Nothing failed. This is a check, not a character reference. Shall we offer?”
 
-On yes (and if autonomous is off, this yes is a person): generate the letter and email it. WhatsApp HR: “Offer emailed to Asha from your template. I will tell you when she accepts.”
+On yes from a person (autonomous mode does not skip this): generate the letter and email it. WhatsApp HR: “Offer emailed to Asha from your template. I will tell you when she accepts.”
 
 If the template is missing: do not invent one. Say “Upload your offer template on the website, then say offer again.”
 
@@ -866,7 +866,7 @@ Pipeline board, team page, automation rules already shipped, admin BGV queue, me
 These need a decision from the founder (and, where marked, a vendor or a lawyer). Engineering should not guess.
 
 1. **BrowseJobs pool, still.** Client files are now in scope (section 3). The open part is the shared pool: only students who finished the readiness interview, or a wider BrowseJobs set? Client rows never enter that shared pool.
-2. **Can autonomous mode send the offer?** The live employer FAQ and `docs/employer-module-requirements.md` say a person always releases the offer. Your step 6 says the whole pipeline can run without yes/no. Recommend: autonomous through L2 and the human round; offer stays a human yes unless you explicitly want otherwise.
+2. **Can autonomous mode send the offer?** **Decided, 7 October 2026.** No. A person must always release the offer letter, even in autonomous mode. Autonomous mode may walk the earlier steps. It stops at the offer and waits for a human yes. This matches the employer FAQ and `docs/employer-module-requirements.md`.
 3. **WhatsApp number.** One BrowseJobs employer bot, or a number per company? One number is simpler and matches “the BrowseJobs bot”. Per company is a different Meta setup and a different cost.
 4. **Same number for candidates and employers, or two?** Two numbers stop a tired HR message from being read as a candidate reply. Slightly more ops.
 5. **Consent copy.** Please approve the exact sentences for: showing my CV to an employer, AI call, recording, WhatsApp hiring updates, EPFO, DigiLocker. Legal should own the wording. We will store the version.
@@ -922,7 +922,7 @@ For this journey, add:
 
 - A cross-company denial test (two companies, one tenant).
 - A test that a candidate who said STOP is not called.
-- A test that autonomous mode cannot pass the offer step until question 2 is decided and the code is changed on purpose.
+- A test that autonomous mode cannot send the offer. A person always releases the letter.
 - A test that company A’s imported candidates are invisible to company B, and are not written into the shared student CV table.
 - A test that an unsigned webhook is rejected.
 - Public copy (`employers.ts`, `answers.ts`) updated in the same phase that makes a claim true, and not before.

@@ -329,7 +329,7 @@ A verification state machine: not started → pending → verified, failed, or e
 - `CandidateDocument` kind `offer_letter` is an upload for verification, not a letter BrowseJobs generates.
 - Email as a channel **does** exist for other messages (`SendEmailMessage`, `MessageMail`, SMTP settings in `.env.example`). It is not pointed at offers.
 
-The current written rule (employer FAQ and `docs/employer-module-requirements.md`) is that a person always releases the offer. Step 9, and autonomous mode, would change that rule.
+**Decided, 7 October 2026.** A person always releases the offer letter, even in autonomous mode. The employer FAQ and `docs/employer-module-requirements.md` stay as written. Autonomous mode does not send the letter.
 
 ---
 

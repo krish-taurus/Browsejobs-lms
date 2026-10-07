@@ -1,41 +1,27 @@
+import Link from "next/link";
 import { InterviewStartForm } from "@/components/auth/InterviewStartForm";
-import { KineticPortrait } from "@/components/home/KineticPortrait";
 import { MaskReveal } from "@/components/motion/MaskReveal";
-import { HOME_EXPLAINER_EMBED_URL, safeExplainerEmbed } from "@/content/home";
 
 export function HomeHero() {
-  const embedSrc = safeExplainerEmbed(
-    process.env.NEXT_PUBLIC_HOME_EXPLAINER_EMBED?.trim() || HOME_EXPLAINER_EMBED_URL,
-  );
-
   return (
-    <section id="top" className="relative overflow-hidden px-5 pb-12 pt-2 md:pb-24 md:pt-10">
-      <div aria-hidden className="home-grid pointer-events-none absolute inset-0 opacity-80" />
-      <div aria-hidden className="home-glow pointer-events-none absolute inset-0" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)] lg:gap-8">
-        <div>
-          <p className="kicker text-verify">Free · no card</p>
-          <h1 className="display mt-3 text-[clamp(2.15rem,6.2vw,5.2rem)] leading-[0.92] tracking-[-0.045em] text-fg md:mt-5">
-            <MaskReveal>Take a free </MaskReveal>
-            <MaskReveal index={1}>AI interview.</MaskReveal>
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted md:mt-6 md:text-lg">
-            It&apos;s free. Fifteen questions from your CV, scored out of 100. A score of{" "}
-            <span className="mono text-fg">75%</span> or more counts as clear and puts you in front of HR with your
-            score.
-          </p>
-          <InterviewStartForm />
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
-            Hiring a team?{" "}
-            <a href="#ai-recruiter" className="font-semibold text-sky underline-offset-4 hover:underline">
-              Watch the BrowseJobs AI Recruiter
-            </a>
-            . The floor on this page is demo data.
-          </p>
-        </div>
-        <div className="hidden lg:block lg:pt-4">
-          <KineticPortrait src={embedSrc} />
-        </div>
+    <section id="top" className="relative overflow-hidden px-5 pb-28 pt-4 md:pb-40 md:pt-8">
+      <div aria-hidden className="home-glow pointer-events-none absolute inset-x-0 top-0 h-[28rem]" />
+      <div className="relative mx-auto max-w-6xl">
+        <p className="kicker text-verify">Free · no card</p>
+        <h1 className="display mt-6 max-w-5xl text-[clamp(2.75rem,7.2vw,6rem)] leading-[0.9] tracking-[-0.045em] text-fg">
+          <MaskReveal>Take a free AI interview.</MaskReveal>
+        </h1>
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted md:text-xl">
+          It&apos;s free. Fifteen questions from your CV. A score of <span className="mono text-fg">75%</span> or more
+          puts you in front of HR.
+        </p>
+        <InterviewStartForm />
+        <Link
+          href="/employers"
+          className="mt-3 inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-semibold text-fg transition-colors hover:border-trust"
+        >
+          Hire with BrowseJobs
+        </Link>
       </div>
     </section>
   );

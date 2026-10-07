@@ -2,40 +2,34 @@ import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 
-const POINTS = [
-  "Pre-vetted, pre-interviewed candidates, each with a full performance report.",
-  "Every interview is fully proctored.",
-  "WhatsApp bots keep candidates in the loop until they join, and after they join.",
-] as const;
-
-/** Short employer pitch, directly under the candidate steps. */
+/** Employer story: one claim, then the floor. */
 export function EmployerBand() {
   return (
     <section id="for-employers" className="scroll-mt-28 border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
         <ScrollReveal>
           <p className="kicker text-trust">For employers</p>
-          <h2 className="display mt-4 max-w-4xl text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.98] text-fg">
-            Cut hiring time from <span className="mono">90</span> days to <span className="mono">3</span> days.
+          <h2 className="display mt-6 max-w-5xl text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">
+            From <span className="mono">90</span> days to <span className="mono">3</span>.
           </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
-            Share the role on WhatsApp. The bots take over. You meet people who already cleared.
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
+            Tell the BrowseJobs AI Recruiter the role. It walks the floor. You meet people who already cleared.
           </p>
-          <Disclaimer className="mt-4 max-w-2xl" />
-          <ul className="mt-8 max-w-2xl space-y-3">
-            {POINTS.map((point) => (
-              <li key={point} className="flex gap-3 text-base leading-relaxed text-fg">
-                <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-trust" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/employers"
-            className="mt-8 inline-flex items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
-          >
-            Hire with BrowseJobs
-          </Link>
+          <Disclaimer className="mt-5 max-w-2xl" />
+          <div className="mt-10 flex flex-wrap gap-3">
+            <a
+              href="#ai-recruiter"
+              className="inline-flex items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
+            >
+              Watch the floor
+            </a>
+            <Link
+              href="/employers"
+              className="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-semibold text-fg transition-colors hover:border-trust"
+            >
+              Hire with BrowseJobs
+            </Link>
+          </div>
         </ScrollReveal>
       </div>
     </section>
