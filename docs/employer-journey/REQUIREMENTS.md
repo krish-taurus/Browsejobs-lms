@@ -1,7 +1,7 @@
 # Employer WhatsApp hiring journey — requirements
 
 **Status:** Draft for Dr Krish Bharggav
-**Date:** 7 October 2026
+**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate data connectors)
 **Evidence:** `GAP-ANALYSIS.md` in this folder (what the repo does today)
 **Does not replace** `browsejobs-lms-requirements.md` (the LMS) or `docs/employer-module-requirements.md` (the website hiring desk). Where this document disagrees with the employer desk — mainly “a person always releases the offer” — the disagreement is listed under Open questions. Do not build the conflicting part until that decision is made.
 
@@ -14,7 +14,7 @@ BrowseJobs already has a website where a company logs in, posts a job, and works
 **What the employer feels**
 
 1. Scan a QR. They are on the company bot. Colleagues scan the same company and land in the same account.
-2. Send a voice note or a text: “I need tech engineers, Bangalore, salary X.” The bot writes the job, searches the CV pool, and sends the best matches back on WhatsApp.
+2. Send a voice note or a text: “I need tech engineers, Bangalore, salary X.” The bot writes the job and searches **two** places: BrowseJobs CVs, and the company’s own people (a spreadsheet, a WhatsApp file, or an email forward in the first release). Each match says where it came from.
 3. It asks “Shall I start reaching out?” On yes, it phones matched candidates, checks interest, and reports who said yes.
 4. On yes, those people sit an L1 AI interview built from their CV and what they said on the call. HR gets “who attended, who cleared.”
 5. Same for L2. HR then gets a short written report on each person who cleared both.
@@ -38,21 +38,25 @@ Six phases. The first one is the only one that must exist before anything else i
 
 | Phase | What HR can do at the end of it | Size |
 |---|---|---|
-| 1 — MVP | Connect by QR. Send a role. Get ranked CVs on WhatsApp. | Medium. Mostly new conversation code on top of the job and talent-pool code. |
+| 1 — MVP | Connect by QR. Send a role. Get ranked BrowseJobs CVs on WhatsApp. | Medium. Mostly new conversation code on top of the job and talent-pool code. |
+| 1b — Their files | Drop an Excel on the website, send a file in WhatsApp, or forward mail to a company address. Those people are ranked in the same list, labelled with their source. | Medium. Parsing tools exist. The private pool and the WhatsApp/email doors do not. |
 | 2 — Calls | Approve outreach. Bot phones candidates and reports interest. | Large. New phone vendor, new consent, new cost control. |
 | 3 — L1 and L2 | Approve interviews. Candidates sit them. HR gets the clearance note and the write-up. | Medium. The interview and grading code exist; delivery and the candidate screen do not. |
 | 4 — Human round | Interviewers pick a slot on WhatsApp. A Zoom link goes to all three parties. | Medium. Zoom exists. Slot booking for employers does not. |
 | 5 — Pre-BGV and offer | HR sees a pre-BGV summary and can send an offer email from their template. | Large. Vendor contracts and a letter generator. |
 | 6 — Engagement | The candidate has an HR-style bot through joining, and HR hears dropout risk. | Medium-large. New bot and a new score. Do not reuse the student dropout formula. |
+| 7 — Live folders and ATS | Connect Google Drive or OneDrive/SharePoint, or an ATS, and keep the pool updated. | Large. Real OAuth and a vendor. Not a file upload. |
+| 8 — Job boards | Bring in Naukri or LinkedIn **only** through the client’s export or an official partner agreement. | Contract first, then a medium build. There is no public API to switch on. |
 
 Size means how much new product this is, next to the employer desk already in the repo. It is not a calendar promise.
 
 **Decisions needed before phase 1 starts**
 
-1. Whose CVs are we allowed to send — only BrowseJobs students who finished the readiness interview (that is the pool today), or a wider set?
+1. Whose BrowseJobs CVs may we show, and does the client confirm they have the right to upload their own people?
 2. May the bot send an offer with no human click, or does autonomous mode stop before the offer?
 3. Which WhatsApp number, and who owns the Meta Business account?
 4. Written consent for calls and for this bot, separate from student marketing opt-in.
+5. Naukri and LinkedIn: start with the client’s own export (phase 1b), and only chase a partner API if a customer contract needs it.
 
 The full list is at the end.
 
@@ -109,9 +113,29 @@ draft
 
 A job can also be `paused` or `closed` by any HR message “stop this role”. Pausing cancels calls not yet placed and stops new invites. It does not delete the record.
 
+### Where a person comes from
+
+Matching reads two lists, then one pipeline:
+
+1. **BrowseJobs pool** — students who are allowed to be shown to employers.
+2. **This company’s private pool** — people imported from that company’s file, email, folder, or ATS.
+
+An import does not skip the line. A row becomes a private candidate (`imported` → `ready`), and the next job search can rank them. From `matched` onward they walk the same states as everyone else. Outreach, L1, L2, the human round, pre-BGV, and the offer do not care which door they came through.
+
+Every match HR sees carries a **source**, in words: “BrowseJobs”, “your Excel”, “WhatsApp file”, “email”, “Google Drive”, “OneDrive”, “ATS”, “Naukri export”, “LinkedIn export”. If the same person is in both pools, HR sees **one** card and both labels, and we place **one** call.
+
+```
+file / email / folder / ATS
+  → imported          (private to this company)
+  → ready             (parsed, de-duplicated)
+  → matched           (same door as the BrowseJobs pool)
+  → outreach_queued → … → joined
+```
+
 ### Candidate states (one person on one job)
 
 ```
+imported → ready      (private pool only; skipped for people who only exist in BrowseJobs)
 matched
   → outreach_queued
   → called            (or no_answer, after retries)
@@ -142,7 +166,90 @@ Each question has Yes, No, and “show me more” (next page of CVs, or the tran
 
 ---
 
-## 3. WhatsApp conversations
+## 3. Candidate data connectors
+
+Matching is useless if the only people in it are BrowseJobs students. The client already has candidates: a spreadsheet, a folder of CVs, an inbox, an ATS, a Naukri login. This section is how those people get in, stay private, and then join the same pipeline as everyone else.
+
+**Rule for every source.** The client’s people live in a **private pool** for that company. They are never copied into the shared BrowseJobs student database. Another company cannot search them. We de-duplicate inside the company (same email or same phone → one person). We link a private row to a BrowseJobs student only when the email matches **and** that student has agreed to be shown to employers. The client’s notes do not become part of the student’s profile.
+
+**Rule for the client’s permission.** Before the first import, the owner confirms a short sentence: they have a proper reason to share these people’s data with BrowseJobs, and those people have been told or will be told before anyone calls them. We store that confirmation. A call still needs the candidate’s own yes (section 10.5). Uploading a file is not consent to be phoned.
+
+**Sync, in two speeds.**
+
+- **One-off.** A file or a zip. We import it, tell HR the counts (“42 new, 7 already in your pool, 3 unreadable”), and stop.
+- **Ongoing.** A folder, a mailbox, or an ATS. We check on a schedule (default every few hours, not every minute) and only add what is new. HR can say “stop syncing” on WhatsApp or on the website.
+
+### Excel or CSV on the website — phase 1b, one-off
+
+HR opens the company workspace and drops a `.csv` or `.xlsx`. This is the reliable path when the file is large.
+
+The bot (and the page) do not ask HR to rename columns. An AI pass suggests a mapping: name, email, phone, city, skills, years, current company, notice period, salary if present. HR sees the first five rows with that mapping and replies YES, or fixes one column. We remember the mapping for the next file from that company.
+
+We already have a small Excel reader (`XlsxReader`) and several admin CSV importers. They read leads and syllabi, not candidates, and the Excel reader only takes the first sheet. Phase 1b extends that pattern. It does not start from zero, and it is not done.
+
+### Excel, CSV, or CV PDFs in the WhatsApp chat — phase 1b, one-off
+
+HR sends the file to the bot, or says “I’ll send a spreadsheet.” The bot replies “Send it here.”
+
+Accepted: `.csv`, `.xlsx`, `.pdf`, `.docx`, and a `.zip` of those. The current WhatsApp webhook ignores anything that is not text, so this is new work. WhatsApp’s own limit is about 100MB; we should tell HR that a huge zip is happier on the website link.
+
+A spreadsheet follows the same mapping YES as the website. A PDF or docx uses the CV parser we already run for a student’s own upload (`PdfExtractor`, `DocxExtractor`, prompt `cv_parse`). A scanned photo-PDF often has no text. We say so and ask for a text PDF or a spreadsheet, rather than pretending we read it. OCR can wait.
+
+When the import finishes, the bot says the counts and “These people will be included the next time you search, and in the role we just opened.” If a role is already waiting on matches, we re-run matching.
+
+### Email — phase 1b for forwarding, later for a connected mailbox
+
+**Easy path (phase 1b, can be ongoing).** Each company gets an address like `acme@in.browsejobs.ai`. HR forwards a CV, or a mail with a spreadsheet attached, to that address. We accept mail only to that exact address, ignore the rest, and import attachments the same way as a WhatsApp file. There is no inbound mail code today. Outbound SMTP exists. A provider such as Postmark, Mailgun, or Amazon SES inbound is the usual way to receive it. Cost is small (often included, or a few dollars per thousand inbound messages).
+
+**Connected mailbox (phase 7, ongoing).** “Connect Gmail” or “Connect Outlook” opens a magic link. HR signs in and grants read access to one label or folder (“BrowseJobs”), not the whole mailbox. We poll that folder. This is OAuth (Gmail API, Microsoft Graph). It is a real API and a real consent screen. It is more than phase 1b, so it waits.
+
+### Google Drive, and SharePoint / OneDrive — phase 7, ongoing
+
+**How HR connects.** On WhatsApp: “Connect Drive.” The bot sends a link. HR signs in with Google or Microsoft, picks **one folder**, and comes back. We store a refresh token for that company, encrypted. We do not ask them to paste a password.
+
+**What we sync.** New and changed CSV, Excel, PDF, and docx files in that folder. Same parser and the same private pool. A nightly (or few-hourly) delta is enough.
+
+**Honest status of our code.** Google Drive code exists, and it is the wrong shape: one BrowseJobs service account listing **images** in a reviews folder (`GoogleDriveClient`, `SyncDriveReviews`). Google login for users does not grant Drive access. SharePoint and OneDrive are not in the repo. The official APIs themselves are fine: Google Drive API, and Microsoft Graph for OneDrive and SharePoint. This phase is ordinary OAuth work, not a partnership.
+
+### The client’s database or ATS — phase 7, ongoing
+
+Three ways, from the one we should sell first to the one we should avoid.
+
+1. **Unified ATS API (first choice when they have a known ATS).** One vendor sits between us and Greenhouse, Lever, Workday, Ashby, and others. HR clicks a magic link, signs into **their** ATS, and we read candidates (and sometimes jobs) through the vendor. We do not store their ATS password.
+   - **Merge.dev** — widest catalogue. Public plans have typically started around a few hundred to about $650 USD per month, plus a fee per connected company. Confirm the current quote.
+   - **Kombo** — often a lower quote, strong on European HR tools. Confirm Indian coverage before signing.
+   - **Apideck** — has a free sandbox and paid Unify plans that have often started lower than Merge. Connector quality varies. Confirm the exact ATS.
+   - Indian tools (Keka, Darwinbox, Zoho Recruit, greytHR, Freshteam) are **not** a given on those catalogues. Ask the first five customers which ATS they actually use before picking the vendor.
+2. **Secure file drop (best fallback).** A per-company SFTP folder or a scheduled CSV the client’s IT pushes. Laravel already knows the word SFTP in its filesystem config; nothing uses it for candidates. One-off or nightly. No OAuth, no per-seat API fee. Easy to explain to a DBA.
+3. **Read-only database login (last resort).** A read-only user, IP allow-list, no writes. It works, and it is the easiest way to leak a production database. Only if the client refuses the first two, and only with their security team in the room.
+
+There is no ATS client in the product today. The employers page says so. A student “apply copilot” route returns 501 and is not this feature.
+
+### Naukri and LinkedIn — phase 1b if they export, phase 8 only with a contract
+
+“Knockery” is Naukri.
+
+**There is no switch we can flip.**
+
+- **Naukri Resdex** (their resume database) and **Naukri RMS** do not offer an open public API for a third party to pull a recruiter’s candidates. Access is a Naukri enterprise or partner agreement, or the client exports Excel from their own Naukri login and sends us that file (phase 1b). Logging into their website and scraping it is against their terms. We will not do that.
+- **LinkedIn Recruiter** is the same shape. The official route is **Recruiter System Connect (RSC)**, a partner programme you apply for. It is not a public API. Until RSC (or an equivalent) is approved, the client exports from Recruiter and sends the file.
+
+**What the repo already does with those names is a different product.** Apify actors can pull **job advertisements** from Naukri and LinkedIn onto the student job board (ADR 0048). That was a conscious exception to an earlier “do not scrape” rule, and it carries terms risk. Those actors return vacancies, not a client’s private shortlist. Do not reuse them for this.
+
+Phase 8 starts when a customer contract requires a live Naukri or LinkedIn connection, and only after the agreement is signed. Until then, “send me the export” is the honest product.
+
+### What HR sees after any of these
+
+The match list (section 4.2) gains a source on every line:
+
+“1. Asha — 86% — BrowseJobs — Python, Django — gap: Kubernetes”
+“2. Ravi — 81% — your Excel (12 Oct) — Python, SQL”
+
+From `matched` onward, Ravi is in the same outreach → L1 → L2 path as Asha. If Ravi has no WhatsApp consent on file, the bot can rank him and **cannot** call him until he opts in. The report says “not contacted — no permission to call” instead of hiding him.
+
+---
+
+## 4. WhatsApp conversations
 
 One bot number for BrowseJobs employers. People are recognised by their WhatsApp id, stored against an employer member. Candidates are a **different** conversation on the same number (or a second number — see Open questions). The bot must not mix them: an employer message never receives the candidate script.
 
@@ -150,7 +257,7 @@ Messages that start a new topic use an approved WhatsApp template. Replies insid
 
 Quiet hours for **calls** are 9:00–19:00 IST, matching the contact hours already on the site. WhatsApp updates may go until 21:00 IST; marketing-style nudges keep the existing 21:00–09:00 block.
 
-### 3.1 Employer: connect
+### 4.1 Employer: connect
 
 QR encodes a WhatsApp link with a one-time company code, for example a prefilled “JOIN ABC123”.
 
@@ -160,7 +267,7 @@ QR encodes a WhatsApp link with a one-time company code, for example a prefilled
 
 The website can also show the QR after the company exists, so the first owner can still be created by ops (the admin onboard screen already does this) and then move to WhatsApp.
 
-### 3.2 Employer: raise a job
+### 4.2 Employer: raise a job
 
 Accept text or a voice note.
 
@@ -171,12 +278,13 @@ Bot:
 1. Immediately: “Got it. I’m reading that and searching CVs.”
 2. Parse title, skills, city, salary, openings, remote. If salary or city is missing, ask one question, not five.
 3. Show the reading back: “Role: Software engineer. Location: Bengaluru. Salary: ₹12 LPA. Openings: 2. Reply YES to search, or correct me.”
-4. On YES, score the pool and send the top matches (target in section 8).
+4. On YES, score the pool and send the top matches (speed target in section 10.1).
 
 Each match, in one bubble or a short list:
 
 - Name
 - Match %
+- **Source** (BrowseJobs, your Excel, WhatsApp file, email, Drive, ATS, or a board export)
 - One line why (skills that hit, skills that missed)
 - Years and city if we have them
 - A link to the CV the employer is allowed to see
@@ -187,7 +295,7 @@ Voice notes: download the media from Meta, transcribe with the same speech-to-te
 
 Do not wait for the JD mock generator before sending CVs. That job can run in the background after the job is saved.
 
-### 3.3 Employer: outreach result
+### 4.3 Employer: outreach result
 
 After calls finish, or at a cutoff (for example two hours, or sooner if everyone has answered):
 
@@ -199,7 +307,7 @@ Interested:
 
 “Shall I set up L1 for these 5?”
 
-### 3.4 Employer: L1 and L2
+### 4.4 Employer: L1 and L2
 
 “L1 closed. 5 were invited, 4 attended, 3 cleared the bar (70). Send L2 to those 3?”
 
@@ -211,7 +319,7 @@ After L2:
 
 The bar (default 70) is per job and editable (“set L1 bar to 75”).
 
-### 3.5 Employer: human round
+### 4.5 Employer: human round
 
 “Set up a human round for these 2?”
 
@@ -225,7 +333,7 @@ When one slot is taken, tell the others it is gone. Then create the meeting and 
 - Interviewer: time, link, CV link, the L1/L2 summary
 - HR: the same, plus who booked it
 
-### 3.6 Employer: pre-BGV and offer
+### 4.6 Employer: pre-BGV and offer
 
 “Run pre-BGV on Asha? This checks employment history (EPFO) and documents (DigiLocker). She will be asked to consent. We do not start without that.”
 
@@ -237,14 +345,14 @@ On yes (and if autonomous is off, this yes is a person): generate the letter and
 
 If the template is missing: do not invent one. Say “Upload your offer template on the website, then say offer again.”
 
-### 3.7 Candidate: before and during the process
+### 4.7 Candidate: before and during the process
 
 - First contact is a template that says who is calling (BrowseJobs, for {company}), that the next call may be an AI, that it can be recorded, and that they can reply STOP.
 - No call until that consent is on file, except where the candidate has already given this exact consent in the product.
-- L1/L2 arrive as a link, with a deadline. The interview itself runs on the existing AI interview (section 6), not as an endless WhatsApp quiz.
+- L1/L2 arrive as a link, with a deadline. The interview itself runs on the existing AI interview (section 8), not as an endless WhatsApp quiz.
 - STOP, or “don’t call me”, ends the candidate on that job and is audited.
 
-### 3.8 Candidate: from offer to joining
+### 4.8 Candidate: from offer to joining
 
 Tone: short, warm, direct. Like a competent HR person. Not a cheerleader.
 
@@ -260,7 +368,7 @@ After joining day, one check-in the next week (“How was day one?”) and then 
 
 ---
 
-## 4. Data we need to add
+## 5. Data we need to add
 
 New tables, all with `tenant_id`, and foreign keys to company, job, and candidate where those apply. Do not edit old migrations; add new ones.
 
@@ -281,6 +389,12 @@ New tables, all with `tenant_id`, and foreign keys to company, job, and candidat
 | `joining_plans` | Offer, date, location, what to bring, last reminder sent |
 | `dropout_signals` | Candidate, job, score 0–100, reasons (json), computed at |
 | `bot_alerts` | Who was told, about which signal, channel, sent at |
+| `company_candidates` | Private person for one company: name, email, phone, city, skills, years, source, consent flags. Not a `users` row unless they later join BrowseJobs |
+| `candidate_imports` | One file, mail, or sync run: who sent it, counts, status |
+| `import_mappings` | Saved column map for that company, so the next spreadsheet does not ask again |
+| `connector_accounts` | Drive, mailbox, or ATS link: provider, encrypted token, folder, last sync, status |
+
+The private candidate is the source of truth for client data. Do not write those rows into `cv_profiles`. A match row points at either a BrowseJobs user, a `company_candidates` id, or both when they are the same person.
 
 Money stays in paise. Match percentages stay integers.
 
@@ -288,7 +402,7 @@ The talent-pool match does not need a new score formula in phase 1. Store the li
 
 ---
 
-## 5. API
+## 6. API
 
 Keep the existing `/api/v1/employer/...` website API. Add the following. All of them check tenant and company membership, same as today (`ResolvesMembership`).
 
@@ -302,7 +416,16 @@ Keep the existing `/api/v1/employer/...` website API. Add the following. All of 
 
 - `POST /api/v1/employer/workspaces/{id}/intakes` — text or audio, returns the parsed reading
 - `POST /api/v1/employer/workspaces/{id}/intakes/{id}/confirm` — writes the `employer_jobs` row and starts matching
-- `GET /api/v1/employer/workspaces/{id}/jobs/{job}/matches` — the same list the bot sends
+- `GET /api/v1/employer/workspaces/{id}/jobs/{job}/matches` — the same list the bot sends, each row tagged with its source
+
+**Client files (phase 1b)**
+
+- `POST /api/v1/employer/workspaces/{id}/imports` — website upload of csv, xlsx, pdf, docx, or zip
+- `POST /api/v1/employer/workspaces/{id}/imports/{id}/mapping` — confirm or correct the column map
+- `GET /api/v1/employer/workspaces/{id}/candidates` — the private pool, this company only
+- Inbound email webhook (signed) for the per-company address
+
+Drive, mailbox OAuth, and ATS connect links are phase 7. They are magic links to the vendor’s consent page, then a callback that stores `connector_accounts`. They are not phase 1b.
 
 **Pipeline controls**
 
@@ -328,7 +451,7 @@ Candidate interview endpoints stay under `/api/v1/me/employer-interviews`. Phase
 
 ---
 
-## 6. Background jobs
+## 7. Background jobs
 
 Every send, call, AI grade, PDF, and vendor check is a queued job. The request that receives a WhatsApp webhook only stores the message and returns 200. Meta retries if we are slow.
 
@@ -337,7 +460,11 @@ Every send, call, AI grade, PDF, and vendor check is a queued job. The request t
 | `IngestEmployerWhatsApp` | Inbound text or voice | Idempotent on the Meta message id |
 | `TranscribeEmployerVoiceNote` | Voice note | Then parse |
 | `ParseHiringIntake` | Text ready | Reuse `ReadHiringIntent` |
-| `RankJobMatches` | Intake confirmed | Reuse `LmsTalentMatcher`. High priority queue. |
+| `RankJobMatches` | Intake confirmed, or a new import landed | Score the BrowseJobs pool and this company’s private pool. High priority queue. |
+| `IngestCandidateFile` | Website upload, WhatsApp document, or inbound email | Unzip if needed. Idempotent on file hash. |
+| `SuggestColumnMapping` | Spreadsheet ingested | AI suggestion, then wait for YES. |
+| `ParseImportedCv` | PDF or docx in a batch | Reuse `cv_parse`. One job per file. |
+| `SyncConnector` | Phase 7 schedule | Drive, mailbox, or ATS. Adds only new files or rows. |
 | `SendMatchList` | Ranking done | WhatsApp to the requester |
 | `PlaceOutreachCall` | Approval or autonomous | One job per candidate, capped |
 | `SummariseOutreach` | Calls settled or cutoff | The “I spoke to 10” message |
@@ -357,7 +484,7 @@ Suggested queues: `whatsapp-in` (fast), `matching` (fast), `calls` (slow, rate l
 
 ---
 
-## 7. Reuse the AI interview and the proctoring code
+## 8. Reuse the AI interview and the proctoring code
 
 **Use this for L1 and L2. Do not build a second interviewer.**
 
@@ -389,7 +516,7 @@ Phone-call L1 (another outbound call, deeper than the screen) is **not** the pla
 
 ---
 
-## 8. Dropout risk
+## 9. Dropout risk
 
 **Do not use `risk_dropout` on `student_scores`.** That number is for a student in a batch: low activity, stalled lessons, blocked fees (`ScoreCalculator`). A candidate who might skip joining is a different question. Mixing them would alert the wrong people for the wrong reasons.
 
@@ -414,9 +541,9 @@ The engagement bot’s own replies come from a versioned prompt in `resources/pr
 
 ---
 
-## 9. Non-functional requirements
+## 10. Non-functional requirements
 
-### 9.1 The 4–5 second CV reply
+### 10.1 The 4–5 second CV reply
 
 This target is for **text**, on a warm pool, after the employer has confirmed the reading of the role.
 
@@ -431,11 +558,13 @@ That is tight but honest **if** matching is a query, not “load every student i
 
 **Voice notes are not in the 4–5 second budget.** Download plus transcription usually takes longer than the whole text path. The bot still answers at once (“Got the voice note”), then sends the matches when they are ready. Aim for under 15 seconds, and measure it. Do not promise 4–5 seconds on voice until the numbers say so.
 
+**Importing a file is not in that budget either.** Parsing a spreadsheet or a zip of CVs happens once, when the file arrives, and can take a minute. After that, those people are already in the company’s private pool, and the next search includes them inside the same one-second score as the BrowseJobs pool.
+
 Never block the CV list on mock generation, grading, or a vendor.
 
 If the pool is empty because almost nobody has finished the readiness interview, say that in the chat. Do not backfill with sample candidates. Sample data stays behind the existing `?sample=1` demo flag.
 
-### 9.2 Reliability
+### 10.2 Reliability
 
 - Webhook idempotent on provider message id.
 - Call placement idempotent on (job, candidate).
@@ -445,7 +574,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - BGV vendor down → pending, never “failed”. The existing providers already do this. Keep it.
 - Grades: if the model fails, no fabricated score. `GradeEmployerInterview` already does this.
 
-### 9.3 Cost
+### 10.3 Cost
 
 - Per job, cap outreach calls (default 15 completions, configurable by the owner).
 - Per candidate, max 2 call attempts.
@@ -453,7 +582,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - Record cost in paise on the call row and in `ai_events` for model calls.
 - Autonomous mode must not be a blank cheque. The cap applies there too. When the cap is hit, the bot stops and tells the owner.
 
-### 9.4 Security
+### 10.4 Security
 
 - Verify WhatsApp, voice, Zoom, and BGV signatures before any work. Existing middleware pattern.
 - Join codes are single-purpose, expiring, stored hashed if they grant ownership.
@@ -463,7 +592,7 @@ If the pool is empty because almost nobody has finished the readiness interview,
 - Cross-tenant and cross-company tests are part of done, as on every employer feature today.
 - No secrets in code or in this document. Keys live in admin settings or `.env`, names only in `.env.example`.
 
-### 9.5 Consent, DPDP, and calls
+### 10.5 Consent, DPDP, and calls
 
 India. Treat this as a gate, not a footer.
 
@@ -475,12 +604,13 @@ India. Treat this as a gate, not a footer.
 - Access and deletion requests (ADR 0047) must include employer applications, calls, offers, and bot transcripts. Today’s exporter does not.
 - Marketing opt-in is a different flag. Do not treat “daily brief” opt-in as permission to be interviewed by a bot.
 - Outbound commercial calls also need the company’s and BrowseJobs’ telecom compliance (DLT registration and an approved caller ID). That is a vendor and legal task, not only a code task.
+- A client’s imported people are that company’s data. Delete them when the company asks. Do not use them to train a shared model or to fill another company’s search. The owner’s upload confirmation is not the candidate’s consent to be called (section 3).
 
 ---
 
-## 10. Third parties
+## 11. Third parties
 
-Rough public prices, in INR, for planning. They move. Get a written quote before phase 2 and phase 5. Paise in the ledger; these notes are ranges only.
+Rough public prices, in INR, for planning. They move. Get a written quote before phase 2 and phase 5. Paise in the ledger; these notes are ranges only. Spreadsheet, Drive, ATS, Naukri, and LinkedIn options, including Merge, Kombo, and Apideck price bands, are in section 3.
 
 ### WhatsApp
 
@@ -519,7 +649,7 @@ No new vendor for text AI.
 | Retell | Named in `.env.example` and unused. Only consider it if we are already leaving Vapi. | Similar. |
 | Exotel / Knowlarity alone | Human call-centre stacks. Wrong tool for an AI caller, right tool for the phone number and DLT. | Number rental plus per-minute. |
 
-15 calls × 3 minutes × ₹8 is on the order of ₹360 for one role’s first screen. Caps in section 9.3 exist so autonomous mode cannot do this all day.
+15 calls × 3 minutes × ₹8 is on the order of ₹360 for one role’s first screen. Caps in section 10.3 exist so autonomous mode cannot do this all day.
 
 ### Video meetings (phase 4)
 
@@ -546,7 +676,7 @@ Ops queue stays for “pending” and for disagreements.
 
 ### Email
 
-**Use the current Laravel mail** (`SendEmailMessage`, SMTP). The offer is a normal message with a PDF attached, from the company template. No new email vendor in v1.
+**Use the current Laravel mail** (`SendEmailMessage`, SMTP) for offers. That path is outbound only. Phase 1b adds inbound mail (Postmark, Mailgun, or SES) so a company can forward CVs to its own address. Details are in section 3. Connecting a whole Gmail or Outlook mailbox waits until phase 7.
 
 ### E-sign (optional, not in the first offer phase)
 
@@ -559,7 +689,7 @@ Phase 5 acceptance is: candidate replies ACCEPT on WhatsApp or clicks the link i
 
 ---
 
-## 11. Phased delivery
+## 12. Phased delivery
 
 Each phase is demoable on its own. Later phases do not start by rewriting the earlier ones. Tests: Pest for the API (happy path, auth, cross-tenant, cross-company) and one Playwright path for the website bits. WhatsApp itself is tested with the fake client already used in `FakeWhatsAppClient`.
 
@@ -574,6 +704,16 @@ Each phase is demoable on its own. Later phases do not start by rewriting the ea
 **Not in this phase:** calls, L1, offers.
 
 **Size:** Medium. The risky part is the conversation state and the speed of matching, not the job form.
+
+### Phase 1b — The company’s own files
+
+**HR can:** upload Excel or CSV on the website, send that file or a zip of CVs in WhatsApp, or forward mail to their company address. They confirm the column mapping. The next search ranks those people beside BrowseJobs CVs, with the source on each line.
+
+**Build:** private `company_candidates` pool, file ingest, AI column map plus YES, batch CV parse reusing `cv_parse`, de-dupe on email and phone, WhatsApp document handling, inbound email address, re-rank when a file lands on an open job. Attestation checkbox before the first import.
+
+**Not in this phase:** Gmail/Outlook OAuth, Drive, SharePoint, live ATS, Naukri or LinkedIn APIs. A Naukri or LinkedIn **export file** is just another spreadsheet, so it works here without a partnership.
+
+**Size:** Medium. The parsers exist. The privacy boundary and the two new doors (WhatsApp file, inbound mail) are the work.
 
 ### Phase 2 — Outreach calls
 
@@ -623,17 +763,35 @@ Each phase is demoable on its own. Later phases do not start by rewriting the ea
 
 **Size:** Medium-large. The bot is easy to make annoying; the work is the cadence and the score, not the chat UI.
 
+### Phase 7 — Folders and ATS
+
+**HR can:** connect one Google Drive or OneDrive/SharePoint folder, or connect an ATS, or drop a nightly CSV on SFTP. New files and new ATS rows join the private pool without another upload.
+
+**Build:** per-company OAuth (magic link from WhatsApp), `SyncConnector`, encrypted tokens, “stop syncing”. ATS through Merge, Kombo, or Apideck once we know which systems the first customers use. SFTP/CSV drop as the fallback. Read-only database access only if a client refuses both.
+
+**Depends on:** Google and Microsoft OAuth apps, and a quote from one unified-API vendor. Do not start this before phase 1b has been used for real.
+
+**Size:** Large.
+
+### Phase 8 — Naukri and LinkedIn, live
+
+**HR can:** keep a Naukri or LinkedIn source updated without exporting by hand.
+
+**Build only after** a Naukri partner agreement or LinkedIn Recruiter System Connect approval. Until that paper exists, phase 1b’s “send me the export” is the product. Do not point the existing Apify job-ad scrapers at a resume database.
+
+**Size:** The contract is the long part. The import itself is the phase 1b path plus a scheduled pull.
+
 ### What we deliberately leave on the website
 
 Pipeline board, team page, automation rules already shipped, admin BGV queue, message log. The bot writes the same tables the board reads.
 
 ---
 
-## 12. Open questions
+## 13. Open questions
 
 These need a decision from the founder (and, where marked, a vendor or a lawyer). Engineering should not guess.
 
-1. **Whose CVs?** Today the pool is BrowseJobs students who finished the AI Readiness Interview, with a role overlap. Is that the database you mean, or every CV ever uploaded, or an outside source? A wider pool is a product change, not a switch.
+1. **BrowseJobs pool, still.** Client files are now in scope (section 3). The open part is the shared pool: only students who finished the readiness interview, or a wider BrowseJobs set? Client rows never enter that shared pool.
 2. **Can autonomous mode send the offer?** The live employer FAQ and `docs/employer-module-requirements.md` say a person always releases the offer. Your step 6 says the whole pipeline can run without yes/no. Recommend: autonomous through L2 and the human round; offer stays a human yes unless you explicitly want otherwise.
 3. **WhatsApp number.** One BrowseJobs employer bot, or a number per company? One number is simpler and matches “the BrowseJobs bot”. Per company is a different Meta setup and a different cost.
 4. **Same number for candidates and employers, or two?** Two numbers stop a tired HR message from being read as a candidate reply. Slightly more ops.
@@ -649,6 +807,12 @@ These need a decision from the founder (and, where marked, a vendor or a lawyer)
 14. **Empty pool.** If no CV clears the bar, the bot says so. Confirm we do not fall back to unrelated students. The matcher was tightened in August 2026 for that reason.
 15. **After they join.** One check-in the following week, then silence. Confirm if you want a longer relationship.
 16. **Proctoring claims.** Confirm phase 3 ships with “no camera record” in the report, until we actually store the signals.
+17. **Right to upload.** Confirm the sentence the owner must accept before the first import: they have a lawful reason to share these people, and nobody is called until that person opts in.
+18. **Same person, two pools.** Recommend one card, both sources, one call. Say if you would rather keep the client’s copy completely separate even when the email matches a student.
+19. **Naukri and LinkedIn.** Recommend phase 1b accepts their Excel export, and we do not apply to Resdex or LinkedIn RSC until a named customer needs a live link. Confirm.
+20. **Which ATS the first clients actually use.** Keka, Darwinbox, Zoho Recruit, Greenhouse, or “we live in Excel”? This picks Merge vs Kombo vs Apideck vs “just SFTP”. Do not buy a unified API before that answer.
+21. **Scanned CVs.** Phase 1b will reject photo-only PDFs and ask for a text PDF or a spreadsheet. Confirm we are not promising OCR on day one.
+22. **How long we keep a private pool** after the company stops paying or asks us to delete it. Recommend: delete on request within the DPDP window, and say so in the attestation.
 
 ### Accounts and credentials to have ready
 
@@ -660,6 +824,10 @@ Nothing here is a secret value. These are the accounts to open. Names already in
 | Phase 1 | ElevenLabs key (voice notes) | `ELEVENLABS_API_KEY` |
 | Phase 1 | An AI provider key if production does not have one | `AI_PROVIDER` and the matching key |
 | Phase 1 | A join-code signing secret (new) | Add when we build it |
+| Phase 1b | Inbound email on a per-company address (Postmark, Mailgun, or SES) | New. `MAIL_*` today is outbound only |
+| Phase 7 | Google OAuth app with Drive file scope, and a Microsoft app with Graph file scope | `GOOGLE_CLIENT_ID` is login only. Drive today is a service account for review images |
+| Phase 7 | Merge, Kombo, or Apideck account — after question 20 | None |
+| Phase 8 | Naukri partner paperwork, or LinkedIn Recruiter System Connect | None. Apify in admin settings pulls job ads, not resumes |
 | Phase 2 | Vapi (or Bolna) outbound, webhook secret | `VAPI_*` exists for web calls; outbound may need extra vendor settings |
 | Phase 2 | Indian number + DLT (Exotel or Plivo) | New |
 | Phase 4 | Zoom server-to-server, and at least one license in the pool | `ZOOM_*`, admin license screen |
@@ -672,7 +840,7 @@ Also: the production webhook URLs must be reachable from Meta, Vapi, Zoom, and t
 
 ---
 
-## 13. Done, for each phase
+## 14. Done, for each phase
 
 The repo’s definition of done still applies: migration, action, API, screen where a screen is needed, queued jobs, Pest tests including cross-tenant denial, seed data, no secrets in git.
 
@@ -681,5 +849,6 @@ For this journey, add:
 - A cross-company denial test (two companies, one tenant).
 - A test that a candidate who said STOP is not called.
 - A test that autonomous mode cannot pass the offer step until question 2 is decided and the code is changed on purpose.
+- A test that company A’s imported candidates are invisible to company B, and are not written into the shared student CV table.
 - A test that an unsigned webhook is rejected.
 - Public copy (`employers.ts`, `answers.ts`) updated in the same phase that makes a claim true, and not before.

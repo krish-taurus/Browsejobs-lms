@@ -1,6 +1,6 @@
 # Employer WhatsApp journey — gap analysis
 
-**Date:** 7 October 2026
+**Date:** 7 October 2026 · **Updated:** 7 October 2026 (candidate data connectors)
 **Scope:** Read-only review of the monorepo (`apps/web`, `apps/api`, migrations, jobs, services, env examples, public copy). No application code was changed.
 **Question:** For the founder’s ten-step, WhatsApp-first employer hiring journey, what already exists in code, what is only a label or a marketing sentence, and what is missing?
 
@@ -34,12 +34,13 @@ This document is the evidence file. The build plan is in `REQUIREMENTS.md` in th
 | 8 | Pre-BGV (EPFO / DigiLocker) and a summary to HR | **Partially built** | A manual review queue and placeholder HTTP clients exist. No vendor contract is wired, and the public FAQ says “not yet”. |
 | 9 | Offer letter from the company’s template, emailed | **Not built** | “Offer” is a pipeline label. No letter, no template, no email. |
 | 10 | Candidate engagement bot, dropout-risk alert, joining details | **Not built** | A dropout score exists for **students in a batch**, not for someone who might skip joining. |
+| — | Client candidate data (Excel, WhatsApp file, email, Drive, database/ATS, Naukri, LinkedIn) | **Not built** | Spreadsheet import, CV parsing, Drive, and Naukri/LinkedIn code exist for other jobs. None of them load a client’s private candidate list. |
 
 | Supporting piece | Status |
 |---|---|
 | Company and multi-user accounts | **Built** (website and email, not WhatsApp) |
 | Auth | **Built** for the website portal |
-| CV database and matching | **Partially built** (BrowseJobs students only, keyword overlap, not a general CV search) |
+| CV database and matching | **Partially built** (BrowseJobs students only, keyword overlap, not a general CV search). A client’s own files are not in that search. |
 | Notifications | **Partially built** (WhatsApp works for other products; this journey barely uses it) |
 | Audit logs | **Partially built** (workspace and stage changes; not calls, offers, or bot decisions) |
 | Consent and DPDP | **Partially built** (student data requests; no consent to be called or WhatsApp-hired) |
@@ -354,6 +355,37 @@ It is stored on `student_scores`, shown to counsellors (`apps/web/src/app/admin/
 
 ---
 
+## Candidate data connectors
+
+The founder wants matching to use two pools: BrowseJobs’ own CVs, **and** the client company’s own people (their spreadsheet, their inbox, their Drive, their ATS, Naukri, LinkedIn). Connecting that data should be easy, including from WhatsApp.
+
+**Status for the whole idea: Not built.** Pieces we can reuse are listed below. Nothing today creates a private, company-scoped candidate list, and nothing searches one.
+
+### What exists, and what it is actually for
+
+| Founder’s source | Closest code | What that code really does |
+|---|---|---|
+| Excel / CSV on the web | `apps/api/app/Support/Import/XlsxReader.php` (first sheet only, no dates or formulas). CSV importers: `ImportLeadsCsv`, `ImportRosterCsv`, `ImportSyllabusCsv`, `ImportMarketJds`, admin job-feed CSV in `JobFeedController`. Screens: admin leads, batch roster, curriculum, market JDs. | Staff tools for **leads, students, syllabi, and job ads**. No employer screen accepts a candidate file. |
+| Excel, CSV, or CV PDFs/ZIP on WhatsApp | `WhatsAppController` | Inbound webhook stores **text only**. A document, image, or zip is ignored. |
+| Email (inbound address or a connected mailbox) | `SendEmailMessage`, `MessageMail`, `MAIL_*` in `.env.example` | **Outbound** mail only. No inbound parser, no per-company address, no Gmail or Outlook mailbox connection. |
+| SharePoint / OneDrive | — | No Microsoft Graph, SharePoint, or OneDrive code. |
+| Google Drive | `apps/api/app/Support/Drive/GoogleDriveClient.php`, `SyncDriveReviews`, admin setting `google_drive` | One **platform** service account, read-only, listing **images** in a single reviews folder. Not per company, not OAuth by the client, not PDFs or spreadsheets. `GOOGLE_CLIENT_ID` is Google **login** for users (`GoogleAuthController`), and that consent does not include Drive files. |
+| Client database or ATS | Employers FAQ and `ROADMAP` in `apps/web/src/content/employers.ts`. `POST me/jobs/{item}/copilot` in ADR 0046. | The public page says CSV/ATS import is **not available**. The copilot route is a stub that returns 501 when the flag is on. No Greenhouse, Lever, Keka, Darwinbox, or Zoho Recruit client. No SFTP drop. `private_pool_candidates` from the employer PRD was never migrated. |
+| Naukri (“Knockery”) and LinkedIn **candidates** | `ScraperAdapter`, `ApifyTransport`, `feed:add-scraper`, ADR 0048. Also `HttpJSearchTransport` (ADR 0045). LinkedIn **profile text** for a student: `OptimizeLinkedin`. | These pull **job advertisements** onto the student job board (Naukri and LinkedIn via Apify actors; JSearch as a licensed job API). They do not pull a recruiter’s resume database. ADR 0048 records that scraping job ads was a conscious break of the earlier “no scraping” rule, with terms-of-service risk. That code must not be pointed at Resdex or LinkedIn Recruiter. |
+| CV parsing (needed once files arrive) | `CvController::importCv`, prompt `cv_parse`, `PdfExtractor`, `DocxExtractor` | A **logged-in student** uploads one PDF, docx, or text file. Text is extracted and the AI fills **their** `CvProfile`. A scanned PDF with no text layer fails honestly. There is no ZIP unpack, no batch, and no path that stores the result on a company instead of the student. |
+| De-duplication | `ImportLeadsCsv` skips a lead whose phone already exists. Job-feed ingest fingerprints company+title+location (ADR 0045). | Same idea, wrong tables. Nothing de-dupes people inside a company pool, and nothing stops a client file from being written onto the shared student pool — because the client file is never imported. |
+
+### What is missing
+
+- A private pool per company, invisible to every other company and not mixed into the BrowseJobs student pool.
+- Upload on the employer website, a WhatsApp document handler, and an inbound mailbox.
+- Column mapping (AI-suggested, human-confirmed) and batch CV parsing.
+- De-dupe on email and phone **inside that company**, with a consent rule before any row is joined to a BrowseJobs student.
+- Ongoing sync (Drive, mailbox, ATS). Everything reusable above is either one-shot (CSV paste) or a scheduled pull of **job ads / review images**.
+- Official access to Naukri Resdex/RMS or LinkedIn Recruiter. Those products do not offer an open public API (see `REQUIREMENTS.md`).
+
+---
+
 ## Supporting pieces
 
 ### Company accounts and auth — Built for the website
@@ -376,7 +408,7 @@ Covered in step 1. Extra notes:
 | Uploaded verification files | `candidate_documents` | ID, education, employment papers, offer scans |
 | External job-board CVs | — | Not a database we search for employers |
 
-Matching is explained under step 2. There is no vector index. The talent-pool query is “students who finished one interview”, not “every CV we have ever stored”.
+Matching is explained under step 2. There is no vector index. The talent-pool query is “students who finished one interview”, not “every CV we have ever stored”, and it does not see a client’s own files. Connector gaps are in the section above.
 
 ### Notifications — Partially built
 
@@ -446,6 +478,9 @@ These should be extended, not rewritten, when the journey is built.
 | Parse “I need engineers in Bangalore” | `ReadHiringIntent` and the `jd_intent` prompt |
 | Speech to text | ElevenLabs path in `TranscribeController` (new caller: WhatsApp media, not the browser) |
 | Rank students against a JD | `LmsTalentMatcher` and `RelevanceScorer` |
+| Read a spreadsheet | `XlsxReader` and the admin CSV importers (leads, roster, syllabus, job ads — not candidates) |
+| Read one CV file | `PdfExtractor`, `DocxExtractor`, `cv_parse` prompt (student profile only) |
+| Read a Google Drive folder | `GoogleDriveClient` (review images only; wrong auth model for a client folder) |
 | Send WhatsApp / email safely | `Messenger`, templates, webhook signature check |
 | AI of any kind | `apps/api/app/Services/AI/AiGateway.php`, `config/ai.php`, `ai_events` |
 | L1/L2 questions and grading | `EmployerInterview`, `GradeEmployerInterview`, JD mock generator |
@@ -461,4 +496,4 @@ These should be extended, not rewritten, when the journey is built.
 
 The company can already sign up on the web, post a job, see a ranked list of **trained BrowseJobs students**, run a written L1/L2, and let a score rule move people as far as L2. WhatsApp can already deliver template messages, and one of those templates fires when a student is shortlisted.
 
-The journey the founder described — QR, voice note, CVs back on WhatsApp, AI calls, approval gates or a full auto mode, human scheduling, pre-BGV, offer PDF, and a joining bot — is a new product surface on top of that desk. The largest empty rooms are outbound calling, the WhatsApp conversation itself, offers, and anything that happens after a yes to hire.
+The journey the founder described — QR, voice note, CVs back on WhatsApp, AI calls, approval gates or a full auto mode, human scheduling, pre-BGV, offer PDF, and a joining bot — is a new product surface on top of that desk. The largest empty rooms are outbound calling, the WhatsApp conversation itself, offers, anything that happens after a yes to hire, and a private pool of the **client’s** candidates. Naukri and LinkedIn in this repo are job-ad feeds for students, not a way into a client’s resume database.
