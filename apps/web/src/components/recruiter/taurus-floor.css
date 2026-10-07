@@ -1,4 +1,5 @@
 /* Taurus command-centre chrome, scoped by living inside .bj-lab. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@500;600;700&family=Orbitron:wght@700;800&display=swap");
 .bj-lab{position:relative;height:100%;min-height:0;overflow:hidden;background:#01040a;color:#f4f8fc;font-family:var(--f-ui, Inter, system-ui, sans-serif);isolation:isolate}
 .bj-lab *,.bj-lab *::before,.bj-lab *::after{box-sizing:border-box}
 .bj-lab button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -270,8 +271,8 @@ noscript{position:absolute;inset:40% 10% auto;z-index:50;text-align:center;color
 .bj-lab.is-full{height:100dvh}
 .bj-lab.is-embed{height:min(920px,88dvh);min-height:640px;border-radius:22px;border:1px solid rgba(255,255,255,.1)}
 .bj-lab.is-console{height:calc(100dvh - 4.5rem)}
-.bj-lab .brand-title{font-size:13px;letter-spacing:.04em}
-.bj-lab.is-full .brand-title,.bj-lab.is-console .brand-title{font-size:14px;letter-spacing:.06em}
+.bj-lab .brand-title{font-size:13px;letter-spacing:.08em}
+.bj-lab.is-full .brand-title,.bj-lab.is-console .brand-title{font-size:15px;letter-spacing:.14em}
 .bj-lab .brand-sub{letter-spacing:.04em}
 #clock-date{text-transform:uppercase}
 .stage-counts{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0 16px 8px;list-style:none}
@@ -291,8 +292,16 @@ noscript{position:absolute;inset:40% 10% auto;z-index:50;text-align:center;color
 @keyframes bj-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .bj-marquee{display:flex;animation:bj-marquee 42s linear infinite}
 @media (prefers-reduced-motion:reduce){.bj-marquee{animation:none}}
-@media (max-width:760px){
-  .bj-lab .brand-title{font-size:11px;letter-spacing:.02em}
+@media (max-width:1280px){
+  .bj-lab.is-full .brand-title,.bj-lab.is-console .brand-title{font-size:13px;letter-spacing:.08em}
 }
+@media (max-width:760px){
+  .bj-lab .brand-title,
+  .bj-lab.is-full .brand-title,
+  .bj-lab.is-console .brand-title,
+  .bj-lab.is-embed .brand-title{font-size:12px;letter-spacing:.05em;white-space:normal;max-width:9.5rem;line-height:1.15}
+}
+#mnav button{text-transform:uppercase;letter-spacing:.04em}
+.ap-top .tag{margin-bottom:6px}
 .roster button.r-item{width:100%;text-align:left}
 .metric-note{font-size:12px;color:var(--muted);line-height:1.45}

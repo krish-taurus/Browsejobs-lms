@@ -410,10 +410,6 @@ export function HiringFloor({
 
   return (
     <div ref={rootRef} className={`bj-lab is-${variant}`}>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@500;600;700&family=Orbitron:wght@700;800&display=swap"
-      />
       <canvas id="lab" ref={canvasRef} className="lab" aria-label="Hiring floor" />
       <div className="fx" id="fx-scan" />
       <div className="fx" id="fx-vig" />
@@ -625,7 +621,7 @@ export function HiringFloor({
             </button>
           </div>
           {open ? <CandidateDossier person={open} titleId={titleId} call={floor.calls.find((row) => row.candidateId === open.id) ?? null} portraitRef={portraitRef} /> : null}
-          {bot ? <BotDossier name={bot.name} task={bot.task} state={bot.state} titleId={titleId} portraitRef={portraitRef} /> : null}
+          {bot ? <BotDossier name={bot.name} task={bot.task} state={bot.state} progress={bot.progress} titleId={titleId} portraitRef={portraitRef} /> : null}
         </aside>
       ) : null}
 
@@ -689,7 +685,7 @@ export function HiringFloor({
         </div>
       </aside>
 
-      <aside id="voice-panel" className={`panel${sheet === "talk" ? " open" : ""}`} hidden={sheet !== "talk"} aria-label="Talk to Recruiter">
+      <section id="voice-panel" className={`panel${sheet === "talk" ? " open" : ""}`} hidden={sheet !== "talk"} aria-label="Talk to Recruiter">
         <div className="panel-head">
           Talk to Recruiter
           <button type="button" className="close-btn" onClick={() => setSheet((current) => (current === "talk" ? null : current))}>
@@ -743,7 +739,7 @@ export function HiringFloor({
             </button>
           ))}
         </div>
-      </aside>
+      </section>
 
       <div id="legend">
         <span style={{ color: "#00d4ff" }}>
@@ -772,18 +768,23 @@ export function HiringFloor({
 
       <nav id="mnav" aria-label="Floor sections">
         <button type="button" className={sheet === "filters" ? "on" : ""} onClick={() => toggleSheet("filters")}>
+          <NavIcon d="M8 8a3 3 0 1 0 0.01 0M17 9a2.4 2.4 0 1 0 0.01 0M2.5 19c.8-3.4 3-5 5.5-5s4.7 1.6 5.5 5M14 18.5c.5-2.4 1.8-3.6 3.4-3.6 1.7 0 3 1.2 3.6 3.6" />
           Candidates
         </button>
         <button type="button" className={sheet === "log" ? "on" : ""} onClick={() => toggleSheet("log")}>
+          <NavIcon d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
           Mission log
         </button>
         <button type="button" className={sheet === "talk" ? "on" : ""} onClick={() => toggleSheet("talk")}>
+          <NavIcon d="M9 3h6v11a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3" />
           Talk
         </button>
         <button type="button" className={sheet === "metrics" ? "on" : ""} onClick={() => toggleSheet("metrics")}>
+          <NavIcon d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
           Metrics
         </button>
         <button type="button" onClick={() => labRef.current?.recenter()}>
+          <NavIcon d="M12 5a7 7 0 1 0 0.01 0M12 10a2 2 0 1 0 0.01 0M12 2v3M12 19v3M2 12h3M19 12h3" />
           Recenter
         </button>
       </nav>
@@ -838,7 +839,7 @@ function CandidateDossier({
       <div className="ap-top">
         <canvas id="ap-portrait" ref={portraitRef} width={72} height={92} />
         <div>
-          <p className="kicker">Demo data</p>
+          <span className="tag sim">Demo data</span>
           <h2 id={titleId} className="ap-name">
             {person.name}
           </h2>
@@ -907,26 +908,29 @@ function BotDossier({
   name,
   task,
   state,
+  progress,
   titleId,
   portraitRef,
 }: {
   name: string;
   task: string;
   state: AgentState;
+  progress: number;
   titleId: string;
   portraitRef: RefObject<HTMLCanvasElement | null>;
 }) {
   const label = state === "approval" ? "Needs your approval" : state;
+  const tone = state === "approval" ? "#ffb627" : state === "error" ? "#ff3d57" : state === "thinking" ? "#b591ff" : "#00d4ff";
   return (
     <div className="ap-body">
       <div className="ap-top">
         <canvas id="ap-portrait" ref={portraitRef} width={72} height={92} />
         <div>
-          <p className="kicker">Demo data</p>
+          <span className="tag sim">Demo data</span>
           <h2 id={titleId} className="ap-name">
             {name}
           </h2>
-          <p className="ap-status" style={{ color: state === "approval" ? "#ffb627" : "#00d4ff" }}>
+          <p className="ap-status" style={{ color: tone }}>
             <i /> {label}
           </p>
         </div>
@@ -934,7 +938,14 @@ function BotDossier({
       <div className="ap-section">
         <div className="ap-label">Now</div>
         <p className="ap-val strong">{task}</p>
+        <div className="ap-prog">
+          <div className="ap-bar">
+            <i style={{ width: `${Math.round(progress)}%` }} />
+          </div>
+          <span id="ap-pct">{Math.round(progress)}%</span>
+        </div>
       </div>
+      <p className="metric-note">A person always releases the offer. This bot does not email anyone.</p>
     </div>
   );
 }
@@ -949,6 +960,14 @@ function Score({ label, value }: { label: string; value: number | null }) {
         {cleared ? " · cleared" : ""}
       </div>
     </div>
+  );
+}
+
+function NavIcon({ d }: { d: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

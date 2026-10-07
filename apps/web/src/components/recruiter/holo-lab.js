@@ -6,11 +6,6 @@
  */
 export function createHoloLab(canvas, hooks){
 hooks = hooks || {};
-var getInsets = hooks.getInsets || function(w,h){
-  if(w<=760) return {l:8,r:8,t:108,b:72};
-  if(w<1100) return {l:8,r:300,t:108,b:72};
-  return {l:292,r:356,t:108,b:52};
-};
 var sheetOpen = false;
 var onSelect = hooks.onSelect || function(){};
 function voiceTick(){}
@@ -367,8 +362,27 @@ var view={K:20,baseK:20,cx:0,cy:0,T:0.62,sV:1,Z:0.95,zoom:1,panX:0,panY:0,vp:{l:
 function P(u,v,z){return [view.cx+u*view.K,view.cy+v*view.K*view.T-(z||0)*view.K*view.Z];}
 function toUV(x,y){return {u:(x-view.cx)/view.K,v:(y-view.cy)/(view.K*view.T)};}
 function computeVP(){
-  var ins=getInsets(W,H);
-  view.vp={l:ins.l,r:Math.max(ins.l+80,W-ins.r),t:ins.t,b:Math.max(ins.t+80,H-ins.b)};
+  var root=cvs.parentElement,box=root.getBoundingClientRect();
+  var header=root.querySelector('#hud-top'),ticker=root.querySelector('#ticker');
+  var leftP=root.querySelector('#left-panel'),rightP=root.querySelector('#right-panel');
+  var mnav=root.querySelector('#mnav'),legend=root.querySelector('#legend');
+  var hh=header?header.offsetHeight:58,th=ticker?ticker.offsetHeight:30;
+  root.style.setProperty('--hud-h',hh+'px');
+  var l=0,r=W,t=hh+th+6,b=H;
+  function rel(el,edge){var rect=el.getBoundingClientRect();return (edge==='right'?rect.right:edge==='top'?rect.top:rect.left)-(edge==='top'?box.top:box.left);}
+  if(W>=1100){
+    if(leftP)l=rel(leftP,'right')+8;
+    if(rightP)r=rel(rightP,'left')-8;
+    b=H-40;
+    if(legend&&getComputedStyle(legend).display!=='none'){var lt=rel(legend,'top');if(lt>t+120)b=Math.min(b,lt-8);}
+  }else if(W>760){
+    if(rightP)r=rel(rightP,'left')-8;
+    b=H-(mnav&&getComputedStyle(mnav).display!=='none'?mnav.offsetHeight:0)-8;
+  }else{
+    b=H-(mnav?mnav.offsetHeight:56)-8;
+    if(sheetOpen)b=Math.min(b,Math.round(H*0.4));
+  }
+  view.vp={l:Math.max(0,l),r:Math.max(l+80,r),t:t,b:Math.max(t+80,b)};
 }
 function computeView(){
   var vp=view.vp,aw=Math.max(200,vp.r-vp.l),ah=Math.max(200,vp.b-vp.t);
@@ -888,7 +902,8 @@ var zoneLabels=[];
 function placeZoneLabels(){
   var obs=[],vp=view.vp,vb=visibleBottom();if(hubRect)obs.push(hubRect);
   state.agents.forEach(function(a){if(a.rt.hit)obs.push(boxToRect(a.rt.hit));if(a.rt.scrRect)obs.push(boxToRect(a.rt.scrRect));});
-  var fs=clamp(view.K*0.4,9,12);zoneLabels=[];
+  var many=state.zonesLayout.length>6;
+  var fs=clamp(view.K*(many?0.34:0.4),many?8.5:9,many?11:12);zoneLabels=[];
   ctx.font='700 '+fs+'px '+UI_FONT;setLS(ctx,'0.5px');
   state.zonesLayout.forEach(function(g){
     var pm=phiAt((g.f0+g.f1)/2),c=Math.cos(pm),s=Math.sin(pm)*view.sV,txt=g.zone.toUpperCase();
@@ -983,7 +998,7 @@ function drawTag(tg,t){
 }
 function drawAgent(a,t){
   var r=a.rt;if(!r.station)return;
-  var p=P(r.u,r.v,0),x=p[0],y0=p[1],s=(1.9*view.K*view.Z/100)*view.figScale*(a.token?0.42:1);
+  var p=P(r.u,r.v,0),x=p[0],y0=p[1],s=(1.9*view.K*view.Z/100)*view.figScale*(a.token?0.56:1);
   var st=a.status,sc=STATUS[st].color,pc=agentColor(a),off=st==='offline';
   var e=r.spawn,vis=r.vis*(e*(2-e)),sel=state.selected===a,hov=state.hover===a;
   var hover=off?0:(2.5+Math.sin(t*1.8+r.seed)*1.5),y=y0-hover*s;
@@ -998,9 +1013,9 @@ function drawAgent(a,t){
   drawFigure(ctx,x+r.glitch*s*4,y,s,{color:body,status:sc,alpha:vis*(off?0.38:1),glow:off?0:(hov||sel?1.6:1),walk:r.walk,moving:r.moving,mdx:r.mdx,mdy:r.mdy,back:r.back,face:r.face,pose:pose,t:t,seed:r.seed,scan:!off});
   if(e<1)ctx.restore();
   if(st==='error'&&Math.abs(r.glitch)>0.2){ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle=rgba(RED,0.35*vis);ctx.fillRect(x-14*s,y-rand(20,90)*s,28*s,2);ctx.restore();}
-  var headY=y-100*s,ih=drawStatusIcon(st,x,headY-2,s,t,vis);
-  r.hit={x1:x-15*s-5,y1:headY-6-ih,x2:x+15*s+5,y2:y0+5};
-  if(r.vis>0.45)tags.push(makeTag(a,x,headY-4-ih));
+  var headY=y-100*s,ih=a.token?0:drawStatusIcon(st,x,headY-2,s,t,vis);
+  r.hit={x1:x-18*s-6,y1:headY-8-ih,x2:x+18*s+6,y2:y0+6};
+  if(r.vis>0.45&&(!a.token||sel||hov))tags.push(makeTag(a,x,headY-4-ih));
 }
 function drawBeams(t){
   var hub=P(0,0,2.75);

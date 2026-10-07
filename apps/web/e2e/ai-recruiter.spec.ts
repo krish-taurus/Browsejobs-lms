@@ -78,7 +78,7 @@ test("a typed role updates the demo brief", async ({ page }) => {
   await page.goto("/employers/mission-control-demo?at=52");
   await page.getByLabel("Tell the recruiter").fill("Hire 2 backend engineers in Hyderabad, 3-5 yrs, notice 15 days");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(page.getByText("backend engineers · Hyderabad · 2 openings")).toBeVisible();
+  await expect(page.locator(".job-line")).toHaveText("backend engineers · Hyderabad · 2 openings");
 });
 
 test("hiring floor stays readable on a phone", async ({ page }) => {
