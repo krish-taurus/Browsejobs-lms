@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { EnquiryForm } from "@/components/apple/EnquiryForm";
+import { Suspense } from "react";
+import { CourseEnquiry } from "@/components/apple/EnquiryForm";
 import { AppleShell } from "@/components/apple/AppleShell";
-import { liveCourseSlug } from "@/content/enquiries";
 import { breadcrumbNode, canonical, jsonLdGraph, webPageNode } from "@/lib/seo";
 
 const TITLE = "Ask about a course";
@@ -14,14 +14,10 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   alternates: { canonical: canonical(PATH) },
   openGraph: { title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };
 
-export default async function CourseEnquirePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ course?: string }>;
-}) {
-  const params = await searchParams;
+export default function CourseEnquirePage() {
   const jsonLd = jsonLdGraph([
     webPageNode({ path: PATH, title: TITLE, description: DESCRIPTION }),
     breadcrumbNode([
@@ -38,12 +34,14 @@ export default async function CourseEnquirePage({
         <section className="px-5 pb-20 pt-16 md:pt-24">
           <div className="mx-auto max-w-[720px] text-center">
             <h1 className="apple-display text-[clamp(2.75rem,6vw,5rem)]">Ask about a course.</h1>
-            <p className="mx-auto mt-4 max-w-[36rem] text-[19px] leading-snug text-[#424245]">
+            <p className="mx-auto mt-4 max-w-[36rem] text-[19px] leading-snug text-ink2">
               Tell us which course, and a time to call. Three free steps come before any fee.
             </p>
           </div>
           <div className="mt-12">
-            <EnquiryForm type="course" course={liveCourseSlug(params.course)} />
+            <Suspense fallback={<div className="min-h-[36rem]" />}>
+              <CourseEnquiry />
+            </Suspense>
           </div>
         </section>
       </AppleShell>

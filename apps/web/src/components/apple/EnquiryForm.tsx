@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CALL_TIMES,
   COMPANY_SIZES,
@@ -8,7 +9,9 @@ import {
   EMPLOYER_INTENTS,
   HIRING_TIMELINES,
   LEARNER_STATUSES,
+  employerIntent,
   enquiryCourses,
+  liveCourseSlug,
   type EmployerIntent,
 } from "@/content/enquiries";
 
@@ -21,6 +24,16 @@ type Props = {
   course?: string;
   intent?: EmployerIntent | null;
 };
+
+export function EmployerEnquiry() {
+  const params = useSearchParams();
+  return <EnquiryForm type="employer" intent={employerIntent(params.get("path") ?? undefined)} />;
+}
+
+export function CourseEnquiry() {
+  const params = useSearchParams();
+  return <EnquiryForm type="course" course={liveCourseSlug(params.get("course") ?? undefined)} />;
+}
 
 const control =
   "h-14 w-full rounded-[10px] border border-line bg-white px-4 text-[17px] text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-trust focus:ring-2 focus:ring-trust/25 aria-[invalid=true]:border-warn";
