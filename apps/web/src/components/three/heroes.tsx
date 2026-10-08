@@ -284,15 +284,18 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
 export function Eclipse({
   progress,
   fades,
+  anchor = "center",
 }: {
   progress: MutableRefObject<number>;
   fades: MutableRefObject<Record<SceneId, number>>;
+  anchor?: SceneAnchor;
 }) {
   const dark = useRef<THREE.Mesh>(null);
   const bright = useRef<THREE.Mesh>(null);
   useFrame(() => {
     if (!dark.current) return;
-    dark.current.position.x = -2.35 + progress.current * 1.7;
+    const slide = anchor === "aside" ? 0.82 : progress.current;
+    dark.current.position.x = -2.35 + slide * 1.7;
     const fade = fades.current.eclipse;
     const material = dark.current.material as THREE.MeshBasicMaterial;
     material.opacity = fade;
@@ -464,11 +467,14 @@ const CAM: Record<SceneId, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
 };
 
 function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, number]; scale: number } {
+  if (id === "grid") return { position: [0, 0, 0], scale: 1 };
   if (id === "ring" && anchor === "top") return { position: [0.45, 0.2, 0], scale: 1.08 };
   if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
   if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
   if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
-  if (id === "score" && anchor === "behind") return { position: [-1.15, 0.42, 0], scale: 0.46 };
+  if (id === "score" && anchor === "behind") return { position: [1.62, 0.05, 0], scale: 0.42 };
+  if (id === "eclipse" && anchor === "aside") return { position: [1.95, 0.02, 0], scale: 0.52 };
+  if (id === "globe" && anchor === "aside") return { position: [0.15, -1.72, 0], scale: 0.4 };
   if (id === "globe" && anchor === "right") return { position: [1.22, -0.4, 0], scale: 0.55 };
   return { position: [0, 0, 0], scale: 1 };
 }
@@ -505,7 +511,8 @@ export function Stage({
   useFrame(({ camera }, delta) => {
     const next: SceneId[] = [];
     for (const id of SCENE_IDS) {
-      const goal = shown && id === scene ? 1 : 0;
+      const withFloor = shown && scene === "globe" && anchor === "aside" && id === "grid";
+      const goal = shown && (id === scene || withFloor) ? 1 : 0;
       fades.current[id] = settle ? goal : fades.current[id] + (goal - fades.current[id]) * Math.min(1, delta * 2.4);
       if (fades.current[id] > 0.045 || id === scene) next.push(id);
     }
@@ -533,7 +540,7 @@ export function Stage({
     camera.lookAt(look.current);
   });
 
-  const globePins = pins === "claims" ? CLAIM_PINS : PINS;
+  const globePins = pins === "claims" ? CLAIM_PINS : pins === "none" ? [] : PINS;
 
   return (
     <>
@@ -544,7 +551,7 @@ export function Stage({
             {id === "ring" ? <HorizonRing progress={progress} fades={fades} anchor={anchor} /> : null}
             {id === "score" ? <ScoreRing progress={progress} fades={fades} anchor={anchor} /> : null}
             {id === "sphere" ? <GlassSphere fades={fades} /> : null}
-            {id === "eclipse" ? <Eclipse progress={progress} fades={fades} /> : null}
+            {id === "eclipse" ? <Eclipse progress={progress} fades={fades} anchor={anchor} /> : null}
             {id === "globe" ? <DotGlobe fades={fades} pins={globePins} /> : null}
             {id === "grid" ? <GridFloor fades={fades} /> : null}
           </group>

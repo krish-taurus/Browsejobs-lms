@@ -12,7 +12,8 @@ test("employer page keeps its canonical, FAQ, and service schema", async ({ page
   expect(html).toContain('"@type":"FAQPage"');
   expect(html).toContain('"@type":"Service"');
   expect(html).not.toContain("/courses/agentic-ai");
-  expect(html).not.toContain("Taurus");
+  expect(html).toContain("Powered by Taurus AI");
+  expect(html.split("Taurus").length - 1).toBe(1);
   expect(html).not.toContain("guaranteed job");
   expect(html).not.toContain("100% placement");
 

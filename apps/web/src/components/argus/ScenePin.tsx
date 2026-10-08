@@ -66,7 +66,7 @@ export function ScenePin({
             return;
           }
           const placed = isSceneAnchor(node.dataset.anchor) ? node.dataset.anchor : "center";
-          const marked: ScenePins = node.dataset.pins === "claims" ? "claims" : "cities";
+          const marked: ScenePins = node.dataset.pins === "claims" ? "claims" : node.dataset.pins === "none" ? "none" : "cities";
           setSceneState(scene, self.progress, { anchor: placed, pins: marked });
         },
       },

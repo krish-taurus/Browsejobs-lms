@@ -60,7 +60,12 @@ test("hiring pages do not claim a dialler or Taurus as the product", async ({ pa
     await page.goto(path);
     const html = await page.content();
     expect(html, path).not.toContain("AI caller");
-    expect(html, path).not.toContain("Taurus");
+    if (path === "/employers") {
+      expect(html).toContain("Powered by Taurus AI");
+      expect(html.split("Taurus").length - 1).toBe(1);
+    } else {
+      expect(html, path).not.toContain("Taurus");
+    }
   }
 });
 

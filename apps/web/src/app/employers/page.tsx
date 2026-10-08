@@ -1,5 +1,5 @@
-import { EmployerProduct } from "@/components/apple/EmployerProduct";
-import { AppleShell } from "@/components/apple/AppleShell";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { EmployersPage } from "@/components/argus/employers/EmployersPage";
 import { EMPLOYER_FAQ, EMPLOYER_META } from "@/content/employer-landing";
 import { contact } from "@/content/landing";
 import { breadcrumbNode, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
@@ -34,9 +34,9 @@ export default function EmployersRoute() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <AppleShell dark>
-        <EmployerProduct />
-      </AppleShell>
+      <ArgusFrame className="argus-home argus-employers">
+        <EmployersPage />
+      </ArgusFrame>
     </>
   );
 }

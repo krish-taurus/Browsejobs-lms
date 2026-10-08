@@ -1,9 +1,9 @@
 export const SCENE_IDS = ["ring", "score", "sphere", "eclipse", "globe", "grid"] as const;
 export type SceneId = (typeof SCENE_IDS)[number];
 
-export const SCENE_ANCHORS = ["center", "top", "right", "halo", "behind"] as const;
+export const SCENE_ANCHORS = ["center", "top", "right", "halo", "behind", "aside"] as const;
 export type SceneAnchor = (typeof SCENE_ANCHORS)[number];
-export type ScenePins = "cities" | "claims";
+export type ScenePins = "cities" | "claims" | "none";
 
 export type SceneSnapshot = {
   scene: SceneId;

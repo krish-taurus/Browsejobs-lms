@@ -427,7 +427,9 @@ export function HomeFloor() {
   );
 }
 
-function DaysBoard() {
+const OUTCOME_LINES = ["Time saved.", "Fewer interviews for your team.", "Only pre-qualified candidates.", "You still decide the offer."] as const;
+
+function DaysBoard({ checks = false }: { checks?: boolean }) {
   const num = useRef<HTMLParagraphElement>(null);
   const usual = useRef<HTMLUListElement>(null);
   const withUs = useRef<HTMLUListElement>(null);
@@ -484,7 +486,15 @@ function DaysBoard() {
           <article key={item.title} className="argus-card">
             <span className="argus-card-no">{String(index + 1).padStart(2, "0")}</span>
             <h3>{item.title}</h3>
-            <p>{item.body}</p>
+            {checks && item.title === "The outcome." ? (
+              <ul className="argus-outcome">
+                {OUTCOME_LINES.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>{item.body}</p>
+            )}
           </article>
         ))}
       </StaggerIn>
@@ -493,10 +503,10 @@ function DaysBoard() {
   );
 }
 
-export function HomeDays() {
+export function HomeDays({ checks = false }: { checks?: boolean }) {
   return (
     <ScenePin id="impact" className="argus-section argus-days-section">
-      <DaysBoard />
+      <DaysBoard checks={checks} />
     </ScenePin>
   );
 }

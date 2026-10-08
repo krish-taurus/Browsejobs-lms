@@ -46,7 +46,7 @@ export function SceneHost() {
           ? Math.min(1, Math.max(0, -rect.top / (Math.max(rect.height, view) * 0.7)))
           : Math.min(1, Math.max(0, (view * 0.82 - rect.top) / (view * 0.7)));
       const anchor = isSceneAnchor(best.dataset.anchor) ? best.dataset.anchor : "center";
-      const pins: ScenePins = best.dataset.pins === "claims" ? "claims" : "cities";
+      const pins: ScenePins = best.dataset.pins === "claims" ? "claims" : best.dataset.pins === "none" ? "none" : "cities";
       setSceneState(best.dataset.scene, progress, { anchor, pins });
     };
 
