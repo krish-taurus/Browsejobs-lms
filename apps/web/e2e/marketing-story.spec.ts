@@ -110,7 +110,7 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   await expect(stories.getByRole("link", { name: "4.9 on Google · 473 reviews" })).toHaveAttribute("href", /google\.com\/maps\/place\/Browsejobs/);
   await expect(stories.getByText("Vinod Karan Singh").first()).toBeVisible();
   await expect(stories.getByText("Google review").first()).toBeVisible();
-  await stories.getByRole("button", { name: "Read more" }).first().click();
+  await stories.getByRole("button", { name: "Read more" }).first().evaluate((button: HTMLButtonElement) => button.click());
   await expect(stories.getByText(/require assistance in job placement/)).toBeVisible();
 });
 

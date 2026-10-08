@@ -551,7 +551,8 @@
   .apple-marquee {
     animation: apple-marquee 48s linear infinite;
   }
-  .apple-marquee:hover { animation-play-state: paused; }
+  .apple-marquee:hover,
+  .apple-marquee:focus-within { animation-play-state: paused; }
   @supports (animation-timeline: view()) {
     .apple-parallax {
       animation: apple-parallax linear both;
