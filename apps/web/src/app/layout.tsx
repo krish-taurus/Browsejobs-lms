@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito } from "next/font/google";
+import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito, Michroma } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
+import { MotionProvider } from "@/components/argus/MotionProvider";
+import { SceneHost } from "@/components/three/SceneHost";
 import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import "./globals.css";
 
@@ -39,6 +41,14 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
+});
+
+const michroma = Michroma({
+  variable: "--font-wordmark",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  preload: false,
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -103,10 +113,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${sora.variable} ${inter.variable} ${plexMono.variable} ${poppins.variable} ${nunito.variable} antialiased`}
+        className={`${sora.variable} ${inter.variable} ${plexMono.variable} ${poppins.variable} ${nunito.variable} ${michroma.variable} antialiased`}
       >
         <SiteJsonLd />
-        {children}
+        <SceneHost />
+        <MotionProvider>{children}</MotionProvider>
         <Analytics />
       </body>
     </html>

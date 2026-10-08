@@ -1,0 +1,553 @@
+/* Argus foundation. Applied only under .argus so live pages stay as they are. */
+
+.argus {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+html.argus-live .argus {
+  background: transparent;
+}
+
+.argus-grain,
+.argus-glow,
+.argus-mobile-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.argus-grain {
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.argus-glow {
+  height: 70vh;
+  background: radial-gradient(880px 420px at 50% -8%, rgba(123, 92, 255, 0.28), transparent 62%);
+}
+
+.argus-mobile-glow {
+  display: none;
+  background:
+    radial-gradient(420px 260px at 50% 16%, rgba(233, 228, 255, 0.45), transparent 60%),
+    radial-gradient(720px 480px at 50% -10%, rgba(59, 43, 255, 0.55), transparent 68%),
+    var(--bg);
+}
+
+.argus-content,
+.argus-foot {
+  position: relative;
+  z-index: 2;
+}
+
+.argus-h1,
+.argus-h2 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+.argus-h1 { font-size: 40px; }
+.argus-h2 { font-size: 32px; line-height: 1.05; }
+
+.argus-body {
+  max-width: 540px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.argus-kicker {
+  margin: 0 0 0.75rem;
+  color: var(--violet-200);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.argus-section {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  padding: 8.5rem 1.5rem 4rem;
+  scroll-margin-top: 5rem;
+}
+
+.argus-section-copy { max-width: 640px; }
+
+.argus-disclaimer {
+  max-width: 540px;
+  margin: 0.75rem 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.argus-nav {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 40;
+  width: min(1200px, calc(100% - 24px));
+  transform: translateX(-50%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.argus-nav.is-hidden {
+  transform: translateX(-50%) translateY(calc(-100% - 20px));
+}
+
+.argus-nav-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  height: 56px;
+  padding: 0 8px 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), rgba(7, 8, 26, 0.72);
+  backdrop-filter: blur(16px);
+}
+
+.argus-logo {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.argus-nav-links {
+  display: none;
+  align-items: center;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.argus-nav-links a {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.argus-nav-links a[aria-current="page"],
+.argus-nav-links a:hover { color: white; }
+
+.argus-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 0.35rem;
+}
+
+.argus-nav-menu {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.argus-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 6rem 1.75rem 2rem;
+  list-style: none;
+  background: rgba(7, 8, 26, 0.96);
+}
+
+.argus-menu a {
+  color: white;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.argus-btn,
+.argus-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.argus-btn {
+  height: 48px;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.argus-btn-primary {
+  border: 0;
+  background: white;
+  color: #07081a;
+  box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+}
+
+.argus-btn-secondary {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: white;
+}
+
+.argus-more {
+  gap: 0.2rem;
+  min-height: 44px;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.argus-more i {
+  display: inline-block;
+  font-style: normal;
+  transition: transform 0.25s ease;
+}
+
+.argus-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg-elev);
+  padding: 1.5rem 1.4rem 1.35rem;
+}
+
+.argus-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+
+.argus-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(123, 92, 255, 0.32), transparent 46%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.argus-card:hover::after { opacity: 1; }
+
+.argus-card > * { position: relative; z-index: 1; }
+
+.argus-card-no {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.15rem;
+  z-index: 1;
+  color: var(--violet-200);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+@media (min-width: 800px) {
+  .argus-card-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.argus-field option { background: #0e1030; color: white; }
+
+.argus-card h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.argus-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(232, 191, 99, 0.75);
+  border-radius: 999px;
+  color: #e8bf63;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.argus-clear {
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.argus-field { position: relative; display: block; }
+
+.argus-field input,
+.argus-field select {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  padding: 16px 16px 0;
+  font: inherit;
+  font-size: 16px;
+}
+
+.argus-field select { padding-top: 18px; }
+
+.argus-field .argus-label {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.argus-field input:focus + .argus-label,
+.argus-field input:not(:placeholder-shown) + .argus-label,
+.argus-field select:focus + .argus-label,
+.argus-field select:valid + .argus-label {
+  top: 7px;
+  color: var(--violet-200);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.argus-field input:focus,
+.argus-field select:focus {
+  border-color: var(--violet-400);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(123, 92, 255, 0.28);
+}
+
+.argus-phone input { padding-left: 76px; }
+.argus-phone .argus-label { left: 76px; }
+
+.argus-code {
+  position: absolute;
+  top: 15px;
+  left: 14px;
+  z-index: 1;
+  padding-right: 8px;
+  border-right: 1px solid var(--border-strong);
+  color: var(--violet-200);
+  font-size: 14px;
+}
+
+.argus-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.argus-check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: #7b5cff;
+}
+
+.argus-faq { border-top: 1px solid var(--border); }
+
+.argus-faq-q {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 56px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: white;
+  font: inherit;
+  font-size: 17px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.argus-faq-plus {
+  color: var(--violet-200);
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 0.35s ease;
+}
+
+.argus-faq-plus.is-open { transform: rotate(45deg); }
+
+.argus-faq-a {
+  overflow: hidden;
+  height: 0;
+}
+
+.argus-faq-a p {
+  margin: 0;
+  padding: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.argus-foot {
+  border-top: 1px solid rgba(185, 168, 255, 0.35);
+  box-shadow: 0 -18px 50px rgba(59, 43, 255, 0.18);
+  padding: 4rem 1.5rem 2rem;
+}
+
+.argus-foot-grid {
+  display: grid;
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.argus-foot h2 {
+  margin: 0 0 0.8rem;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.argus-foot ul { margin: 0; padding: 0; list-style: none; }
+.argus-foot a { color: white; font-size: 15px; line-height: 2; text-decoration: none; }
+
+.argus-wordmark {
+  margin: 2.5rem 0 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.14);
+  font-family: var(--font-wordmark), sans-serif;
+  font-size: clamp(22px, 4.4vw, 64px);
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.argus-panel {
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  background: rgba(14, 16, 48, 0.78);
+  padding: 1.5rem;
+}
+
+.argus-transition {
+  position: relative;
+  min-height: 100vh;
+}
+
+.argus-transition-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 8rem 1.5rem;
+}
+
+.argus-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.argus-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.argus-canvas canvas { display: block; }
+
+.argus-pin-label {
+  color: var(--glow-hot);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+html.argus-scroll { scroll-behavior: auto; }
+
+@media (min-width: 768px) {
+  .argus-h1 { font-size: clamp(64px, 6vw, 80px); }
+  .argus-h2 { font-size: clamp(48px, 4vw, 56px); }
+  .argus-body { font-size: 18px; }
+  .argus-nav-bar { grid-template-columns: 1fr auto 1fr; padding-right: 8px; }
+  .argus-nav-links { display: flex; }
+  .argus-nav-menu { display: none; }
+  .argus-foot-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .argus { background: transparent; }
+  .argus-mobile-glow { display: block; animation: argus-glow 7s ease-in-out infinite alternate; }
+  .argus-nav-cta-long { display: none; }
+}
+
+@media (min-width: 768px) {
+  .argus-nav-cta-short { display: none; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .argus-btn-primary:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 28px rgba(255, 255, 255, 0.38);
+  }
+  .argus-more:hover i { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .argus-nav,
+  .argus-btn-primary,
+  .argus-more i,
+  .argus-faq-plus,
+  .argus-mobile-glow { transition: none; animation: none; }
+}
+
+@keyframes argus-glow {
+  from { filter: brightness(0.92); }
+  to { filter: brightness(1.14); }
+}
+
+.argus a:focus-visible,
+.argus button:focus-visible,
+.argus input:focus-visible,
+.argus select:focus-visible {
+  outline: 2px solid var(--violet-400);
+  outline-offset: 3px;
+}

@@ -31,10 +31,11 @@ export function LoginMenu({
   appearance = "default",
 }: {
   tone?: "light" | "night";
-  appearance?: "default" | "apple";
+  appearance?: "default" | "apple" | "argus";
 } = {}) {
-  const night = tone === "night";
+  const night = tone === "night" || appearance === "argus";
   const apple = appearance === "apple";
+  const argus = appearance === "argus";
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -66,9 +67,11 @@ export function LoginMenu({
         className={
           apple
             ? "inline-flex h-8 items-center gap-1 text-[12px] leading-none"
-            : `flex items-center gap-1 text-sm font-medium transition-colors ${
-                night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
-              }`
+            : argus
+              ? "inline-flex h-11 items-center gap-1 px-2 text-[14px] text-white/80 hover:text-white"
+              : `flex items-center gap-1 text-sm font-medium transition-colors ${
+                  night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
+                }`
         }
       >
         Login

@@ -8,6 +8,7 @@ import { SITE_ORIGIN } from "@/lib/seo";
  */
 const PRIVATE = [
   "/employers/mission-control-demo",
+  "/dev",
   "/admin",
   "/api/",
   "/candidate",

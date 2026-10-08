@@ -1,0 +1,73 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { isSceneId, prefersReducedMotion } from "@/lib/motion";
+import { setSceneState } from "@/lib/scene-bus";
+
+const SceneCanvas = dynamic(() => import("./SceneCanvas"), { ssr: false });
+
+/** Mounts the 3D canvas only after first paint, and only on pages that declare data-scene. */
+export function SceneHost() {
+  const pathname = usePathname();
+  const [webgl, setWebgl] = useState(false);
+
+  useEffect(() => {
+    const sections = () => [...document.querySelectorAll<HTMLElement>("[data-scene]")];
+    if (sections().length === 0) return;
+
+    const narrow = window.matchMedia("(max-width: 767px)");
+    const reduced = prefersReducedMotion();
+    let frame = 0;
+
+    const measure = () => {
+      const view = window.innerHeight;
+      let best: HTMLElement | null = null;
+      let bestRatio = 0;
+      for (const node of sections()) {
+        const rect = node.getBoundingClientRect();
+        const visible = Math.min(rect.bottom, view) - Math.max(rect.top, 0);
+        const ratio = visible / Math.min(view, Math.max(rect.height, 1));
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          best = node;
+        }
+      }
+      if (!best || bestRatio < 0.12 || best.dataset.pinned === "true") return;
+      if (!isSceneId(best.dataset.scene)) return;
+      const rect = best.getBoundingClientRect();
+      const progress = reduced ? 1 : Math.min(1, Math.max(0, (view * 0.82 - rect.top) / (view * 0.7)));
+      setSceneState(best.dataset.scene, progress);
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    const kick = window.setTimeout(() => setWebgl(!narrow.matches), 60);
+    const onNarrow = () => setWebgl(!narrow.matches);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    narrow.addEventListener("change", onNarrow);
+
+    return () => {
+      window.clearTimeout(kick);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      narrow.removeEventListener("change", onNarrow);
+      document.documentElement.classList.remove("argus-live");
+    };
+  }, [pathname]);
+
+  if (!webgl) return null;
+
+  return (
+    <SceneCanvas
+      onReady={() => {
+        document.documentElement.classList.add("argus-live");
+      }}
+    />
+  );
+}
