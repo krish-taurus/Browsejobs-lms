@@ -241,16 +241,24 @@ export function ScoreRing({
   );
 }
 
+const GLASS_FRAG = `
+  uniform float uFade;
+  varying vec3 vN;
+  void main() {
+    float rim = pow(1.0 - max(dot(normalize(vN), vec3(0.0, 0.0, 1.0)), 0.0), 1.65);
+    vec3 col = mix(vec3(0.78, 0.78, 0.80), vec3(0.28, 0.28, 0.30), rim);
+    float alpha = (0.05 + rim * 0.62) * uFade;
+    if (alpha < 0.02) discard;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
 export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId, number>> }) {
   const comet = useRef<THREE.Group>(null);
-  const shell = useRef<THREE.Mesh>(null);
+  const shell = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
   useFrame(({ clock }) => {
-    const fade = fades.current.sphere;
-    const glass = shell.current?.material;
-    if (glass && "opacity" in glass) {
-      glass.transparent = true;
-      glass.opacity = fade;
-    }
+    if (shell.current) shell.current.uniforms.uFade.value = fades.current.sphere;
     const t = clock.elapsedTime * 1.15;
     comet.current?.position.set(Math.cos(t) * 1.85, Math.sin(t * 0.65) * 0.55, Math.sin(t) * 1.85);
     comet.current?.traverse((obj) => {
@@ -264,27 +272,15 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
   });
   return (
     <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.35}>
-      <mesh ref={shell}>
-        <sphereGeometry args={[1.25, 64, 64]} />
-        <meshPhysicalMaterial
-          transmission={1}
-          roughness={0.08}
-          thickness={1.2}
-          ior={1.45}
-          color="#f4f4f6"
-          metalness={0}
-          clearcoat={1}
-          clearcoatRoughness={0.2}
-          reflectivity={0.55}
-          transparent
-        />
+      <mesh>
+        <sphereGeometry args={[1.25, 48, 48]} />
+        <shaderMaterial ref={shell} transparent depthWrite={false} toneMapped={false} uniforms={uniforms} vertexShader={RING_VERT} fragmentShader={GLASS_FRAG} />
       </mesh>
       <group ref={comet}>
         <mesh>
-          <sphereGeometry args={[0.055, 16, 16]} />
-          <meshBasicMaterial color="#2c2c2e" />
+          <sphereGeometry args={[0.055, 12, 12]} />
+          <meshBasicMaterial color="#2c2c2e" transparent />
         </mesh>
-        <pointLight intensity={4} distance={4} color="#ffffff" />
       </group>
     </Float>
   );
@@ -295,11 +291,12 @@ const ECLIPSE_FRAG = `
   varying vec3 vN;
   void main() {
     vec3 n = normalize(vN);
-    float facing = max(dot(n, vec3(0.0, 0.0, 1.0)), 0.0);
-    float rim = pow(1.0 - facing, 2.15);
-    float shade = pow(facing, 0.62);
-    vec3 col = mix(vec3(0.035, 0.035, 0.04), vec3(0.20, 0.20, 0.21), shade);
-    col = mix(col, vec3(0.62, 0.62, 0.65), rim);
+    vec3 key = normalize(vec3(-0.42, 0.68, 0.6));
+    float nd = max(dot(n, key), 0.0);
+    float body = pow(nd * 0.78 + 0.22, 1.2);
+    float rim = pow(1.0 - max(dot(n, vec3(0.0, 0.0, 1.0)), 0.0), 1.85);
+    vec3 col = mix(vec3(0.012, 0.012, 0.016), vec3(0.30, 0.30, 0.32), body);
+    col = mix(col, vec3(0.70, 0.70, 0.73), rim);
     float alpha = uFade;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
@@ -404,7 +401,7 @@ const DISC_FRAG = `
     float facing = max(dot(n, vec3(0.0, 0.0, 1.0)), 0.0);
     float rim = pow(1.0 - facing, 1.55);
     float lift = n.y * 0.5 + 0.5;
-    vec3 col = mix(vec3(1.0), vec3(0.90, 0.90, 0.925), rim * 0.85);
+    vec3 col = mix(vec3(1.0), vec3(0.84, 0.84, 0.86), rim * 0.95);
     col *= mix(0.94, 1.0, lift);
     float alpha = uFade;
     if (alpha < 0.02) discard;
@@ -418,7 +415,7 @@ const DOT_VERT = `
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vec3 n = normalize(normalMatrix * normalize(position));
     vDepth = clamp(n.z * 0.5 + 0.5, 0.0, 1.0);
-    gl_PointSize = clamp(1.15 * (4.8 / max(-mv.z, 0.35)), 1.05, 2.15);
+    gl_PointSize = clamp(1.85 * (5.0 / max(-mv.z, 0.35)), 1.7, 3.1);
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -560,7 +557,7 @@ function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, 
   if (id === "ring" && anchor === "top") return { position: [0.45, 0.2, 0], scale: 1.08 };
   if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
   if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
-  if (id === "sphere" && anchor === "aside") return { position: [2.2, 0.02, 0], scale: 0.56 };
+  if (id === "sphere" && anchor === "aside") return { position: [1.65, 0.0, 0], scale: 0.48 };
   if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
   if (id === "score" && anchor === "behind") return { position: [1.62, 0.05, 0], scale: 0.42 };
   if (id === "eclipse" && anchor === "aside") return { position: [1.95, 0.02, 0], scale: 0.52 };
