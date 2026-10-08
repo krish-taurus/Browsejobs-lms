@@ -16,6 +16,7 @@ import {
 import { INK, SERIES, SURFACE } from "@/components/viz/tokens";
 import { ApiError } from "@/lib/api";
 import { candidateApi, jobApi, STAGE_LABELS, type PublicJob } from "@/lib/candidate";
+import { mockPath } from "@/lib/mockKinds";
 
 type Application = { id: number; employer_job_id: number; stage: string; mock_score: number | null };
 
@@ -81,7 +82,7 @@ export default function CandidateJobDetailPage() {
     setOffers(null);
     try {
       const res = await candidateApi.startMock(jobId);
-      router.push(`/student-ai-mock/${res.data.mock_id}`);
+      router.push(mockPath("job", res.data.mock_id));
     } catch (err) {
       // An empty wallet is an offer, not a failure — show the packs inline.
       if (err instanceof ApiError && err.status === 402) {

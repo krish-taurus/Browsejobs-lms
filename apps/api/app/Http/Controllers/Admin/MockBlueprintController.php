@@ -18,6 +18,59 @@ use Illuminate\Http\Request;
  */
 final class MockBlueprintController extends Controller
 {
+    /**
+     * Every student interview of one kind, newest first — the four admin
+     * tables under /admin/ai-interviews/{practice|voice|job|cv}.
+     */
+    public function interviews(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'kind' => ['required', 'string', 'in:'.implode(',', MockInterview::KINDS)],
+            'status' => ['nullable', 'string', 'in:in_progress,completed,abandoned'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $page = MockInterview::query()
+            ->ofKind($validated['kind'])
+            ->when($validated['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
+            ->when($validated['q'] ?? null, fn ($q, $term) => $q->whereHas('student', fn ($s) => $s
+                ->where('name', 'like', '%'.$term.'%')
+                ->orWhere('email', 'like', '%'.$term.'%')
+                ->orWhere('phone', 'like', '%'.$term.'%')))
+            ->with(['student:id,name,email,phone', 'blueprint:id,role_title'])
+            ->orderByDesc('id')
+            ->paginate(50);
+
+        $counts = collect(MockInterview::KINDS)->mapWithKeys(fn (string $k) => [
+            $k => MockInterview::query()->ofKind($k)->count(),
+        ]);
+
+        return response()->json([
+            'data' => [
+                'kind' => $validated['kind'],
+                'counts' => $counts,
+                'interviews' => collect($page->items())->map(fn (MockInterview $m) => [
+                    'id' => $m->id,
+                    'student' => $m->student?->name,
+                    'email' => $m->student?->email,
+                    'phone' => $m->student?->phone,
+                    'role_title' => $m->blueprint?->role_title,
+                    'status' => $m->status,
+                    'overall_score' => $m->overall_score,
+                    'scorecard_source' => $m->scorecard_source,
+                    'duration_seconds' => $m->duration_seconds,
+                    'started_at' => $m->started_at?->toIso8601String(),
+                    'completed_at' => $m->completed_at?->toIso8601String(),
+                ])->values(),
+            ],
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'last_page' => $page->lastPage(),
+                'total' => $page->total(),
+            ],
+        ]);
+    }
+
     public function index(): JsonResponse
     {
         return response()->json([

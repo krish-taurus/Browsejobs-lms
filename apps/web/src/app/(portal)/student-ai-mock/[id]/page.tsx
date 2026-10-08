@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { isBudgetError } from "@/lib/tutor";
+import { MOCK_KIND_META, mockPath, type MockKind } from "@/lib/mockKinds";
 
 type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 
@@ -51,6 +52,7 @@ type Scorecard = {
 
 type MockSession = {
   id: number;
+  kind: MockKind;
   status: "in_progress" | "completed" | "abandoned";
   mode: "text" | "voice";
   // A room-kind interview (the spoken, proctored /student-ai-mock/[id]/room experience —
@@ -249,11 +251,16 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
   // the difference), send them to the room instead of silently rendering
   // the wrong interview format. A completed/abandoned room-kind interview is
   // fine to review here — only "still in progress" redirects.
+  //
+  // Every session also lives under its own kind's URL
+  // (/student-ai-mock/{practice|voice|job|cv}/{id}) — an old /student-ai-mock/{id}
+  // link lands on the right one.
+  const pathname = usePathname();
   useEffect(() => {
-    if (session?.is_room && session.status === "in_progress") {
-      router.replace(`/student-ai-mock/${id}/room`);
-    }
-  }, [session, id, router]);
+    if (!session) return;
+    const target = mockPath(session.kind, id, session.is_room && session.status === "in_progress");
+    if (pathname !== target) router.replace(target);
+  }, [session, id, router, pathname]);
 
   function toggleVoice() {
     if (voiceOn) {
@@ -313,13 +320,13 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href="/student-ai-mock" className="text-sm text-trust hover:underline">← Mock Interviews</Link>
+      <Link href={`/student-ai-mock/${session.kind}`} className="text-sm text-trust hover:underline">← {MOCK_KIND_META[session.kind].title}</Link>
       <div className="mt-3 flex items-baseline justify-between">
         <h1 className="display text-2xl text-ink">{session.role_title ?? "Mock interview"}</h1>
         <span className="flex items-center gap-3">
           {!done && session.status === "in_progress" && session.mode === "text" && voiceSupported && (
             <Link
-              href={`/student-ai-mock/${session.id}/room`}
+              href={mockPath(session.kind, session.id, true)}
               className="rounded-full bg-trust px-3 py-1 text-xs font-semibold text-white"
             >
               📹 Join interview room

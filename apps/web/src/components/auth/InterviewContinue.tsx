@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { InterviewStartForm } from "@/components/auth/InterviewStartForm";
 import { ApiError, apiJson } from "@/lib/api";
 import { cvMockApi } from "@/lib/candidate";
+import { mockPath } from "@/lib/mockKinds";
 
 type Gate = "loading" | "auth" | "cv" | "error";
 
@@ -24,7 +25,7 @@ export function InterviewContinue() {
     cvMockApi
       .start()
       .then((result) => {
-        if (!cancelled) router.replace(`/student-ai-mock/${result.data.mock_id}/room`);
+        if (!cancelled) router.replace(mockPath("cv", result.data.mock_id, true));
       })
       .catch(async (err: unknown) => {
         if (cancelled) return;

@@ -425,6 +425,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me/mocks', [MockController::class, 'index']);
     Route::post('me/mocks', [MockController::class, 'store']);
     Route::post('me/mocks/voice', [MockController::class, 'storeVoice'])->middleware('throttle:10,1');
+    // One interview kind's sessions (practice | voice | job | cv) — declared
+    // before me/mocks/{mock} so "history" is never read as an id.
+    Route::get('me/mocks/history', [MockController::class, 'history']);
     Route::get('me/mocks/{mock}', [MockController::class, 'show']);
     Route::post('me/mocks/{mock}/answer', [MockController::class, 'answer'])->middleware('throttle:ai');
     // Reads a question aloud in the configured ElevenLabs voice. Answers 204
@@ -674,6 +677,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
         Route::delete('knowledge/{knowledge}', [KnowledgeController::class, 'destroy']);
         Route::post('knowledge/reindex', [KnowledgeController::class, 'reindex']);
         Route::get('mock-blueprints', [MockBlueprintController::class, 'index']);
+        Route::get('mock-interviews', [MockBlueprintController::class, 'interviews']);
         Route::post('mock-blueprints', [MockBlueprintController::class, 'store']);
         Route::patch('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'update']);
         Route::delete('mock-blueprints/{blueprint}', [MockBlueprintController::class, 'destroy']);

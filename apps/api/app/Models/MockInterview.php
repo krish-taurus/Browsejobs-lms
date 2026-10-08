@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -42,6 +43,21 @@ class MockInterview extends Model
 
     public const MODE_VOICE = 'voice';
 
+    // Which of the four interview experiences a session belongs to. Derived,
+    // not stored: the blueprint says who the interview is for (a course, an
+    // employer job / job-feed posting, or one student's CV), is_room/mode say
+    // how it was taken. Each kind has its own portal URL and its own list.
+    public const KIND_PRACTICE = 'practice'; // course blueprint, typed
+
+    public const KIND_VOICE = 'voice'; // course blueprint, spoken (room or call)
+
+    public const KIND_JOB = 'job'; // a role hiring directly / a job-feed posting
+
+    public const KIND_CV = 'cv'; // the free CV-readiness interview
+
+    /** @var list<string> */
+    public const KINDS = [self::KIND_PRACTICE, self::KIND_VOICE, self::KIND_JOB, self::KIND_CV];
+
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'is_room', 'status',
@@ -71,6 +87,49 @@ class MockInterview extends Model
     public function turns(): HasMany
     {
         return $this->hasMany(MockTurn::class);
+    }
+
+    /**
+     * The interview's kind — precedence cv > job > voice > practice, the same
+     * order scopeOfKind() uses so a list and a single record never disagree.
+     */
+    public function kind(): string
+    {
+        $blueprint = $this->blueprint;
+
+        if ($blueprint?->user_id !== null) {
+            return self::KIND_CV;
+        }
+        if ($blueprint?->employer_job_id !== null || $blueprint?->job_feed_item_id !== null) {
+            return self::KIND_JOB;
+        }
+        if ($this->is_room || $this->mode === self::MODE_VOICE) {
+            return self::KIND_VOICE;
+        }
+
+        return self::KIND_PRACTICE;
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeOfKind(Builder $query, string $kind): Builder
+    {
+        $courseOnly = fn (Builder $b) => $b->whereNull('user_id')
+            ->whereNull('employer_job_id')
+            ->whereNull('job_feed_item_id');
+
+        return match ($kind) {
+            self::KIND_CV => $query->whereHas('blueprint', fn (Builder $b) => $b->whereNotNull('user_id')),
+            self::KIND_JOB => $query->whereHas('blueprint', fn (Builder $b) => $b->whereNull('user_id')
+                ->where(fn (Builder $w) => $w->whereNotNull('employer_job_id')->orWhereNotNull('job_feed_item_id'))),
+            self::KIND_VOICE => $query->whereHas('blueprint', $courseOnly)
+                ->where(fn (Builder $w) => $w->where('is_room', true)->orWhere('mode', self::MODE_VOICE)),
+            default => $query->whereHas('blueprint', $courseOnly)
+                ->where('is_room', false)
+                ->where('mode', '!=', self::MODE_VOICE),
+        };
     }
 
     public function candidateAnswers(): int

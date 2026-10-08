@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { mockPath, type MockKind } from "@/lib/mockKinds";
 import { use, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { apiJson, apiPostBlob } from "@/lib/api";
 import { AiAvatar, type AiAvatarPhase } from "@/components/portal/AiAvatar";
@@ -24,6 +25,7 @@ type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 
 type MockSession = {
   id: number;
+  kind: MockKind;
   status: "in_progress" | "completed" | "abandoned";
   mode: "text" | "voice";
   role_title: string | null;
@@ -242,6 +244,18 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  // The room lives under its kind's URL (/student-ai-mock/{kind}/{id}/room) —
+  // an old /student-ai-mock/{id}/room link moves there before anything starts.
+  const pathname = usePathname();
+  useEffect(() => {
+    if (session?.status !== "in_progress") return;
+    const target = mockPath(session.kind, id, true);
+    if (pathname !== target) router.replace(target);
+  }, [session, id, router, pathname]);
+
+  // The session page for this interview, under its kind's URL once known.
+  const sessionHref = session ? mockPath(session.kind, id) : `/student-ai-mock/${id}`;
 
   // Call timer.
   useEffect(() => {
@@ -914,7 +928,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       await apiJson(`/api/v1/me/mocks/${id}/recording`, { method: "POST", body: form }).catch(() => {});
     }
 
-    router.push(`/student-ai-mock/${id}`);
+    router.push(sessionHref);
   }
 
   if (loading) {
@@ -930,7 +944,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       <div className="fixed inset-0 z-[60] grid place-items-center bg-ink p-6 text-center">
         <div>
           <p className="text-sm text-white">This interview room is closed.</p>
-          <Link href={`/student-ai-mock/${id}`} className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white">
+          <Link href={sessionHref} className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white">
             View the session →
           </Link>
         </div>
@@ -1149,7 +1163,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             This attempt is spent and won&apos;t be scored — but that&apos;s alright. Take a breath, and good luck on your next one.
           </p>
           <button
-            onClick={() => router.push(`/student-ai-mock/${id}`)}
+            onClick={() => router.push(sessionHref)}
             className="mt-6 w-full rounded-full bg-trust px-5 py-3 text-sm font-semibold text-white"
           >
             Back to interviews
