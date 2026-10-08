@@ -421,7 +421,7 @@ export function HomeFloor() {
         </p>
       </div>
       <div ref={tilt} className="argus-tilt">
-        <MacFloor tone="dark" />
+        <MacFloor tone="light" />
       </div>
     </section>
   );

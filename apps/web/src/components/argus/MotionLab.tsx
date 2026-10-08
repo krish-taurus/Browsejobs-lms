@@ -15,7 +15,7 @@ function ScrubFill() {
     timeline.fromTo(bar.current, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: "none" }, 0);
   });
   return (
-    <div style={{ marginTop: "1.5rem", height: 2, width: "min(420px, 80vw)", background: "rgba(255,255,255,.12)" }}>
+    <div style={{ marginTop: "1.5rem", height: 2, width: "min(420px, 80vw)", background: "#e5e5ea" }}>
       <div ref={bar} style={{ height: "100%", width: "100%", transformOrigin: "left center", background: "var(--violet-200)" }} />
     </div>
   );

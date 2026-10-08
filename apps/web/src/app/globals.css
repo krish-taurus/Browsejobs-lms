@@ -27,21 +27,22 @@
   --bj-surface: #ffffff;
   --bj-fg: #0a1220;
 
-  /* Argus system. Scoped visuals live under `.argus` so existing pages keep
-     their current palette until a later prompt applies this chrome. */
-  --bg: #07081a;
-  --bg-elev: #0e1030;
-  --bg-elev-2: #14173d;
-  --violet-600: #3b2bff;
-  --violet-400: #7b5cff;
-  --violet-200: #b9a8ff;
-  --glow-hot: #e9e4ff;
-  --text: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.58);
-  --text-dim: rgba(255, 255, 255, 0.38);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --success: #4ade80;
+  /* Argus system. White field, black and graphite accents. The old violet
+     names still point at the accent scale so existing var(--violet-*) rules
+     follow the new palette without a second set of tokens. */
+  --bg: #ffffff;
+  --bg-elev: #f5f5f7;
+  --bg-elev-2: #e5e5ea;
+  --violet-600: #111111;
+  --violet-400: #2c2c2e;
+  --violet-200: #111111;
+  --glow-hot: #0a0a0a;
+  --text: #0a0a0a;
+  --text-muted: #6e6e73;
+  --text-dim: #6e6e73;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: #d1d1d6;
+  --success: #0f7a3a;
   --radius-argus-card: 24px;
   --radius-argus-panel: 32px;
 }

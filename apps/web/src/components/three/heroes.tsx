@@ -70,6 +70,8 @@ const SCORE_FRAG = `
 const GRID_FRAG = `
   uniform float uTime;
   uniform float uFade;
+  uniform float uKeep;
+  uniform float uResY;
   varying vec2 vUv;
   void main() {
     vec2 uv = vUv;
@@ -78,8 +80,10 @@ const GRID_FRAG = `
     float gy = abs(fract(vUv.y * 28.0 - uTime * 0.18) - 0.5);
     float line = smoothstep(0.045, 0.0, gx) + smoothstep(0.04, 0.0, gy);
     float depth = smoothstep(0.05, 0.85, vUv.y);
-    vec3 col = mix(vec3(0.23, 0.17, 1.0), vec3(0.91, 0.89, 1.0), depth * 0.55);
-    float alpha = line * depth * uFade;
+    vec3 col = mix(vec3(0.56, 0.56, 0.58), vec3(0.78, 0.78, 0.80), depth);
+    float y = gl_FragCoord.y / max(uResY, 1.0);
+    float band = uKeep > 0.0 ? 1.0 - smoothstep(uKeep - 0.05, uKeep + 0.03, y) : 1.0;
+    float alpha = line * depth * uFade * band;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -112,8 +116,8 @@ function shaderUniforms(extra?: Record<string, THREE.IUniform>) {
   return {
     uProgress: { value: 0 },
     uFade: { value: 1 },
-    uColor: { value: new THREE.Color("#7B5CFF") },
-    uHot: { value: new THREE.Color("#E9E4FF") },
+    uColor: { value: new THREE.Color("#2C2C2E") },
+    uHot: { value: new THREE.Color("#111111") },
     ...extra,
   };
 }
@@ -260,22 +264,22 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
         <meshPhysicalMaterial
           transmission={1}
           roughness={0.08}
-          thickness={1.4}
-          iridescence={0.6}
-          iridescenceIOR={1.3}
+          thickness={1.2}
           ior={1.45}
-          color="#b9a8ff"
-          emissive="#3b2bff"
-          emissiveIntensity={0.35}
+          color="#f4f4f6"
+          metalness={0}
+          clearcoat={1}
+          clearcoatRoughness={0.2}
+          reflectivity={0.55}
           transparent
         />
       </mesh>
       <group ref={comet}>
         <mesh>
           <sphereGeometry args={[0.055, 16, 16]} />
-          <meshBasicMaterial color="#e9e4ff" />
+          <meshBasicMaterial color="#2c2c2e" />
         </mesh>
-        <pointLight intensity={18} distance={5} color="#e9e4ff" />
+        <pointLight intensity={4} distance={4} color="#ffffff" />
       </group>
     </Float>
   );
@@ -306,12 +310,12 @@ export function Eclipse({
     <group>
       <mesh ref={bright} position={[0, 0, -0.35]}>
         <sphereGeometry args={[1.15, 48, 48]} />
-        <meshBasicMaterial color="#7b5cff" transparent />
+        <meshBasicMaterial color="#8e8e93" transparent />
       </mesh>
-      <pointLight position={[0, 0, -0.8]} intensity={30} color="#e9e4ff" distance={6} />
+      <pointLight position={[0, 0, -0.8]} intensity={6} color="#ffffff" distance={6} />
       <mesh ref={dark} position={[-2.35, 0, 0.15]}>
         <sphereGeometry args={[1.12, 48, 48]} />
-        <meshBasicMaterial color="#07081a" transparent />
+        <meshBasicMaterial color="#111111" transparent />
       </mesh>
     </group>
   );
@@ -345,7 +349,7 @@ function GlobePin({ lat, lng, label }: { lat: number; lng: number; label: string
   const outer = useMemo(() => latLng(lat, lng, 2.05), [lat, lng]);
   const line = useMemo(() => {
     const geometry = new THREE.BufferGeometry().setFromPoints([surface, outer]);
-    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: "#e9e4ff" }));
+    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: "#111111" }));
   }, [surface, outer]);
   const side = outer.x >= 0 ? "is-right" : "is-left";
   return (
@@ -427,11 +431,11 @@ export function DotGlobe({
     <group ref={group}>
       <mesh>
         <sphereGeometry args={[1.55, 32, 32]} />
-        <meshBasicMaterial color="#14173d" />
+        <meshBasicMaterial color="#f5f5f7" />
       </mesh>
       {geometry ? (
         <points geometry={geometry} frustumCulled={false}>
-          <pointsMaterial ref={material} color="#b9a8ff" size={0.028} sizeAttenuation transparent depthWrite={false} />
+          <pointsMaterial ref={material} color="#2c2c2e" size={0.028} sizeAttenuation transparent depthWrite={false} />
         </points>
       ) : null}
       {pins.map((pin) => (
@@ -441,13 +445,16 @@ export function DotGlobe({
   );
 }
 
-export function GridFloor({ fades }: { fades: MutableRefObject<Record<SceneId, number>> }) {
+export function GridFloor({ fades, clip = 0 }: { fades: MutableRefObject<Record<SceneId, number>>; clip?: number }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
-  const uniforms = useMemo(() => shaderUniforms({ uTime: { value: 0 } }), []);
+  const size = useThree((state) => state.size);
+  const uniforms = useMemo(() => shaderUniforms({ uTime: { value: 0 }, uKeep: { value: 0 }, uResY: { value: 1 } }), []);
   useFrame(({ clock }) => {
     if (!mat.current) return;
     mat.current.uniforms.uTime.value = clock.elapsedTime;
     mat.current.uniforms.uFade.value = fades.current.grid;
+    mat.current.uniforms.uKeep.value = clip;
+    mat.current.uniforms.uResY.value = size.height;
   });
   return (
     <mesh rotation={[-Math.PI / 2.15, 0, 0]} position={[0, -1.35, -2]}>
@@ -495,14 +502,19 @@ export function Stage({
   /** Slow renderers snap to the active object instead of lerping across frames. */
   settle?: boolean;
 }) {
+  const invalidate = useThree((state) => state.invalidate);
   const fades = useRef<Record<SceneId, number>>({
-    ring: scene === "ring" ? 1 : 0,
+    ring: 0,
     score: 0,
     sphere: 0,
     eclipse: 0,
     globe: 0,
     grid: 0,
   });
+  if (shown) {
+    fades.current[scene] = fades.current[scene] || 1;
+    if (scene === "globe" && anchor === "aside") fades.current.grid = fades.current.grid || 1;
+  }
   const [alive, setAlive] = useState<SceneId[]>([scene]);
   const aliveRef = useRef(alive);
   const desired = useRef(new THREE.Vector3());
@@ -510,12 +522,15 @@ export function Stage({
 
   useFrame(({ camera }, delta) => {
     const next: SceneId[] = [];
+    let settling = false;
     for (const id of SCENE_IDS) {
       const withFloor = shown && scene === "globe" && anchor === "aside" && id === "grid";
       const goal = shown && (id === scene || withFloor) ? 1 : 0;
       fades.current[id] = settle ? goal : fades.current[id] + (goal - fades.current[id]) * Math.min(1, delta * 2.4);
+      if (Math.abs(fades.current[id] - goal) > 0.03) settling = true;
       if (fades.current[id] > 0.045 || id === scene) next.push(id);
     }
+    if (settling) invalidate();
     const previous = aliveRef.current;
     if (previous.length !== next.length || previous.some((id, index) => id !== next[index])) {
       aliveRef.current = next;
@@ -553,7 +568,7 @@ export function Stage({
             {id === "sphere" ? <GlassSphere fades={fades} /> : null}
             {id === "eclipse" ? <Eclipse progress={progress} fades={fades} anchor={anchor} /> : null}
             {id === "globe" ? <DotGlobe fades={fades} pins={globePins} /> : null}
-            {id === "grid" ? <GridFloor fades={fades} /> : null}
+            {id === "grid" ? <GridFloor fades={fades} clip={anchor === "aside" ? 0.32 : 0} /> : null}
           </group>
         );
       })}

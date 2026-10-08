@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import * as THREE from "three";
 import { getSceneState, getServerSceneState, subscribeScene } from "@/lib/scene-bus";
 import { Stage } from "./heroes";
 
@@ -10,27 +11,38 @@ import { Stage } from "./heroes";
  * Continuous motion is the default. A device that stays slower than 100ms per
  * frame for 30 frames drops to on-demand painting. Scroll and scene changes
  * still request a frame, so the object keeps up with the section in view.
- * Bloom is the expensive pass, so it drops first when frames are already slow.
  */
-function FrameBudget({ onDimBloom, onSlow }: { onDimBloom: () => void; onSlow: () => void }) {
+function FrameBudget({ onSlow }: { onSlow: () => void }) {
   const slow = useRef(0);
   const seen = useRef(0);
-  const dimmed = useRef(false);
   const stopped = useRef(false);
   useFrame((_, delta) => {
     seen.current += 1;
     if (seen.current < 6) return;
     if (delta > 0.1) slow.current += 1;
     else slow.current = 0;
-    if (!dimmed.current && slow.current >= 4) {
-      dimmed.current = true;
-      onDimBloom();
-    }
     if (!stopped.current && slow.current >= 30) {
       stopped.current = true;
       onSlow();
     }
   });
+  return null;
+}
+
+/** Neutral studio reflections so the glass sphere reads on a white field. */
+function GreyStudio() {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const env = pmrem.fromScene(room, 0.04).texture;
+    scene.environment = env;
+    return () => {
+      env.dispose();
+      pmrem.dispose();
+    };
+  }, [gl, scene]);
   return null;
 }
 
@@ -86,7 +98,6 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
   progress.current = snap.progress;
   const [hidden, setHidden] = useState(false);
   const [live, setLive] = useState(true);
-  const [bloom, setBloom] = useState(true);
   const [software, setSoftware] = useState(false);
 
   useEffect(() => {
@@ -103,20 +114,19 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
         camera={{ position: [0, 0.2, 6.6], fov: 42 }}
         gl={{ antialias: false, alpha: false, stencil: false, powerPreference: "high-performance" }}
         onCreated={({ gl }) => {
-          gl.setClearColor("#07081a", 1);
-          if (isSoftwareRenderer(gl)) {
-            setSoftware(true);
-            setBloom(false);
-          }
+          gl.setClearColor("#ffffff", 1);
+          if (isSoftwareRenderer(gl)) setSoftware(true);
           onReady?.();
         }}
       >
-        <FrameBudget onDimBloom={() => setBloom(false)} onSlow={() => setLive(false)} />
+        <FrameBudget onSlow={() => setLive(false)} />
         <SoftwareSettle active={software} onDone={() => setLive(false)} />
+        <GreyStudio />
         <FollowScene token={`${snap.scene}:${snap.anchor}:${snap.pins}:${snap.shown}:${snap.progress.toFixed(2)}`} />
         <ScrollFrames active={!live} />
-        <ambientLight intensity={0.35} />
-        <pointLight position={[3, 2, 4]} intensity={16} color="#b9a8ff" />
+        <ambientLight intensity={0.85} color="#ffffff" />
+        <hemisphereLight args={["#ffffff", "#d1d1d6", 0.45]} />
+        <directionalLight position={[4, 6, 5]} intensity={1.15} color="#ffffff" />
         <Stage
           scene={snap.scene}
           progress={progress}
@@ -125,11 +135,6 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
           shown={snap.shown}
           settle={!live}
         />
-        {bloom ? (
-          <EffectComposer multisampling={0}>
-            <Bloom intensity={1.2} luminanceThreshold={0.2} mipmapBlur />
-          </EffectComposer>
-        ) : null}
       </Canvas>
     </div>
   );
