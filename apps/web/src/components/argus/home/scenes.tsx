@@ -356,7 +356,10 @@ export function HomeFloor() {
             Learn more
           </ArgusButton>
         </div>
-        <p className="argus-badge">Sample data</p>
+        <p className="argus-row">
+          <span className="argus-badge">Sample data</span>
+          <span className="argus-badge">Demo data</span>
+        </p>
       </div>
       <div ref={tilt} className="argus-tilt">
         <MacFloor tone="dark" />
