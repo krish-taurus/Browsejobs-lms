@@ -5,6 +5,12 @@
  * Do not add placement stats here.
  */
 
+/**
+ * Sitemap lastmod for /get-hired. Bump when this page's copy changes.
+ * The page was published on 2026-10-06.
+ */
+export const GET_HIRED_UPDATED = "2026-10-06";
+
 /** Three steps. Copy is rendered in full for SEO and reduced motion. */
 export const REVERSE_STEPS = [
   {

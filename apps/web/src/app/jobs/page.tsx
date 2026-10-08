@@ -5,6 +5,12 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { buildJobPosting } from "@/lib/job-posting";
 import { canonical } from "@/lib/seo";
 
+/**
+ * Indexable markup last changed 2026-10-05. Bump PAGE_UPDATED["/jobs"] in
+ * content/last-modified.ts when the board copy or JobPosting schema changes.
+ * Job records are not separate sitemap URLs.
+ */
+
 export const metadata: Metadata = {
   title: "Open jobs — apply with an interview, not a CV",
   description:

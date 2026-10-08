@@ -1,4 +1,4 @@
-import { contact } from "@/content/landing";
+import { contact } from "./landing";
 
 /**
  * Public entity facts for Organization / Person JSON-LD.
@@ -12,6 +12,12 @@ export const founder = {
 } as const;
 
 export const founderProfileUrl = "/founder";
+
+/**
+ * Sitemap lastmod for /founder. Bump when the bio on the page or this
+ * press list changes. The page was published on 2026-10-06.
+ */
+export const FOUNDER_UPDATED = "2026-10-06";
 
 /** BrowseJobs profiles. The Offer Letter accounts belong on the founder, not here. */
 export const organizationSameAs = ["https://www.instagram.com/browsejobs.ai"] as const;

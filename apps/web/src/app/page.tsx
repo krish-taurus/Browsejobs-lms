@@ -10,6 +10,8 @@ import { HomeClose } from "@/components/home/HomeClose";
 import { homeNav } from "@/content/home";
 import { canonical } from "@/lib/seo";
 
+/** Homepage copy last changed 2026-10-06. Bump HOME_UPDATED in content/home.ts when it changes. */
+
 const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
 const DESCRIPTION =
   "Take a free AI interview. Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear and puts you in front of HR with your score. Counselling and a course come only if you still need them.";

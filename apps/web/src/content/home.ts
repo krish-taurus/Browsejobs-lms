@@ -5,8 +5,14 @@
  * published model in `fees` (landing.ts).
  */
 
-import { courses } from "@/content/landing";
-import { getCourseDetail } from "@/content/courses";
+import { courses } from "./landing";
+import { getCourseDetail } from "./courses";
+
+/**
+ * Sitemap lastmod for /. Bump when homepage copy changes.
+ * Seeded from the free-interview rewrite on 2026-10-06.
+ */
+export const HOME_UPDATED = "2026-10-06";
 
 export const HOME_TITLE = "Free AI interview · BrowseJobs";
 

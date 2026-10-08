@@ -1,6 +1,11 @@
 import type { FaqItem } from "@/lib/seo";
 
-/** Shown on every answer page and in WebPage.dateModified. */
+/**
+ * Shown on every answer page, in WebPage.dateModified, and as sitemap
+ * <lastmod> for /answers and any /answers/* page without its own updatedAt.
+ * Bump this when answer copy changes. If only one answer changes, set
+ * updatedAt on that page instead of moving every answer URL.
+ */
 export const ANSWERS_UPDATED = "2026-10-06";
 
 export type AnswerSection = {
@@ -23,6 +28,11 @@ export type AnswerPage = {
   faqs: readonly FaqItem[];
   related: readonly AnswerLink[];
   secondary: { href: string; label: string };
+  /**
+   * Sitemap lastmod (YYYY-MM-DD) when this answer changed on its own.
+   * Omit to use ANSWERS_UPDATED.
+   */
+  updatedAt?: string;
 };
 
 export function answerPath(slug: string): string {
