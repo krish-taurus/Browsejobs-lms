@@ -10,6 +10,7 @@ use App\Actions\Mocks\StartMockInterview;
 use App\Actions\Mocks\StartVoiceMock;
 use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
+use App\Models\EmployerJob;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\ModuleMockRequirement;
@@ -375,6 +376,11 @@ final class MockController extends Controller
                 // practice | voice | job | cv — the portal keeps each kind
                 // under its own URL (/student-ai-mock/{kind}/{id}).
                 'kind' => $interview->kind(),
+                // Who is hiring, for a job interview — the room's heading
+                // reads "Job interview · Data Engineer at BrowseJobs".
+                'company' => $interview->blueprint?->employer_job_id !== null
+                    ? EmployerJob::query()->with('workspace:id,name')->find($interview->blueprint->employer_job_id)?->workspace?->name
+                    : null,
                 'status' => $interview->status,
                 'mode' => $interview->mode,
                 // The plain (non-room) page uses this to redirect a room-kind
