@@ -16,6 +16,17 @@ test("homepage has one heading, valid JSON-LD, and no agentic-ai link", async ({
     if (data["@graph"]?.some((node) => node["@type"] === "FAQPage")) sawFaq = true;
   }
   expect(sawFaq).toBe(true);
+  for (let i = 0; i < count; i++) {
+    const raw = await scripts.nth(i).textContent();
+    const data = JSON.parse(raw ?? "") as { "@graph"?: Record<string, unknown>[]; "@type"?: string; review?: unknown; aggregateRating?: unknown };
+    const nodes = data["@graph"] ?? [data];
+    for (const node of nodes) {
+      if (node["@type"] === "Course") {
+        expect(node.review).toBeUndefined();
+        expect(node.aggregateRating).toBeUndefined();
+      }
+    }
+  }
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
 });
 

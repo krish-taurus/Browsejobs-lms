@@ -86,7 +86,10 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   const html = await page.content();
   expect(html).toContain('"@type":"FAQPage"');
   expect(html).toContain('"@type":"ItemList"');
-  expect(html).not.toContain('"@type":"Review"');
+  expect(html).toContain('"@type":"EducationalOrganization"');
+  expect(html).toContain('"@type":"AggregateRating"');
+  expect(html).toContain('"reviewCount":"473"');
+  expect(html).toContain('"@type":"Review"');
   expect(html).not.toContain("/courses/agentic-ai");
 
   const courses = page.locator("#career-courses");
@@ -104,7 +107,11 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   await expect(stories).toContainText("From homemaker to engineer");
   await expect(stories).toContainText("From delivery rider to engineer");
   await expect(stories).toContainText("AI interview");
-  await expect(stories).not.toContainText("Google review");
+  await expect(stories.getByRole("link", { name: "4.9 on Google · 473 reviews" })).toHaveAttribute("href", /google\.com\/maps\/place\/Browsejobs/);
+  await expect(stories.getByText("Vinod Karan Singh").first()).toBeVisible();
+  await expect(stories.getByText("Google review").first()).toBeVisible();
+  await stories.getByRole("button", { name: "Read more" }).first().click();
+  await expect(stories.getByText(/require assistance in job placement/)).toBeVisible();
 });
 
 test("employers page explains 90 days against 3 days", async ({ page }) => {

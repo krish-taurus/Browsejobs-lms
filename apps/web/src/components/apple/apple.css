@@ -366,6 +366,11 @@
   .apple-parallax,
   .apple-marquee { animation: none; }
   .apple-road-sticky { position: static; }
+  .apple-marquee-clip {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .apple-marquee-copy { display: none; }
 }
 
 .apple-mist {
@@ -415,15 +420,65 @@
   padding: 0.25rem 0 1rem;
   list-style: none;
 }
-.apple-review {
-  display: flex;
-  width: min(320px, 78vw);
-  min-height: 180px;
-  flex-direction: column;
-  padding: 1.25rem 1.35rem;
-  color: inherit;
+.apple-rating-link {
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1d1d1f;
   text-decoration: none;
 }
+.apple-rating-link:hover { text-decoration: underline; }
+.apple-review {
+  position: relative;
+  display: flex;
+  width: min(360px, 82vw);
+  min-height: 240px;
+  flex-direction: column;
+  padding: 1.35rem 1.4rem 1.15rem;
+  color: #1d1d1f;
+  text-decoration: none;
+}
+.apple-review-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+.apple-review-text,
+.apple-stars,
+.apple-review > span:not(.apple-review-hit) {
+  pointer-events: none;
+}
+.apple-review-text {
+  margin: 0.7rem 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #1d1d1f;
+}
+.apple-review-text.is-open {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: pre-line;
+}
+.apple-review-more {
+  position: relative;
+  z-index: 2;
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 15px;
+  color: #1b6df0;
+  cursor: pointer;
+}
+.apple-review-more:hover { text-decoration: underline; }
 .apple-stars {
   color: #c4841d;
   letter-spacing: 0.08em;

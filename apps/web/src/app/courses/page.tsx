@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppleShell } from "@/components/apple/AppleShell";
+import { GoogleReviews } from "@/components/apple/GoogleReviews";
 import { careerCourseCards, courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
 import { seoMoneyLinks } from "@/content/seo-nav";
@@ -67,6 +68,12 @@ export default function CoursesPage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 pb-4 text-center">
+        <div className="mx-auto max-w-[1100px] pb-8">
+          <GoogleReviews />
         </div>
       </section>
 

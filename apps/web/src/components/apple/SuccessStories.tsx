@@ -5,7 +5,7 @@ import { googleReviews } from "@/content/reviews";
 import { successStories } from "@/content/success-stories";
 import { whatsappShots } from "@/content/whatsapp-shots";
 import { isPreviewHost } from "@/lib/preview-host";
-import { SITE_ORIGIN } from "@/lib/seo";
+import { GoogleReviews } from "./GoogleReviews";
 import { WhatsAppGallery } from "./WhatsAppGallery";
 
 export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
@@ -22,33 +22,8 @@ export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
     return null;
   }
 
-  const publishedReviews = reviews.filter((review) => review.published);
-  const reviewLd =
-    publishedReviews.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@graph": publishedReviews.map((review) => ({
-            "@type": "Review",
-            author: { "@type": "Person", name: review.name },
-            reviewRating: {
-              "@type": "Rating",
-              ratingValue: String(review.stars),
-              bestRating: "5",
-            },
-            reviewBody: review.text,
-            url: review.url,
-            itemReviewed: {
-              "@type": "EducationalOrganization",
-              name: "BrowseJobs",
-              url: SITE_ORIGIN,
-            },
-          })),
-        }
-      : null;
-
   return (
     <section id="success-stories" className="apple-rise bg-white text-center">
-      {reviewLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewLd) }} /> : null}
       <div className="apple-tile">
         <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]">Success stories.</h2>
         <p className="apple-sub mt-4 text-[#424245]">
@@ -94,32 +69,7 @@ export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
           </ul>
         ) : null}
 
-        {reviews.length > 0 ? (
-          <div className="mt-14 text-left">
-            <h3 className="text-center text-[21px] font-semibold tracking-[-0.02em]">Google reviews</h3>
-            <div className="apple-marquee-clip mt-6">
-              <ul className="apple-marquee">
-                {[0, 1].flatMap((copy) =>
-                  reviews.map((review) => (
-                  <li key={`${review.id}-${copy}`} aria-hidden={copy === 1 ? true : undefined}>
-                    <a href={review.url} className="apple-review" target="_blank" rel="noreferrer">
-                      <span className="apple-stars" aria-label={`${review.stars} out of 5 stars`}>
-                        {"★".repeat(review.stars)}
-                        <span className="text-[#d2d2d7]">{"★".repeat(Math.max(0, 5 - review.stars))}</span>
-                      </span>
-                      <span className="mt-2 block text-[15px] leading-snug text-[#1d1d1f]">{review.text}</span>
-                      <span className="mt-3 flex items-center justify-between gap-3 text-[13px] text-[#6e6e73]">
-                        <span>{review.name}</span>
-                        <span className="rounded-full border border-black/10 px-2 py-0.5">Google review</span>
-                      </span>
-                    </a>
-                  </li>
-                  )),
-                )}
-              </ul>
-            </div>
-          </div>
-        ) : null}
+        {reviews.length > 0 ? <GoogleReviews /> : null}
 
         <WhatsAppGallery shots={shots} />
       </div>
