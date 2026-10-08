@@ -10,9 +10,11 @@ export type SceneSnapshot = {
   progress: number;
   anchor: SceneAnchor;
   pins: ScenePins;
+  /** False when the section in view has no object of its own. */
+  shown: boolean;
 };
 
-const SERVER_SNAPSHOT: SceneSnapshot = { scene: "ring", progress: 0, anchor: "center", pins: "cities" };
+const SERVER_SNAPSHOT: SceneSnapshot = { scene: "ring", progress: 0, anchor: "center", pins: "cities", shown: true };
 let snapshot: SceneSnapshot = SERVER_SNAPSHOT;
 const listeners = new Set<() => void>();
 
@@ -33,22 +35,31 @@ export function subscribeScene(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/** Drop the canvas object when the section in view does not own one. */
+export function hideScene(): void {
+  if (!snapshot.shown) return;
+  snapshot = { ...snapshot, shown: false };
+  listeners.forEach((listener) => listener());
+}
+
 export function setSceneState(
   scene: SceneId,
   progress: number,
-  extra?: { anchor?: SceneAnchor; pins?: ScenePins },
+  extra?: { anchor?: SceneAnchor; pins?: ScenePins; shown?: boolean },
 ): void {
   const next = Math.min(1, Math.max(0, progress));
   const anchor = extra?.anchor ?? "center";
   const pins = extra?.pins ?? "cities";
+  const shown = extra?.shown ?? true;
   if (
     snapshot.scene === scene &&
     snapshot.anchor === anchor &&
     snapshot.pins === pins &&
+    snapshot.shown === shown &&
     Math.abs(snapshot.progress - next) < 0.01
   ) {
     return;
   }
-  snapshot = { scene, progress: next, anchor, pins };
+  snapshot = { scene, progress: next, anchor, pins, shown };
   listeners.forEach((listener) => listener());
 }

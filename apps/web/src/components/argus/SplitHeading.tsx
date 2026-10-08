@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/motion";
@@ -12,12 +12,14 @@ export function SplitHeading({
   text,
   className,
   breakAfter,
+  suffix,
 }: {
   as?: "h1" | "h2";
   text: string;
   className?: string;
   /** Insert a line break after this word index. The space stays in the accessible name. */
   breakAfter?: number;
+  suffix?: ReactNode;
 }) {
   const ref = useRef<HTMLHeadingElement>(null);
   const words = text.split(/\s+/).filter(Boolean);
@@ -56,6 +58,7 @@ export function SplitHeading({
           {index < words.length - 1 ? " " : null}
         </span>
       ))}
+      {suffix}
     </Tag>
   );
 }

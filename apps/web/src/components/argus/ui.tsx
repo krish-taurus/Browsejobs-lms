@@ -194,10 +194,13 @@ export function ArgusNav() {
           ))}
         </ul>
         <div className="argus-nav-actions">
-          <LoginMenu tone="night" appearance="argus" />
+          <div className="argus-nav-login">
+            <LoginMenu tone="night" appearance="argus" />
+          </div>
           <Link href="/employers/enquire" className="argus-btn argus-btn-primary">
             <span className="argus-nav-cta-long">Onboard with us for the future of hiring</span>
             <span className="argus-nav-cta-short">Onboard with us</span>
+            <span className="argus-nav-cta-compact">Onboard</span>
           </Link>
           <button
             type="button"
@@ -219,6 +222,9 @@ export function ArgusNav() {
               </Link>
             </li>
           ))}
+          <li className="argus-menu-login">
+            <LoginMenu tone="night" appearance="argus" />
+          </li>
           <li>
             <Link href="/employers/enquire" onClick={() => setOpen(false)}>
               Onboard with us for the future of hiring

@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { showcaseShots, whatsappShots, type WhatsAppShot } from "@/content/whatsapp-shots";
+import { SplitHeading } from "@/components/argus/SplitHeading";
 
 const OPEN = "bj-open-whatsapp";
 
@@ -68,7 +69,11 @@ export function WhatsAppMessages({ variant }: { variant: "carousel" | "grid" }) 
   return (
     <section id="real-messages" className={variant === "carousel" ? "apple-messages apple-rise text-center text-white" : "apple-tile apple-rise bg-[#f5f5f7] text-center"}>
       <div className={variant === "carousel" ? "apple-tile" : undefined}>
-        <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]">Real messages from our students.</h2>
+        {variant === "carousel" ? (
+          <SplitHeading as="h2" className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]" text="Real messages from our students." />
+        ) : (
+          <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]">Real messages from our students.</h2>
+        )}
         <p className={`apple-sub mt-4 ${variant === "carousel" ? "text-[#a1a1a6]" : "text-[#424245]"}`}>
           Words from people who wrote in after they moved.
         </p>

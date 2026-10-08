@@ -24,31 +24,35 @@ export function CountUp({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
 
+  const final = `${prefix}${to.toFixed(decimals)}${suffix}`;
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const state = { n: from };
-    const paint = () => {
-      el.textContent = `${prefix}${state.n.toFixed(decimals)}${suffix}`;
-    };
     if (prefersReducedMotion()) {
-      state.n = to;
-      paint();
+      el.textContent = final;
       return;
     }
+    const state = { n: from };
     const tween = gsap.to(state, {
       n: to,
       duration: 1.2,
       ease: "power3.out",
-      scrollTrigger: { trigger: el, start: "top 85%" },
-      onUpdate: paint,
+      immediateRender: false,
+      scrollTrigger: { trigger: el, start: "top 90%" },
+      onUpdate: () => {
+        el.textContent = `${prefix}${state.n.toFixed(decimals)}${suffix}`;
+      },
     });
-    paint();
     return () => {
       tween.scrollTrigger?.kill();
       tween.kill();
     };
-  }, [from, to, decimals, suffix, prefix]);
+  }, [from, to, decimals, suffix, prefix, final]);
 
-  return <span ref={ref} className={className ? `argus-count ${className}` : "argus-count"} />;
+  return (
+    <span ref={ref} className={className ? `argus-count ${className}` : "argus-count"}>
+      {final}
+    </span>
+  );
 }

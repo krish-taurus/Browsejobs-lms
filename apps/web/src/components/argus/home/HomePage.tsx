@@ -6,6 +6,8 @@ import { WhatsAppMessages } from "@/components/apple/WhatsAppMessages";
 import { careerCourseCards } from "@/content/courses";
 import { COUNSELLING_COPY } from "@/content/home";
 import { SITE_ORIGIN } from "@/lib/seo";
+import { Reveal, StaggerIn } from "@/components/argus/Reveal";
+import { SplitHeading } from "@/components/argus/SplitHeading";
 import { HomeClose, HomeDays, HomeEclipse, HomeFaq, HomeFloor, HomeHero, HomePath, HomeScore } from "./scenes";
 
 const ICONS: Record<string, "pipeline" | "cloud" | "chart" | "code"> = {
@@ -38,12 +40,16 @@ export function HomePage() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
         <div className="argus-scrim argus-courses-intro">
           <p className="argus-kicker">Development plan</p>
-          <h2 className="argus-h2">Career-driven courses.</h2>
-          <p className="argus-body">
-            Courses focused on getting you hired. Real-world scenarios: projects, mock interviews, and the skills recruiters test for.
-          </p>
+          <Reveal
+            heading={<SplitHeading as="h2" className="argus-h2" text="Career-driven courses." />}
+            body={
+              <p className="argus-body">
+                Courses focused on getting you hired. Real-world scenarios: projects, mock interviews, and the skills recruiters test for.
+              </p>
+            }
+          />
         </div>
-        <ul className="argus-course-grid">
+        <StaggerIn as="ul" className="argus-course-grid">
           {cards.map((course, index) => (
             <li key={course.slug} className="argus-card">
               <span className="argus-card-no">{String(index + 1).padStart(2, "0")}</span>
@@ -65,7 +71,7 @@ export function HomePage() {
               </div>
             </li>
           ))}
-        </ul>
+        </StaggerIn>
         <div className="argus-row argus-course-cta">
           <Link href="/courses" className="argus-btn argus-btn-primary">
             Explore courses
@@ -84,8 +90,10 @@ export function HomePage() {
         <div className="argus-counsel-grid">
           <div className="argus-scrim">
             <p className="argus-kicker is-free">{COUNSELLING_COPY.kicker}</p>
-            <h2 className="argus-h2">{COUNSELLING_COPY.title}</h2>
-            <p className="argus-body">{COUNSELLING_COPY.body}</p>
+            <Reveal
+              heading={<SplitHeading as="h2" className="argus-h2" text={COUNSELLING_COPY.title} />}
+              body={<p className="argus-body">{COUNSELLING_COPY.body}</p>}
+            />
             <ul className="argus-ticks">
               <li>Book a free counselling session.</li>
               <li>A BrowseJobs counsellor calls you back.</li>

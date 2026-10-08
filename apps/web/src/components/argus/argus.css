@@ -533,11 +533,28 @@ html.argus-scroll { scroll-behavior: auto; }
 @media (max-width: 767px) {
   .argus { background: transparent; }
   .argus-mobile-glow { display: block; animation: argus-glow 7s ease-in-out infinite alternate; }
-  .argus-nav-cta-long { display: none; }
+  .argus-nav-cta-long,
+  .argus-nav-cta-short { display: none; }
+  .argus-nav-cta-compact { display: inline; }
+  .argus-nav-login { display: none; }
+  .argus-menu-login { display: block; }
+  .argus-logo { font-size: 8px; letter-spacing: 0.05em; }
+  .argus-nav-bar { height: 48px; padding-left: 12px; padding-right: 4px; }
+  .argus-nav-actions .argus-btn { height: 36px; padding: 0 0.7rem; font-size: 13px; flex-shrink: 0; }
+  .argus-nav-menu { flex-shrink: 0; }
+  .argus-menu-login button { height: auto; font-size: 32px; font-weight: 600; color: white; }
+  .argus-nav-actions .argus-btn { white-space: nowrap; }
+}
+
+@media (max-width: 480px) {
+  .argus-logo { font-size: 6px; letter-spacing: 0.03em; }
+  .argus-nav { width: calc(100% - 12px); }
 }
 
 @media (min-width: 768px) {
-  .argus-nav-cta-short { display: none; }
+  .argus-nav-cta-short,
+  .argus-nav-cta-compact,
+  .argus-menu-login { display: none; }
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -682,9 +699,14 @@ html.argus-scroll { scroll-behavior: auto; }
   font-weight: 600;
 }
 .argus-score-layout { width: min(1100px, 100%); margin: 0 auto; }
-.argus-score-num { margin: 0.6rem 0 0; font-size: clamp(64px, 8vw, 104px); line-height: 0.9; }
-.argus-score-count { display: none; }
-.argus-score-clear { min-height: 1.2em; opacity: 0; }
+.argus-score-stage {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  margin: 0.4rem 0 0.2rem;
+}
+.argus-score-num { margin: 0; font-size: clamp(64px, 8vw, 104px); line-height: 0.9; text-align: center; }
+.argus-score-clear { min-height: 1.2em; margin: 0.2rem 0 0; text-align: center; }
 .argus-score-cards {
   display: grid;
   gap: 0.8rem;
@@ -695,7 +717,7 @@ html.argus-scroll { scroll-behavior: auto; }
 .argus-score-cards li {
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(7, 8, 26, 0.78);
+  background: rgba(7, 8, 26, 0.94);
   padding: 0.8rem 0.9rem;
 }
 .argus-score-cards h3 { margin: 0.2rem 0; font-size: 16px; letter-spacing: -0.02em; }
@@ -706,17 +728,18 @@ html.argus-scroll { scroll-behavior: auto; }
 }
 .argus-path { align-items: flex-start; }
 .argus-path-row { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 0.8rem; width: min(760px, 100%); margin-top: 1.5rem; }
-.argus-path-line { width: 28px; height: 100%; }
-.argus-path-line path { fill: none; stroke: #b9a8ff; stroke-width: 2; }
+.argus-path-line { width: 28px; height: 100%; filter: drop-shadow(0 0 8px rgba(233, 228, 255, 0.85)); }
+.argus-path-line path { fill: none; stroke: #e9e4ff; stroke-width: 3; }
+.argus-path-track { stroke: rgba(185, 168, 255, 0.28); stroke-width: 2; filter: none; }
 .argus-path-light {
   position: absolute;
-  left: 6px;
+  left: 4px;
   top: 0;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #e9e4ff;
-  box-shadow: 0 0 16px #e9e4ff;
+  background: #fff;
+  box-shadow: 0 0 18px 6px #e9e4ff, 0 0 4px #fff;
 }
 .argus-path-row ol { margin: 0; padding: 0; list-style: none; }
 .argus-path-row li { display: grid; grid-template-columns: auto 1fr; gap: 0.7rem; margin-bottom: 1rem; }
@@ -825,9 +848,7 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 @media (max-width: 767px) {
   .argus-capsule { flex-direction: column; align-items: stretch; border-radius: 28px; }
   .argus-capsule .argus-btn { width: 100%; }
-  .argus-score-scrub { display: none; }
-  .argus-score-count { display: inline; }
-  .argus-score-clear { opacity: 1; }
+  .argus-score-stage { min-height: 180px; }
   .argus-sample-card, .argus-tilt, .argus-icon path, .argus-marquee { animation: none; }
   .argus-h1 { font-size: 40px; }
 }

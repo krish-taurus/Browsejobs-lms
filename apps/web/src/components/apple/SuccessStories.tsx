@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { googleReviews } from "@/content/reviews";
 import { successStories } from "@/content/success-stories";
 import { isPreviewHost } from "@/lib/preview-host";
+import { SplitHeading } from "@/components/argus/SplitHeading";
 import { GoogleReviews } from "./GoogleReviews";
 import { openWhatsAppShot } from "./WhatsAppMessages";
 
@@ -23,7 +24,11 @@ export function SuccessStories({ fuller = false, tone = "apple" }: { fuller?: bo
   return (
     <section id="success-stories" className={tone === "argus" ? "argus-section argus-stories" : "apple-rise bg-white text-center"}>
       <div className={tone === "argus" ? "argus-stories-inner" : "apple-tile"}>
-        <h2 className={tone === "argus" ? "argus-h2" : "apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]"}>Success stories.</h2>
+        {tone === "argus" ? (
+          <SplitHeading as="h2" className="argus-h2" text="Success stories." />
+        ) : (
+          <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]">Success stories.</h2>
+        )}
         <p className={tone === "argus" ? "argus-body" : "apple-sub mt-4 text-[#424245]"}>
           How people moved into the role. The path is the same: AI interview, counselling, a course, a retake, then hired.
         </p>

@@ -9,6 +9,7 @@ import { MacFloor } from "@/components/apple/MacFloor";
 import { ArgusButton, ArgusFaq } from "@/components/argus/ui";
 import { ScenePin, useScrub } from "@/components/argus/ScenePin";
 import { SplitHeading } from "@/components/argus/SplitHeading";
+import { Reveal, StaggerIn } from "@/components/argus/Reveal";
 import { CountUp } from "@/components/argus/CountUp";
 import { BELOW_SEVENTY_FIVE, CLAIM_INTERVIEW_CALL, CLAIM_RECRUITERS, SEVENTY_FIVE } from "@/content/home";
 import { prefersReducedMotion } from "@/lib/motion";
@@ -120,14 +121,13 @@ export function HomeHero() {
 }
 
 function ScoreBoard() {
-  const num = useRef<HTMLSpanElement>(null);
   const clear = useRef<HTMLParagraphElement>(null);
   const list = useRef<HTMLOListElement>(null);
 
   useScrub((timeline) => {
+    timeline.to({}, { duration: 1 }, 0);
     timeline.eventCallback("onUpdate", () => {
       const p = timeline.progress();
-      if (num.current) num.current.textContent = `${Math.round(Math.min(1, p / 0.4) * 75)}%`;
       if (clear.current) clear.current.style.opacity = p >= 0.4 ? "1" : "0";
       list.current?.querySelectorAll<HTMLLIElement>("li").forEach((item, index) => {
         const on = p >= index / 5;
@@ -140,15 +140,14 @@ function ScoreBoard() {
   return (
     <div className="argus-score-layout">
       <div className="argus-scrim argus-score-copy">
-        <h2 className="argus-h2">What 75% means.</h2>
-        <p className="argus-body">Plain version. The score is a read of this interview. It is not a job offer.</p>
+        <Reveal
+          heading={<SplitHeading as="h2" className="argus-h2" text="What 75% means." />}
+          body={<p className="argus-body">Plain version. The score is a read of this interview. It is not a job offer.</p>}
+        />
+      </div>
+      <div className="argus-score-stage">
         <p className="argus-score-num">
-          <span ref={num} className="argus-count argus-score-scrub">
-            0%
-          </span>
-          <span className="argus-score-count">
-            <CountUp to={75} suffix="%" />
-          </span>
+          <CountUp to={75} suffix="%" />
         </p>
         <p ref={clear} className="argus-clear argus-score-clear">
           Clear
@@ -216,12 +215,13 @@ export function HomePath() {
 
   return (
     <section id="below-75" ref={root} className="argus-section argus-path" data-scene="sphere" data-anchor="right">
-      <div className="argus-scrim">
-        <h2 className="argus-h2">Below 75%? Here&apos;s your path.</h2>
-        <p className="argus-body">A score under 75% is a starting point. This is the path back to a clear.</p>
-      </div>
+      <Reveal
+        heading={<SplitHeading as="h2" className="argus-h2" text="Below 75%? Here's your path." />}
+        body={<p className="argus-body">A score under 75% is a starting point. This is the path back to a clear.</p>}
+      />
       <div className="argus-path-row">
         <svg className="argus-path-line" viewBox="0 0 40 700" preserveAspectRatio="none" aria-hidden>
+          <path className="argus-path-track" d="M20 8 V692" />
           <path ref={beam} d="M20 8 V692" />
         </svg>
         <span ref={light} className="argus-path-light" aria-hidden />
@@ -265,8 +265,8 @@ function EclipsePhases() {
   return (
     <div className="argus-eclipse">
       <div className="argus-scrim argus-eclipse-copy">
-        <h2 className="argus-h2">How it works.</h2>
-        <h2 className="argus-h2 argus-h2-quiet">After you clear.</h2>
+        <SplitHeading as="h2" className="argus-h2" text="How it works." />
+        <SplitHeading as="h2" className="argus-h2 argus-h2-quiet" text="After you clear." />
       </div>
       <div id="how" ref={first} className="argus-phase">
         <ol className="argus-steps">
@@ -348,8 +348,10 @@ export function HomeFloor() {
   return (
     <section id="for-employers" className="argus-section argus-floor">
       <div id="ai-recruiter" className="argus-scrim argus-floor-copy">
-        <h2 className="argus-h2">Your AI Recruiter.</h2>
-        <p className="argus-body">Tell it the role. Watch every stage on the floor. The floor below is sample data.</p>
+        <Reveal
+          heading={<SplitHeading as="h2" className="argus-h2" text="Your AI Recruiter." />}
+          body={<p className="argus-body">Tell it the role. Watch every stage on the floor. The floor below is sample data.</p>}
+        />
         <div className="argus-row">
           <ArgusButton href="/employers/mission-control-demo">Watch the demo</ArgusButton>
           <ArgusButton href="/employers" variant="secondary">
@@ -374,6 +376,7 @@ function DaysBoard() {
   const withUs = useRef<HTMLUListElement>(null);
 
   useScrub((timeline) => {
+    timeline.to({}, { duration: 1 }, 0);
     timeline.eventCallback("onUpdate", () => {
       const p = timeline.progress();
       const value = Math.round(90 - p * 87);
@@ -390,11 +393,10 @@ function DaysBoard() {
   return (
     <div className="argus-days">
       <div className="argus-scrim">
-        <h2 className="argus-h2">
-          90 days <span aria-hidden>→</span> 3 days.
-          <sup>1</sup>
-        </h2>
-        <p className="argus-body">Where those 90 days usually go, and what we take off your team.</p>
+        <Reveal
+          heading={<SplitHeading as="h2" className="argus-h2" text="90 days → 3 days." suffix={<sup>1</sup>} />}
+          body={<p className="argus-body">Where those 90 days usually go, and what we take off your team.</p>}
+        />
         <p ref={num} className="argus-days-num">
           90
         </p>
@@ -420,7 +422,7 @@ function DaysBoard() {
         </div>
       </div>
       <Disclaimer tone="argus" />
-      <div className="argus-gets">
+      <StaggerIn className="argus-gets">
         {GETS.map((item, index) => (
           <article key={item.title} className="argus-card">
             <span className="argus-card-no">{String(index + 1).padStart(2, "0")}</span>
@@ -428,7 +430,7 @@ function DaysBoard() {
             <p>{item.body}</p>
           </article>
         ))}
-      </div>
+      </StaggerIn>
       <ArgusButton href="/employers/enquire">Onboard with us for the future of hiring</ArgusButton>
     </div>
   );
@@ -446,7 +448,7 @@ export function HomeFaq() {
   return (
     <section id="faq" className="argus-section argus-faq-section">
       <div className="argus-scrim argus-faq-wrap">
-        <h2 className="argus-h2">Questions.</h2>
+        <SplitHeading as="h2" className="argus-h2" text="Questions." />
         <ArgusFaq />
         <Disclaimer tone="argus" />
       </div>
@@ -459,10 +461,7 @@ export function HomeClose() {
     <>
       <section className="argus-section argus-close" data-scene="globe" data-anchor="right" data-pins="claims">
         <div className="argus-scrim">
-          <h2 className="argus-h2">
-            Start with{" "}
-            <br /> the interview.
-          </h2>
+          <SplitHeading as="h2" className="argus-h2" text="Start with the interview." breakAfter={1} />
           <p className="argus-body">It&apos;s free.</p>
           <ArgusButton href="/#interview-start">Take your free AI interview</ArgusButton>
           <Disclaimer tone="argus" />

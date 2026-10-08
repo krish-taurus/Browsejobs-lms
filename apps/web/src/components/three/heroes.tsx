@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Float, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { SCENE_IDS, type SceneAnchor, type SceneId, type ScenePins } from "@/lib/scene-bus";
+import { prefersReducedMotion } from "@/lib/motion";
 
 const RING_VERT = `
   varying vec2 vUv;
@@ -19,6 +20,8 @@ const RING_VERT = `
 const RING_FRAG = `
   uniform float uProgress;
   uniform float uFade;
+  uniform float uClip;
+  uniform vec2 uRes;
   uniform vec3 uColor;
   uniform vec3 uHot;
   varying vec2 vUv;
@@ -27,7 +30,8 @@ const RING_FRAG = `
     float reveal = smoothstep(uProgress + 0.02, uProgress - 0.06, vUv.x);
     float rim = pow(1.0 - abs(dot(normalize(vN), vec3(0.0, 0.0, 1.0))), 1.2);
     vec3 col = mix(uColor, uHot, clamp(rim + 0.35, 0.0, 1.0));
-    float alpha = reveal * (0.55 + rim) * uFade;
+    float side = uClip > 0.0 ? smoothstep(uClip, uClip + 0.16, gl_FragCoord.x / max(uRes.x, 1.0)) : 1.0;
+    float alpha = reveal * (0.55 + rim) * uFade * side;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -46,7 +50,7 @@ const SCORE_FRAG = `
     float head = smoothstep(0.04, 0.0, abs(vUv.x - uProgress));
     float rim = pow(1.0 - abs(dot(normalize(vN), vec3(0.0, 0.0, 1.0))), 1.2);
     vec3 col = mix(uColor, uHot, clamp(head + rim + fill * 0.35 + uFlash * 0.9, 0.0, 1.0));
-    float alpha = (0.42 + fill * 0.7 + head) * (0.55 + rim) * uFade;
+    float alpha = (0.28 + fill * 0.7 + head) * (0.55 + rim) * uFade;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -104,13 +108,25 @@ export function HorizonRing({
   const mat = useRef<THREE.ShaderMaterial>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const intro = useRef(0);
-  const uniforms = useMemo(() => shaderUniforms(), []);
+  const invalidate = useThree((state) => state.invalidate);
+  const size = useThree((state) => state.size);
+  const uniforms = useMemo(
+    () => shaderUniforms({ uClip: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) } }),
+    [],
+  );
   useFrame(({ clock }, delta) => {
     const material = mat.current;
     if (!material) return;
-    intro.current = Math.min(1, intro.current + delta / 1.6);
+    if (prefersReducedMotion()) intro.current = 1;
+    else if (intro.current < 1) {
+      const step = delta > 0.08 ? Math.max(delta, 0.2) : delta;
+      intro.current = Math.min(1, intro.current + step / 1.6);
+      invalidate();
+    }
     const drawn = 1 - Math.pow(1 - intro.current, 3);
     material.uniforms.uProgress.value = drawn;
+    material.uniforms.uClip.value = anchor === "top" ? 0.4 : 0;
+    material.uniforms.uRes.value.set(size.width, size.height);
     const leave = anchor === "top" ? progress.current : 0;
     material.uniforms.uFade.value = fades.current.ring * (1 - leave * 0.72);
     if (material.uniforms.uTime) material.uniforms.uTime.value = clock.elapsedTime;
@@ -118,7 +134,7 @@ export function HorizonRing({
   });
   return (
     <mesh ref={mesh} rotation={[1.25, 0, 0]} position={[0, 0.45, 0]}>
-      <torusGeometry args={[2.35, 0.045, 16, 220]} />
+      <torusGeometry args={[2.35, 0.062, 16, 220]} />
       <shaderMaterial
         ref={mat}
         transparent
@@ -293,6 +309,7 @@ export function DotGlobe({
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const group = useRef<THREE.Group>(null);
   const material = useRef<THREE.PointsMaterial>(null);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
     let dead = false;
@@ -331,11 +348,12 @@ export function DotGlobe({
       const next = new THREE.BufferGeometry();
       next.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       setGeometry(next);
+      invalidate();
     };
     return () => {
       dead = true;
     };
-  }, []);
+  }, [invalidate]);
 
   useFrame((_, delta) => {
     if (group.current) group.current.rotation.y += delta * 0.08;
@@ -386,11 +404,11 @@ const CAM: Record<SceneId, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
 };
 
 function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, number]; scale: number } {
-  if (id === "ring" && anchor === "top") return { position: [0.2, 1.15, 0], scale: 1 };
-  if (id === "score" && anchor === "halo") return { position: [0, 0.7, 0], scale: 0.68 };
-  if ((id === "eclipse" || id === "globe" || id === "sphere") && anchor === "right") {
-    return { position: [2.15, 0.1, 0], scale: 0.92 };
-  }
+  if (id === "ring" && anchor === "top") return { position: [0.45, 0.2, 0], scale: 1.08 };
+  if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
+  if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
+  if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
+  if (id === "globe" && anchor === "right") return { position: [1.15, 0.02, 0], scale: 0.86 };
   return { position: [0, 0, 0], scale: 1 };
 }
 
@@ -399,12 +417,14 @@ export function Stage({
   progress,
   anchor,
   pins,
+  shown,
   settle = false,
 }: {
   scene: SceneId;
   progress: MutableRefObject<number>;
   anchor: SceneAnchor;
   pins: ScenePins;
+  shown: boolean;
   /** Slow renderers snap to the active object instead of lerping across frames. */
   settle?: boolean;
 }) {
@@ -424,7 +444,7 @@ export function Stage({
   useFrame(({ camera }, delta) => {
     const next: SceneId[] = [];
     for (const id of SCENE_IDS) {
-      const goal = id === scene ? 1 : 0;
+      const goal = shown && id === scene ? 1 : 0;
       fades.current[id] = settle ? goal : fades.current[id] + (goal - fades.current[id]) * Math.min(1, delta * 2.4);
       if (fades.current[id] > 0.045 || id === scene) next.push(id);
     }

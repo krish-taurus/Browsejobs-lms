@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { isSceneId, prefersReducedMotion } from "@/lib/motion";
-import { isSceneAnchor, setSceneState, type ScenePins } from "@/lib/scene-bus";
+import { hideScene, isSceneAnchor, setSceneState, type ScenePins } from "@/lib/scene-bus";
 
 const SceneCanvas = dynamic(() => import("./SceneCanvas"), { ssr: false });
 
@@ -35,7 +35,10 @@ export function SceneHost() {
         }
       }
       if (!best || bestRatio < 0.12 || best.dataset.pinned === "true") return;
-      if (!isSceneId(best.dataset.scene)) return;
+      if (!isSceneId(best.dataset.scene)) {
+        hideScene();
+        return;
+      }
       const rect = best.getBoundingClientRect();
       const progress = reduced
         ? 1

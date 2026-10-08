@@ -52,3 +52,44 @@ export function Reveal({
     </div>
   );
 }
+
+/** Fade-and-rise for a row of cards. The wrapper is the grid or list. */
+export function StaggerIn({
+  as: Tag = "div",
+  className,
+  children,
+}: {
+  as?: "div" | "ul" | "ol";
+  className?: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const nodes = [...root.children];
+    if (prefersReducedMotion()) {
+      gsap.set(nodes, { opacity: 1, y: 0 });
+      return;
+    }
+    const tween = gsap.from(nodes, {
+      y: 22,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      stagger: 0.08,
+      scrollTrigger: { trigger: root, start: "top 82%" },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, []);
+
+  return (
+    <Tag ref={ref as never} className={className}>
+      {children}
+    </Tag>
+  );
+}

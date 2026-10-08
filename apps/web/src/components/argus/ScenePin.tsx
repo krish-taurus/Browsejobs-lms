@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { isMobileViewport, prefersReducedMotion, type SceneId } from "@/lib/motion";
-import { isSceneAnchor, setSceneState, type SceneAnchor, type ScenePins } from "@/lib/scene-bus";
+import { hideScene, isSceneAnchor, setSceneState, type SceneAnchor, type ScenePins } from "@/lib/scene-bus";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -61,7 +61,10 @@ export function ScenePin({
         pin: true,
         scrub: 1,
         onUpdate: (self) => {
-          if (!scene) return;
+          if (!scene) {
+            hideScene();
+            return;
+          }
           const placed = isSceneAnchor(node.dataset.anchor) ? node.dataset.anchor : "center";
           const marked: ScenePins = node.dataset.pins === "claims" ? "claims" : "cities";
           setSceneState(scene, self.progress, { anchor: placed, pins: marked });
