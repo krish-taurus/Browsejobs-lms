@@ -1,7 +1,7 @@
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { ScreenFrame } from "@/components/home/ScreenFrame";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { CLEAR_PICKUP, screenSteps } from "@/content/home";
+import { CLAIM_INTERVIEW_CALL, CLAIM_RECRUITERS, screenSteps } from "@/content/home";
 
 /** Candidate story: one claim, one sample round, then the three beats. */
 export function HowItWorks() {
@@ -19,7 +19,8 @@ export function HowItWorks() {
         </ScrollReveal>
 
         <ScrollReveal className="mt-16 max-w-3xl">
-          <p className="text-xl leading-relaxed text-fg md:text-2xl">{CLEAR_PICKUP}</p>
+          <p className="text-xl leading-relaxed text-fg md:text-2xl">{CLAIM_INTERVIEW_CALL}</p>
+          <p className="mt-4 text-xl leading-relaxed text-fg md:text-2xl">{CLAIM_RECRUITERS}</p>
           <Disclaimer className="mt-4" />
         </ScrollReveal>
 

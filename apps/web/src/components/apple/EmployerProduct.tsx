@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { EMPLOYER_FAQ, EMPLOYER_WAYS } from "@/content/employer-landing";
+import { EmployerImpact } from "./EmployerImpact";
 import { MacFloor } from "./MacFloor";
 import { More } from "./More";
 import { PhoneInterview } from "./PhoneInterview";
@@ -17,8 +18,8 @@ const HIGHLIGHTS = [
   {
     id: "calls",
     dark: true,
-    title: "It calls and screens.",
-    line: "Coming soon. The demo shows who was called, the outcome, and what they said.",
+    title: "We call and screen.",
+    line: "We call and screen shortlisted candidates. You see who was called, the outcome, and what they said.",
     href: "/employers/how-it-works",
     about: "about calls and screening",
   },
@@ -34,7 +35,7 @@ const HIGHLIGHTS = [
     id: "rounds",
     dark: true,
     title: "L1, L2, and pre-BGV.",
-    line: "Tracked on the floor. Background checks are coming soon.",
+    line: "We run L1 and L2 for you, then pre-BGV. You see the status on the floor.",
     href: "/employers/how-it-works",
     about: "about the hiring stages",
   },
@@ -51,28 +52,25 @@ const HIGHLIGHTS = [
 export function EmployerProduct() {
   return (
     <>
-      <div className="sticky top-12 z-30 border-b border-white/10 bg-black/80 text-[12px] text-white backdrop-blur-xl">
+      <div className="sticky top-[52px] z-30 border-b border-white/10 bg-black/80 text-[12px] text-white backdrop-blur-xl">
         <nav
           className="apple-subnav mx-auto flex h-12 max-w-[1100px] items-center gap-6 overflow-x-auto px-5"
           aria-label="BrowseJobs AI Recruiter"
         >
-          <span className="shrink-0 font-semibold tracking-[-0.01em]">BrowseJobs AI Recruiter</span>
-          <a className="inline-flex h-11 shrink-0 items-center text-white/80 hover:text-white" href="#overview">
+          <span className="inline-flex h-12 shrink-0 items-center font-semibold tracking-[-0.01em]">BrowseJobs AI Recruiter</span>
+          <a className="inline-flex h-12 shrink-0 items-center text-white/80 hover:text-white" href="#overview">
             Overview
           </a>
-          <Link className="inline-flex h-11 shrink-0 items-center text-white/80 hover:text-white" href="/employers/how-it-works">
+          <Link className="inline-flex h-12 shrink-0 items-center text-white/80 hover:text-white" href="/employers/how-it-works">
             How it works
           </Link>
-          <Link
-            className="inline-flex h-11 shrink-0 items-center text-white/80 hover:text-white"
-            href="/employers/mission-control-demo"
-          >
+          <Link className="inline-flex h-12 shrink-0 items-center text-white/80 hover:text-white" href="/demo">
             Demo
           </Link>
-          <Link className="inline-flex h-11 shrink-0 items-center text-white/80 hover:text-white" href="/employers/faq">
+          <Link className="inline-flex h-12 shrink-0 items-center text-white/80 hover:text-white" href="/employers/faq">
             FAQ
           </Link>
-          <a className="inline-flex h-11 shrink-0 items-center text-white/80 hover:text-white" href="#get-started">
+          <a className="inline-flex h-12 shrink-0 items-center text-white/80 hover:text-white" href="#get-started">
             Get started
           </a>
         </nav>
@@ -86,7 +84,7 @@ export function EmployerProduct() {
           Recruiter.
         </h1>
         <p className="apple-sub mt-5 text-[#a1a1a6]">
-          From 90 days to 3 days.<sup>1</sup> You still release the offer.
+          From 90 days to 3 days.<sup>1</sup> Pre-qualified candidates. You still release the offer.
         </p>
         <div className="apple-note mt-4">
           <Disclaimer />
@@ -99,10 +97,13 @@ export function EmployerProduct() {
             Watch the demo
           </More>
         </div>
-        <div className="mt-10">
+        <p className="mt-8 text-[12px] text-[#a1a1a6]">Sample data</p>
+        <div className="mt-3">
           <MacFloor credit={false} tone="dark" />
         </div>
       </section>
+
+      <EmployerImpact dark />
 
       {HIGHLIGHTS.map((item) => (
         <section
@@ -156,9 +157,14 @@ export function EmployerProduct() {
 
       <section id="get-started" className="scroll-mt-28 bg-[#f5f5f7] text-center">
         <div className="apple-tile">
-          <h2 className="apple-display text-[clamp(2.75rem,5vw,4.5rem)]">Get started.</h2>
+          <h2 className="apple-display text-[clamp(2.75rem,5vw,4.5rem)]">Onboard with us.</h2>
           <p className="apple-sub mt-4 text-[#424245]">We can run hiring with you, or your team can use the tool.</p>
-          <div className="mx-auto mt-8 flex max-w-[640px] flex-col items-center gap-2">
+          <div className="mt-8">
+            <Link href="/employers/enquire" className="apple-pill max-w-full whitespace-normal px-6 text-center leading-snug">
+              Onboard with us for the future of hiring
+            </Link>
+          </div>
+          <div className="mx-auto mt-6 flex max-w-[640px] flex-col items-center gap-2">
             {EMPLOYER_WAYS.map((way) =>
               way.primary ? (
                 <Link key={way.id} href={way.href} className="apple-pill w-full max-w-[22rem] whitespace-normal px-6 text-center leading-snug">
@@ -196,9 +202,9 @@ function HighlightShot({ id, dark }: { id: (typeof HIGHLIGHTS)[number]["id"]; da
       <div className="mx-auto w-[260px] rounded-[2.2rem] border border-white/15 bg-[#2c2c2e] p-[10px] text-white">
         <div className="rounded-[1.7rem] px-5 pb-8 pt-6">
           <div className="mx-auto h-5 w-20 rounded-full bg-black" aria-hidden />
-          <p className="mt-8 text-[12px] text-[#a1a1a6]">Calls</p>
-          <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em]">Coming soon</p>
-          <p className="mt-6 text-[14px] leading-snug text-[#a1a1a6]">The demo shows a sample call. Nothing is dialled.</p>
+          <p className="mt-8 text-[12px] text-[#a1a1a6]">Sample data</p>
+          <p className="mt-2 text-[22px] font-semibold tracking-[-0.03em]">We call and screen</p>
+          <p className="mt-6 text-[14px] leading-snug text-[#a1a1a6]">You see who was called, the outcome, and what they said.</p>
         </div>
       </div>
     );
@@ -211,7 +217,6 @@ function HighlightShot({ id, dark }: { id: (typeof HIGHLIGHTS)[number]["id"]; da
         <li>L2</li>
         <li>
           Pre-BGV
-          <span className="mt-2 block text-[13px] font-normal text-[#a1a1a6]">Coming soon</span>
         </li>
       </ol>
     );

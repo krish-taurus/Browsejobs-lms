@@ -356,7 +356,7 @@ export const DEMO_ACTIVITY: readonly DemoActivity[] = [
   { id: "a5", at: 18_000, time: "0:18", agent: "Interviewer", state: "working", text: "Candidates sit the AI interview before L1." },
   { id: "a6", at: 28_000, time: "0:28", agent: "Interviewer", state: "working", text: "L1 is open for the people who cleared the AI interview." },
   { id: "a7", at: 36_000, time: "0:36", agent: "Scheduler", state: "working", text: "Human round is optional. A sample slot is Tue 11:00." },
-  { id: "a8", at: 42_000, time: "0:42", agent: "BGV", state: "working", text: "Pre-BGV is a preview. EPFO and DigiLocker are not live." },
+  { id: "a8", at: 42_000, time: "0:42", agent: "BGV", state: "working", text: "Sample pre-BGV is on the desk." },
   { id: "a9", at: 48_000, time: "0:48", agent: "Offer", state: "approval", text: "Sample offer for Sample Asha Iyer needs a person." },
   { id: "a10", at: 50_500, time: "0:50", agent: "Joining", state: "error", text: "Sample Rohan Mehta went quiet. Dropout risk 74. Demo only." },
 ];

@@ -15,7 +15,7 @@ import {
   type EmployerIntent,
 } from "@/content/enquiries";
 
-type EnquiryType = "employer" | "course";
+type EnquiryType = "employer" | "course" | "counselling";
 
 type FieldErrors = Record<string, string>;
 
@@ -33,6 +33,10 @@ export function EmployerEnquiry() {
 export function CourseEnquiry() {
   const params = useSearchParams();
   return <EnquiryForm type="course" course={liveCourseSlug(params.get("course") ?? undefined)} />;
+}
+
+export function CounsellingEnquiry() {
+  return <EnquiryForm type="counselling" />;
 }
 
 const control =
@@ -111,10 +115,12 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
       if (!values.company_size) next.company_size = "Choose a company size.";
       if (values.roles.trim().length < 2) next.roles = "Tell us the roles and how many people you are hiring.";
       if (!values.timeline) next.timeline = "Choose a hiring timeline.";
-    } else {
+    } else if (type === "course") {
       if (!values.course_slug) next.course_slug = "Choose a course.";
       if (!values.learner_status) next.learner_status = "Choose the option that fits you.";
       if (!values.preferred_time) next.preferred_time = "Choose a time we can call.";
+    } else if (!values.preferred_time) {
+      next.preferred_time = "Choose a time we can call.";
     }
 
     if (!values.consent) next.consent = "Please confirm we may contact you about this enquiry.";
@@ -149,7 +155,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
       timeline: type === "employer" ? values.timeline : undefined,
       course_slug: type === "course" ? values.course_slug : undefined,
       learner_status: type === "course" ? values.learner_status : undefined,
-      preferred_time: type === "course" ? values.preferred_time : undefined,
+      preferred_time: type === "employer" ? undefined : values.preferred_time,
       referrer: document.referrer.slice(0, 500),
       landing_page: `${window.location.pathname}${window.location.search}`.slice(0, 500),
       form_started_at: startedAt.current,
@@ -356,7 +362,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
                 </select>
               </Field>
             </>
-          ) : (
+          ) : type === "course" ? (
             <>
               <Field id={`${formId}-course_slug`} label="Course of interest" error={errors.course_slug}>
                 <select
@@ -394,6 +400,39 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
                   ))}
                 </select>
               </Field>
+              <Field id={`${formId}-city`} label="City" error={errors.city}>
+                <input
+                  id={`${formId}-city`}
+                  className={control}
+                  autoComplete="address-level2"
+                  value={values.city}
+                  onChange={(event) => set("city", event.target.value)}
+                  aria-invalid={errors.city ? true : undefined}
+                  aria-describedby={errors.city ? `${formId}-city-error` : undefined}
+                  required
+                />
+              </Field>
+              <Field id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
+                <select
+                  id={`${formId}-preferred_time`}
+                  className={control}
+                  value={values.preferred_time}
+                  onChange={(event) => set("preferred_time", event.target.value)}
+                  aria-invalid={errors.preferred_time ? true : undefined}
+                  aria-describedby={errors.preferred_time ? `${formId}-preferred_time-error` : undefined}
+                  required
+                >
+                  <option value="">Choose a time</option>
+                  {CALL_TIMES.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          ) : (
+            <>
               <Field id={`${formId}-city`} label="City" error={errors.city}>
                 <input
                   id={`${formId}-city`}
@@ -476,7 +515,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
           ) : null}
 
           <button type="submit" className="apple-pill w-full border-0 disabled:cursor-wait disabled:opacity-60" disabled={sending}>
-            {sending ? "Sending…" : "Send enquiry"}
+            {sending ? "Sending…" : type === "counselling" ? "Request a callback" : "Send enquiry"}
           </button>
         </form>
       )}

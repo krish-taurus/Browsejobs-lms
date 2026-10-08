@@ -77,24 +77,56 @@ export const homeNav = [
 export const recruiterFaqs = [
   {
     q: "What is the free AI interview?",
-    a: "Fifteen questions drawn from your CV, scored out of 100. A score of 75% or more counts as clear. That score is what we put in front of HR. It is not a promise of a job.",
+    a: "You answer about 15 questions based on your CV. The AI scores you out of 100. A score of 75% or more means you are pre-qualified. It is not a promise of a job.",
+  },
+  {
+    q: "What does 75% mean?",
+    a: "Clearing the AI interview (75% or more) increases your chance of getting an interview call by almost 60%. Score 75% and your CV is sent to 3,000 HR recruiters. Below 75%, you can book a free counselling session, follow a personal improvement plan, practise, and retake the interview.",
   },
   {
     q: "How does an employer hire?",
-    a: "They tell the BrowseJobs AI Recruiter the role, by typing or by voice. The floor shows the job, the shortlist, the AI interview, calls, L1, L2, an optional human round, pre-BGV, the offer, and joining. A person must always release the offer letter, even in autonomous mode. Calls, background checks, offers, and joining chats are a demo. They are not live yet.",
+    a: "They share the role. BrowseJobs puts pre-qualified candidates in front of them, calls and screens the shortlist, runs L1 and L2, and prepares pre-BGV. The hiring floor shows each stage. A person must always release the offer letter. The names on the marketing floor are sample data.",
   },
   {
     q: "Is the hiring floor live data?",
-    a: "No. The names, calls, and scores on the floor are demo data. Nothing is sent to a candidate. Jobs, the pipeline, and the team pages stay as they are until this desk is wired to them.",
+    a: "The floor on these pages is sample data, with fictional names. It shows the desk an employer uses. Nothing on that sample is sent to a real candidate.",
   },
 ] as const;
 
 /**
- * Krish's claim, rendered once in the steps section with the shared disclaimer.
- * Do not paraphrase the 500% figure or add a second rate.
+ * Owner claims. Render with the shared disclaimer immediately after.
+ * Do not add a second rate.
  */
-export const CLEAR_PICKUP =
-  "If you clear the AI interview (75% or more), your CV is 500% more likely to get picked. You are pre-qualified for the interview.";
+export const CLAIM_INTERVIEW_CALL =
+  "Clearing the AI interview (75% or more) increases your chance of getting an interview call by almost 60%.";
+
+export const CLAIM_RECRUITERS = "Score 75% and your CV is sent to 3,000 HR recruiters.";
+
+export const SEVENTY_FIVE = [
+  { title: "About 15 questions.", body: "They are based on your CV. You answer them. It is an interview, not a class." },
+  { title: "The AI scores you.", body: "You see the score out of 100, and where the answers were thin." },
+  { title: "75% or more.", body: "That score means you are pre-qualified." },
+  { title: "Your CV goes out.", body: CLAIM_RECRUITERS },
+  { title: "A better chance of a call.", body: CLAIM_INTERVIEW_CALL },
+] as const;
+
+export const BELOW_SEVENTY_FIVE = [
+  { title: "Score under 75%.", body: "You see the score, and what blocked a clear." },
+  { title: "Free counselling session.", body: "A BrowseJobs counsellor calls you back and walks through the result." },
+  { title: "A personal improvement plan.", body: "A course only if you need it to close the gap." },
+  { title: "Practise.", body: "You work the plan. The interview is still free to retake." },
+  { title: "Retake the AI interview.", body: "Same kind of round. A new score." },
+  { title: "Reach 75%.", body: "You are pre-qualified." },
+  { title: "Your CV goes to 3,000 HRs.", body: "The same step as anyone else who clears." },
+] as const;
+
+/** Copy for the callback section. Edit this when the owner sets a count or a channel. */
+export const COUNSELLING_COPY = {
+  kicker: "Free",
+  title: "Free counselling session.",
+  body: "Book a free counselling session. A BrowseJobs counsellor calls you back. Tell us when to phone.",
+  submit: "Request a callback",
+} as const;
 
 export const screenSteps = [
   {
@@ -116,53 +148,45 @@ export const screenSteps = [
     n: "03",
     mode: "outcome" as const,
     title: "Two ways it can go",
-    body: "A score of 75% or more counts as clear. We put you in front of HR with that score. Below that, free counselling shows what's blocking you. A course comes only if you need it to close that gap.",
+    body: "A score of 75% or more counts as clear. Your CV is sent to 3,000 HR recruiters. Below that, a free counselling session shows what's blocking you. A course comes only if you need it.",
   },
 ] as const;
 
 export type ScreenMode = (typeof screenSteps)[number]["mode"];
 
-/** One line per hiring stage. Live means a candidate can do it today. */
+/** One line per hiring stage. The service includes each of these. A person releases the offer. */
 export const hiringStages = [
   {
     name: "AI interview",
-    live: true,
-    body: "Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear.",
+    body: "About 15 questions from the CV, scored out of 100. A score of 75% or more counts as clear.",
   },
   {
     name: "Calls",
-    live: false,
-    body: "The recruiter would phone people who match. The dialler is not live.",
+    body: "We call and screen shortlisted candidates.",
   },
   {
     name: "L1",
-    live: false,
-    body: "A scored round after the call. Not live.",
+    body: "We run the first scored round after the AI interview.",
   },
   {
     name: "L2",
-    live: false,
-    body: "A second scored round. Not live.",
+    body: "We run a second scored round.",
   },
   {
     name: "Human round",
-    live: false,
-    body: "Optional. Someone on the hiring team meets them. Not live.",
+    body: "Optional. Someone on the hiring team can meet them.",
   },
   {
     name: "Pre-BGV",
-    live: false,
-    body: "A check before any letter. The vendors are not connected.",
+    body: "We run a background check before any letter.",
   },
   {
     name: "Offer",
-    live: false,
-    body: "Needs your approval. A person must always release the offer letter, even in autonomous mode. Nothing is emailed from this demo.",
+    body: "Needs your approval. A person must always release the offer letter, even in autonomous mode.",
   },
   {
     name: "Joining",
-    live: false,
-    body: "A chat until they join. Not live.",
+    body: "We stay in touch until they join.",
   },
 ] as const;
 

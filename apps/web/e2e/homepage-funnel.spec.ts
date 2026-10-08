@@ -89,14 +89,14 @@ test("how it works scrolls into the employer section without a pin", async ({ pa
   }
 
   await page.goto("/how-it-works");
-  await expect(page.locator("#how")).toContainText("500%");
-  await expect(page.locator("#how")).toContainText("pre-qualified for the interview");
+  await expect(page.locator("#how")).toContainText("almost 60%");
+  await expect(page.locator("#how")).toContainText("3,000 HR recruiters");
 });
 
 test("homepage employer CTA opens the employer page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const cta = page.getByRole("link", { name: "Hire with BrowseJobs" }).first();
+  const cta = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "For Employers" });
   await cta.scrollIntoViewIfNeeded();
   await cta.click();
   await expect(page).toHaveURL(/\/employers$/);

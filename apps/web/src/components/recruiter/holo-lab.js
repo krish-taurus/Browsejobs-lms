@@ -654,7 +654,7 @@ function drawHubTower(t){
   // gold underline accents
   ctx.strokeStyle=rgba(GOLD,0.85);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(rx-tw/2-6,tyy+6);ctx.lineTo(rx+tw/2+6,tyy+6);ctx.stroke();
   var sfs=Math.max(8.5,fs*0.46);ctx.font='700 '+sfs.toFixed(1)+'px '+UI_FONT;setLS(ctx,(sfs*0.28).toFixed(1)+'px');
-  var sub='Demo data · not live';
+  var sub='Sample data';
   ctx.fillStyle=state.mode==='demo'?rgba(AMBER,0.95):rgba(GOLD,0.95);ctx.fillText(sub,rx+sfs*0.14,tyy+sfs*1.9);
   var sw=ctx.measureText(sub).width,half=Math.max(tw,sw)/2+12;
   ctx.strokeStyle=rgba(CYAN,0.65);ctx.lineWidth=1.2;

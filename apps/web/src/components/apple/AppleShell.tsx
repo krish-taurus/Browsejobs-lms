@@ -13,7 +13,7 @@ export function AppleShell({ children, dark = false }: { children: ReactNode; da
         Skip to content
       </a>
       <AppleNav dark={dark} />
-      <main id="content" className="pt-12">
+      <main id="content" className="pt-[52px]">
         {children}
       </main>
       <AppleFooter />

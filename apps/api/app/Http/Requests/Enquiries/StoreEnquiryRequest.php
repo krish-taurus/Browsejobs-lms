@@ -32,7 +32,12 @@ final class StoreEnquiryRequest extends FormRequest
             'timeline' => ['required_if:type,employer', 'nullable', 'string', Rule::in(array_keys(Enquiry::TIMELINES))],
             'course_slug' => ['required_if:type,course', 'nullable', 'string', Rule::in(config('enquiry.courses'))],
             'learner_status' => ['required_if:type,course', 'nullable', 'string', Rule::in(array_keys(Enquiry::LEARNER_STATUSES))],
-            'preferred_time' => ['required_if:type,course', 'nullable', 'string', Rule::in(array_keys(Enquiry::PREFERRED_TIMES))],
+            'preferred_time' => [
+                Rule::requiredIf(fn (): bool => in_array($this->input('type'), [Enquiry::TYPE_COURSE, Enquiry::TYPE_COUNSELLING], true)),
+                'nullable',
+                'string',
+                Rule::in(array_keys(Enquiry::PREFERRED_TIMES)),
+            ],
             'city' => ['required', 'string', 'max:120'],
             'message' => ['nullable', 'string', 'max:2000'],
             'consent' => ['accepted'],

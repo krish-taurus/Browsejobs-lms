@@ -6,14 +6,14 @@
 export const FLOOR_STAGES = [
   { id: "job", label: "Job", soon: false },
   { id: "sourcing", label: "Sourcing", soon: false },
-  { id: "calls", label: "AI calls", soon: true },
+  { id: "calls", label: "AI calls", soon: false },
   { id: "ai", label: "AI interview", soon: false },
   { id: "l1", label: "L1", soon: false },
   { id: "l2", label: "L2", soon: false },
   { id: "human", label: "Human", soon: false },
-  { id: "bgv", label: "BGV", soon: true },
-  { id: "offer", label: "Offer", soon: true },
-  { id: "joining", label: "Joining", soon: true },
+  { id: "bgv", label: "BGV", soon: false },
+  { id: "offer", label: "Offer", soon: false },
+  { id: "joining", label: "Joining", soon: false },
 ] as const;
 
 export type FloorStageId = (typeof FLOOR_STAGES)[number]["id"];

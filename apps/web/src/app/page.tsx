@@ -6,7 +6,7 @@ import { canonical } from "@/lib/seo";
 
 const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
 const DESCRIPTION =
-  "Take a free AI interview. Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear and puts you in front of HR with your score. Employers hire with the BrowseJobs AI Recruiter and watch each stage. Calls, background checks, and offers are not live yet.";
+  "Take a free AI interview. About 15 questions from your CV. Score 75% or more and your CV is sent to 3,000 HR recruiters. Clearing raises your chance of an interview call by almost 60%. Employers hire in about 3 days, down from 90.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },

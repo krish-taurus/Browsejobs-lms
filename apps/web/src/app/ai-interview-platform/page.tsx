@@ -161,9 +161,9 @@ export default function AiInterviewPlatformPage() {
           <TextLink href="/employers">for employers</TextLink>. This page is only the interview.
         </p>
         <p>
-          Full background verification — DigiLocker, PAN, education certificates, EPFO — is not part of the
-          interview and is not live. Do not write it into a candidate communication as if the brief included it. The
-          brief includes interview evidence. Say that.
+          Full background verification — DigiLocker, PAN, education certificates, EPFO — is a separate part of
+          the hiring service, not part of this interview brief. Do not write it into a candidate communication as if
+          the brief included it. The brief includes interview evidence. Say that.
         </p>
       </MoneySection>
 

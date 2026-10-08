@@ -10,7 +10,7 @@ import { breadcrumbNode, canonical, jsonLdGraph, webPageNode } from "@/lib/seo";
 
 const TITLE = "How the AI Recruiter works";
 const DESCRIPTION =
-  "The four bots, the old path and the new one, a labelled sample report, and every hiring stage. Calls, background checks, offers, and joining are not live. A person always releases the offer.";
+  "The four bots, the old path and the new one, a labelled sample report, and every hiring stage. We call and screen, run pre-BGV, and prepare the offer. A person always releases the offer.";
 const PATH = "/employers/how-it-works";
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function EmployerHowPage() {
         <section className="px-5 pb-4 pt-16 text-center md:pt-24">
           <h1 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.15rem,6vw,4.75rem)]">We reverse-engineered hiring.</h1>
           <p className="mx-auto mt-5 max-w-[36rem] text-[19px] leading-snug md:text-[21px]">
-            From a message to day 3. Calls, background checks, offers, and joining chats are not live yet.
+            From a message to about 3 days. We call and screen, run the rounds and pre-BGV, and prepare the offer. A person always releases it.
           </p>
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-7">
             <Link href="/employers/enquire" className="apple-pill">

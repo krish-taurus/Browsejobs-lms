@@ -322,7 +322,7 @@ export function HiringFloor({
     setPromptError(null);
     const parsed = parseHiringPrompt(trimmed);
     const answer = parsed
-      ? `Role set to ${parsed.title} · ${parsed.city} · ${parsed.openings} openings. The sample floor is running. Demo data. AI calls, pre-BGV, offers, and joining are not live yet.`
+      ? `Role set to ${parsed.title} · ${parsed.city} · ${parsed.openings} openings. The sample floor is running. Sample data.`
       : answerFloorQuestion(trimmed, floorRef.current);
     if (parsed) {
       setBrief(parsed);
@@ -405,7 +405,7 @@ export function HiringFloor({
     : "";
 
   const ticker = [...floor.activity.map((item) => `${item.time} ${item.agent} ${item.text}`), ...floor.calls.map((call) => `${call.name} ${call.outcome}`)];
-  const tickerLoop = ticker.length ? [...ticker, ...ticker] : ["Demo data · not live yet"];
+  const tickerLoop = ticker.length ? [...ticker, ...ticker] : ["Sample data"];
   const Title = variant === "full" ? "h1" : "p";
   const leftOpen = !mid || sheet === "filters";
   const rightOpen = !narrow || sheet === "log";
@@ -525,7 +525,7 @@ export function HiringFloor({
             <li key={stage.id}>
               <span className="mono">{stage.count}</span>
               <span>{stage.label}</span>
-              {stage.id === "offer" ? <span className="apr">Needs your approval</span> : stage.comingSoon ? <span className="soon">soon</span> : null}
+              {stage.id === "offer" ? <span className="apr">Needs your approval</span> : null}
             </li>
           ))}
         </ul>
@@ -534,7 +534,7 @@ export function HiringFloor({
             {autonomous ? "Autonomous on" : "Ask before each step"}
           </button>
           <p>Offers always need a human.</p>
-          <p className="metric-note">AI calls, pre-BGV, offers, and joining chats are not live yet.</p>
+          <p className="metric-note">We call and screen, run pre-BGV, and prepare the offer. A person always releases it. Sample data.</p>
         </div>
         <div className="roster" aria-label="Candidates">
           {people.map((person) => (
@@ -647,7 +647,7 @@ export function HiringFloor({
           </p>
           <MetricCard title="Sourcing" rows={[["CVs sourced", floor.metrics.sourced], ["Ranked", floor.metrics.ranked]]} />
           <MetricCard
-            title="AI calls · soon"
+            title="AI calls"
             rows={[
               ["Made", floor.metrics.callsMade],
               ["Connected", floor.metrics.connected],
@@ -668,16 +668,16 @@ export function HiringFloor({
             ]}
           />
           <MetricCard
-            title="Pre-BGV · soon"
+            title="Pre-BGV"
             rows={[
               ["Verified", floor.metrics.bgvVerified],
               ["Pending", floor.metrics.bgvPending],
               ["Flagged", floor.metrics.bgvFlagged],
             ]}
-            note="EPFO and DigiLocker are not connected."
+            note="Sample status on this floor. Not a finished check of a real person."
           />
           <MetricCard
-            title="Offer · soon"
+            title="Offer"
             rows={[
               ["Awaiting approval", floor.metrics.offersWaiting],
               ["Released", floor.metrics.offersReleased],
@@ -896,7 +896,7 @@ function CandidateDossier({
         )}
       </div>
       {person.dropoutRisk != null ? (
-        <p className="ap-val">Dropout risk {person.dropoutRisk}. Sample alert. The joining chat is not live.</p>
+        <p className="ap-val">Dropout risk {person.dropoutRisk}. Sample alert. We stay in touch until they join.</p>
       ) : null}
       <div className="ap-section">
         <div className="ap-label">Timeline</div>

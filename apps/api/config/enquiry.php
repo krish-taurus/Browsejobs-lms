@@ -17,12 +17,15 @@ if (! is_string($shared) || filter_var($shared, FILTER_VALIDATE_EMAIL) === false
 
 $employer = env('ENQUIRY_NOTIFY_EMAIL_EMPLOYER');
 $course = env('ENQUIRY_NOTIFY_EMAIL_COURSE');
+$counselling = env('ENQUIRY_NOTIFY_EMAIL_COUNSELLING');
 
 return [
 
     'notify_employer' => is_string($employer) && filter_var($employer, FILTER_VALIDATE_EMAIL) ? $employer : $shared,
 
     'notify_course' => is_string($course) && filter_var($course, FILTER_VALIDATE_EMAIL) ? $course : $shared,
+
+    'notify_counselling' => is_string($counselling) && filter_var($counselling, FILTER_VALIDATE_EMAIL) ? $counselling : $shared,
 
     /*
     | Optional. Empty on the single VPS: Next connects to Nginx on loopback,

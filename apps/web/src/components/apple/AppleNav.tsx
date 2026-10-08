@@ -2,40 +2,46 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { LoginMenu } from "@/components/landing/LoginMenu";
 
 const LINKS = [
-  { href: "/#interview-start", label: "AI interview" },
-  { href: "/employers", label: "Employers" },
-  { href: "/courses", label: "Courses" },
-  { href: "/jobs", label: "Jobs" },
+  { href: "/", label: "Home" },
+  { href: "/students", label: "Students" },
+  { href: "/employers", label: "For Employers" },
+  { href: "/demo", label: "Demo" },
 ] as const;
 
 export function AppleNav({ dark = false }: { dark?: boolean }) {
   const [open, setOpen] = useState(false);
+  const path = usePathname();
+  const tone = dark ? "night" : "light";
+
   return (
     <header className={`apple-nav${dark ? " is-dark" : ""}`}>
-      <nav className="apple-nav-bar mx-auto w-full max-w-[1100px] gap-6 px-5" aria-label="Primary">
-        <Link href="/" className="text-[14px] font-semibold tracking-[-0.02em]">
+      <nav className="apple-nav-bar mx-auto w-full max-w-[1100px] px-5" aria-label="Primary">
+        <Link href="/" className="apple-nav-brand">
           BrowseJobs
         </Link>
-        <ul className="apple-links hidden flex-1 items-center justify-center gap-8 text-[12px] md:flex">
+        <ul className="apple-nav-links">
           {LINKS.map((item) => (
             <li key={item.href}>
-              <Link href={item.href} className="inline-flex min-h-11 items-center">
+              <Link href={item.href} aria-current={path === item.href ? "page" : undefined}>
                 {item.label}
               </Link>
             </li>
           ))}
+          <li>
+            <LoginMenu tone={tone} appearance="apple" />
+          </li>
         </ul>
-        <Link
-          href="/#interview-start"
-          className="apple-links ml-auto hidden text-[12px] md:inline-flex md:min-h-11 md:items-center"
-        >
-          Take your free AI interview
+        <Link href="/employers/enquire" className="apple-nav-cta">
+          <span className="hidden lg:inline">Onboard with us for the future of hiring</span>
+          <span className="lg:hidden">Onboard with us</span>
         </Link>
         <button
           type="button"
-          className="ml-auto inline-flex h-11 items-center px-2 text-[12px] md:hidden"
+          className="apple-nav-menu"
           aria-expanded={open}
           aria-controls="apple-menu"
           onClick={() => setOpen((value) => !value)}
@@ -44,17 +50,20 @@ export function AppleNav({ dark = false }: { dark?: boolean }) {
         </button>
       </nav>
       {open ? (
-        <ul id="apple-menu" className="apple-menu text-[17px] md:hidden">
+        <ul id="apple-menu" className="apple-menu md:hidden">
           {LINKS.map((item) => (
             <li key={item.href}>
-              <Link href={item.href} className="flex min-h-11 items-center" onClick={() => setOpen(false)}>
+              <Link href={item.href} onClick={() => setOpen(false)}>
                 {item.label}
               </Link>
             </li>
           ))}
           <li>
-            <Link href="/#interview-start" className="flex min-h-11 items-center" onClick={() => setOpen(false)}>
-              Take your free AI interview
+            <LoginMenu tone={tone} appearance="apple" />
+          </li>
+          <li>
+            <Link href="/employers/enquire" className="apple-nav-cta mt-2" onClick={() => setOpen(false)}>
+              Onboard with us for the future of hiring
             </Link>
           </li>
         </ul>

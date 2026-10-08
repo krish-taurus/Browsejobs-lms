@@ -12,7 +12,7 @@ import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/
 
 const TITLE = "How the free AI interview works";
 const DESCRIPTION =
-  "Sit a free AI interview, get a score, and see what happens at 75%. Counselling is free if you miss. A course comes only if you need it. The 500% pickup line is historical BrowseJobs data, not a promise.";
+  "Sit a free AI interview, get a score, and see what happens at 75%. Score 75% and your CV is sent to 3,000 HR recruiters. Clearing raises your chance of an interview call by almost 60%. A free counselling session if you miss. A course only if you need it.";
 const PATH = "/how-it-works";
 
 export const metadata: Metadata = {

@@ -107,6 +107,32 @@ it('captures a course enquiry and mails the course inbox', function () {
     Mail::assertNotSent(MessageMail::class, fn (MessageMail $mail) => $mail->hasTo('learner@example.test'));
 });
 
+it('captures a counselling callback without a course or a company', function () {
+    Mail::fake();
+
+    postEnquiry([
+        'type' => 'counselling',
+        'email' => 'callback@example.test',
+        'company' => null,
+        'company_size' => null,
+        'roles' => null,
+        'timeline' => null,
+        'preferred_time' => 'morning',
+        'city' => 'Bengaluru',
+        'landing_page' => '/students#counselling',
+    ])->assertCreated();
+
+    $enquiry = Enquiry::withoutGlobalScopes()->first();
+
+    expect($enquiry->type)->toBe('counselling')
+        ->and($enquiry->course_slug)->toBeNull()
+        ->and($enquiry->company)->toBeNull()
+        ->and($enquiry->preferred_time)->toBe('morning');
+
+    Mail::assertSent(MessageMail::class, fn (MessageMail $mail) => $mail->hasTo('hello@browsejobs.ai')
+        && str_contains($mail->subjectLine, 'counselling'));
+});
+
 it('rejects a course that is not on the live catalogue', function () {
     postEnquiry([
         'type' => 'course',

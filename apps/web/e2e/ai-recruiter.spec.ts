@@ -32,7 +32,7 @@ test("homepage demo is labelled and links to the full floor", async ({ page }) =
   const stages = page.locator("#stages");
   await expect(stages).toContainText("Needs your approval");
   await expect(stages).toContainText("A person must always release the offer letter");
-  await expect(stages.getByText("Not live").first()).toBeVisible();
+  await expect(stages.getByText("Not live")).toHaveCount(0);
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
 });
 
@@ -43,7 +43,9 @@ test("hiring floor shows demo data, stage counts, calls, and a candidate drawer"
   await expect(page.getByText("Demo data").first()).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "BrowseJobs AI Recruiter" })).toBeVisible();
   await expect(page.getByText("Powered by Taurus AI").first()).toBeVisible();
-  await expect(page.getByText("not live yet")).toBeVisible();
+  await expect(page.getByText("Sample data").first()).toBeVisible();
+  await expect(page.getByText(/not live/i)).toHaveCount(0);
+  await expect(page.getByText(/coming soon/i)).toHaveCount(0);
 
   const counts = page.getByRole("list", { name: "Stage counts" });
   await expect(counts).toBeVisible();

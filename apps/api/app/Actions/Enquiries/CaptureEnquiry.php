@@ -42,7 +42,7 @@ final class CaptureEnquiry
             'timeline' => $type === Enquiry::TYPE_EMPLOYER ? $this->nullable($data, 'timeline') : null,
             'course_slug' => $type === Enquiry::TYPE_COURSE ? $this->nullable($data, 'course_slug') : null,
             'learner_status' => $type === Enquiry::TYPE_COURSE ? $this->nullable($data, 'learner_status') : null,
-            'preferred_time' => $type === Enquiry::TYPE_COURSE ? $this->nullable($data, 'preferred_time') : null,
+            'preferred_time' => in_array($type, [Enquiry::TYPE_COURSE, Enquiry::TYPE_COUNSELLING], true) ? $this->nullable($data, 'preferred_time') : null,
             'city' => $this->nullable($data, 'city'),
             'message' => $this->nullable($data, 'message'),
             'consented_at' => now(),

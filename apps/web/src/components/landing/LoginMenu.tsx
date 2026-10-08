@@ -26,8 +26,15 @@ const OPTIONS = [
   },
 ];
 
-export function LoginMenu({ tone = "light" }: { tone?: "light" | "night" } = {}) {
+export function LoginMenu({
+  tone = "light",
+  appearance = "default",
+}: {
+  tone?: "light" | "night";
+  appearance?: "default" | "apple";
+} = {}) {
   const night = tone === "night";
+  const apple = appearance === "apple";
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -56,9 +63,13 @@ export function LoginMenu({ tone = "light" }: { tone?: "light" | "night" } = {})
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-          night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
-        }`}
+        className={
+          apple
+            ? "inline-flex h-8 items-center gap-1 text-[12px] leading-none"
+            : `flex items-center gap-1 text-sm font-medium transition-colors ${
+                night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
+              }`
+        }
       >
         Login
         <span

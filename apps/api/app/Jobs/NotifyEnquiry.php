@@ -40,9 +40,11 @@ final class NotifyEnquiry implements ShouldQueue
             return;
         }
 
-        $to = $enquiry->type === Enquiry::TYPE_EMPLOYER
-            ? (string) config('enquiry.notify_employer')
-            : (string) config('enquiry.notify_course');
+        $to = match ($enquiry->type) {
+            Enquiry::TYPE_EMPLOYER => (string) config('enquiry.notify_employer'),
+            Enquiry::TYPE_COUNSELLING => (string) config('enquiry.notify_counselling'),
+            default => (string) config('enquiry.notify_course'),
+        };
 
         if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
             $this->recordFailure($enquiry, 'Notification address is not a valid email.');
@@ -86,6 +88,10 @@ final class NotifyEnquiry implements ShouldQueue
             return 'New employer enquiry — '.($enquiry->company ?: $enquiry->name);
         }
 
+        if ($enquiry->type === Enquiry::TYPE_COUNSELLING) {
+            return 'New counselling enquiry — '.$enquiry->name;
+        }
+
         return 'New course enquiry — '.($enquiry->course_slug ?: $enquiry->name);
     }
 
@@ -104,6 +110,9 @@ final class NotifyEnquiry implements ShouldQueue
             $lines[] = 'Company size: '.$enquiry->label('COMPANY_SIZES', $enquiry->company_size);
             $lines[] = 'Roles: '.(string) $enquiry->roles;
             $lines[] = 'Timeline: '.$enquiry->label('TIMELINES', $enquiry->timeline);
+        } elseif ($enquiry->type === Enquiry::TYPE_COUNSELLING) {
+            $lines[] = 'Request: free counselling session';
+            $lines[] = 'Preferred time: '.$enquiry->label('PREFERRED_TIMES', $enquiry->preferred_time);
         } else {
             $lines[] = 'Course: '.(string) $enquiry->course_slug;
             $lines[] = 'Status: '.$enquiry->label('LEARNER_STATUSES', $enquiry->learner_status);

@@ -29,6 +29,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     dated("/employers/faq", 0.6),
     dated("/employers/enquire", 0.7),
     dated("/how-it-works", 0.8),
+    dated("/students", 0.8),
+    dated("/demo", 0.5),
     dated("/get-hired", 0.9),
     dated("/jobs", 0.8),
     dated("/brief", 0.8),

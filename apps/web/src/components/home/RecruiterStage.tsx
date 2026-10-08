@@ -15,7 +15,7 @@ export function RecruiterStage() {
           Candidates take a free AI interview first and get a score. Employers tell the recruiter the role and watch the floor move, from the shortlist to the offer.
         </p>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-          Demo data. Fictional names. AI calls, pre-BGV, offers, and joining chats are not live yet.
+          Sample data. Fictional names. A person always releases the offer.
         </p>
       </div>
       <div className="mx-auto max-w-6xl px-5 pb-20 md:pb-32">

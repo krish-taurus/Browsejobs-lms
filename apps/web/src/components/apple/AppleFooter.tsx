@@ -8,6 +8,7 @@ const COLUMNS = [
     title: "Candidates",
     links: [
       { href: "/#interview-start", label: "Free AI interview" },
+      { href: "/students", label: "Students" },
       { href: "/how-it-works", label: "How it works" },
       { href: "/get-hired", label: "Get hired" },
       { href: "/courses", label: "Courses" },
@@ -20,7 +21,7 @@ const COLUMNS = [
     links: [
       { href: "/employers", label: "AI Recruiter" },
       { href: "/employers/how-it-works", label: "How it works" },
-      { href: "/employers/mission-control-demo", label: "Watch the demo" },
+      { href: "/demo", label: "Watch the demo" },
       { href: "/employers/faq", label: "FAQ" },
       { href: "/employers/enquire", label: "Enquire" },
     ],
@@ -75,7 +76,7 @@ export function AppleFooter() {
         <div className="apple-note mx-0 max-w-none text-left">
           <sup>1</sup> <Disclaimer className="inline" />
         </div>
-        <p>Calls, background checks, offers, and joining chats are not live yet. The hiring floor is demo data.</p>
+        <p>The hiring floor on these pages is sample data. A person always releases the offer.</p>
         <p>Every promise in writing. Every call recorded and AI-monitored.</p>
       </div>
     </footer>

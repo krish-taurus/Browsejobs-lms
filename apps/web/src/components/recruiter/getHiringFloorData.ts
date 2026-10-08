@@ -26,7 +26,7 @@ import {
   type HiringFloorSnapshot,
 } from "./types";
 
-const COMING_SOON = ["AI calls", "Pre-BGV", "Offers", "Joining chats"] as const;
+const COMING_SOON = [] as const;
 
 function stageOf(person: DemoPerson, t: number): FloorStageId | null {
   let current: FloorStageId | null = null;
@@ -70,17 +70,19 @@ function agents(t: number, autonomous: boolean): FloorAgent[] {
 
   const caller =
     t < 12_000
-      ? bot("caller", "Caller", "calls", "idle", "Idle until sourcing finishes. This dialler is not live.", 0)
+      ? bot("caller", "Caller", "calls", "idle", "Idle until sourcing finishes. Sample data.", 0)
       : t < 18_000
         ? bot(
             "caller",
             "Caller",
             "calls",
             autonomous ? "working" : "approval",
-            autonomous ? "Autonomous is on. Sample calls start without a pause. The dialler is not live." : "Waiting for a yes before any call. The dialler is not live.",
+            autonomous
+              ? "Autonomous is on. We call and screen the sample shortlist."
+              : "Waiting for a yes before any sample call.",
             autonomous ? 40 : 100,
           )
-        : bot("caller", "Caller", "calls", "working", "Sample calls are on the log. This dialler is not live.", 62);
+        : bot("caller", "Caller", "calls", "working", "Sample calls are on the log. We call and screen the shortlist.", 62);
 
   const interviewer =
     t < 18_000
@@ -112,17 +114,17 @@ function agents(t: number, autonomous: boolean): FloorAgent[] {
 
   const bgv =
     t < 42_000
-      ? bot("bgv", "BGV Checker", "bgv", "idle", "Pre-BGV is not live. EPFO and DigiLocker are not connected.", 0)
-      : bot("bgv", "BGV Checker", "bgv", "working", "Pre-BGV preview. EPFO and DigiLocker are not live.", 55);
+      ? bot("bgv", "BGV Checker", "bgv", "idle", "Pre-BGV starts after the rounds. Sample data.", 0)
+      : bot("bgv", "BGV Checker", "bgv", "working", "Sample pre-BGV is on the desk.", 55);
 
   const offer = bot("offer", "Offer Desk", "offer", "approval", "Needs your approval. A person always releases the offer.", 100);
 
   const engagement =
     t < 48_000
-      ? bot("engagement", "Engagement", "joining", "idle", "Joining chat is not live.", 0)
+      ? bot("engagement", "Engagement", "joining", "idle", "Joining support starts after the offer. Sample data.", 0)
       : t < 50_000
-        ? bot("engagement", "Engagement", "joining", "working", "Sample joining note. The chat is not live.", 22)
-        : bot("engagement", "Engagement", "joining", "error", "Sample Rohan Mehta went quiet. Dropout risk 74. The joining chat is not live.", 0);
+        ? bot("engagement", "Engagement", "joining", "working", "Sample joining note. We stay in touch until they join.", 22)
+        : bot("engagement", "Engagement", "joining", "error", "Sample Rohan Mehta went quiet. Dropout risk 74. Sample data.", 0);
 
   return [scout, caller, interviewer, l1, l2, scheduler, bgv, offer, engagement];
 }
@@ -214,10 +216,10 @@ export function answerFloorQuestion(question: string, floor: HiringFloorSnapshot
   if (/dropout|quiet/.test(q)) {
     const names = floor.candidates.filter((person) => person.dropoutRisk != null);
     if (!names.length) return "No dropout-risk alert on this pass of the demo.";
-    return names.map((person) => `${person.name} · dropout risk ${person.dropoutRisk}. Sample alert. The joining chat is not live.`).join(" ");
+    return names.map((person) => `${person.name} · dropout risk ${person.dropoutRisk}. Sample alert.`).join(" ");
   }
 
-  return "I can answer from this demo: how many are at L2, who's interested, BGV status for Asha, and whether an offer is waiting. Demo data. Nothing here is live.";
+  return "I can answer from this demo: how many are at L2, who's interested, BGV status for Asha, and whether an offer is waiting. Sample data.";
 }
 
 export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot {
@@ -278,7 +280,7 @@ export function getHiringFloorData(query: HiringFloorQuery): HiringFloorSnapshot
       {
         id: "outreach",
         title: "Start outreach",
-        detail: "Call the sample shortlist? Silence is not a yes. This dialler is not live.",
+        detail: "Call the sample shortlist? Silence is not a yes. We call and screen shortlisted candidates.",
       },
       {
         id: "offer",

@@ -96,7 +96,7 @@ export function EmployersPage() {
           </ScrollReveal>
           <HiringJourney />
           <p className="mt-8 max-w-2xl text-sm leading-relaxed text-ink2">
-            The hiring floor is a preview with fictional names. AI calls, background checks, offers, and joining chats are not live yet.{" "}
+            The hiring floor is sample data, with fictional names. We call and screen, run pre-BGV, and prepare the offer. A person always releases it.{" "}
             <Link href="/employers/mission-control-demo" className="font-semibold text-trust hover:text-deep">
               Open the demo
             </Link>
