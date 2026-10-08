@@ -184,6 +184,50 @@ it('sends the staff email once when the job is handled twice', function () {
     expect($enquiry->fresh()->notified_at)->not->toBeNull();
 });
 
+it('records a mail failure and still accepts the enquiry', function () {
+    Mail::shouldReceive('to')->once()->andReturn(new class
+    {
+        public function send(mixed $mailable): void
+        {
+            throw new RuntimeException('Connection refused');
+        }
+    });
+
+    postEnquiry()->assertCreated()->assertJson(['status' => 'received']);
+
+    $enquiry = Enquiry::withoutGlobalScopes()->first();
+
+    expect($enquiry)->not->toBeNull()
+        ->and($enquiry->notified_at)->toBeNull()
+        ->and($enquiry->notify_error)->toContain('Connection refused');
+});
+
+it('keeps the enquiry when the notification address is unusable', function () {
+    config(['enquiry.notify_employer' => 'not-an-email']);
+
+    postEnquiry()->assertCreated();
+
+    $enquiry = Enquiry::withoutGlobalScopes()->first();
+
+    expect($enquiry->notified_at)->toBeNull()
+        ->and($enquiry->notify_error)->toBe('Notification address is not a valid email.');
+});
+
+it('trusts a forwarded client ip from a same-box private peer without a proxy secret', function () {
+    Mail::fake();
+    config(['enquiry.proxy_secret' => '']);
+
+    test()->withServerVariables(['REMOTE_ADDR' => '10.0.0.8'])
+        ->withHeaders([
+            'X-Enquiry-Client-Ip' => '203.0.113.50',
+            'User-Agent' => 'EnquiryTest/1.0',
+        ])
+        ->postJson('http://acme.test/api/v1/enquiries', enquiryPayload())
+        ->assertCreated();
+
+    expect(Enquiry::withoutGlobalScopes()->first()->ip_hash)->toBe(ClientIp::hash('203.0.113.50'));
+});
+
 it('ignores a spoofed client ip when the peer is not the proxy', function () {
     Mail::fake();
 
@@ -220,7 +264,12 @@ it('lists, filters, updates, and exports enquiries for staff in the tenant', fun
     $admin = User::factory()->for($this->tenant)->create(['user_type' => 'staff']);
     $admin->assignRole('admin');
 
-    $employer = Enquiry::factory()->for($this->tenant)->create(['name' => 'Employer One', 'company' => 'Northwind']);
+    $employer = Enquiry::factory()->for($this->tenant)->create([
+        'name' => 'Employer One',
+        'company' => 'Northwind',
+        'notified_at' => null,
+        'notify_error' => 'Connection refused',
+    ]);
     Enquiry::factory()->for($this->tenant)->course()->create(['name' => 'Learner One']);
     $foreign = Enquiry::factory()->for(Tenant::factory()->create())->create(['name' => 'Foreign One']);
 
@@ -229,6 +278,7 @@ it('lists, filters, updates, and exports enquiries for staff in the tenant', fun
     $this->getJson('/api/v1/admin/enquiries')
         ->assertOk()
         ->assertJsonFragment(['name' => 'Employer One'])
+        ->assertJsonFragment(['notify_error' => 'Connection refused'])
         ->assertJsonFragment(['name' => 'Learner One'])
         ->assertJsonMissing(['name' => 'Foreign One'])
         ->assertJsonMissing(['ip_hash' => $employer->ip_hash]);
@@ -250,6 +300,7 @@ it('lists, filters, updates, and exports enquiries for staff in the tenant', fun
     expect($csv->headers->get('content-type'))->toContain('text/csv')
         ->and($csv->getContent())->toContain('Employer One')
         ->and($csv->getContent())->toContain($employer->ip_hash)
+        ->and($csv->getContent())->toContain('Connection refused')
         ->and($csv->getContent())->not->toContain('Learner One');
 });
 

@@ -34,7 +34,10 @@ final class ClientIp
 
     private static function trusted(Request $request, string $peer): bool
     {
-        if (self::isLoopback($peer)) {
+        // Next and Nginx share the VPS. The proxy connects to loopback, or to
+        // a private address, and does not need ENQUIRY_PROXY_SECRET. A public
+        // peer cannot set the visitor IP unless it also has the secret.
+        if (self::isLoopback($peer) || self::isPrivate($peer)) {
             return true;
         }
 
@@ -47,5 +50,31 @@ final class ClientIp
     private static function isLoopback(string $ip): bool
     {
         return $ip === '127.0.0.1' || $ip === '::1';
+    }
+
+    private static function isPrivate(string $ip): bool
+    {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+            $long = ip2long($ip);
+            if ($long === false) {
+                return false;
+            }
+
+            foreach ([['10.0.0.0', '10.255.255.255'], ['172.16.0.0', '172.31.255.255'], ['192.168.0.0', '192.168.255.255']] as [$start, $end]) {
+                if ($long >= ip2long($start) && $long <= ip2long($end)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        $packed = inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16) {
+            return false;
+        }
+
+        // fc00::/7 unique local addresses.
+        return (ord($packed[0]) & 0xFE) === 0xFC;
     }
 }

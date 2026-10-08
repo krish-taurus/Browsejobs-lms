@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $user_agent
  * @property string|null $ip_hash
  * @property Carbon|null $notified_at
+ * @property string|null $notify_error
  */
 class Enquiry extends Model
 {
@@ -94,7 +95,7 @@ class Enquiry extends Model
         'course_slug', 'learner_status', 'preferred_time', 'message',
         'consented_at', 'consent_version',
         'utm_source', 'utm_medium', 'utm_campaign', 'referrer', 'landing_page',
-        'user_agent', 'ip_hash', 'notified_at',
+        'user_agent', 'ip_hash', 'notified_at', 'notify_error',
     ];
 
     /**

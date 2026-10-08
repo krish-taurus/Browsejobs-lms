@@ -9,6 +9,9 @@ use App\Models\Enquiry;
 use App\Support\Crm\PhoneNormalizer;
 use App\Support\Enquiries\ClientIp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Stores one enquiry and queues the staff email. The raw IP is hashed and dropped.
@@ -53,9 +56,29 @@ final class CaptureEnquiry
             'ip_hash' => ClientIp::hash($ip),
         ]);
 
-        NotifyEnquiry::dispatch($enquiry->id);
+        $this->queueAlert($enquiry);
 
         return $enquiry;
+    }
+
+    /**
+     * The row is already stored. A queue outage is recorded on it and does
+     * not fail the request. afterCommit waits for an open transaction.
+     */
+    private function queueAlert(Enquiry $enquiry): void
+    {
+        try {
+            Bus::dispatch((new NotifyEnquiry($enquiry->id))->afterCommit());
+        } catch (Throwable $e) {
+            Log::warning('Enquiry notification could not be queued', [
+                'enquiry_id' => $enquiry->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            $enquiry->forceFill([
+                'notify_error' => mb_substr($e->getMessage() !== '' ? $e->getMessage() : 'Could not queue the notification.', 0, 500),
+            ])->save();
+        }
     }
 
     /**

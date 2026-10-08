@@ -43,6 +43,7 @@ final class EnquiryResource extends JsonResource
             'landing_page' => $this->landing_page,
             'consented_at' => $this->consented_at?->toIso8601String(),
             'notified_at' => $this->notified_at?->toIso8601String(),
+            'notify_error' => $this->notify_error,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

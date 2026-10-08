@@ -15,6 +15,8 @@ type EnquiryRow = {
   company: string | null;
   city: string | null;
   course_slug: string | null;
+  notified_at: string | null;
+  notify_error: string | null;
   created_at: string | null;
 };
 
@@ -126,6 +128,7 @@ export default function AdminEnquiriesPage() {
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Contact</th>
                 <th className="px-4 py-3 font-medium">About</th>
+                <th className="px-4 py-3 font-medium">Alert</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -142,6 +145,16 @@ export default function AdminEnquiriesPage() {
                     <p className="text-muted">{row.email}</p>
                   </td>
                   <td className="px-4 py-3 text-ink">{row.type === "employer" ? row.company : row.course_slug}</td>
+                  <td className="px-4 py-3">
+                    {row.notified_at ? (
+                      <span className="text-ink">Sent</span>
+                    ) : (
+                      <span className="text-muted">
+                        Not sent
+                        {row.notify_error ? <span className="mt-1 block text-xs">{row.notify_error}</span> : null}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <select
                       aria-label={`Status for ${row.name}`}

@@ -11,10 +11,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 /**
- * Tells the team about a new enquiry. Idempotent via notified_at.
+ * Staff alert for a new enquiry, on the default queue.
+ *
+ * Production runs `queue:work redis` (no Horizon). The enquiry row is already
+ * saved. A mail failure is logged and stored on the row; it is not thrown,
+ * so a dead SMTP server cannot fail the HTTP request or the queue job.
  * Nothing is sent to the person who submitted.
  */
 final class NotifyEnquiry implements ShouldQueue
@@ -23,10 +29,6 @@ final class NotifyEnquiry implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
-
-    public int $tries = 3;
-
-    public int $backoff = 30;
 
     public function __construct(public readonly int $enquiryId) {}
 
@@ -42,16 +44,40 @@ final class NotifyEnquiry implements ShouldQueue
             ? (string) config('enquiry.notify_employer')
             : (string) config('enquiry.notify_course');
 
-        if ($to === '' || ! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+            $this->recordFailure($enquiry, 'Notification address is not a valid email.');
+
             return;
         }
 
-        Mail::to($to)->send(new MessageMail(
-            $this->subject($enquiry),
-            $this->body($enquiry),
-        ));
+        try {
+            Mail::to($to)->send(new MessageMail(
+                $this->subject($enquiry),
+                $this->body($enquiry),
+            ));
+        } catch (Throwable $e) {
+            $this->recordFailure($enquiry, $e->getMessage());
 
-        $enquiry->forceFill(['notified_at' => now()])->save();
+            return;
+        }
+
+        $enquiry->forceFill([
+            'notified_at' => now(),
+            'notify_error' => null,
+        ])->save();
+    }
+
+    private function recordFailure(Enquiry $enquiry, string $message): void
+    {
+        $message = trim($message) !== '' ? trim($message) : 'Notification failed.';
+        $stored = mb_substr($message, 0, 500);
+
+        Log::warning('Enquiry notification failed', [
+            'enquiry_id' => $enquiry->id,
+            'message' => $stored,
+        ]);
+
+        $enquiry->forceFill(['notify_error' => $stored])->save();
     }
 
     private function subject(Enquiry $enquiry): string

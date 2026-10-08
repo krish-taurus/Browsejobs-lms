@@ -46,6 +46,7 @@ class EnquiryFactory extends Factory
             'user_agent' => 'Factory',
             'ip_hash' => hash('sha256', '127.0.0.1|factory'),
             'notified_at' => null,
+            'notify_error' => null,
         ];
     }
 

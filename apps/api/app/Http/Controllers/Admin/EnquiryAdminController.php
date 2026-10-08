@@ -44,7 +44,7 @@ final class EnquiryAdminController extends Controller
             'id', 'type', 'status', 'name', 'email', 'phone', 'company', 'company_size',
             'roles', 'city', 'timeline', 'course_slug', 'learner_status', 'preferred_time',
             'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer', 'landing_page',
-            'ip_hash', 'created_at',
+            'ip_hash', 'notified_at', 'notify_error', 'created_at',
         ]);
 
         foreach ($rows as $enquiry) {
@@ -70,6 +70,8 @@ final class EnquiryAdminController extends Controller
                 $enquiry->referrer,
                 $enquiry->landing_page,
                 $enquiry->ip_hash,
+                $enquiry->notified_at?->toIso8601String(),
+                $enquiry->notify_error,
                 $enquiry->created_at?->toIso8601String(),
             ]);
         }
