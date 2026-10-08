@@ -97,18 +97,21 @@ html.argus-live .argus {
 .argus-nav {
   position: fixed;
   top: 12px;
-  left: 50%;
+  left: 0;
+  right: 0;
   z-index: 40;
   width: min(1200px, calc(100% - 24px));
-  transform: translateX(-50%);
+  margin-inline: auto;
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .argus-nav.is-hidden {
-  transform: translateX(-50%) translateY(calc(-100% - 20px));
+  transform: translateY(calc(-100% - 20px));
 }
 
 .argus-nav-bar {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -169,13 +172,14 @@ html.argus-live .argus {
 .argus-menu {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.4rem;
   margin: 0;
   padding: 6rem 1.75rem 2rem;
+  overflow-y: auto;
   list-style: none;
   background: rgba(255, 255, 255, 0.96);
 }
@@ -854,8 +858,9 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 .argus-phase-grid h3, .argus-days h3 { margin: 0; font-size: 18px; }
 .argus-phase-grid p, .argus-days li { color: #3a3a3c; }
 .argus-phase { margin-top: 0.5rem; }
-.argus-floor { display: block; }
-.argus-tilt { margin-top: 1.5rem; transform: perspective(1200px) rotateX(20deg); transform-origin: center top; }
+.argus-floor { display: block; overflow-x: clip; }
+.argus-floor-tilt { margin-top: 1.5rem; transform: perspective(1200px) rotateX(20deg); transform-origin: center top; }
+.argus-tilt { transform-origin: center center; }
 .argus-days-num { margin: 0.4rem 0 0; font-size: clamp(72px, 12vw, 140px); line-height: 0.85; letter-spacing: -0.05em; }
 .argus-days-cols { display: grid; gap: 1rem; margin-top: 1rem; }
 .argus-days-cols ul { margin: 0.6rem 0 0; padding: 0; list-style: none; }
@@ -945,12 +950,13 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
   .argus-capsule { flex-direction: column; align-items: stretch; border-radius: 28px; }
   .argus-capsule .argus-btn { width: 100%; }
   .argus-score-stage { min-height: 180px; }
-  .argus-sample-card, .argus-tilt, .argus-icon path, .argus-marquee { animation: none; }
+  .argus-sample-card, .argus-floor-tilt, .argus-icon path, .argus-marquee { animation: none; }
   .argus-h1 { font-size: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .argus-sample-card, .argus-icon path, .argus-marquee, .argus-check { animation: none; }
+  .argus-floor-tilt { animation: none; transform: none; }
   .argus-path-line path { stroke-dashoffset: 0 !important; }
 }
 

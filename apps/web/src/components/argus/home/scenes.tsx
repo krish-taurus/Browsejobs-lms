@@ -420,7 +420,7 @@ export function HomeFloor() {
           <span className="argus-badge">Demo data</span>
         </p>
       </div>
-      <div ref={tilt} className="argus-tilt">
+      <div ref={tilt} className="argus-floor-tilt">
         <MacFloor tone="light" />
       </div>
     </section>

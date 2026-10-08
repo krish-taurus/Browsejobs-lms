@@ -14,7 +14,7 @@ export function openWhatsAppShot(id: string) {
 function ShotFigure({ shot, onOpen }: { shot: WhatsAppShot; onOpen: (id: string) => void }) {
   return (
     <figure className="apple-shot">
-      <button type="button" className="apple-phone is-shot" onClick={() => onOpen(shot.id)}>
+      <button type="button" className="apple-phone is-shot" aria-label={`Open the message: ${shot.headline}`} onClick={() => onOpen(shot.id)}>
         <span className="apple-phone-screen">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

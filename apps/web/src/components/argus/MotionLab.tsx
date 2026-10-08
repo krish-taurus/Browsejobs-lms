@@ -54,7 +54,7 @@ export function MotionLab() {
           <p className="argus-kicker">Object 03 · Glass sphere</p>
           <SplitHeading className="argus-h2" text="A comet crosses the glass." />
           <p className="argus-body" style={{ marginTop: "1rem" }}>
-            Transmission, a tight roughness, and iridescence, with a bright light orbiting the surface.
+            A light fresnel rim and a small mark orbiting the surface. The shell stays off the copy.
           </p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export function MotionLab() {
         <div className="argus-section-copy">
           <p className="argus-kicker">Object 04 · Eclipse</p>
           <SplitHeading className="argus-h2" text="The light breaks into a crescent." />
-          <p className="argus-body" style={{ marginTop: "1rem" }}>A dark sphere slides across a violet light as you scroll.</p>
+          <p className="argus-body" style={{ marginTop: "1rem" }}>A dark sphere sits in the empty side of the section. It does not travel across the copy.</p>
         </div>
       </section>
 
@@ -80,7 +80,7 @@ export function MotionLab() {
       <section className="argus-section" data-scene="grid" data-shot="object">
         <div className="argus-section-copy">
           <p className="argus-kicker">Object 06 · Grid floor</p>
-          <SplitHeading className="argus-h2" text="A violet grid from the horizon." />
+          <SplitHeading className="argus-h2" text="A light grid from the horizon." />
           <p className="argus-body" style={{ marginTop: "1rem" }}>The floor moves toward you. It is the ground under later forms.</p>
         </div>
       </section>
