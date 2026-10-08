@@ -24,7 +24,7 @@ export function InterviewStartForm({
 }: {
   next?: string;
   id?: string;
-  tone?: "night" | "apple";
+  tone?: "night" | "apple" | "argus";
 }) {
   const router = useRouter();
   const destination = safeNextPath(next) ?? AFTER_AUTH;
@@ -38,6 +38,7 @@ export function InterviewStartForm({
   const [busy, setBusy] = useState(false);
 
   const apple = tone === "apple";
+  const argus = tone === "argus";
   const inputCls = apple
     ? "h-12 w-full rounded-full border border-black/15 bg-white px-5 text-[17px] text-[#1d1d1f] outline-none placeholder:text-[#6e6e73] focus-visible:border-[#1b6df0] focus-visible:ring-2 focus-visible:ring-[#1b6df0]"
     : "w-full rounded-[10px] border border-white/15 bg-white/5 px-4 py-3 text-fg outline-none placeholder:text-muted focus:border-trust";
@@ -115,7 +116,7 @@ export function InterviewStartForm({
   }
 
   return (
-    <div id={id} className={apple ? "mx-auto mt-5 w-full max-w-[26rem] scroll-mt-28 text-left" : "mt-5 max-w-md scroll-mt-28 md:mt-8"}>
+    <div id={id} className={argus ? "argus-start scroll-mt-28" : apple ? "mx-auto mt-5 w-full max-w-[26rem] scroll-mt-28 text-left" : "mt-5 max-w-md scroll-mt-28 md:mt-8"}>
       {error && (
         <p className="mb-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn" role="alert">
           {error}
@@ -123,7 +124,7 @@ export function InterviewStartForm({
       )}
 
       {step === "phone" && (
-        <form onSubmit={requestLogin} className="space-y-3">
+        <form onSubmit={requestLogin} className={argus ? "argus-capsule" : "space-y-3"}>
           <label className="block">
             <span className={labelCls}>Phone number</span>
             <input
@@ -137,16 +138,16 @@ export function InterviewStartForm({
               minLength={8}
               placeholder="10-digit mobile number"
               aria-label="Phone number"
-            className={`${inputCls} ${apple ? "mt-0" : "mt-2"}`}
+            className={argus ? "argus-capsule-input" : `${inputCls} ${apple ? "mt-0" : "mt-2"}`}
           />
           </label>
           <button
             disabled={busy}
-            className={apple ? buttonCls : "inline-flex w-full items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep disabled:opacity-50"}
+            className={argus ? "argus-btn argus-btn-primary" : apple ? buttonCls : "inline-flex w-full items-center justify-center rounded-full bg-trust px-7 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep disabled:opacity-50"}
           >
             {busy ? "Checking…" : "Take your free AI interview"}
           </button>
-          <p className={apple ? "text-center text-[13px] text-[#6e6e73]" : "text-sm text-muted"}>Free. One code by SMS. No card.</p>
+          <p className={argus ? "argus-micro" : apple ? "text-center text-[13px] text-[#6e6e73]" : "text-sm text-muted"}>Free. One code by SMS. No card.</p>
         </form>
       )}
 

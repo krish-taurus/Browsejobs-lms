@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { isSceneId, prefersReducedMotion } from "@/lib/motion";
-import { setSceneState } from "@/lib/scene-bus";
+import { isSceneAnchor, setSceneState, type ScenePins } from "@/lib/scene-bus";
 
 const SceneCanvas = dynamic(() => import("./SceneCanvas"), { ssr: false });
 
@@ -37,8 +37,14 @@ export function SceneHost() {
       if (!best || bestRatio < 0.12 || best.dataset.pinned === "true") return;
       if (!isSceneId(best.dataset.scene)) return;
       const rect = best.getBoundingClientRect();
-      const progress = reduced ? 1 : Math.min(1, Math.max(0, (view * 0.82 - rect.top) / (view * 0.7)));
-      setSceneState(best.dataset.scene, progress);
+      const progress = reduced
+        ? 1
+        : best.dataset.progress === "leave"
+          ? Math.min(1, Math.max(0, -rect.top / (Math.max(rect.height, view) * 0.7)))
+          : Math.min(1, Math.max(0, (view * 0.82 - rect.top) / (view * 0.7)));
+      const anchor = isSceneAnchor(best.dataset.anchor) ? best.dataset.anchor : "center";
+      const pins: ScenePins = best.dataset.pins === "claims" ? "claims" : "cities";
+      setSceneState(best.dataset.scene, progress, { anchor, pins });
     };
 
     const onScroll = () => {

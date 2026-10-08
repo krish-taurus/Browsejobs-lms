@@ -183,8 +183,8 @@ export function ArgusNav() {
   return (
     <header className={hidden && !open ? "argus-nav is-hidden" : "argus-nav"}>
       <nav className="argus-nav-bar" aria-label="Primary">
-        <Link href="/" className="argus-logo">
-          BrowseJobs
+        <Link href="/" className="argus-logo" aria-label="BrowseJobs">
+          <span aria-hidden="true">B R O W S E J O B S</span>
         </Link>
         <ul className="argus-nav-links">
           {LINKS.map((item) => (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/landing/JsonLd";
-import { AppleHome } from "@/components/apple/AppleHome";
-import { AppleShell } from "@/components/apple/AppleShell";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { HomePage } from "@/components/argus/home/HomePage";
 import { canonical } from "@/lib/seo";
 
 const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
@@ -27,9 +27,9 @@ export default function Home() {
   return (
     <>
       <JsonLd />
-      <AppleShell>
-        <AppleHome />
-      </AppleShell>
+      <ArgusFrame className="argus-home">
+        <HomePage />
+      </ArgusFrame>
     </>
   );
 }

@@ -23,6 +23,7 @@ type Props = {
   type: EnquiryType;
   course?: string;
   intent?: EmployerIntent | null;
+  appearance?: "default" | "argus";
 };
 
 export function EmployerEnquiry() {
@@ -62,7 +63,9 @@ function utm(): Record<string, string> {
   };
 }
 
-export function EnquiryForm({ type, course = "", intent = null }: Props) {
+export function EnquiryForm({ type, course = "", intent = null, appearance = "default" }: Props) {
+  const argus = appearance === "argus";
+  const controlClass = argus ? "argus-input" : control;
   const startedAt = useRef(Date.now());
   const headingRef = useRef<HTMLHeadingElement>(null);
   const formId = useId();
@@ -206,18 +209,19 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
   }
 
   return (
-    <div className="min-h-[36rem]">
+    <div className={argus ? (done ? "argus-form-wrap is-done" : "argus-form-wrap") : "min-h-[36rem]"}>
       {done ? (
-        <div className="py-10 text-center">
-          <h2 ref={headingRef} tabIndex={-1} className="apple-display text-[clamp(2.5rem,6vw,4rem)] outline-none">
+        <div className={argus ? "argus-thanks" : "py-10 text-center"}>
+          {argus ? <span className="argus-check" aria-hidden>✓</span> : null}
+          <h2 ref={headingRef} tabIndex={-1} className={argus ? "argus-h2 outline-none" : "apple-display text-[clamp(2.5rem,6vw,4rem)] outline-none"}>
             Thank you.
           </h2>
-          <p className="mx-auto mt-4 max-w-[36rem] text-[19px] leading-snug text-ink2">
+          <p className={argus ? "argus-body" : "mx-auto mt-4 max-w-[36rem] text-[19px] leading-snug text-ink2"}>
             We have your enquiry. Someone from BrowseJobs will call you on the number you gave.
           </p>
         </div>
       ) : (
-        <form onSubmit={onSubmit} noValidate className="mx-auto max-w-[640px] space-y-7 text-left" aria-busy={sending}>
+        <form onSubmit={onSubmit} noValidate className={argus ? "argus-fields" : "mx-auto max-w-[640px] space-y-7 text-left"} aria-busy={sending}>
           {intent ? (
             <p className="text-[17px] text-ink2">{EMPLOYER_INTENTS[intent]}</p>
           ) : null}
@@ -225,7 +229,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
           <Field id={`${formId}-name`} label="Full name" error={errors.name}>
             <input
               id={`${formId}-name`}
-              className={control}
+              className={controlClass}
               autoComplete="name"
               value={values.name}
               onChange={(event) => set("name", event.target.value)}
@@ -245,7 +249,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               type="email"
               inputMode="email"
               autoComplete="email"
-              className={control}
+              className={controlClass}
               value={values.email}
               onChange={(event) => set("email", event.target.value)}
               aria-invalid={errors.email ? true : undefined}
@@ -254,11 +258,11 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
             />
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-[11.5rem_1fr]">
+          <div className={argus ? "argus-span grid gap-4 sm:grid-cols-[11.5rem_1fr]" : "grid gap-4 sm:grid-cols-[11.5rem_1fr]"}>
             <Field id={`${formId}-country`} label="Country code" error="">
               <select
                 id={`${formId}-country`}
-                className={control}
+                className={controlClass}
                 autoComplete="tel-country-code"
                 value={country}
                 onChange={(event) => setCountry(event.target.value)}
@@ -276,7 +280,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel-national"
-                className={control}
+                className={controlClass}
                 placeholder="98400 11111"
                 value={values.phone}
                 onChange={(event) => set("phone", event.target.value)}
@@ -292,7 +296,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-company`} label="Company" error={errors.company}>
                 <input
                   id={`${formId}-company`}
-                  className={control}
+                  className={controlClass}
                   autoComplete="organization"
                   value={values.company}
                   onChange={(event) => set("company", event.target.value)}
@@ -304,7 +308,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-company_size`} label="Company size" error={errors.company_size}>
                 <select
                   id={`${formId}-company_size`}
-                  className={control}
+                  className={controlClass}
                   value={values.company_size}
                   onChange={(event) => set("company_size", event.target.value)}
                   aria-invalid={errors.company_size ? true : undefined}
@@ -322,7 +326,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-roles`} label="Roles and number of hires" error={errors.roles}>
                 <input
                   id={`${formId}-roles`}
-                  className={control}
+                  className={controlClass}
                   value={values.roles}
                   onChange={(event) => set("roles", event.target.value)}
                   aria-invalid={errors.roles ? true : undefined}
@@ -333,7 +337,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-city`} label="City or remote" error={errors.city}>
                 <input
                   id={`${formId}-city`}
-                  className={control}
+                  className={controlClass}
                   autoComplete="address-level2"
                   placeholder="Bengaluru, or Remote"
                   value={values.city}
@@ -346,7 +350,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-timeline`} label="Hiring timeline" error={errors.timeline}>
                 <select
                   id={`${formId}-timeline`}
-                  className={control}
+                  className={controlClass}
                   value={values.timeline}
                   onChange={(event) => set("timeline", event.target.value)}
                   aria-invalid={errors.timeline ? true : undefined}
@@ -367,7 +371,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-course_slug`} label="Course of interest" error={errors.course_slug}>
                 <select
                   id={`${formId}-course_slug`}
-                  className={control}
+                  className={controlClass}
                   value={values.course_slug}
                   onChange={(event) => set("course_slug", event.target.value)}
                   aria-invalid={errors.course_slug ? true : undefined}
@@ -385,7 +389,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-learner_status`} label="Where you are now" error={errors.learner_status}>
                 <select
                   id={`${formId}-learner_status`}
-                  className={control}
+                  className={controlClass}
                   value={values.learner_status}
                   onChange={(event) => set("learner_status", event.target.value)}
                   aria-invalid={errors.learner_status ? true : undefined}
@@ -403,7 +407,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-city`} label="City" error={errors.city}>
                 <input
                   id={`${formId}-city`}
-                  className={control}
+                  className={controlClass}
                   autoComplete="address-level2"
                   value={values.city}
                   onChange={(event) => set("city", event.target.value)}
@@ -415,7 +419,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
                 <select
                   id={`${formId}-preferred_time`}
-                  className={control}
+                  className={controlClass}
                   value={values.preferred_time}
                   onChange={(event) => set("preferred_time", event.target.value)}
                   aria-invalid={errors.preferred_time ? true : undefined}
@@ -436,7 +440,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-city`} label="City" error={errors.city}>
                 <input
                   id={`${formId}-city`}
-                  className={control}
+                  className={controlClass}
                   autoComplete="address-level2"
                   value={values.city}
                   onChange={(event) => set("city", event.target.value)}
@@ -448,7 +452,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
               <Field id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
                 <select
                   id={`${formId}-preferred_time`}
-                  className={control}
+                  className={controlClass}
                   value={values.preferred_time}
                   onChange={(event) => set("preferred_time", event.target.value)}
                   aria-invalid={errors.preferred_time ? true : undefined}
@@ -466,10 +470,10 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
             </>
           )}
 
-          <Field id={`${formId}-message`} label="Message, if you want to add one" error={errors.message}>
+          <Field id={`${formId}-message`} label="Message, if you want to add one" error={errors.message} wide={argus}>
             <textarea
               id={`${formId}-message`}
-              className={`${control} h-32 resize-y py-3`}
+              className={`${controlClass} h-32 resize-y py-3`}
               value={values.message}
               maxLength={2000}
               onChange={(event) => set("message", event.target.value)}
@@ -478,7 +482,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
             />
           </Field>
 
-          <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+          <div className="argus-span absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
             <label htmlFor={`${formId}-hp`}>Leave this blank</label>
             <input
               id={`${formId}-hp`}
@@ -489,8 +493,8 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
             />
           </div>
 
-          <div>
-            <label className="flex min-h-11 items-start gap-3 text-[17px] leading-snug text-ink">
+          <div className={argus ? "argus-span" : undefined}>
+            <label className={argus ? "argus-check" : "flex min-h-11 items-start gap-3 text-[17px] leading-snug text-ink"}>
               <input
                 id={`${formId}-consent`}
                 type="checkbox"
@@ -514,7 +518,7 @@ export function EnquiryForm({ type, course = "", intent = null }: Props) {
             </p>
           ) : null}
 
-          <button type="submit" className="apple-pill w-full border-0 disabled:cursor-wait disabled:opacity-60" disabled={sending}>
+          <button type="submit" className={argus ? "argus-span argus-btn argus-btn-primary" : "apple-pill w-full border-0 disabled:cursor-wait disabled:opacity-60"} disabled={sending}>
             {sending ? "Sending…" : type === "counselling" ? "Request a callback" : "Send enquiry"}
           </button>
         </form>
@@ -527,15 +531,17 @@ function Field({
   id,
   label,
   error,
+  wide = false,
   children,
 }: {
   id: string;
   label: string;
   error?: string;
+  wide?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-2">
+    <div className={wide ? "argus-span space-y-2" : "space-y-2"}>
       <label htmlFor={id} className="block text-[21px] font-semibold tracking-[-0.02em] text-ink">
         {label}
       </label>

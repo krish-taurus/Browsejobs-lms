@@ -11,10 +11,13 @@ export function SplitHeading({
   as: Tag = "h2",
   text,
   className,
+  breakAfter,
 }: {
   as?: "h1" | "h2";
   text: string;
   className?: string;
+  /** Insert a line break after this word index. The space stays in the accessible name. */
+  breakAfter?: number;
 }) {
   const ref = useRef<HTMLHeadingElement>(null);
   const words = text.split(/\s+/).filter(Boolean);
@@ -49,6 +52,7 @@ export function SplitHeading({
           <span data-word style={{ display: "inline-block" }}>
             {word}
           </span>
+          {index === breakAfter ? <br /> : null}
           {index < words.length - 1 ? " " : null}
         </span>
       ))}

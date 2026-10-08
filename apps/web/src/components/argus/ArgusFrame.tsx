@@ -2,14 +2,19 @@ import type { ReactNode } from "react";
 import { ArgusFooter, ArgusNav } from "./ui";
 import "./argus.css";
 
-export function ArgusFrame({ children }: { children: ReactNode }) {
+export function ArgusFrame({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="argus">
+    <div className={className ? `argus ${className}` : "argus"}>
+      <a href="#content" className="argus-skip">
+        Skip to content
+      </a>
       <div className="argus-glow" aria-hidden />
       <div className="argus-grain" aria-hidden />
       <div className="argus-mobile-glow" aria-hidden />
       <ArgusNav />
-      <div className="argus-content">{children}</div>
+      <main id="content" className="argus-content">
+        {children}
+      </main>
       <ArgusFooter />
     </div>
   );

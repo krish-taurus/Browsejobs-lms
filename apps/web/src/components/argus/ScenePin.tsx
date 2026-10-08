@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { isMobileViewport, prefersReducedMotion, type SceneId } from "@/lib/motion";
-import { setSceneState } from "@/lib/scene-bus";
+import { isSceneAnchor, setSceneState, type SceneAnchor, type ScenePins } from "@/lib/scene-bus";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -31,12 +31,18 @@ export function useScrub(build: (timeline: gsap.core.Timeline) => void): void {
  * Pinning is skipped under reduced motion and below 768px.
  */
 export function ScenePin({
+  id,
   scene,
+  anchor = "center",
+  pins = "cities",
   className,
   shot,
   children,
 }: {
+  id?: string;
   scene?: SceneId;
+  anchor?: SceneAnchor;
+  pins?: ScenePins;
   className?: string;
   shot?: string;
   children: ReactNode;
@@ -55,7 +61,10 @@ export function ScenePin({
         pin: true,
         scrub: 1,
         onUpdate: (self) => {
-          if (scene) setSceneState(scene, self.progress);
+          if (!scene) return;
+          const placed = isSceneAnchor(node.dataset.anchor) ? node.dataset.anchor : "center";
+          const marked: ScenePins = node.dataset.pins === "claims" ? "claims" : "cities";
+          setSceneState(scene, self.progress, { anchor: placed, pins: marked });
         },
       },
     });
@@ -68,7 +77,16 @@ export function ScenePin({
   }, [scene]);
 
   return (
-    <section ref={ref} className={className} data-scene={scene} data-shot={shot} data-pinned={timeline ? "true" : undefined}>
+    <section
+      id={id}
+      ref={ref}
+      className={className}
+      data-scene={scene}
+      data-anchor={anchor}
+      data-pins={pins}
+      data-shot={shot}
+      data-pinned={timeline ? "true" : undefined}
+    >
       <TimelineContext.Provider value={timeline}>{children}</TimelineContext.Provider>
     </section>
   );

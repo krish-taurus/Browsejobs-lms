@@ -21,7 +21,7 @@ test("primary nav is the same order on desktop and mobile", async ({ page }) => 
   await expect(nav.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
   await expect(nav.getByRole("link", { name: "For Employers", exact: true })).toHaveAttribute("href", "/employers");
   await expect(nav.getByRole("link", { name: "Demo", exact: true })).toHaveAttribute("href", "/demo");
-  const order = await nav.locator(".apple-nav-links a, .apple-nav-links button").evaluateAll((nodes) =>
+  const order = await nav.locator(".argus-nav-links a, .argus-nav-actions button").evaluateAll((nodes) =>
     nodes.map((node) => (node.textContent ?? "").replace("▾", "").replace(/\s+/g, " ").trim()),
   );
   expect(order.slice(0, 6)).toEqual(["Home", "Students", "Courses", "For Employers", "Demo", "Login"]);
@@ -31,7 +31,7 @@ test("primary nav is the same order on desktop and mobile", async ({ page }) => 
     "/employers/enquire",
   );
 
-  const centers = await nav.locator(".apple-nav-brand, .apple-nav-links a, .apple-nav-links button, .apple-nav-cta").evaluateAll((nodes) =>
+  const centers = await nav.locator(".argus-logo, .argus-nav-links a, .argus-nav-actions button:not(.argus-nav-menu), .argus-nav-actions > a").evaluateAll((nodes) =>
     nodes.map((node) => {
       const box = node.getBoundingClientRect();
       return box.y + box.height / 2;
@@ -47,7 +47,7 @@ test("primary nav is the same order on desktop and mobile", async ({ page }) => 
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Menu" }).click();
-  const menu = page.locator("#apple-menu");
+  const menu = page.locator("#argus-menu");
   await expect(menu.getByRole("link", { name: "Students" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
   await expect(menu.getByRole("link", { name: "For Employers" })).toBeVisible();

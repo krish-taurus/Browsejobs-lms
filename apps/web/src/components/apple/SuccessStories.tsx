@@ -7,7 +7,7 @@ import { isPreviewHost } from "@/lib/preview-host";
 import { GoogleReviews } from "./GoogleReviews";
 import { openWhatsAppShot } from "./WhatsAppMessages";
 
-export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
+export function SuccessStories({ fuller = false, tone = "apple" }: { fuller?: boolean; tone?: "apple" | "argus" }) {
   const [preview, setPreview] = useState(false);
   useEffect(() => {
     setPreview(isPreviewHost(window.location.hostname));
@@ -21,10 +21,10 @@ export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
   }
 
   return (
-    <section id="success-stories" className="apple-rise bg-white text-center">
-      <div className="apple-tile">
-        <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]">Success stories.</h2>
-        <p className="apple-sub mt-4 text-[#424245]">
+    <section id="success-stories" className={tone === "argus" ? "argus-section argus-stories" : "apple-rise bg-white text-center"}>
+      <div className={tone === "argus" ? "argus-stories-inner" : "apple-tile"}>
+        <h2 className={tone === "argus" ? "argus-h2" : "apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.5rem)]"}>Success stories.</h2>
+        <p className={tone === "argus" ? "argus-body" : "apple-sub mt-4 text-[#424245]"}>
           How people moved into the role. The path is the same: AI interview, counselling, a course, a retake, then hired.
         </p>
         {fuller ? (
@@ -38,7 +38,7 @@ export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
             {stories.map((story) => {
               const draft = !story.published;
               return (
-                <li key={story.id} className={draft ? "apple-story-card is-draft" : "apple-story-card"}>
+                <li key={story.id} className={draft ? "apple-story-card is-draft" : tone === "argus" ? "apple-story-card argus-card" : "apple-story-card"}>
                   <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[#6e6e73]">
                     {draft ? "Story coming soon" : "Success story"}
                   </p>
@@ -74,7 +74,7 @@ export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
           </ul>
         ) : null}
 
-        {reviews.length > 0 ? <GoogleReviews /> : null}
+        {reviews.length > 0 ? <GoogleReviews tone={tone} /> : null}
       </div>
     </section>
   );

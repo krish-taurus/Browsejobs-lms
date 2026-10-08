@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import { useFrame } from "@react-three/fiber";
 import { Float, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { SCENE_IDS, type SceneId } from "@/lib/scene-bus";
+import { SCENE_IDS, type SceneAnchor, type SceneId, type ScenePins } from "@/lib/scene-bus";
 
 const RING_VERT = `
   varying vec2 vUv;
@@ -36,6 +36,7 @@ const RING_FRAG = `
 const SCORE_FRAG = `
   uniform float uProgress;
   uniform float uFade;
+  uniform float uFlash;
   uniform vec3 uColor;
   uniform vec3 uHot;
   varying vec2 vUv;
@@ -44,7 +45,7 @@ const SCORE_FRAG = `
     float fill = step(vUv.x, uProgress);
     float head = smoothstep(0.04, 0.0, abs(vUv.x - uProgress));
     float rim = pow(1.0 - abs(dot(normalize(vN), vec3(0.0, 0.0, 1.0))), 1.2);
-    vec3 col = mix(uColor, uHot, clamp(head + rim + fill * 0.35, 0.0, 1.0));
+    vec3 col = mix(uColor, uHot, clamp(head + rim + fill * 0.35 + uFlash * 0.9, 0.0, 1.0));
     float alpha = (0.42 + fill * 0.7 + head) * (0.55 + rim) * uFade;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
@@ -94,14 +95,29 @@ function shaderUniforms(extra?: Record<string, THREE.IUniform>) {
 export function HorizonRing({
   progress,
   fades,
+  anchor,
 }: {
   progress: MutableRefObject<number>;
   fades: MutableRefObject<Record<SceneId, number>>;
+  anchor: SceneAnchor;
 }) {
-  const mat = useProgressUniform(progress, fades, "ring");
+  const mat = useRef<THREE.ShaderMaterial>(null);
+  const mesh = useRef<THREE.Mesh>(null);
+  const intro = useRef(0);
   const uniforms = useMemo(() => shaderUniforms(), []);
+  useFrame(({ clock }, delta) => {
+    const material = mat.current;
+    if (!material) return;
+    intro.current = Math.min(1, intro.current + delta / 1.6);
+    const drawn = 1 - Math.pow(1 - intro.current, 3);
+    material.uniforms.uProgress.value = drawn;
+    const leave = anchor === "top" ? progress.current : 0;
+    material.uniforms.uFade.value = fades.current.ring * (1 - leave * 0.72);
+    if (material.uniforms.uTime) material.uniforms.uTime.value = clock.elapsedTime;
+    if (mesh.current) mesh.current.rotation.x = 1.25 + leave * 0.55;
+  });
   return (
-    <mesh rotation={[1.25, 0, 0]} position={[0, -0.15, 0]}>
+    <mesh ref={mesh} rotation={[1.25, 0, 0]} position={[0, 0.45, 0]}>
       <torusGeometry args={[2.35, 0.045, 16, 220]} />
       <shaderMaterial
         ref={mat}
@@ -118,12 +134,21 @@ export function HorizonRing({
 export function ScoreRing({
   progress,
   fades,
+  anchor,
 }: {
   progress: MutableRefObject<number>;
   fades: MutableRefObject<Record<SceneId, number>>;
+  anchor: SceneAnchor;
 }) {
   const mat = useProgressUniform(progress, fades, "score");
-  const uniforms = useMemo(() => shaderUniforms(), []);
+  const uniforms = useMemo(() => shaderUniforms({ uFlash: { value: 0 } }), []);
+  useFrame(() => {
+    const material = mat.current;
+    if (!material || anchor !== "halo") return;
+    const fill = Math.min(0.75, (progress.current / 0.4) * 0.75);
+    material.uniforms.uProgress.value = fill;
+    material.uniforms.uFlash.value = fill >= 0.74 ? 1 : 0;
+  });
   return (
     <mesh>
       <torusGeometry args={[1.55, 0.11, 28, 160]} />
@@ -236,6 +261,11 @@ const PINS = [
   { lat: 51.51, lng: -0.13, label: "London" },
 ];
 
+const CLAIM_PINS = [
+  { lat: 12.97, lng: 77.59, label: "3,000 HRs" },
+  { lat: 51.51, lng: -0.13, label: "4.9 ★ Google" },
+];
+
 function GlobePin({ lat, lng, label }: { lat: number; lng: number; label: string }) {
   const surface = useMemo(() => latLng(lat, lng, 1.62), [lat, lng]);
   const outer = useMemo(() => latLng(lat, lng, 2.15), [lat, lng]);
@@ -253,7 +283,13 @@ function GlobePin({ lat, lng, label }: { lat: number; lng: number; label: string
   );
 }
 
-export function DotGlobe({ fades }: { fades: MutableRefObject<Record<SceneId, number>> }) {
+export function DotGlobe({
+  fades,
+  pins = PINS,
+}: {
+  fades: MutableRefObject<Record<SceneId, number>>;
+  pins?: { lat: number; lng: number; label: string }[];
+}) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const group = useRef<THREE.Group>(null);
   const material = useRef<THREE.PointsMaterial>(null);
@@ -317,7 +353,7 @@ export function DotGlobe({ fades }: { fades: MutableRefObject<Record<SceneId, nu
           <pointsMaterial ref={material} color="#b9a8ff" size={0.028} sizeAttenuation transparent depthWrite={false} />
         </points>
       ) : null}
-      {PINS.map((pin) => (
+      {pins.map((pin) => (
         <GlobePin key={pin.label} lat={pin.lat} lng={pin.lng} label={pin.label} />
       ))}
     </group>
@@ -349,13 +385,26 @@ const CAM: Record<SceneId, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
   grid: { pos: new THREE.Vector3(0, 1.7, 4.2), look: new THREE.Vector3(0, -0.4, -2) },
 };
 
+function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, number]; scale: number } {
+  if (id === "ring" && anchor === "top") return { position: [0.2, 1.15, 0], scale: 1 };
+  if (id === "score" && anchor === "halo") return { position: [0, 0.7, 0], scale: 0.68 };
+  if ((id === "eclipse" || id === "globe" || id === "sphere") && anchor === "right") {
+    return { position: [2.15, 0.1, 0], scale: 0.92 };
+  }
+  return { position: [0, 0, 0], scale: 1 };
+}
+
 export function Stage({
   scene,
   progress,
+  anchor,
+  pins,
   settle = false,
 }: {
   scene: SceneId;
   progress: MutableRefObject<number>;
+  anchor: SceneAnchor;
+  pins: ScenePins;
   /** Slow renderers snap to the active object instead of lerping across frames. */
   settle?: boolean;
 }) {
@@ -403,18 +452,23 @@ export function Stage({
     camera.lookAt(look.current);
   });
 
+  const globePins = pins === "claims" ? CLAIM_PINS : PINS;
+
   return (
     <>
-      {alive.map((id) => (
-        <group key={id}>
-          {id === "ring" ? <HorizonRing progress={progress} fades={fades} /> : null}
-          {id === "score" ? <ScoreRing progress={progress} fades={fades} /> : null}
-          {id === "sphere" ? <GlassSphere fades={fades} /> : null}
-          {id === "eclipse" ? <Eclipse progress={progress} fades={fades} /> : null}
-          {id === "globe" ? <DotGlobe fades={fades} /> : null}
-          {id === "grid" ? <GridFloor fades={fades} /> : null}
-        </group>
-      ))}
+      {alive.map((id) => {
+        const spot = placed(id, anchor);
+        return (
+          <group key={id} position={spot.position} scale={spot.scale}>
+            {id === "ring" ? <HorizonRing progress={progress} fades={fades} anchor={anchor} /> : null}
+            {id === "score" ? <ScoreRing progress={progress} fades={fades} anchor={anchor} /> : null}
+            {id === "sphere" ? <GlassSphere fades={fades} /> : null}
+            {id === "eclipse" ? <Eclipse progress={progress} fades={fades} /> : null}
+            {id === "globe" ? <DotGlobe fades={fades} pins={globePins} /> : null}
+            {id === "grid" ? <GridFloor fades={fades} /> : null}
+          </group>
+        );
+      })}
     </>
   );
 }

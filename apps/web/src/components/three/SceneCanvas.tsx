@@ -80,7 +80,7 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
         <ScrollFrames active={!live} />
         <ambientLight intensity={0.35} />
         <pointLight position={[3, 2, 4]} intensity={16} color="#b9a8ff" />
-        <Stage scene={snap.scene} progress={progress} settle={!live} />
+        <Stage scene={snap.scene} progress={progress} anchor={snap.anchor} pins={snap.pins} settle={!live} />
         <EffectComposer>
           <Bloom intensity={1.2} luminanceThreshold={0.2} mipmapBlur />
         </EffectComposer>
