@@ -104,6 +104,11 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
 
   const stories = page.locator("#success-stories");
   await expect(stories).toContainText("Story coming soon");
+  await expect(stories).toContainText("From a 3.5-year support role to an Accenture offer");
+  await expect(stories).toContainText("Stuck after a CS post-grad");
+  await expect(stories).toContainText("Pranjal");
+  await expect(stories).not.toContainText("15LPA");
+  await expect(stories).not.toContainText("LPA");
   await expect(stories).toContainText("From homemaker to engineer");
   await expect(stories).toContainText("From delivery rider to engineer");
   await expect(stories).toContainText("AI interview");
@@ -112,6 +117,37 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   await expect(stories.getByText("Google review").first()).toBeVisible();
   await stories.getByRole("button", { name: "Read more" }).first().evaluate((button: HTMLButtonElement) => button.click());
   await expect(stories.getByText(/require assistance in job placement/)).toBeVisible();
+
+  const messages = page.locator("#real-messages");
+  await expect(messages.getByRole("heading", { name: "Real messages from our students." })).toBeVisible();
+  await expect(messages.getByRole("figure")).toHaveCount(14);
+  await expect(messages.getByRole("figure").first()).toContainText("Joining third company after course");
+  await expect(messages.getByRole("figure").nth(1)).toContainText("Support role to Accenture offer");
+  await stories.getByRole("button", { name: "See the message" }).first().click();
+  await expect(page.getByRole("dialog")).toContainText("Support role to Accenture offer");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("homepage leads with the career-switch messages", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  const messages = page.locator("#real-messages");
+  await expect(messages.getByRole("heading", { name: "Real messages from our students." })).toBeVisible();
+  const figures = messages.getByRole("figure");
+  await expect(figures).toHaveCount(14);
+  await expect(figures.nth(0)).toContainText("Joining third company after course");
+  await expect(figures.nth(0)).toContainText("Pranjal");
+  await expect(figures.nth(1)).toContainText("Support role to Accenture offer");
+  await expect(figures.nth(1).locator(".apple-shot-name")).toHaveCount(0);
+  await expect(messages.getByRole("link", { name: "Take the free AI interview" })).toHaveAttribute("href", "/#interview-start");
+  await expect(messages.locator("img").first()).toHaveAttribute("loading", "lazy");
+  await figures.nth(0).getByRole("button").click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("Joining third company after course");
+  await expect(dialog).toContainText("Pranjal");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
 });
 
 test("employers page explains 90 days against 3 days", async ({ page }) => {

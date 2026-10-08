@@ -17,11 +17,35 @@ export type SuccessStory = {
   quote?: string;
   photo?: string;
   how?: string;
+  /** Opens this WhatsApp screenshot. */
+  shotId?: string;
 };
 
 const PATH = ["AI interview", "Counselling", "Course", "Retake", "Hired"] as const;
 
 export const successStories: SuccessStory[] = [
+  {
+    id: "support-role-accenture",
+    title: "From a 3.5-year support role to an Accenture offer",
+    beforeRole: "Support role",
+    afterRole: "Accenture offer",
+    path: [],
+    published: true,
+    quote: "I was stucked for 3.5 yeas in support role but now with the help of browsejobs i am starting my new career journey.",
+    shotId: "02-support-role-to-accenture",
+  },
+  {
+    id: "pranjal-career-restart",
+    title: "Stuck after a CS post-grad → now joining a third company",
+    beforeRole: "CS post-grad",
+    afterRole: "Third company",
+    path: [],
+    published: true,
+    name: "Pranjal",
+    quote:
+      "After Krish sir's class this is third company I am joining 😅 … 2 years back I was stuck in life I had strong regret I am not doing anything in life despite post graduation in computer science. Same month I came across Krish sir's master class & without single doubt I just joined it to give one chance to myself",
+    shotId: "01-pranjal-career-restart",
+  },
   {
     id: "homemaker-engineer",
     title: "From homemaker to engineer",

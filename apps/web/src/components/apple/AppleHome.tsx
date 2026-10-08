@@ -6,6 +6,7 @@ import { MacFloor } from "./MacFloor";
 import { EmployerImpact } from "./EmployerImpact";
 import { CareerCourses } from "./CareerCourses";
 import { SuccessStories } from "./SuccessStories";
+import { WhatsAppMessages } from "./WhatsAppMessages";
 import { AfterYouClear, BelowSeventyFive, CounsellingBlock, HowTheInterviewWorks, StudentFaq, WhatSeventyFive } from "./StudentStory";
 
 export function AppleHome() {
@@ -37,6 +38,7 @@ export function AppleHome() {
       <HowTheInterviewWorks />
       <AfterYouClear />
       <SuccessStories />
+      <WhatsAppMessages variant="carousel" />
 
       <section id="for-employers" className="apple-dark bg-black text-center text-white">
         <div id="ai-recruiter" className="apple-tile">

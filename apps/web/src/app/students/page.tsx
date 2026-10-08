@@ -4,6 +4,7 @@ import { AppleShell } from "@/components/apple/AppleShell";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { CareerCourses } from "@/components/apple/CareerCourses";
 import { SuccessStories } from "@/components/apple/SuccessStories";
+import { WhatsAppMessages } from "@/components/apple/WhatsAppMessages";
 import { AfterYouClear, BelowSeventyFive, CounsellingBlock, HowTheInterviewWorks, StudentFaq, WhatSeventyFive } from "@/components/apple/StudentStory";
 import { recruiterFaqs } from "@/content/home";
 import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
@@ -57,6 +58,7 @@ export default function StudentsPage() {
         <HowTheInterviewWorks />
         <AfterYouClear />
         <SuccessStories fuller />
+        <WhatsAppMessages variant="grid" />
         <StudentFaq />
       </AppleShell>
     </>
