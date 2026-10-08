@@ -1,14 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    const events: unknown[] = [];
-    Object.assign(window, {
-      __leadEvents: events,
-      gtag: (...args: unknown[]) => events.push(args),
-    });
-  });
-
   if (process.env.CI) {
     await page.route("**/api/enquiries", (route) =>
       route.fulfill({
@@ -44,9 +36,9 @@ test("employer enquiry page validates, then submits", async ({ page }) => {
   await page.getByRole("button", { name: "Send enquiry" }).click();
   await expect(page.getByRole("heading", { name: "Thank you." })).toBeVisible();
 
-  const events = await page.evaluate(() => (window as unknown as { __leadEvents: unknown[] }).__leadEvents);
-  expect(JSON.stringify(events)).toContain("generate_lead");
-  expect(JSON.stringify(events)).toContain("employer");
+  const layer = await page.evaluate(() => JSON.stringify((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []));
+  expect(layer).toContain("generate_lead");
+  expect(layer).toContain("employer");
 });
 
 test("course enquiry page lists live courses and submits", async ({ page }) => {
@@ -73,8 +65,9 @@ test("course enquiry page lists live courses and submits", async ({ page }) => {
   await page.getByRole("button", { name: "Send enquiry" }).click();
   await expect(page.getByRole("heading", { name: "Thank you." })).toBeVisible();
 
-  const events = await page.evaluate(() => (window as unknown as { __leadEvents: unknown[] }).__leadEvents);
-  expect(JSON.stringify(events)).toContain("course");
+  const layer = await page.evaluate(() => JSON.stringify((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []));
+  expect(layer).toContain("generate_lead");
+  expect(layer).toContain("course");
 });
 
 test("enquiry pages are in the sitemap and linked from the product pages", async ({ page, request }) => {
