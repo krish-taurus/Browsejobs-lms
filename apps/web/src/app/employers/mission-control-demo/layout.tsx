@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { AppleNav } from "@/components/apple/AppleNav";
-import "@/components/apple/apple.css";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
 import { absoluteUrl } from "@/lib/seo";
 
 const TITLE = "BrowseJobs AI Recruiter — demo";
@@ -21,9 +20,11 @@ export const metadata: Metadata = {
 
 export default function MissionControlDemoLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-theme="dark" className="demo-frame min-h-screen bg-[#01040a] text-white">
-      <AppleNav dark />
-      {children}
-    </div>
+    <ArgusFrame className="argus-demo">
+      <div className="argus-demo-stage">
+        <p className="argus-badge">Demo data. Not a live hiring desk.</p>
+        <div className="argus-demo-device">{children}</div>
+      </div>
+    </ArgusFrame>
   );
 }

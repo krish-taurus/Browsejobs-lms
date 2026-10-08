@@ -1138,6 +1138,75 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 .argus-hero,
 .argus-floor-story { background: transparent; }
 
+.argus-demo .argus-content {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 5.25rem 0.75rem 0.75rem;
+  overflow: hidden;
+}
+.argus-demo-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  min-width: 0;
+}
+.argus-demo-stage .argus-badge {
+  align-self: center;
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+}
+.argus-demo-device {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px;
+  border-radius: 22px;
+  background: #1d1d1f;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
+}
+.argus-demo-device .bj-lab.is-full {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.argus-how,
+.argus-faq-page { --bj-trust: #111111; --bj-deep: #2c2c2e; --bj-sky: #f5f5f7; }
+.argus-how-hero,
+.argus-how-block,
+.argus-faq-hero { min-height: 0; align-items: stretch; }
+.argus-how-block { padding-top: 4.5rem; }
+.argus-how-copy,
+.argus-faq-page .argus-faq-wrap { width: min(1100px, 100%); margin: 0 auto; }
+.argus-faq-page .argus-faq-wrap { max-width: 720px; }
+.argus-faq-list { margin-top: 1.5rem; border-top: 1px solid rgba(0, 0, 0, 0.08); }
+.argus-stages #stages {
+  border-top-color: transparent;
+  background: #f5f5f7;
+  color: #0a0a0a;
+}
+.argus-stages #stages .text-fg { color: #0a0a0a; }
+.argus-stages #stages .text-muted { color: #3a3a3c; }
+.argus-stages #stages .text-trust { color: #111111; }
+.argus-stages #stages ol,
+.argus-stages #stages ol > li { border-color: rgba(0, 0, 0, 0.08); }
+
+@media (max-width: 767px) {
+  .argus-demo .argus-content { padding: 4.85rem 0.5rem 0.5rem; }
+  .argus-demo-device { padding: 6px; border-radius: 16px; }
+  .argus-demo-device .bj-lab.is-full { border-radius: 12px; }
+  .argus-demo .argus-wordmark { letter-spacing: 0.04em; font-size: clamp(14px, 7.2vw, 28px); }
+}
+
 .argus-courses-hero { min-height: 100vh; }
 .argus-courses-copy { position: relative; z-index: 2; max-width: 32rem; }
 .argus-course-board,

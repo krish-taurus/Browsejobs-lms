@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { AppleShell } from "@/components/apple/AppleShell";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { ArgusButton, ArgusMore } from "@/components/argus/ui";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { BotGrid } from "@/components/employers/BotGrid";
 import { HiringJourney } from "@/components/employers/HiringJourney";
@@ -33,56 +33,50 @@ export default function EmployerHowPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <AppleShell>
-        <section className="px-5 pb-4 pt-16 text-center md:pt-24">
-          <h1 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.15rem,6vw,4.75rem)]">We reverse-engineered hiring.</h1>
-          <p className="mx-auto mt-5 max-w-[36rem] text-[19px] leading-snug md:text-[21px]">
-            From a message to about 3 days. We call and screen, run the rounds and pre-BGV, and prepare the offer. A person always releases it.
-          </p>
-          <p className="mt-4 flex flex-wrap items-center justify-center gap-x-7">
-            <Link href="/employers/enquire" className="apple-pill">
-              Get started
-            </Link>
-            <Link href="/employers/mission-control-demo" className="apple-more">
-              Watch the demo <span aria-hidden>›</span>
-            </Link>
-          </p>
+      <ArgusFrame className="argus-how">
+        <section className="argus-section argus-how-hero">
+          <div className="argus-how-copy">
+            <h1 className="argus-h1">We reverse-engineered hiring.</h1>
+            <p className="argus-body argus-hero-sub">
+              From a message to about 3 days. We call and screen, run the rounds and pre-BGV, and prepare the offer. A person always releases it.
+            </p>
+            <div className="argus-row argus-start">
+              <ArgusButton href="/employers/enquire">Get started</ArgusButton>
+              <ArgusMore href="/employers/mission-control-demo">Watch the demo</ArgusMore>
+            </div>
+          </div>
         </section>
 
-        <section id="bots" className="scroll-mt-28 border-t border-black/10 bg-white">
-          <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-            <h2 className="apple-display max-w-3xl text-[clamp(2rem,4vw,3.5rem)] text-[#1d1d1f]">A message. Then the bots.</h2>
-            <p className="mt-4 max-w-2xl text-[19px] leading-snug text-[#424245]">Each bot has one job. You do not chase people by hand.</p>
+        <section id="bots" className="argus-section argus-how-block">
+          <div className="argus-how-copy">
+            <h2 className="argus-h2">A message. Then the bots.</h2>
+            <p className="argus-body">Each bot has one job. You do not chase people by hand.</p>
             <BotGrid />
           </div>
         </section>
 
-        <section id="journey" className="scroll-mt-28 bg-[#f5f5f7]">
-          <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-            <h2 className="apple-display max-w-3xl text-[clamp(2rem,4vw,3.5rem)]">From the message to day 3.</h2>
-            <p className="mt-4 max-w-2xl text-[19px] leading-snug text-[#424245]">
-              The old way is 90 days of manual calls. This path is about 3 days.
-            </p>
-            <Disclaimer className="mt-4 max-w-2xl" />
+        <section id="journey" className="argus-section argus-how-block">
+          <div className="argus-how-copy">
+            <h2 className="argus-h2">From the message to day 3.</h2>
+            <p className="argus-body">The old way is 90 days of manual calls. This path is about 3 days.</p>
+            <Disclaimer tone="argus" />
             <HiringJourney />
           </div>
         </section>
 
-        <section id="report" className="scroll-mt-28 bg-white">
-          <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-            <p className="text-[14px] font-semibold text-[#1b6df0]">Sample report: example candidate</p>
-            <h2 className="apple-display mt-3 max-w-3xl text-[clamp(2rem,4vw,3.5rem)]">What you receive.</h2>
-            <p className="mt-4 max-w-2xl text-[19px] leading-snug text-[#424245]">
-              A performance report and the CV. The person below is an example. Not a real person.
-            </p>
+        <section id="report" className="argus-section argus-how-block">
+          <div className="argus-how-copy">
+            <p className="argus-kicker">Sample report: example candidate</p>
+            <h2 className="argus-h2">What you receive.</h2>
+            <p className="argus-body">A performance report and the CV. The person below is an example. Not a real person.</p>
             <SampleReport />
           </div>
         </section>
 
-        <div className="home-canvas !min-h-0">
+        <div className="argus-stages">
           <HomeStages />
         </div>
-      </AppleShell>
+      </ArgusFrame>
     </>
   );
 }

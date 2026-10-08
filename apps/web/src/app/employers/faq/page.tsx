@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { AppleShell } from "@/components/apple/AppleShell";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { ArgusButton } from "@/components/argus/ui";
 import { EMPLOYER_FAQ } from "@/content/employer-landing";
 import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
 
@@ -30,31 +30,27 @@ export default function EmployerFaqPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <AppleShell>
-        <section className="px-5 pb-20 pt-16 md:pt-24">
-          <div className="mx-auto max-w-[720px]">
-            <h1 className="apple-display text-center text-[clamp(2.75rem,6vw,5rem)]">Questions.</h1>
-            <div className="mt-10 divide-y divide-black/10 border-y border-black/10">
+      <ArgusFrame className="argus-faq-page">
+        <section className="argus-section argus-faq-hero">
+          <div className="argus-faq-wrap">
+            <h1 className="argus-h1">Questions.</h1>
+            <div className="argus-faq-list">
               {EMPLOYER_FAQ.map((item) => (
-                <details key={item.q} className="group py-5">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-start justify-between gap-4 text-[19px] font-semibold [&::-webkit-details-marker]:hidden">
+                <details key={item.q} className="argus-faq-item">
+                  <summary>
                     {item.q}
-                    <span aria-hidden className="text-[#6e6e73] group-open:rotate-45">
-                      +
-                    </span>
+                    <span aria-hidden>+</span>
                   </summary>
-                  <p className="max-w-[60ch] pb-2 pt-3 text-[17px] leading-relaxed text-[#424245]">{item.a}</p>
+                  <p>{item.a}</p>
                 </details>
               ))}
             </div>
-            <p className="mt-10 text-center">
-              <Link href="/employers/enquire" className="apple-pill">
-                Get started
-              </Link>
+            <p className="argus-start">
+              <ArgusButton href="/employers/enquire">Get started</ArgusButton>
             </p>
           </div>
         </section>
-      </AppleShell>
+      </ArgusFrame>
     </>
   );
 }
