@@ -1,19 +1,22 @@
-import { headers } from "next/headers";
-import { visibleReviews } from "@/content/reviews";
-import { visibleStories } from "@/content/success-stories";
-import { visibleShots } from "@/content/whatsapp-shots";
+"use client";
+
+import { useEffect, useState } from "react";
+import { googleReviews } from "@/content/reviews";
+import { successStories } from "@/content/success-stories";
+import { whatsappShots } from "@/content/whatsapp-shots";
 import { isPreviewHost } from "@/lib/preview-host";
 import { SITE_ORIGIN } from "@/lib/seo";
 import { WhatsAppGallery } from "./WhatsAppGallery";
 
-export async function SuccessStories({ fuller = false }: { fuller?: boolean }) {
-  const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
-  const preview = isPreviewHost(host);
-  const stories = visibleStories(preview);
-  const reviews = visibleReviews(preview).filter((review) => review.name.trim() !== "" && review.text.trim() !== "");
-  const shots = visibleShots(preview).filter((shot) => shot.src.trim() !== "");
-  const drafts = preview ? stories.filter((story) => !story.published) : [];
+export function SuccessStories({ fuller = false }: { fuller?: boolean }) {
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    setPreview(isPreviewHost(window.location.hostname));
+  }, []);
+  const stories = successStories.filter((story) => story.published || preview);
+  const reviews = googleReviews.filter((review) => (review.published || preview) && review.name.trim() !== "" && review.text.trim() !== "");
+  const shots = whatsappShots.filter((shot) => (shot.published || preview) && shot.src.trim() !== "");
+  const drafts = stories.filter((story) => !story.published);
 
   if (stories.filter((story) => story.published).length === 0 && reviews.length === 0 && shots.length === 0 && drafts.length === 0) {
     return null;

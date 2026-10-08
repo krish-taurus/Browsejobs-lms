@@ -125,6 +125,9 @@ test("employers page explains 90 days against 3 days", async ({ page }) => {
 test("marketing pages do not say coming soon or not live", async ({ page }) => {
   for (const path of ["/", "/students", "/employers", "/employers/how-it-works", "/employers/faq", "/how-it-works", "/employers/mission-control-demo", "/courses"]) {
     await page.goto(path);
+    if (path === "/" || path === "/students") {
+      await expect(page.locator("#success-stories")).toBeVisible();
+    }
     const story = page.locator("#success-stories");
     const storyText = (await story.count()) > 0 ? (await story.innerText()).toLowerCase() : "";
     const body = (await page.locator("body").innerText()).toLowerCase();
