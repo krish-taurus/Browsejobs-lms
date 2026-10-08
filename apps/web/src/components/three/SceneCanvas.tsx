@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import * as THREE from "three";
 import { getSceneState, getServerSceneState, subscribeScene } from "@/lib/scene-bus";
 import { Stage } from "./heroes";
 
@@ -26,23 +24,6 @@ function FrameBudget({ onSlow }: { onSlow: () => void }) {
       onSlow();
     }
   });
-  return null;
-}
-
-/** Neutral studio reflections so the glass sphere reads on a white field. */
-function GreyStudio() {
-  const gl = useThree((state) => state.gl);
-  const scene = useThree((state) => state.scene);
-  useEffect(() => {
-    const pmrem = new THREE.PMREMGenerator(gl);
-    const room = new RoomEnvironment();
-    const env = pmrem.fromScene(room, 0.04).texture;
-    scene.environment = env;
-    return () => {
-      env.dispose();
-      pmrem.dispose();
-    };
-  }, [gl, scene]);
   return null;
 }
 
@@ -121,7 +102,6 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
       >
         <FrameBudget onSlow={() => setLive(false)} />
         <SoftwareSettle active={software} onDone={() => setLive(false)} />
-        <GreyStudio />
         <FollowScene token={`${snap.scene}:${snap.anchor}:${snap.pins}:${snap.shown}:${snap.progress.toFixed(2)}`} />
         <ScrollFrames active={!live} />
         <ambientLight intensity={0.85} color="#ffffff" />
