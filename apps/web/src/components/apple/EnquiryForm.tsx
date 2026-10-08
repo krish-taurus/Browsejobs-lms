@@ -28,16 +28,16 @@ type Props = {
 
 export function EmployerEnquiry() {
   const params = useSearchParams();
-  return <EnquiryForm type="employer" intent={employerIntent(params.get("path") ?? undefined)} />;
+  return <EnquiryForm type="employer" intent={employerIntent(params.get("path") ?? undefined)} appearance="argus" />;
 }
 
 export function CourseEnquiry() {
   const params = useSearchParams();
-  return <EnquiryForm type="course" course={liveCourseSlug(params.get("course") ?? undefined)} />;
+  return <EnquiryForm type="course" course={liveCourseSlug(params.get("course") ?? undefined)} appearance="argus" />;
 }
 
 export function CounsellingEnquiry() {
-  return <EnquiryForm type="counselling" />;
+  return <EnquiryForm type="counselling" appearance="argus" />;
 }
 
 const control =
@@ -212,7 +212,13 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
     <div className={argus ? (done ? "argus-form-wrap is-done" : "argus-form-wrap") : "min-h-[36rem]"}>
       {done ? (
         <div className={argus ? "argus-thanks" : "py-10 text-center"}>
-          {argus ? <span className="argus-check" aria-hidden>✓</span> : null}
+          {argus ? (
+            <span className="argus-check" aria-hidden>
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+              </svg>
+            </span>
+          ) : null}
           <h2 ref={headingRef} tabIndex={-1} className={argus ? "argus-h2 outline-none" : "apple-display text-[clamp(2.5rem,6vw,4rem)] outline-none"}>
             Thank you.
           </h2>
@@ -223,13 +229,15 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
       ) : (
         <form onSubmit={onSubmit} noValidate className={argus ? "argus-fields" : "mx-auto max-w-[640px] space-y-7 text-left"} aria-busy={sending}>
           {intent ? (
-            <p className="text-[17px] text-ink2">{EMPLOYER_INTENTS[intent]}</p>
+            <p className={argus ? "argus-span argus-intent" : "text-[17px] text-ink2"}>{EMPLOYER_INTENTS[intent]}</p>
           ) : null}
 
-          <Field id={`${formId}-name`} label="Full name" error={errors.name}>
+          <Field argus={argus} id={`${formId}-name`} label="Full name" error={errors.name}>
             <input
               id={`${formId}-name`}
               className={controlClass}
+              placeholder={argus ? " " : undefined}
+              disabled={sending}
               autoComplete="name"
               value={values.name}
               onChange={(event) => set("name", event.target.value)}
@@ -240,6 +248,7 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
           </Field>
 
           <Field
+            argus={argus}
             id={`${formId}-email`}
             label={type === "employer" ? "Work email" : "Email"}
             error={errors.email}
@@ -250,6 +259,8 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
               inputMode="email"
               autoComplete="email"
               className={controlClass}
+              placeholder={argus ? " " : undefined}
+              disabled={sending}
               value={values.email}
               onChange={(event) => set("email", event.target.value)}
               aria-invalid={errors.email ? true : undefined}
@@ -259,10 +270,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
           </Field>
 
           <div className={argus ? "argus-span grid gap-4 sm:grid-cols-[11.5rem_1fr]" : "grid gap-4 sm:grid-cols-[11.5rem_1fr]"}>
-            <Field id={`${formId}-country`} label="Country code" error="">
+            <Field argus={argus} id={`${formId}-country`} label="Country code" error="">
               <select
                 id={`${formId}-country`}
                 className={controlClass}
+                disabled={sending}
                 autoComplete="tel-country-code"
                 value={country}
                 onChange={(event) => setCountry(event.target.value)}
@@ -274,13 +286,14 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                 ))}
               </select>
             </Field>
-            <Field id={`${formId}-phone`} label="Phone" error={errors.phone}>
+            <Field argus={argus} id={`${formId}-phone`} label="Phone" error={errors.phone}>
               <input
                 id={`${formId}-phone`}
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel-national"
                 className={controlClass}
+                disabled={sending}
                 placeholder="98400 11111"
                 value={values.phone}
                 onChange={(event) => set("phone", event.target.value)}
@@ -293,10 +306,12 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
 
           {type === "employer" ? (
             <>
-              <Field id={`${formId}-company`} label="Company" error={errors.company}>
+              <Field argus={argus} id={`${formId}-company`} label="Company" error={errors.company}>
                 <input
                   id={`${formId}-company`}
                   className={controlClass}
+                  placeholder={argus ? " " : undefined}
+                  disabled={sending}
                   autoComplete="organization"
                   value={values.company}
                   onChange={(event) => set("company", event.target.value)}
@@ -305,10 +320,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   required
                 />
               </Field>
-              <Field id={`${formId}-company_size`} label="Company size" error={errors.company_size}>
+              <Field argus={argus} id={`${formId}-company_size`} label="Company size" error={errors.company_size}>
                 <select
                   id={`${formId}-company_size`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.company_size}
                   onChange={(event) => set("company_size", event.target.value)}
                   aria-invalid={errors.company_size ? true : undefined}
@@ -323,10 +339,12 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   ))}
                 </select>
               </Field>
-              <Field id={`${formId}-roles`} label="Roles and number of hires" error={errors.roles}>
+              <Field argus={argus} id={`${formId}-roles`} label="Roles and number of hires" error={errors.roles}>
                 <input
                   id={`${formId}-roles`}
                   className={controlClass}
+                  placeholder={argus ? " " : undefined}
+                  disabled={sending}
                   value={values.roles}
                   onChange={(event) => set("roles", event.target.value)}
                   aria-invalid={errors.roles ? true : undefined}
@@ -334,12 +352,13 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   required
                 />
               </Field>
-              <Field id={`${formId}-city`} label="City or remote" error={errors.city}>
+              <Field argus={argus} id={`${formId}-city`} label="City or remote" error={errors.city}>
                 <input
                   id={`${formId}-city`}
                   className={controlClass}
                   autoComplete="address-level2"
                   placeholder="Bengaluru, or Remote"
+                  disabled={sending}
                   value={values.city}
                   onChange={(event) => set("city", event.target.value)}
                   aria-invalid={errors.city ? true : undefined}
@@ -347,10 +366,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   required
                 />
               </Field>
-              <Field id={`${formId}-timeline`} label="Hiring timeline" error={errors.timeline}>
+              <Field argus={argus} id={`${formId}-timeline`} label="Hiring timeline" error={errors.timeline}>
                 <select
                   id={`${formId}-timeline`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.timeline}
                   onChange={(event) => set("timeline", event.target.value)}
                   aria-invalid={errors.timeline ? true : undefined}
@@ -368,10 +388,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
             </>
           ) : type === "course" ? (
             <>
-              <Field id={`${formId}-course_slug`} label="Course of interest" error={errors.course_slug}>
+              <Field argus={argus} id={`${formId}-course_slug`} label="Course of interest" error={errors.course_slug}>
                 <select
                   id={`${formId}-course_slug`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.course_slug}
                   onChange={(event) => set("course_slug", event.target.value)}
                   aria-invalid={errors.course_slug ? true : undefined}
@@ -386,10 +407,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   ))}
                 </select>
               </Field>
-              <Field id={`${formId}-learner_status`} label="Where you are now" error={errors.learner_status}>
+              <Field argus={argus} id={`${formId}-learner_status`} label="Where you are now" error={errors.learner_status}>
                 <select
                   id={`${formId}-learner_status`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.learner_status}
                   onChange={(event) => set("learner_status", event.target.value)}
                   aria-invalid={errors.learner_status ? true : undefined}
@@ -404,10 +426,12 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   ))}
                 </select>
               </Field>
-              <Field id={`${formId}-city`} label="City" error={errors.city}>
+              <Field argus={argus} id={`${formId}-city`} label="City" error={errors.city}>
                 <input
                   id={`${formId}-city`}
                   className={controlClass}
+                  placeholder={argus ? " " : undefined}
+                  disabled={sending}
                   autoComplete="address-level2"
                   value={values.city}
                   onChange={(event) => set("city", event.target.value)}
@@ -416,10 +440,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   required
                 />
               </Field>
-              <Field id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
+              <Field argus={argus} id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
                 <select
                   id={`${formId}-preferred_time`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.preferred_time}
                   onChange={(event) => set("preferred_time", event.target.value)}
                   aria-invalid={errors.preferred_time ? true : undefined}
@@ -437,10 +462,12 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
             </>
           ) : (
             <>
-              <Field id={`${formId}-city`} label="City" error={errors.city}>
+              <Field argus={argus} id={`${formId}-city`} label="City" error={errors.city}>
                 <input
                   id={`${formId}-city`}
                   className={controlClass}
+                  placeholder={argus ? " " : undefined}
+                  disabled={sending}
                   autoComplete="address-level2"
                   value={values.city}
                   onChange={(event) => set("city", event.target.value)}
@@ -449,10 +476,11 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
                   required
                 />
               </Field>
-              <Field id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
+              <Field argus={argus} id={`${formId}-preferred_time`} label="Preferred time to call" error={errors.preferred_time}>
                 <select
                   id={`${formId}-preferred_time`}
                   className={controlClass}
+                  disabled={sending}
                   value={values.preferred_time}
                   onChange={(event) => set("preferred_time", event.target.value)}
                   aria-invalid={errors.preferred_time ? true : undefined}
@@ -470,10 +498,12 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
             </>
           )}
 
-          <Field id={`${formId}-message`} label="Message, if you want to add one" error={errors.message} wide={argus}>
+          <Field argus={argus} id={`${formId}-message`} label="Message, if you want to add one" error={errors.message} wide={argus}>
             <textarea
               id={`${formId}-message`}
-              className={`${controlClass} h-32 resize-y py-3`}
+              className={argus ? controlClass : `${controlClass} h-32 resize-y py-3`}
+              placeholder={argus ? " " : undefined}
+              disabled={sending}
               value={values.message}
               maxLength={2000}
               onChange={(event) => set("message", event.target.value)}
@@ -493,13 +523,14 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
             />
           </div>
 
-          <div className={argus ? "argus-span" : undefined}>
-            <label className={argus ? "argus-check" : "flex min-h-11 items-start gap-3 text-[17px] leading-snug text-ink"}>
+          <div className={argus ? "argus-span argus-consent" : undefined}>
+            <label className={argus ? "argus-consent-row" : "flex min-h-11 items-start gap-3 text-[17px] leading-snug text-ink"}>
               <input
                 id={`${formId}-consent`}
                 type="checkbox"
-                className="mt-1 h-5 w-5 rounded border-line text-trust focus:ring-trust"
+                className={argus ? undefined : "mt-1 h-5 w-5 rounded border-line text-trust focus:ring-trust"}
                 checked={values.consent}
+                disabled={sending}
                 onChange={(event) => set("consent", event.target.checked)}
                 aria-invalid={errors.consent ? true : undefined}
                 aria-describedby={errors.consent ? `${formId}-consent-error` : undefined}
@@ -507,18 +538,23 @@ export function EnquiryForm({ type, course = "", intent = null, appearance = "de
               />
               <span>BrowseJobs may call or email me about this enquiry.</span>
             </label>
-            <p id={`${formId}-consent-error`} role={errors.consent ? "alert" : undefined} className="min-h-5 text-sm text-warn">
+            <p
+              id={`${formId}-consent-error`}
+              role={errors.consent ? "alert" : undefined}
+              className={argus ? (errors.consent ? "argus-field-error is-on" : "argus-field-error") : "min-h-5 text-sm text-warn"}
+            >
               {errors.consent ?? ""}
             </p>
           </div>
 
           {formError ? (
-            <p role="alert" className="text-[15px] text-warn">
+            <p role="alert" className={argus ? "argus-span argus-form-error" : "text-[15px] text-warn"}>
               {formError}
             </p>
           ) : null}
 
           <button type="submit" className={argus ? "argus-span argus-btn argus-btn-primary" : "apple-pill w-full border-0 disabled:cursor-wait disabled:opacity-60"} disabled={sending}>
+            {argus && sending ? <span className="argus-spin" aria-hidden /> : null}
             {sending ? "Sending…" : type === "counselling" ? "Request a callback" : "Send enquiry"}
           </button>
         </form>
@@ -532,21 +568,32 @@ function Field({
   label,
   error,
   wide = false,
+  argus = false,
   children,
 }: {
   id: string;
   label: string;
   error?: string;
   wide?: boolean;
+  argus?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className={wide ? "argus-span space-y-2" : "space-y-2"}>
-      <label htmlFor={id} className="block text-[21px] font-semibold tracking-[-0.02em] text-ink">
-        {label}
-      </label>
+    <div className={argus ? `argus-float${wide ? " argus-span" : ""}` : wide ? "argus-span space-y-2" : "space-y-2"}>
+      {argus ? null : (
+        <label htmlFor={id} className="block text-[21px] font-semibold tracking-[-0.02em] text-ink">
+          {label}
+        </label>
+      )}
       {children}
-      <p id={`${id}-error`} role={error ? "alert" : undefined} className="min-h-5 text-sm text-warn">
+      {argus ? (
+        <label htmlFor={id}>{label}</label>
+      ) : null}
+      <p
+        id={`${id}-error`}
+        role={error ? "alert" : undefined}
+        className={argus ? (error ? "argus-field-error is-on" : "argus-field-error") : "min-h-5 text-sm text-warn"}
+      >
         {error ?? ""}
       </p>
     </div>

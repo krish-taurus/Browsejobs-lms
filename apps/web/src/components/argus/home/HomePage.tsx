@@ -101,7 +101,7 @@ export function HomeCounsel() {
               <li>Tell us when to phone.</li>
             </ul>
           </div>
-          <div className="argus-panel">
+          <div className="argus-counsel-form">
             <EnquiryForm type="counselling" appearance="argus" />
           </div>
         </div>

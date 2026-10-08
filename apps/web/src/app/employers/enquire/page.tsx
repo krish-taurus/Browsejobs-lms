@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { EmployerEnquiry } from "@/components/apple/EnquiryForm";
-import { AppleShell } from "@/components/apple/AppleShell";
+import { EnquiryStage } from "@/components/argus/EnquiryStage";
 import { breadcrumbNode, canonical, jsonLdGraph, webPageNode } from "@/lib/seo";
 
 const TITLE = "Enquire to hire";
@@ -30,21 +30,14 @@ export default function EmployerEnquirePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <AppleShell>
-        <section className="px-5 pb-20 pt-16 md:pt-24">
-          <div className="mx-auto max-w-[720px] text-center">
-            <h1 className="apple-display text-[clamp(2.75rem,6vw,5rem)]">Enquire to hire.</h1>
-            <p className="mx-auto mt-4 max-w-[36rem] text-[19px] leading-snug text-ink2">
-              Share the role and when you want to start. We call you back. Hiring still depends on the market.
-            </p>
-          </div>
-          <div className="mt-12">
-            <Suspense fallback={<div className="min-h-[36rem]" />}>
-              <EmployerEnquiry />
-            </Suspense>
-          </div>
-        </section>
-      </AppleShell>
+      <EnquiryStage
+        title="Enquire to hire."
+        lede="Share the role and when you want to start. We call you back. Hiring still depends on the market."
+      >
+        <Suspense fallback={<div className="min-h-[36rem]" />}>
+          <EmployerEnquiry />
+        </Suspense>
+      </EnquiryStage>
     </>
   );
 }
