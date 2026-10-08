@@ -158,7 +158,7 @@ function FloorStory() {
     const steps = [...board.querySelectorAll<HTMLElement>("[data-step]")];
     const panes = [...board.querySelectorAll<HTMLElement>("[data-pane]")];
     const dots = [...board.querySelectorAll<HTMLElement>("[data-dot]")];
-    const paint = (progress: number) => {
+    const paint = (progress: number, active: boolean) => {
       const scaled = Math.min(0.999, Math.max(0, progress)) * STEPS.length;
       const index = Math.min(STEPS.length - 1, Math.floor(scaled));
       const fraction = scaled - index;
@@ -166,16 +166,16 @@ function FloorStory() {
       panes.forEach((pane, stepIndex) => pane.classList.toggle("is-on", stepIndex === index));
       dots.forEach((dot, stepIndex) => dot.classList.toggle("is-on", stepIndex <= index));
       paintDevice(board, index, fraction);
-      hideScene();
+      if (active) hideScene();
     };
-    paint(0);
+    paint(0, false);
     const trigger = ScrollTrigger.create({
       trigger: section,
       start: "top top",
       end: "+=500%",
       pin: board,
       scrub: 1,
-      onUpdate: (self) => paint(self.progress),
+      onUpdate: (self) => paint(self.progress, self.isActive),
     });
     return () => trigger.kill();
   }, []);
