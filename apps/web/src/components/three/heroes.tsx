@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Float, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { SCENE_IDS, type SceneAnchor, type SceneId, type ScenePins } from "@/lib/scene-bus";
 import { prefersReducedMotion } from "@/lib/motion";
@@ -260,7 +260,7 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
   useFrame(({ clock }) => {
     if (shell.current) shell.current.uniforms.uFade.value = fades.current.sphere;
     const t = clock.elapsedTime * 1.15;
-    comet.current?.position.set(Math.cos(t) * 1.85, Math.sin(t * 0.65) * 0.55, Math.sin(t) * 1.85);
+    comet.current?.position.set(Math.cos(t) * 1.35, Math.sin(t * 0.65) * 0.42, Math.sin(t) * 1.35);
     comet.current?.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (mesh.material && "opacity" in mesh.material) {
@@ -271,18 +271,18 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
     });
   });
   return (
-    <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.35}>
+    <group>
       <mesh>
-        <sphereGeometry args={[1.25, 48, 48]} />
+        <sphereGeometry args={[1.25, 16, 16]} />
         <shaderMaterial ref={shell} transparent depthWrite={false} toneMapped={false} uniforms={uniforms} vertexShader={RING_VERT} fragmentShader={GLASS_FRAG} />
       </mesh>
       <group ref={comet}>
         <mesh>
-          <sphereGeometry args={[0.055, 12, 12]} />
+          <sphereGeometry args={[0.055, 8, 8]} />
           <meshBasicMaterial color="#2c2c2e" transparent />
         </mesh>
       </group>
-    </Float>
+    </group>
   );
 }
 
@@ -330,10 +330,14 @@ export function Eclipse({
   const uniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
   const shadowUniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
   useFrame(() => {
-    const slide = anchor === "aside" ? 0.82 : progress.current;
+    const slide = anchor === "aside" ? 0.82 : anchor === "right" ? 1 : progress.current;
     const x = -2.35 + slide * 1.7;
     if (body.current) body.current.position.x = x;
-    if (shadow.current) shadow.current.position.x = x;
+    if (shadow.current) {
+      shadow.current.position.x = x;
+      const shadowScale = anchor === "right" ? 0.55 : 1;
+      shadow.current.scale.setScalar(shadowScale);
+    }
     const fade = fades.current.eclipse;
     if (bodyMat.current) bodyMat.current.uniforms.uFade.value = fade;
     if (shadowMat.current) shadowMat.current.uniforms.uFade.value = fade;
@@ -531,7 +535,7 @@ export function GridFloor({ fades, clip = 0 }: { fades: MutableRefObject<Record<
   useFrame(({ clock }) => {
     if (!mat.current) return;
     mat.current.uniforms.uTime.value = clock.elapsedTime;
-    mat.current.uniforms.uFade.value = fades.current.grid;
+    mat.current.uniforms.uFade.value = fades.current.grid * (clip > 0 ? 0.28 : 1);
     mat.current.uniforms.uKeep.value = clip;
     mat.current.uniforms.uResY.value = size.height;
   });
@@ -556,12 +560,12 @@ function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, 
   if (id === "grid") return { position: [0, 0, 0], scale: 1 };
   if (id === "ring" && anchor === "top") return { position: [0.45, 0.2, 0], scale: 1.08 };
   if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
-  if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
+  if (id === "sphere" && anchor === "right") return { position: [2.05, 0.02, 0], scale: 0.5 };
   if (id === "sphere" && anchor === "aside") return { position: [1.65, 0.0, 0], scale: 0.48 };
-  if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
+  if (id === "eclipse" && anchor === "right") return { position: [2.05, 0.02, 0], scale: 0.4 };
   if (id === "score" && anchor === "behind") return { position: [1.62, 0.05, 0], scale: 0.42 };
   if (id === "eclipse" && anchor === "aside") return { position: [1.95, 0.02, 0], scale: 0.52 };
-  if (id === "globe" && anchor === "aside") return { position: [0.15, -1.72, 0], scale: 0.4 };
+  if (id === "globe" && anchor === "aside") return { position: [1.22, -0.28, 0], scale: 0.55 };
   if (id === "globe" && anchor === "right") return { position: [1.22, -0.4, 0], scale: 0.55 };
   return { position: [0, 0, 0], scale: 1 };
 }
@@ -584,31 +588,44 @@ export function Stage({
 }) {
   const invalidate = useThree((state) => state.invalidate);
   const fades = useRef<Record<SceneId, number>>({
-    ring: 0,
-    score: 0,
-    sphere: 0,
-    eclipse: 0,
-    globe: 0,
-    grid: 0,
+    ring: scene === "ring" ? 1 : 0,
+    score: scene === "score" ? 1 : 0,
+    sphere: scene === "sphere" ? 1 : 0,
+    eclipse: scene === "eclipse" ? 1 : 0,
+    globe: scene === "globe" ? 1 : 0,
+    grid: scene === "globe" && anchor === "aside" ? 1 : 0,
   });
-  if (shown) {
-    fades.current[scene] = fades.current[scene] || 1;
-    if (scene === "globe" && anchor === "aside") fades.current.grid = fades.current.grid || 1;
-  }
+  const [rest, setRest] = useState({ scene, anchor, pins });
+  const restRef = useRef(rest);
+  const mode = useRef<"hold" | "clear" | "move">("hold");
   const [alive, setAlive] = useState<SceneId[]>([scene]);
   const aliveRef = useRef(alive);
   const desired = useRef(new THREE.Vector3());
   const look = useRef(new THREE.Vector3());
 
   useFrame(({ camera }, delta) => {
+    const parked = restRef.current;
+    const changed = parked.scene !== scene || parked.anchor !== anchor || parked.pins !== pins;
+    if (settle) {
+      mode.current = "hold";
+      if (changed) {
+        const nextRest = { scene, anchor, pins };
+        restRef.current = nextRest;
+        setRest(nextRest);
+      }
+    } else if (changed && mode.current === "hold") {
+      mode.current = "clear";
+    }
+
+    const presenting = mode.current === "hold" ? { scene, anchor, pins } : parked;
     const next: SceneId[] = [];
     let settling = false;
     for (const id of SCENE_IDS) {
-      const withFloor = shown && scene === "globe" && anchor === "aside" && id === "grid";
-      const goal = shown && (id === scene || withFloor) ? 1 : 0;
-      fades.current[id] = settle ? goal : fades.current[id] + (goal - fades.current[id]) * Math.min(1, delta * 2.4);
+      const withFloor = shown && mode.current === "hold" && presenting.scene === "globe" && presenting.anchor === "aside" && id === "grid";
+      const goal = shown && mode.current === "hold" && (id === presenting.scene || withFloor) ? 1 : 0;
+      fades.current[id] = settle ? goal : fades.current[id] + (goal - fades.current[id]) * Math.min(1, delta * 14);
       if (Math.abs(fades.current[id] - goal) > 0.03) settling = true;
-      if (fades.current[id] > 0.045 || id === scene) next.push(id);
+      if (fades.current[id] > 0.045) next.push(id);
     }
     if (settling) invalidate();
     const previous = aliveRef.current;
@@ -617,41 +634,66 @@ export function Stage({
       setAlive(next);
     }
 
-    desired.current.set(0, 0, 0);
-    look.current.set(0, 0, 0);
-    let weight = 0;
-    for (const id of SCENE_IDS) {
-      const fade = fades.current[id];
-      if (fade < 0.02) continue;
-      desired.current.addScaledVector(CAM[id].pos, fade);
-      look.current.addScaledVector(CAM[id].look, fade);
-      weight += fade;
+    if (!settle && mode.current === "clear" && SCENE_IDS.every((id) => fades.current[id] < 0.04)) {
+      mode.current = "move";
+      const nextRest = { scene, anchor, pins };
+      restRef.current = nextRest;
+      setRest(nextRest);
     }
-    if (weight < 0.02) return;
-    desired.current.multiplyScalar(1 / weight);
-    look.current.multiplyScalar(1 / weight);
-    if (settle) camera.position.copy(desired.current);
-    else camera.position.lerp(desired.current, 1 - Math.pow(0.05, delta));
-    camera.lookAt(look.current);
+
+    const camScene = mode.current === "clear" ? parked.scene : scene;
+    desired.current.copy(CAM[camScene].pos);
+    look.current.copy(CAM[camScene].look);
+    const distance = camera.position.distanceTo(desired.current);
+    if (settle || mode.current === "clear") camera.position.copy(mode.current === "clear" ? CAM[parked.scene].pos : desired.current);
+    else camera.position.lerp(desired.current, 1 - Math.pow(0.001, delta));
+    camera.lookAt(mode.current === "clear" ? CAM[parked.scene].look : look.current);
+    if (!settle && mode.current === "move" && distance < 0.08) mode.current = "hold";
   });
 
-  const globePins = pins === "claims" ? CLAIM_PINS : pins === "none" ? [] : PINS;
+  const globePins = rest.pins === "claims" ? CLAIM_PINS : rest.pins === "none" ? [] : PINS;
 
   return (
     <>
       {alive.map((id) => {
-        const spot = placed(id, anchor);
+        const spot = placed(id, rest.anchor);
         return (
-          <group key={id} position={spot.position} scale={spot.scale}>
-            {id === "ring" ? <HorizonRing progress={progress} fades={fades} anchor={anchor} /> : null}
-            {id === "score" ? <ScoreRing progress={progress} fades={fades} anchor={anchor} /> : null}
+          <FadeGroup key={id} id={id} fades={fades} position={spot.position} base={spot.scale}>
+            {id === "ring" ? <HorizonRing progress={progress} fades={fades} anchor={rest.anchor} /> : null}
+            {id === "score" ? <ScoreRing progress={progress} fades={fades} anchor={rest.anchor} /> : null}
             {id === "sphere" ? <GlassSphere fades={fades} /> : null}
-            {id === "eclipse" ? <Eclipse progress={progress} fades={fades} anchor={anchor} /> : null}
+            {id === "eclipse" ? <Eclipse progress={progress} fades={fades} anchor={rest.anchor} /> : null}
             {id === "globe" ? <DotGlobe fades={fades} pins={globePins} /> : null}
-            {id === "grid" ? <GridFloor fades={fades} clip={anchor === "aside" ? 0.32 : 0} /> : null}
-          </group>
+            {id === "grid" ? <GridFloor fades={fades} clip={rest.anchor === "aside" ? 0.16 : 0} /> : null}
+          </FadeGroup>
         );
       })}
     </>
+  );
+}
+
+/** Shrinks an outgoing object where it already sits. It does not slide across the page. */
+function FadeGroup({
+  id,
+  fades,
+  position,
+  base,
+  children,
+}: {
+  id: SceneId;
+  fades: MutableRefObject<Record<SceneId, number>>;
+  position: [number, number, number];
+  base: number;
+  children: ReactNode;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const fade = fades.current[id];
+    ref.current?.scale.setScalar(base * (0.4 + 0.6 * fade));
+  });
+  return (
+    <group ref={ref} position={position} scale={base}>
+      {children}
+    </group>
   );
 }

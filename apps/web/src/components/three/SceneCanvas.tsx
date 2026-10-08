@@ -2,25 +2,50 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { getSceneState, getServerSceneState, subscribeScene } from "@/lib/scene-bus";
+import { getSceneState, getServerSceneState, subscribeScene, type SceneId } from "@/lib/scene-bus";
 import { Stage } from "./heroes";
 
 /**
- * Continuous motion is the default. A device that stays slower than 100ms per
- * frame for 30 frames drops to on-demand painting. Scroll and scene changes
- * still request a frame, so the object keeps up with the section in view.
+ * Continuous motion is the default. Only the glass sphere can trip the slow-frame
+ * latch, and only while that section is on screen. Leaving it turns motion back on.
+ * Software GL never uses this latch — it idles on its own path.
  */
-function FrameBudget({ onSlow }: { onSlow: () => void }) {
+function FrameBudget({
+  scene,
+  enabled,
+  onSlow,
+  onRecover,
+}: {
+  scene: SceneId;
+  enabled: boolean;
+  onSlow: () => void;
+  onRecover: () => void;
+}) {
   const slow = useRef(0);
   const seen = useRef(0);
-  const stopped = useRef(false);
+  const latched = useRef(false);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
   useFrame((_, delta) => {
+    if (!enabled) return;
     seen.current += 1;
     if (seen.current < 6) return;
+    if (latched.current) {
+      if (sceneRef.current !== "sphere") {
+        latched.current = false;
+        slow.current = 0;
+        onRecover();
+      }
+      return;
+    }
+    if (sceneRef.current !== "sphere") {
+      slow.current = 0;
+      return;
+    }
     if (delta > 0.1) slow.current += 1;
     else slow.current = 0;
-    if (!stopped.current && slow.current >= 30) {
-      stopped.current = true;
+    if (slow.current >= 30) {
+      latched.current = true;
       onSlow();
     }
   });
@@ -100,7 +125,12 @@ export default function SceneCanvas({ onReady }: { onReady?: () => void }) {
           onReady?.();
         }}
       >
-        <FrameBudget onSlow={() => setLive(false)} />
+        <FrameBudget
+          scene={snap.scene}
+          enabled={!software}
+          onSlow={() => setLive(false)}
+          onRecover={() => setLive(true)}
+        />
         <SoftwareSettle active={software} onDone={() => setLive(false)} />
         <FollowScene token={`${snap.scene}:${snap.anchor}:${snap.pins}:${snap.shown}:${snap.progress.toFixed(2)}`} />
         <ScrollFrames active={!live} />

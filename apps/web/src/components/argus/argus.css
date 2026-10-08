@@ -886,6 +886,37 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 .argus .apple-messages { background: transparent; }
 .argus .apple-more { color: #0a0a0a; }
 
+@media (min-width: 960px) {
+  .argus-how,
+  .argus-after,
+  .argus-path { align-items: flex-start; }
+  .argus-how > *,
+  .argus-after > *,
+  .argus-path > *,
+  .argus-eclipse {
+    width: min(620px, 46vw);
+    max-width: 46vw;
+  }
+  .argus-how .argus-phase-grid,
+  .argus-after .argus-phase-grid,
+  .argus-eclipse .argus-phase-grid {
+    width: 100%;
+    max-width: none;
+  }
+  .argus-onboard {
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4rem;
+  }
+  .argus-onboard-copy {
+    width: min(520px, 42vw);
+    margin: 0 auto 0 0;
+    text-align: left;
+  }
+  .argus-onboard-copy .argus-h2,
+  .argus-onboard-copy .argus-body { margin-left: 0; margin-right: 0; }
+}
+
 @media (min-width: 800px) {
   .argus-hero-grid { grid-template-columns: minmax(0, 1fr) 300px; }
   .argus-score-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -895,12 +926,19 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
   .argus-fields { grid-template-columns: 1fr 1fr; }
   .argus-span { grid-column: 1 / -1; }
   .argus-phase-grid, .argus-days-cols { grid-template-columns: 1fr 1fr 1fr; }
-  .argus-how .argus-phase-grid,
-  .argus-after .argus-phase-grid { width: min(760px, 68%); }
   .argus-days-cols { grid-template-columns: 1fr 1fr; }
   .argus-eclipse { display: grid; }
   .argus-eclipse-copy { grid-area: 1 / 1; }
   .argus-phase { grid-area: 2 / 1; }
+}
+
+@media (min-width: 960px) {
+  .argus-how .argus-phase-grid,
+  .argus-after .argus-phase-grid,
+  .argus-eclipse .argus-phase-grid {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 @media (max-width: 767px) {

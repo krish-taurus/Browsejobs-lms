@@ -128,7 +128,7 @@ export function EmployersPage() {
         </div>
       </section>
 
-      <section id="get-started" className="argus-section argus-onboard" data-scene="globe" data-anchor="aside" data-pins="none">
+      <section id="get-started" className="argus-section argus-onboard" data-scene="globe" data-anchor="aside" data-pins="claims">
         <div className="argus-onboard-copy">
           <SplitHeading as="h2" className="argus-h2" text="Onboard with us." />
           <p className="argus-body">We can run hiring with you, or your team can use the tool.</p>

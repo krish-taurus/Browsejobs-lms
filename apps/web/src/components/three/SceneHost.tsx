@@ -27,7 +27,23 @@ export function SceneHost() {
     let frame = 0;
 
     const measure = () => {
-      const view = window.innerHeight;
+      const view = window.innerHeight || 1;
+      for (const node of document.querySelectorAll<HTMLElement>("[data-canvas-clear]")) {
+        const rect = node.getBoundingClientRect();
+        const visible = Math.min(rect.bottom, view) - Math.max(rect.top, 0);
+        if (visible > view * 0.08) {
+          hideScene();
+          return;
+        }
+      }
+      for (const node of document.querySelectorAll<HTMLElement>(".argus-section")) {
+        if (isSceneId(node.dataset.scene)) continue;
+        const rect = node.getBoundingClientRect();
+        if (rect.top < view * 0.82 && rect.bottom > view * 0.18) {
+          hideScene();
+          return;
+        }
+      }
       let best: HTMLElement | null = null;
       let bestRatio = 0;
       for (const node of sections()) {
@@ -39,7 +55,16 @@ export function SceneHost() {
           best = node;
         }
       }
-      if (!best || bestRatio < 0.12 || best.dataset.pinned === "true") return;
+      const path = document.getElementById("below-75");
+      if (best?.dataset.scene === "score" && path && isSceneId(path.dataset.scene)) {
+        const prect = path.getBoundingClientRect();
+        if (prect.top < view * 0.9 && prect.bottom > 0) best = path;
+      }
+      if (!best || bestRatio < 0.12) return;
+      if (best.dataset.pinned === "true") {
+        const rect = best.getBoundingClientRect();
+        if (rect.top > -12 && rect.bottom > view * 0.9) return;
+      }
       if (!isSceneId(best.dataset.scene)) {
         hideScene();
         return;
