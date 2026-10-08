@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { mockPath, type MockKind } from "@/lib/mockKinds";
+import { MOCK_KIND_META, mockPath, type MockKind } from "@/lib/mockKinds";
 import { use, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { apiJson, apiPostBlob } from "@/lib/api";
 import { AiAvatar, type AiAvatarPhase } from "@/components/portal/AiAvatar";
@@ -26,6 +26,7 @@ type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 type MockSession = {
   id: number;
   kind: MockKind;
+  company: string | null;
   status: "in_progress" | "completed" | "abandoned";
   mode: "text" | "voice";
   role_title: string | null;
@@ -991,8 +992,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     return (
       <div className="fixed inset-0 z-[60] overflow-y-auto bg-ink px-5 py-10">
         <div className="mx-auto max-w-3xl">
-          <p className="mono text-[11px] uppercase tracking-widest text-trust">Before you begin</p>
+          <p className="mono text-[11px] uppercase tracking-widest text-trust">
+            {MOCK_KIND_META[session.kind].room} · {session.role_title ?? "Interview"}
+            {session.company ? ` at ${session.company}` : ""}
+          </p>
           <h1 className="display mt-2 text-2xl text-white">System check</h1>
+          <p className="mt-1 text-sm text-white/80">{MOCK_KIND_META[session.kind].purpose}</p>
           <p className="mt-1 text-sm text-white/60">A quick check so nothing interrupts the interview once it starts.</p>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-[1.1fr_1fr]">
@@ -1183,7 +1188,10 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       <header className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3">
           <span className="h-2 w-2 animate-pulse rounded-full bg-warn motion-reduce:animate-none" />
-          <span className="text-sm font-semibold text-white">{session.role_title ?? "Mock"} interview</span>
+          <span className="text-sm font-semibold text-white">
+            {MOCK_KIND_META[session.kind].room} · {session.role_title ?? "Interview"}
+            {session.company ? ` at ${session.company}` : ""}
+          </span>
         </div>
         <div className="mono flex items-center gap-4 text-xs text-white/70">
           <span>Q {Math.min(session.questions_asked, session.max_questions)}/{session.max_questions}</span>

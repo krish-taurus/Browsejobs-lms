@@ -49,7 +49,7 @@ function studentWithEveryKind(Tenant $tenant): array
         ...$extra,
     ])->id;
 
-    return ['student' => $student, 'ids' => [
+    return ['student' => $student, 'company' => $workspace->name, 'ids' => [
         'practice' => $make($blueprints['course']),
         'voice' => $make($blueprints['course'], ['is_room' => true]),
         'job' => $make($blueprints['job'], ['is_room' => true]),
@@ -77,6 +77,15 @@ it('derives one kind per interview and lists each kind on its own', function () 
         ->assertJsonPath('data.kind_counts.voice', 1)
         ->assertJsonPath('data.kind_counts.job', 1)
         ->assertJsonPath('data.kind_counts.cv', 1);
+});
+
+it('names the hiring company on a job interview only', function () {
+    ['student' => $student, 'company' => $company, 'ids' => $ids] = studentWithEveryKind($this->tenant);
+    Sanctum::actingAs($student);
+
+    getJson("/api/v1/me/mocks/{$ids['job']}")->assertOk()->assertJsonPath('data.company', $company);
+    getJson("/api/v1/me/mocks/{$ids['cv']}")->assertOk()->assertJsonPath('data.company', null);
+    getJson("/api/v1/me/mocks/{$ids['practice']}")->assertOk()->assertJsonPath('data.company', null);
 });
 
 it('treats a voice-mode call on a course blueprint as voice', function () {

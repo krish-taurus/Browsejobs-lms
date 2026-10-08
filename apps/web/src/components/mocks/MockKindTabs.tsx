@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiJson } from "@/lib/api";
-import { MOCK_KINDS, MOCK_KIND_META, type MockKind } from "@/lib/mockKinds";
+import { MOCK_KINDS, MOCK_KIND_META, mockListPath, type MockKind } from "@/lib/mockKinds";
 
 type Counts = Partial<Record<MockKind, number>>;
 
@@ -30,7 +30,7 @@ export function MockKindTabs({ active, counts: given }: { active?: MockKind; cou
         return (
           <Link
             key={kind}
-            href={`/student-ai-mock/${kind}`}
+            href={mockListPath(kind)}
             aria-current={on ? "page" : undefined}
             className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
               on ? "border-trust bg-trust text-white" : "border-line bg-white text-ink hover:border-trust"

@@ -75,6 +75,13 @@ export const aliasRedirects: Redirect[] = [
   // keep working. Temporary for the same reason as neural-ops above.
   { source: "/mock", destination: "/student-ai-mock", permanent: false },
   { source: "/mock/:path*", destination: "/student-ai-mock/:path*", permanent: false },
+
+  // Job and AI Readiness interviews moved to their own URLs (Oct 2026) —
+  // links shared in the few hours they lived under /student-ai-mock keep working.
+  { source: "/student-ai-mock/job", destination: "/job-interview", permanent: false },
+  { source: "/student-ai-mock/job/:path*", destination: "/job-interview/:path*", permanent: false },
+  { source: "/student-ai-mock/cv", destination: "/ai-readiness-interview", permanent: false },
+  { source: "/student-ai-mock/cv/:path*", destination: "/ai-readiness-interview/:path*", permanent: false },
 ];
 
 /**

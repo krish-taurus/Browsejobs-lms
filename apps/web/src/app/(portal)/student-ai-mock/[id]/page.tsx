@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { isBudgetError } from "@/lib/tutor";
-import { MOCK_KIND_META, mockPath, type MockKind } from "@/lib/mockKinds";
+import { MOCK_KIND_META, mockListPath, mockPath, type MockKind } from "@/lib/mockKinds";
 
 type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 
@@ -53,6 +53,7 @@ type Scorecard = {
 type MockSession = {
   id: number;
   kind: MockKind;
+  company: string | null;
   status: "in_progress" | "completed" | "abandoned";
   mode: "text" | "voice";
   // A room-kind interview (the spoken, proctored /student-ai-mock/[id]/room experience —
@@ -320,8 +321,11 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href={`/student-ai-mock/${session.kind}`} className="text-sm text-trust hover:underline">← {MOCK_KIND_META[session.kind].title}</Link>
-      <div className="mt-3 flex items-baseline justify-between">
+      <Link href={mockListPath(session.kind)} className="text-sm text-trust hover:underline">← {MOCK_KIND_META[session.kind].title}</Link>
+      <p className="kicker mt-3 text-trust">
+        {MOCK_KIND_META[session.kind].room}{session.company ? ` · ${session.company}` : ""}
+      </p>
+      <div className="mt-1 flex items-baseline justify-between">
         <h1 className="display text-2xl text-ink">{session.role_title ?? "Mock interview"}</h1>
         <span className="flex items-center gap-3">
           {!done && session.status === "in_progress" && session.mode === "text" && voiceSupported && (
