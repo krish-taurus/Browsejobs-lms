@@ -75,6 +75,7 @@ const GRID_FRAG = `
   uniform float uTime;
   uniform float uFade;
   uniform float uKeep;
+  uniform float uResX;
   uniform float uResY;
   varying vec2 vUv;
   void main() {
@@ -86,8 +87,10 @@ const GRID_FRAG = `
     float depth = smoothstep(0.05, 0.85, vUv.y);
     vec3 col = mix(vec3(0.56, 0.56, 0.58), vec3(0.78, 0.78, 0.80), depth);
     float y = gl_FragCoord.y / max(uResY, 1.0);
+    float x = gl_FragCoord.x / max(uResX, 1.0);
     float band = uKeep > 0.0 ? 1.0 - smoothstep(uKeep - 0.05, uKeep + 0.03, y) : 1.0;
-    float alpha = line * depth * uFade * band;
+    float side = uKeep > 0.0 ? smoothstep(0.48, 0.56, x) : 1.0;
+    float alpha = line * depth * uFade * band * side;
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -531,12 +534,13 @@ export function DotGlobe({
 export function GridFloor({ fades, clip = 0 }: { fades: MutableRefObject<Record<SceneId, number>>; clip?: number }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const size = useThree((state) => state.size);
-  const uniforms = useMemo(() => shaderUniforms({ uTime: { value: 0 }, uKeep: { value: 0 }, uResY: { value: 1 } }), []);
+  const uniforms = useMemo(() => shaderUniforms({ uTime: { value: 0 }, uKeep: { value: 0 }, uResX: { value: 1 }, uResY: { value: 1 } }), []);
   useFrame(({ clock }) => {
     if (!mat.current) return;
     mat.current.uniforms.uTime.value = clock.elapsedTime;
     mat.current.uniforms.uFade.value = fades.current.grid * (clip > 0 ? 0.28 : 1);
     mat.current.uniforms.uKeep.value = clip;
+    mat.current.uniforms.uResX.value = size.width;
     mat.current.uniforms.uResY.value = size.height;
   });
   return (

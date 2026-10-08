@@ -1123,6 +1123,23 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 .argus-onboard-copy { width: min(760px, 100%); margin: 0 auto; text-align: center; }
 .argus-onboard-copy .argus-h2,
 .argus-onboard-copy .argus-body { margin-left: auto; margin-right: auto; }
+
+@media (min-width: 960px) {
+  .argus-onboard {
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4rem;
+  }
+  .argus-onboard-copy {
+    width: min(520px, 40vw);
+    max-width: 40vw;
+    margin: 0 auto 0 0;
+    text-align: left;
+  }
+  .argus-onboard-copy .argus-h2,
+  .argus-onboard-copy .argus-body,
+  .argus-onboard-copy .argus-btn { margin-left: 0; margin-right: 0; }
+}
 .argus-way-grid { display: grid; gap: 1rem; margin-top: 1.2rem; text-align: left; }
 .argus-way { display: block; color: inherit; text-decoration: none; }
 .argus-way h3 { margin: 0; font-size: 22px; }
