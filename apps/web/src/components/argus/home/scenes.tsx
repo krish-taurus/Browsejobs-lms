@@ -242,6 +242,101 @@ export function HomePath() {
   );
 }
 
+const HOW_STEPS = [
+  { kicker: "Interview", title: "Interview", body: "About 15 questions from your CV. You answer them. It is free." },
+  { kicker: "Score", title: "Score", body: "The AI scores the round out of 100. 75% or more is a clear." },
+  {
+    kicker: "Get seen",
+    title: "Get seen",
+    body: "A clear sends your CV to 3,000 HR recruiters. Under 75%, the path is counselling, a plan, then a retake.",
+  },
+] as const;
+
+const AFTER_STEPS = [
+  { kicker: "Pre-qualified", title: "You are pre-qualified.", body: "75% or more is the clear mark. Employers see people who already cleared." },
+  { kicker: "CV sent", title: "Your CV is sent.", body: CLAIM_RECRUITERS },
+  { kicker: "Interview call", title: "The call is more likely.", body: `${CLAIM_INTERVIEW_CALL} The market still decides.` },
+] as const;
+
+function StepCards({ steps, stagger = false }: { steps: readonly { title: string; body: string }[]; stagger?: boolean }) {
+  const cards = steps.map((step) => (
+    <article key={step.title}>
+      <h3>{step.title}</h3>
+      <p>{step.body}</p>
+    </article>
+  ));
+  if (stagger) {
+    return (
+      <StaggerIn as="div" className="argus-phase-grid">
+        {cards}
+      </StaggerIn>
+    );
+  }
+  return <div className="argus-phase-grid">{cards}</div>;
+}
+
+function HowCards({ stagger = false }: { stagger?: boolean }) {
+  return (
+    <>
+      <ol className="argus-steps">
+        {HOW_STEPS.map((step) => (
+          <li key={step.kicker}>{step.kicker}</li>
+        ))}
+      </ol>
+      <StepCards steps={HOW_STEPS} stagger={stagger} />
+      <Disclaimer tone="argus" />
+    </>
+  );
+}
+
+function AfterCards({ stagger = false }: { stagger?: boolean }) {
+  return (
+    <>
+      <ol className="argus-steps">
+        {AFTER_STEPS.map((step) => (
+          <li key={step.kicker}>{step.kicker}</li>
+        ))}
+      </ol>
+      <StepCards steps={AFTER_STEPS} stagger={stagger} />
+      <Disclaimer tone="argus" />
+    </>
+  );
+}
+
+export function StudentsHero() {
+  return (
+    <section id="top" className="argus-section argus-hero argus-students-hero" data-scene="score" data-anchor="behind">
+      <div className="argus-students-copy">
+        <p className="argus-pill">Free</p>
+        <SplitHeading as="h1" className="argus-h1" text="Take a free AI interview." breakAfter={2} />
+        <p className="argus-body argus-hero-sub">
+          It&apos;s free. About 15 questions from your CV. Score 75% and your CV is sent to 3,000 HR recruiters.
+        </p>
+        <Disclaimer tone="argus" className="is-dim" />
+        <InterviewStartForm id="interview-start" tone="argus" />
+      </div>
+    </section>
+  );
+}
+
+export function StudentsHow() {
+  return (
+    <section id="how" className="argus-section argus-how" data-scene="sphere" data-anchor="right">
+      <Reveal heading={<SplitHeading as="h2" className="argus-h2" text="How it works." />} />
+      <HowCards stagger />
+    </section>
+  );
+}
+
+export function StudentsAfter() {
+  return (
+    <section id="after-clear" className="argus-section argus-after" data-scene="eclipse" data-anchor="right">
+      <Reveal heading={<SplitHeading as="h2" className="argus-h2" text="After you clear." />} />
+      <AfterCards stagger />
+    </section>
+  );
+}
+
 function EclipsePhases() {
   const first = useRef<HTMLDivElement>(null);
   const second = useRef<HTMLDivElement>(null);
@@ -269,48 +364,10 @@ function EclipsePhases() {
         <SplitHeading as="h2" className="argus-h2 argus-h2-quiet" text="After you clear." />
       </div>
       <div id="how" ref={first} className="argus-phase">
-        <ol className="argus-steps">
-          <li>Interview</li>
-          <li>Score</li>
-          <li>Get seen</li>
-        </ol>
-        <div className="argus-phase-grid">
-          <article>
-            <h3>Interview</h3>
-            <p>About 15 questions from your CV. You answer them. It is free.</p>
-          </article>
-          <article>
-            <h3>Score</h3>
-            <p>The AI scores the round out of 100. 75% or more is a clear.</p>
-          </article>
-          <article>
-            <h3>Get seen</h3>
-            <p>A clear sends your CV to 3,000 HR recruiters. Under 75%, the path is counselling, a plan, then a retake.</p>
-          </article>
-        </div>
-        <Disclaimer tone="argus" />
+        <HowCards />
       </div>
       <div id="after-clear" ref={second} className="argus-phase">
-        <ol className="argus-steps">
-          <li>Pre-qualified</li>
-          <li>CV sent</li>
-          <li>Interview call</li>
-        </ol>
-        <div className="argus-phase-grid">
-          <article>
-            <h3>You are pre-qualified.</h3>
-            <p>75% or more is the clear mark. Employers see people who already cleared.</p>
-          </article>
-          <article>
-            <h3>Your CV is sent.</h3>
-            <p>{CLAIM_RECRUITERS}</p>
-          </article>
-          <article>
-            <h3>The call is more likely.</h3>
-            <p>{CLAIM_INTERVIEW_CALL} The market still decides.</p>
-          </article>
-        </div>
-        <Disclaimer tone="argus" />
+        <AfterCards />
       </div>
     </div>
   );

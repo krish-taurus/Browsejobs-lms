@@ -92,6 +92,7 @@ html.argus-live .argus {
   font-size: 12px;
   line-height: 1.45;
 }
+.argus-disclaimer.is-dim { color: var(--text-dim); }
 
 .argus-nav {
   position: fixed;
@@ -505,18 +506,28 @@ html.argus-live .argus {
   position: fixed;
   inset: 0;
   z-index: 0;
+  overflow: visible;
   pointer-events: none;
 }
 
 .argus-canvas canvas { display: block; }
 
 .argus-pin-label {
+  display: inline-block;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(233, 228, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(7, 8, 26, 0.92);
+  box-shadow: 0 0 16px rgba(7, 8, 26, 0.85);
   color: var(--glow-hot);
-  font-size: 13px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
 }
+.argus-pin-label.is-right { transform: translate(8px, -50%); }
+.argus-pin-label.is-left { transform: translate(calc(-100% - 8px), -50%); }
 
 html.argus-scroll { scroll-behavior: auto; }
 
@@ -608,7 +619,7 @@ html.argus-scroll { scroll-behavior: auto; }
   align-items: flex-start;
   justify-content: flex-start;
 }
-.argus-home .argus-close { align-items: center; }
+.argus-home .argus-close { align-items: flex-start; }
 .argus-stories-inner { width: min(1100px, 100%); margin: 0 auto; }
 .argus-stories .apple-story-card,
 .argus-stories .apple-story-card.is-draft {
@@ -639,6 +650,8 @@ html.argus-scroll { scroll-behavior: auto; }
 .argus-hero-sub { margin-top: 1rem; }
 .argus-start { margin-top: 1.25rem; max-width: 640px; }
 .argus-capsule {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -646,7 +659,7 @@ html.argus-scroll { scroll-behavior: auto; }
   width: 100%;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: rgba(14, 16, 48, 0.9);
+  background: rgba(10, 12, 36, 0.96);
   padding: 0.35rem 0.35rem 0.35rem 1rem;
 }
 .argus-capsule label { flex: 1; min-width: 9rem; }
@@ -666,12 +679,12 @@ html.argus-scroll { scroll-behavior: auto; }
   color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
 }
-.argus-sample { margin: 0; justify-self: end; }
+.argus-sample { position: relative; z-index: 2; margin: 0; justify-self: end; }
 .argus-sample-card {
   width: min(300px, 100%);
   border: 1px solid var(--border-strong);
   border-radius: 24px;
-  background: rgba(14, 16, 48, 0.88);
+  background: rgba(10, 12, 36, 0.96);
   padding: 1.25rem 1.3rem 1.4rem;
   transform: rotate(4deg);
   animation: argus-float 7s ease-in-out infinite;
@@ -756,6 +769,32 @@ html.argus-scroll { scroll-behavior: auto; }
 .argus-row { display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem; align-items: center; margin-top: 0.9rem; }
 .argus-more.is-quiet { color: rgba(255, 255, 255, 0.78); }
 .argus-kicker.is-free { color: #4ade80; }
+.argus-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  margin: 0 0 0.9rem;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(74, 222, 128, 0.55);
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.12);
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.argus-students-hero { align-items: flex-start; min-height: 100vh; }
+.argus-students-copy { position: relative; z-index: 2; max-width: 720px; }
+.argus-students-copy .argus-h1 { text-shadow: 0 2px 24px rgba(7, 8, 26, 0.9); }
+.argus-how .argus-phase-grid,
+.argus-after .argus-phase-grid { width: min(980px, 100%); }
+.argus #real-messages { background: transparent; color: white; }
+.argus #real-messages h2,
+.argus #real-messages .apple-shot-headline { color: white; }
+.argus #real-messages .apple-sub,
+.argus #real-messages .apple-shot-name { color: rgba(255, 255, 255, 0.72); }
 .argus-counsel-grid { display: grid; gap: 1.5rem; width: min(1100px, 100%); margin: 0 auto; align-items: start; }
 .argus-ticks { margin: 1rem 0 0; padding: 0; list-style: none; }
 .argus-ticks li { position: relative; margin: 0.45rem 0; padding-left: 1.3rem; color: rgba(255, 255, 255, 0.86); }
@@ -825,6 +864,7 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
 .argus-stories .apple-story-card blockquote { color: white; }
 .argus-stories .apple-story-card p,
 .argus-stories .apple-story-card li { color: rgba(255, 255, 255, 0.82); }
+.argus-stories p.apple-sub { color: rgba(255, 255, 255, 0.72); }
 .argus .apple-stars .is-on { color: #f5a623; }
 .argus .apple-stars .is-off { color: rgba(255, 255, 255, 0.35); }
 .argus .apple-messages { background: transparent; }
@@ -839,6 +879,8 @@ textarea.argus-input { height: auto; min-height: 7rem; padding-top: 0.8rem; }
   .argus-fields { grid-template-columns: 1fr 1fr; }
   .argus-span { grid-column: 1 / -1; }
   .argus-phase-grid, .argus-days-cols { grid-template-columns: 1fr 1fr 1fr; }
+  .argus-how .argus-phase-grid,
+  .argus-after .argus-phase-grid { width: min(760px, 68%); }
   .argus-days-cols { grid-template-columns: 1fr 1fr; }
   .argus-eclipse { display: grid; }
   .argus-eclipse-copy { grid-area: 1 / 1; }

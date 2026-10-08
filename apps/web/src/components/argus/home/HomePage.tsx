@@ -17,7 +17,7 @@ const ICONS: Record<string, "pipeline" | "cloud" | "chart" | "code"> = {
   "python-backend": "code",
 };
 
-export function HomePage() {
+export function HomeCourses({ interviewHref = "/#interview-start" }: { interviewHref?: string }) {
   const cards = careerCourseCards();
   const itemList = {
     "@context": "https://schema.org",
@@ -32,10 +32,6 @@ export function HomePage() {
   };
 
   return (
-    <>
-      <HomeHero />
-      <HomeScore />
-      <HomePath />
       <section id="career-courses" className="argus-section argus-courses">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
         <div className="argus-scrim argus-courses-intro">
@@ -80,12 +76,17 @@ export function HomePage() {
             Book free counselling
             <i aria-hidden>›</i>
           </Link>
-          <Link href="/#interview-start" className="argus-more">
+          <Link href={interviewHref} className="argus-more">
             Take the free AI interview
             <i aria-hidden>›</i>
           </Link>
         </div>
       </section>
+  );
+}
+
+export function HomeCounsel() {
+  return (
       <section id="counselling" className="argus-section argus-counsel" data-scene="grid">
         <div className="argus-counsel-grid">
           <div className="argus-scrim">
@@ -105,6 +106,17 @@ export function HomePage() {
           </div>
         </div>
       </section>
+  );
+}
+
+export function HomePage() {
+  return (
+    <>
+      <HomeHero />
+      <HomeScore />
+      <HomePath />
+      <HomeCourses />
+      <HomeCounsel />
       <HomeEclipse />
       <SuccessStories tone="argus" />
       <WhatsAppMessages variant="carousel" />

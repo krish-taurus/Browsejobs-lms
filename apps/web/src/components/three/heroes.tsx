@@ -22,16 +22,27 @@ const RING_FRAG = `
   uniform float uFade;
   uniform float uClip;
   uniform vec2 uRes;
+  uniform vec4 uCard;
+  uniform vec4 uBtn;
   uniform vec3 uColor;
   uniform vec3 uHot;
   varying vec2 vUv;
   varying vec3 vN;
+  float cover(vec4 r, vec2 p) {
+    if (r.z <= r.x || r.w <= r.y) return 0.0;
+    float ix = smoothstep(r.x - 0.01, r.x + 0.03, p.x) * smoothstep(r.z + 0.01, r.z - 0.03, p.x);
+    float iy = smoothstep(r.y - 0.01, r.y + 0.03, p.y) * smoothstep(r.w + 0.01, r.w - 0.03, p.y);
+    return ix * iy;
+  }
   void main() {
     float reveal = smoothstep(uProgress + 0.02, uProgress - 0.06, vUv.x);
     float rim = pow(1.0 - abs(dot(normalize(vN), vec3(0.0, 0.0, 1.0))), 1.2);
     vec3 col = mix(uColor, uHot, clamp(rim + 0.35, 0.0, 1.0));
     float side = uClip > 0.0 ? smoothstep(uClip, uClip + 0.16, gl_FragCoord.x / max(uRes.x, 1.0)) : 1.0;
-    float alpha = reveal * (0.55 + rim) * uFade * side;
+    vec2 suv = gl_FragCoord.xy / max(uRes, vec2(1.0));
+    suv.y = 1.0 - suv.y;
+    float ui = max(cover(uCard, suv), cover(uBtn, suv));
+    float alpha = reveal * (0.55 + rim) * uFade * side * mix(1.0, 0.38, ui);
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -86,6 +97,17 @@ function useProgressUniform(progress: MutableRefObject<number>, fade: MutableRef
   return mat;
 }
 
+function screenRect(selector: string, width: number, height: number, target: THREE.Vector4) {
+  const node = document.querySelector(selector);
+  if (!node || width < 1 || height < 1) {
+    target.set(0, 0, 0, 0);
+    return;
+  }
+  const rect = node.getBoundingClientRect();
+  const pad = 12;
+  target.set((rect.left - pad) / width, (rect.top - pad) / height, (rect.right + pad) / width, (rect.bottom + pad) / height);
+}
+
 function shaderUniforms(extra?: Record<string, THREE.IUniform>) {
   return {
     uProgress: { value: 0 },
@@ -111,7 +133,13 @@ export function HorizonRing({
   const invalidate = useThree((state) => state.invalidate);
   const size = useThree((state) => state.size);
   const uniforms = useMemo(
-    () => shaderUniforms({ uClip: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) } }),
+    () =>
+      shaderUniforms({
+        uClip: { value: 0 },
+        uRes: { value: new THREE.Vector2(1, 1) },
+        uCard: { value: new THREE.Vector4() },
+        uBtn: { value: new THREE.Vector4() },
+      }),
     [],
   );
   useFrame(({ clock }, delta) => {
@@ -127,6 +155,15 @@ export function HorizonRing({
     material.uniforms.uProgress.value = drawn;
     material.uniforms.uClip.value = anchor === "top" ? 0.4 : 0;
     material.uniforms.uRes.value.set(size.width, size.height);
+    const card = material.uniforms.uCard.value as THREE.Vector4;
+    const button = material.uniforms.uBtn.value as THREE.Vector4;
+    if (anchor === "top") {
+      screenRect("#top .argus-sample-card", size.width, size.height, card);
+      screenRect("#top .argus-capsule", size.width, size.height, button);
+    } else {
+      card.set(0, 0, 0, 0);
+      button.set(0, 0, 0, 0);
+    }
     const leave = anchor === "top" ? progress.current : 0;
     material.uniforms.uFade.value = fades.current.ring * (1 - leave * 0.72);
     if (material.uniforms.uTime) material.uniforms.uTime.value = clock.elapsedTime;
@@ -157,10 +194,25 @@ export function ScoreRing({
   anchor: SceneAnchor;
 }) {
   const mat = useProgressUniform(progress, fades, "score");
+  const intro = useRef(0);
+  const invalidate = useThree((state) => state.invalidate);
   const uniforms = useMemo(() => shaderUniforms({ uFlash: { value: 0 } }), []);
-  useFrame(() => {
+  useFrame((_, delta) => {
     const material = mat.current;
-    if (!material || anchor !== "halo") return;
+    if (!material) return;
+    if (anchor === "behind") {
+      if (prefersReducedMotion()) intro.current = 1;
+      else if (intro.current < 1) {
+        const step = delta > 0.08 ? Math.max(delta, 0.2) : delta;
+        intro.current = Math.min(1, intro.current + step / 1.2);
+        invalidate();
+      }
+      const fill = (1 - Math.pow(1 - intro.current, 3)) * 0.75;
+      material.uniforms.uProgress.value = fill;
+      material.uniforms.uFlash.value = fill >= 0.74 ? 1 : 0;
+      return;
+    }
+    if (anchor !== "halo") return;
     const fill = Math.min(0.75, (progress.current / 0.4) * 0.75);
     material.uniforms.uProgress.value = fill;
     material.uniforms.uFlash.value = fill >= 0.74 ? 1 : 0;
@@ -282,18 +334,22 @@ const CLAIM_PINS = [
   { lat: 51.51, lng: -0.13, label: "4.9 ★ Google" },
 ];
 
+/** Holds both claim cities on the front of the globe, labels inside a 1280 and 1440 viewport. */
+const CLAIM_YAW = (316 * Math.PI) / 180;
+
 function GlobePin({ lat, lng, label }: { lat: number; lng: number; label: string }) {
   const surface = useMemo(() => latLng(lat, lng, 1.62), [lat, lng]);
-  const outer = useMemo(() => latLng(lat, lng, 2.15), [lat, lng]);
+  const outer = useMemo(() => latLng(lat, lng, 2.05), [lat, lng]);
   const line = useMemo(() => {
     const geometry = new THREE.BufferGeometry().setFromPoints([surface, outer]);
     return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: "#e9e4ff" }));
   }, [surface, outer]);
+  const side = outer.x >= 0 ? "is-right" : "is-left";
   return (
     <group>
       <primitive object={line} />
-      <Html position={outer} center zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
-        <span className="argus-pin-label">{label}</span>
+      <Html position={outer} zIndexRange={[8, 0]} style={{ pointerEvents: "none" }}>
+        <span className={`argus-pin-label ${side}`}>{label}</span>
       </Html>
     </group>
   );
@@ -355,8 +411,12 @@ export function DotGlobe({
     };
   }, [invalidate]);
 
+  const claims = pins === CLAIM_PINS;
   useFrame((_, delta) => {
-    if (group.current) group.current.rotation.y += delta * 0.08;
+    if (group.current) {
+      if (claims) group.current.rotation.y = CLAIM_YAW;
+      else if (!prefersReducedMotion()) group.current.rotation.y += delta * 0.08;
+    }
     if (material.current) material.current.opacity = fades.current.globe;
   });
 
@@ -408,7 +468,8 @@ function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, 
   if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
   if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
   if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
-  if (id === "globe" && anchor === "right") return { position: [1.15, 0.02, 0], scale: 0.86 };
+  if (id === "score" && anchor === "behind") return { position: [-1.15, 0.42, 0], scale: 0.46 };
+  if (id === "globe" && anchor === "right") return { position: [1.22, -0.4, 0], scale: 0.55 };
   return { position: [0, 0, 0], scale: 1 };
 }
 

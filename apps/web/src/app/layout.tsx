@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { Sora, Inter, IBM_Plex_Mono, Poppins, Nunito, Michroma } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@/components/analytics/Analytics";
 import { MotionProvider } from "@/components/argus/MotionProvider";
 import { SceneHost } from "@/components/three/SceneHost";
 import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import "./globals.css";
 
-const sora = Sora({
+// Latin woff2 files live in the repo (OFL alongside each family) so the
+// production build never calls Google Fonts.
+
+const sora = localFont({
+  src: [
+    { path: "../fonts/sora/sora-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/sora/sora-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/sora/sora-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-sora",
-  subsets: ["latin"],
-  weight: ["400", "600", "800"],
   display: "swap",
   preload: false,
 });
@@ -19,42 +25,58 @@ const sora = Sora({
 // body text, chat and controls. Kept separate from --font-sora (used
 // everywhere else as `.display`/`font-display`) so the rest of the site is
 // untouched.
-const poppins = Poppins({
+const poppins = localFont({
+  src: [
+    { path: "../fonts/poppins/poppins-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/poppins/poppins-latin-500-italic.woff2", weight: "500", style: "italic" },
+    { path: "../fonts/poppins/poppins-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/poppins/poppins-latin-600-italic.woff2", weight: "600", style: "italic" },
+    { path: "../fonts/poppins/poppins-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/poppins/poppins-latin-700-italic.woff2", weight: "700", style: "italic" },
+  ],
   variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
   display: "swap",
   preload: false,
 });
 
-const nunito = Nunito({
+const nunito = localFont({
+  src: [
+    { path: "../fonts/nunito/nunito-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/nunito/nunito-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/nunito/nunito-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/nunito/nunito-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/nunito/nunito-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-nunito",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   preload: false,
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: [
+    { path: "../fonts/inter/inter-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/inter/inter-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/inter/inter-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/inter/inter-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const michroma = Michroma({
+const michroma = localFont({
+  src: [{ path: "../fonts/michroma/michroma-latin-400-normal.woff2", weight: "400", style: "normal" }],
   variable: "--font-wordmark",
-  subsets: ["latin"],
-  weight: "400",
   display: "swap",
   preload: false,
 });
 
-const plexMono = IBM_Plex_Mono({
+const plexMono = localFont({
+  src: [
+    { path: "../fonts/ibm-plex-mono/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/ibm-plex-mono/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/ibm-plex-mono/ibm-plex-mono-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
   variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   display: "swap",
   preload: false,
 });
