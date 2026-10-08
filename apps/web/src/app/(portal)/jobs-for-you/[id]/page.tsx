@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
 import { candidateApi, jobApi, type MyMockStatus, type PublicJob } from "@/lib/candidate";
 import { JobDescription } from "@/components/jobs/JobDescription";
+import { mockPath } from "@/lib/mockKinds";
 
 /**
  * Apply to a BrowseJobs-direct role, in the LMS's own theme — not the
@@ -44,7 +45,7 @@ export default function ApplyToJobPage({ params }: { params: Promise<{ id: strin
     setError(null);
     try {
       const r = await candidateApi.startMock(jobId);
-      router.push(`/student-ai-mock/${r.data.mock_id}/room`);
+      router.push(mockPath("job", r.data.mock_id, true));
     } catch (err) {
       // Past the attempt cap this is a plain validation error (a hard stop,
       // not a purchase offer — StartEmployerJobMock never touches a wallet),

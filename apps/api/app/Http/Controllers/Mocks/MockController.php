@@ -44,6 +44,7 @@ final class MockController extends Controller
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
             $mocks = MockInterview::query()
                 ->where('user_id', $request->user()->id)
+                ->with('blueprint:id,user_id,employer_job_id,job_feed_item_id')
                 ->orderByDesc('id')
                 ->get();
 
@@ -66,7 +67,10 @@ final class MockController extends Controller
             return response()->json([
                 'data' => [
                     'enabled' => $this->entitlements->settings()->text_practice_enabled,
-                    'in_progress_id' => $mocks->firstWhere('status', MockInterview::STATUS_IN_PROGRESS)?->id,
+                    // Practice only — a job or CV interview left open must not
+                    // surface as "resume" on the text-practice card.
+                    'in_progress_id' => $mocks->first(fn (MockInterview $m) => $m->status === MockInterview::STATUS_IN_PROGRESS
+                        && $m->kind() === MockInterview::KIND_PRACTICE)?->id,
                     'best_score' => $best,
                     'human_mock_unlocked' => $best >= (int) config('mocks.human_gate_score', 70),
                     // Per-module mock quotas the student has unlocked (PRD §6.6).
@@ -107,9 +111,52 @@ final class MockController extends Controller
                         ->values()
                         ->map(fn (MockInterview $m) => [
                             'id' => $m->id,
+                            'kind' => $m->kind(),
                             'overall_score' => $m->overall_score,
                             'completed_at' => $m->completed_at?->toIso8601String(),
                         ]),
+                    // How many sessions of each kind the student has — the
+                    // counts on the Practice / Voice / Job / CV tabs.
+                    'kind_counts' => collect(MockInterview::KINDS)
+                        ->mapWithKeys(fn (string $k) => [$k => $mocks->filter(fn (MockInterview $m) => $m->kind() === $k)->count()]),
+                ],
+            ]);
+        });
+    }
+
+    /**
+     * One kind's sessions for the student — the list behind
+     * /student-ai-mock/{practice|voice|job|cv}.
+     */
+    public function history(Request $request): JsonResponse
+    {
+        $kind = (string) $request->query('kind', MockInterview::KIND_PRACTICE);
+        if (! in_array($kind, MockInterview::KINDS, true)) {
+            throw ValidationException::withMessages(['kind' => 'Unknown interview type.']);
+        }
+
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $kind): JsonResponse {
+            $mocks = MockInterview::query()
+                ->where('user_id', $request->user()->id)
+                ->ofKind($kind)
+                ->with('blueprint:id,role_title,user_id,employer_job_id,job_feed_item_id')
+                ->orderByDesc('id')
+                ->limit(200)
+                ->get();
+
+            return response()->json([
+                'data' => [
+                    'kind' => $kind,
+                    'mocks' => $mocks->map(fn (MockInterview $m) => [
+                        'id' => $m->id,
+                        'kind' => $kind,
+                        'role_title' => $m->blueprint?->role_title,
+                        'status' => $m->status,
+                        'is_room' => (bool) $m->is_room,
+                        'overall_score' => $m->overall_score,
+                        'started_at' => $m->started_at?->toIso8601String(),
+                        'completed_at' => $m->completed_at?->toIso8601String(),
+                    ])->values(),
                 ],
             ]);
         });
@@ -309,7 +356,7 @@ final class MockController extends Controller
 
     private function session(MockInterview $interview, int $status = 200): JsonResponse
     {
-        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title,max_questions']);
+        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title,max_questions,user_id,employer_job_id,job_feed_item_id']);
         // A blueprint may run longer than the platform default (the AI
         // Readiness Interview asks 15) — mirrors AnswerMockInterview's own
         // override so the two never disagree about when the session is done.
@@ -325,6 +372,9 @@ final class MockController extends Controller
         return response()->json([
             'data' => [
                 'id' => $interview->id,
+                // practice | voice | job | cv — the portal keeps each kind
+                // under its own URL (/student-ai-mock/{kind}/{id}).
+                'kind' => $interview->kind(),
                 'status' => $interview->status,
                 'mode' => $interview->mode,
                 // The plain (non-room) page uses this to redirect a room-kind

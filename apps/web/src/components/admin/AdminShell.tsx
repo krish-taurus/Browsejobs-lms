@@ -42,6 +42,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Careers",
     items: [
       { href: "/admin/mocks", label: "Mocks" },
+      { href: "/admin/ai-interviews", label: "AI interviews" },
       { href: "/admin/interviews", label: "Interview bank" },
       { href: "/admin/market", label: "Market intel" },
       { href: "/admin/advice-graph", label: "Advice graph" },

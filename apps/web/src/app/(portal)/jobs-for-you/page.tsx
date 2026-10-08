@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
 import { candidateApi, cvMockApi, mockRecordingApi, type InternalJob, type MyMockStatus } from "@/lib/candidate";
+import { mockPath } from "@/lib/mockKinds";
 
 type Job = {
   id: number;
@@ -326,7 +327,7 @@ export default function JobsForYouPage() {
     setError(null);
     try {
       const r = await cvMockApi.start();
-      router.push(`/student-ai-mock/${r.data.mock_id}/room`);
+      router.push(mockPath("cv", r.data.mock_id, true));
     } catch (err) {
       setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the interview.");
       setCvMockBusy(false);
@@ -396,8 +397,8 @@ export default function JobsForYouPage() {
     setBusy(job.id);
     setError(null);
     try {
-      await apiJson<{ data: { mock_id: number } }>(`/api/v1/me/jobs/${job.id}/mock`, { method: "POST" });
-      router.push("/student-ai-mock");
+      const r = await apiJson<{ data: { mock_id: number } }>(`/api/v1/me/jobs/${job.id}/mock`, { method: "POST" });
+      router.push(mockPath("job", r.data.mock_id));
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
         setError("JD mocks are part of the Interview Kit — unlock this job below.");
