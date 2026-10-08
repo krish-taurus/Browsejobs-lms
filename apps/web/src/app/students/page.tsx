@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { InterviewStartForm } from "@/components/auth/InterviewStartForm";
 import { AppleShell } from "@/components/apple/AppleShell";
 import { Disclaimer } from "@/components/brand/Disclaimer";
+import { CareerCourses } from "@/components/apple/CareerCourses";
+import { SuccessStories } from "@/components/apple/SuccessStories";
 import { AfterYouClear, BelowSeventyFive, CounsellingBlock, HowTheInterviewWorks, StudentFaq, WhatSeventyFive } from "@/components/apple/StudentStory";
 import { recruiterFaqs } from "@/content/home";
 import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
@@ -50,9 +52,11 @@ export default function StudentsPage() {
         </section>
         <WhatSeventyFive />
         <BelowSeventyFive />
+        <CareerCourses />
         <CounsellingBlock />
         <HowTheInterviewWorks />
         <AfterYouClear />
+        <SuccessStories fuller />
         <StudentFaq />
       </AppleShell>
     </>

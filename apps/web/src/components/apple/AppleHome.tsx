@@ -4,6 +4,8 @@ import { More } from "./More";
 import { PhoneInterview } from "./PhoneInterview";
 import { MacFloor } from "./MacFloor";
 import { EmployerImpact } from "./EmployerImpact";
+import { CareerCourses } from "./CareerCourses";
+import { SuccessStories } from "./SuccessStories";
 import { AfterYouClear, BelowSeventyFive, CounsellingBlock, HowTheInterviewWorks, StudentFaq, WhatSeventyFive } from "./StudentStory";
 
 export function AppleHome() {
@@ -23,16 +25,18 @@ export function AppleHome() {
           <Disclaimer />
         </div>
         <InterviewStartForm tone="apple" />
-        <div className="mt-8 md:mt-10">
+        <div className="apple-parallax mt-8 md:mt-10">
           <PhoneInterview />
         </div>
       </section>
 
       <WhatSeventyFive />
       <BelowSeventyFive />
+      <CareerCourses />
       <CounsellingBlock />
       <HowTheInterviewWorks />
       <AfterYouClear />
+      <SuccessStories />
 
       <section id="for-employers" className="apple-dark bg-black text-center text-white">
         <div id="ai-recruiter" className="apple-tile">

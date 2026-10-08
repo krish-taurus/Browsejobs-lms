@@ -38,7 +38,7 @@ export function EmployerImpact({ dark = false }: { dark?: boolean }) {
   const muted = dark ? "text-[#a1a1a6]" : "text-[#424245]";
   const card = dark ? "border-white/15 bg-white/5" : "border-black/10 bg-white";
   return (
-    <section id="impact" className={dark ? "apple-dark bg-black text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"}>
+    <section id="impact" className={dark ? "apple-dark apple-shade text-white" : "apple-mist text-[#1d1d1f]"}>
       <div className="apple-tile text-center">
         <h2 className="apple-display text-[clamp(2.75rem,6vw,5rem)] leading-[0.98]">
           90 days <span className="text-[#6e6e73]">→</span> 3 days.

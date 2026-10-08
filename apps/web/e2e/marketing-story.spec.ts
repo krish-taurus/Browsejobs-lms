@@ -18,8 +18,13 @@ test("primary nav is the same order on desktop and mobile", async ({ page }) => 
   const nav = page.getByRole("navigation", { name: "Primary" });
   await expect(nav.getByRole("link", { name: "Home", exact: true })).toHaveAttribute("href", "/");
   await expect(nav.getByRole("link", { name: "Students", exact: true })).toHaveAttribute("href", "/students");
+  await expect(nav.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
   await expect(nav.getByRole("link", { name: "For Employers", exact: true })).toHaveAttribute("href", "/employers");
   await expect(nav.getByRole("link", { name: "Demo", exact: true })).toHaveAttribute("href", "/demo");
+  const order = await nav.locator(".apple-nav-links a, .apple-nav-links button").evaluateAll((nodes) =>
+    nodes.map((node) => (node.textContent ?? "").replace("▾", "").replace(/\s+/g, " ").trim()),
+  );
+  expect(order.slice(0, 6)).toEqual(["Home", "Students", "Courses", "For Employers", "Demo", "Login"]);
   await expect(nav.getByRole("button", { name: "Login" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Onboard with us for the future of hiring" })).toHaveAttribute(
     "href",
@@ -44,6 +49,7 @@ test("primary nav is the same order on desktop and mobile", async ({ page }) => 
   await page.getByRole("button", { name: "Menu" }).click();
   const menu = page.locator("#apple-menu");
   await expect(menu.getByRole("link", { name: "Students" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
   await expect(menu.getByRole("link", { name: "For Employers" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Onboard with us for the future of hiring" })).toHaveAttribute(
     "href",
@@ -79,7 +85,26 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
 
   const html = await page.content();
   expect(html).toContain('"@type":"FAQPage"');
+  expect(html).toContain('"@type":"ItemList"');
+  expect(html).not.toContain('"@type":"Review"');
   expect(html).not.toContain("/courses/agentic-ai");
+
+  const courses = page.locator("#career-courses");
+  await expect(courses).toContainText("Career-driven courses");
+  await expect(courses).toContainText("Data Engineering");
+  await expect(courses).toContainText("6 months");
+  await expect(courses).toContainText("Live online + recordings");
+  await expect(courses).toContainText("APIs, databases, and production Python.");
+  await expect(courses.getByRole("link", { name: "View course" }).first()).toHaveAttribute("href", "/courses/data-engineering");
+  await expect(courses.getByRole("link", { name: "Explore courses" })).toHaveAttribute("href", "/courses");
+  await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
+
+  const stories = page.locator("#success-stories");
+  await expect(stories).toContainText("Story coming soon");
+  await expect(stories).toContainText("From homemaker to engineer");
+  await expect(stories).toContainText("From delivery rider to engineer");
+  await expect(stories).toContainText("AI interview");
+  await expect(stories).not.toContainText("Google review");
 });
 
 test("employers page explains 90 days against 3 days", async ({ page }) => {
@@ -98,9 +123,12 @@ test("employers page explains 90 days against 3 days", async ({ page }) => {
 });
 
 test("marketing pages do not say coming soon or not live", async ({ page }) => {
-  for (const path of ["/", "/students", "/employers", "/employers/how-it-works", "/employers/faq", "/how-it-works", "/employers/mission-control-demo"]) {
+  for (const path of ["/", "/students", "/employers", "/employers/how-it-works", "/employers/faq", "/how-it-works", "/employers/mission-control-demo", "/courses"]) {
     await page.goto(path);
-    const text = (await page.locator("body").innerText()).toLowerCase();
+    const story = page.locator("#success-stories");
+    const storyText = (await story.count()) > 0 ? (await story.innerText()).toLowerCase() : "";
+    const body = (await page.locator("body").innerText()).toLowerCase();
+    const text = storyText ? body.replaceAll(storyText, "") : body;
     expect(text, path).not.toContain("coming soon");
     expect(text, path).not.toContain("not live");
   }

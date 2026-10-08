@@ -4,7 +4,7 @@ import { BELOW_SEVENTY_FIVE, CLAIM_INTERVIEW_CALL, CLAIM_RECRUITERS, COUNSELLING
 
 export function WhatSeventyFive() {
   return (
-    <section id="what-75" className="apple-tile bg-white text-center">
+    <section id="what-75" className="apple-tile apple-rise bg-white text-center">
       <h2 className="apple-display text-[clamp(2.75rem,5vw,4.5rem)]">What 75% means.</h2>
       <p className="apple-sub mt-4 text-[#424245]">Plain version. The score is a read of this interview. It is not a job offer.</p>
       <ol className="mx-auto mt-12 grid max-w-[880px] gap-8 text-left sm:grid-cols-2">
@@ -25,10 +25,12 @@ export function WhatSeventyFive() {
 
 export function BelowSeventyFive() {
   return (
-    <section id="below-75" className="apple-tile bg-[#f5f5f7] text-center">
+    <section id="below-75" className="apple-tile apple-rise apple-mist text-center">
       <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.5rem,5vw,4.25rem)]">Below 75%? Here&apos;s your path.</h2>
       <p className="apple-sub mt-4 text-[#424245]">A score under 75% is a starting point. This is the path back to a clear.</p>
-      <ol className="apple-road">
+      <div className="apple-road-layout">
+        <p className="apple-road-sticky">Below 75%</p>
+        <ol className="apple-road">
         {BELOW_SEVENTY_FIVE.map((step, index) => (
           <li key={step.title}>
             <span className="apple-road-n">{String(index + 1).padStart(2, "0")}</span>
@@ -38,7 +40,8 @@ export function BelowSeventyFive() {
             </div>
           </li>
         ))}
-      </ol>
+        </ol>
+      </div>
       <div className="apple-note mt-4">
         <Disclaimer />
       </div>
@@ -48,7 +51,7 @@ export function BelowSeventyFive() {
 
 export function CounsellingBlock() {
   return (
-    <section id="counselling" className="apple-tile scroll-mt-20 bg-white text-center">
+    <section id="counselling" className="apple-tile apple-rise scroll-mt-20 bg-white text-center">
       <p className="text-[17px] font-medium text-[#0a7040]">{COUNSELLING_COPY.kicker}</p>
       <h2 className="apple-display mt-3 text-[clamp(2.5rem,5vw,4.25rem)]">{COUNSELLING_COPY.title}</h2>
       <p className="apple-sub mt-4 text-[#424245]">{COUNSELLING_COPY.body}</p>
@@ -61,7 +64,7 @@ export function CounsellingBlock() {
 
 export function AfterYouClear() {
   return (
-    <section id="after-clear" className="apple-tile bg-[#f5f5f7] text-center">
+    <section id="after-clear" className="apple-tile apple-rise bg-[#f5f5f7] text-center">
       <h2 className="apple-display text-[clamp(2.5rem,5vw,4.25rem)]">After you clear.</h2>
       <ol className="apple-steps">
         <li>Pre-qualified</li>
@@ -91,7 +94,7 @@ export function AfterYouClear() {
 
 export function HowTheInterviewWorks() {
   return (
-    <section id="how" className="apple-tile bg-white text-center">
+    <section id="how" className="apple-tile apple-rise bg-[#fbfbfd] text-center">
       <h2 className="apple-display text-[clamp(2.75rem,5vw,4.5rem)]">How it works.</h2>
       <ol className="apple-steps">
         <li>Interview</li>

@@ -76,7 +76,7 @@ export function EmployerProduct() {
         </nav>
       </div>
 
-      <section id="overview" className="apple-dark scroll-mt-28 bg-black px-5 pb-16 pt-10 text-center text-white md:pb-20 md:pt-12">
+      <section id="overview" className="apple-dark apple-glow scroll-mt-28 bg-black px-5 pb-16 pt-10 text-center text-white md:pb-20 md:pt-12">
         <p className="text-[17px] text-[#a1a1a6]">For employers</p>
         <h1 className="apple-display mx-auto mt-3 max-w-[10ch] text-[clamp(3rem,6.6vw,6rem)]">
           Your AI{" "}
@@ -109,7 +109,7 @@ export function EmployerProduct() {
         <section
           key={item.id}
           id={item.id}
-          className={item.dark ? "apple-dark bg-black text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"}
+          className={item.dark ? "apple-dark apple-rise bg-black text-white" : "apple-rise bg-[#f5f5f7] text-[#1d1d1f]"}
         >
           <div className="apple-tile text-center">
             <h2 className="apple-display mx-auto max-w-[16ch] text-[clamp(2.75rem,5.2vw,4.75rem)]">{item.title}</h2>

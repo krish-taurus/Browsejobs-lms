@@ -8,6 +8,7 @@ import { LoginMenu } from "@/components/landing/LoginMenu";
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/students", label: "Students" },
+  { href: "/courses", label: "Courses" },
   { href: "/employers", label: "For Employers" },
   { href: "/demo", label: "Demo" },
 ] as const;
@@ -19,7 +20,7 @@ export function AppleNav({ dark = false }: { dark?: boolean }) {
 
   return (
     <header className={`apple-nav${dark ? " is-dark" : ""}`}>
-      <nav className="apple-nav-bar mx-auto w-full max-w-[1100px] px-5" aria-label="Primary">
+      <nav className="apple-nav-bar mx-auto w-full max-w-[1240px] px-5" aria-label="Primary">
         <Link href="/" className="apple-nav-brand">
           BrowseJobs
         </Link>
