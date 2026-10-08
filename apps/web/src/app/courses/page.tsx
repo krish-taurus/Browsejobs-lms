@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { MarketingShell } from "@/components/landing/MarketingShell";
-import { Kicker } from "@/components/brand/Kicker";
-import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { courseDetails } from "@/content/courses";
-import { courses } from "@/content/landing";
-import { canonical } from "@/lib/seo";
-import { seoMoneyLinks } from "@/content/seo-nav";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { CoursesHub } from "@/components/argus/courses/CoursesHub";
+import { careerCourseCards } from "@/content/courses";
+import { canonical, SITE_ORIGIN } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Programs",
@@ -16,87 +12,25 @@ export const metadata: Metadata = {
 };
 
 export default function CoursesPage() {
-  const detailSlugs = new Set(courseDetails.filter((c) => c.live).map((c) => c.slug));
-  const live = courses.filter((c) => c.live);
-  const soon = courses.filter((c) => !c.live);
+  const live = careerCourseCards();
+  const list = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Career-driven courses",
+    itemListElement: live.map((course, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: course.name,
+      url: `${SITE_ORIGIN}${course.href}`,
+    })),
+  };
 
   return (
-    <MarketingShell>
-      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <ScrollReveal>
-          <Kicker>Programs</Kicker>
-          <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-6xl">
-            Every program, rebuilt monthly from real interviews
-          </h1>
-        </ScrollReveal>
-
-        <div className="mt-12 grid gap-5 md:grid-cols-2">
-          {live.map((c, i) => {
-            const detail = courseDetails.find((d) => d.slug === c.slug);
-            const hasDetail = detailSlugs.has(c.slug);
-            const Card = (
-              <article className="group flex h-full flex-col rounded-[22px] border border-line bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-trust/40 hover:shadow-soft md:p-10">
-                <div className="flex items-center justify-between">
-                  <span className="mono rounded-full bg-sky px-3 py-1 text-xs font-semibold text-deep">{c.code}</span>
-                  {detail && <span className="mono text-xs text-muted">{detail.duration}</span>}
-                </div>
-                <h2 className="display mt-6 text-3xl text-ink md:text-4xl">{c.name}</h2>
-                <p className="mt-3 flex-1 text-ink2/70">{c.tagline}</p>
-                <div className="mt-7 flex items-center justify-between border-t border-line pt-5">
-                  <span className="mono text-xs text-muted">{detail?.projectsLabel ?? "Live program"}</span>
-                  {hasDetail && (
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-trust">
-                      View syllabus
-                      <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                    </span>
-                  )}
-                </div>
-              </article>
-            );
-            return (
-              <ScrollReveal key={c.code} delay={i * 0.06}>
-                {hasDetail ? <Link href={`/courses/${c.slug}`}>{Card}</Link> : Card}
-              </ScrollReveal>
-            );
-          })}
-        </div>
-
-        <ScrollReveal delay={0.1}>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {soon.map((c) => (
-              <div key={c.code} className="flex items-center justify-between rounded-[14px] border border-dashed border-line bg-white/60 px-5 py-5">
-                <span>
-                  <span className="display block text-lg text-ink">{c.name}</span>
-                  <span className="mono mt-1 block text-[10px] uppercase tracking-widest text-muted">Waitlist</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal>
-          <div className="mt-16 border-t border-line pt-12">
-            <Kicker>Guides</Kicker>
-            <h2 className="display mt-3 max-w-2xl text-3xl text-ink">Read the fee, the city, and the switch before you book</h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {seoMoneyLinks
-                .filter((item) => item.path !== "/ai-hiring" && item.path !== "/ai-interview-platform")
-                .map((item) => (
-                  <li key={item.path}>
-                    <Link href={item.path} className="font-semibold text-trust hover:underline">
-                      {item.footerLabel}
-                    </Link>
-                  </li>
-                ))}
-              <li>
-                <Link href="/answers" className="font-semibold text-trust hover:underline">
-                  Straight answers
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </ScrollReveal>
-      </div>
-    </MarketingShell>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(list) }} />
+      <ArgusFrame className="argus-home argus-courses-page">
+        <CoursesHub />
+      </ArgusFrame>
+    </>
   );
 }

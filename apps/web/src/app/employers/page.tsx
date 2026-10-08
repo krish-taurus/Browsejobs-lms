@@ -1,16 +1,10 @@
-import { EmployersPage } from "@/components/employers/EmployersPage";
-import { MarketingShell } from "@/components/landing/MarketingShell";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { EmployersPage } from "@/components/argus/employers/EmployersPage";
 import { EMPLOYER_FAQ, EMPLOYER_META } from "@/content/employer-landing";
 import { contact } from "@/content/landing";
 import { breadcrumbNode, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
 
-const employerNav = [
-  { href: "#bots", label: "The bots" },
-  { href: "#journey", label: "Journey" },
-  { href: "#report", label: "Sample report" },
-  { href: "#faq", label: "FAQ" },
-  { href: "/", label: "For candidates" },
-] as const;
+const SHORT_FAQ = EMPLOYER_FAQ.filter((_, index) => index === 0 || index === 1 || index === 5);
 
 export default function EmployersRoute() {
   const jsonLd = jsonLdGraph([
@@ -22,7 +16,7 @@ export default function EmployersRoute() {
     {
       "@type": "Service",
       name: "BrowseJobs hiring",
-      serviceType: "Hiring on WhatsApp bots",
+      serviceType: "Hiring with the BrowseJobs AI Recruiter",
       url: "https://browsejobs.ai/employers",
       provider: {
         "@type": "Organization",
@@ -34,15 +28,15 @@ export default function EmployersRoute() {
       areaServed: "IN",
       description: EMPLOYER_META.description,
     },
-    faqNode(EMPLOYER_FAQ),
+    faqNode(SHORT_FAQ),
   ]);
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <MarketingShell links={employerNav} ctaLabel="Hire with BrowseJobs" ctaHref="#work-with-us">
+      <ArgusFrame className="argus-home argus-employers">
         <EmployersPage />
-      </MarketingShell>
+      </ArgusFrame>
     </>
   );
 }

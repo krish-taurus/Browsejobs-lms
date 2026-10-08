@@ -37,7 +37,8 @@ const NAV = [
   // Taurus AI kit's own nav placement (Sept 2026). It previously lived
   // embedded in the Dashboard (see git history), which is now view-only and
   // has no room for a conversation.
-  { href: "/employer/taurus-ai", label: "Taurus AI", icon: RobotIcon, badge: "AI" },
+  { href: "/employer/taurus-ai", label: "AI Recruiter", icon: RobotIcon, badge: "AI" },
+  { href: "/employer/ai-recruiter", label: "AI Recruiter", icon: RobotIcon, badge: "Demo" },
   { href: "/employer/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/employer/jobs", label: "Jobs", icon: BriefcaseIcon },
   { href: "/employer/pipeline", label: "Pipeline", icon: PipelineIcon },
@@ -364,7 +365,7 @@ function Guarded({ children }: { children: ReactNode }) {
                 style={{ borderColor: "var(--bj-dash-primary)", color: "var(--bj-dash-primary)" }}
               >
                 <RobotIcon className="size-4" />
-                <span className="hidden sm:inline">Taurus AI</span>
+                <span className="hidden sm:inline">AI Recruiter</span>
               </Link>
 
               <button

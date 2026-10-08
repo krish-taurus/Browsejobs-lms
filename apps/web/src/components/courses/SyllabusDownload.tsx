@@ -29,7 +29,7 @@ function captureUtm(): Record<string, string> {
  * captures a `syllabus` lead, and opens the signed PDF/HTML on success. If no approved
  * syllabus exists yet the endpoint 404s and we nudge the free counselling step.
  */
-export function SyllabusDownload({ courseSlug }: { courseSlug: string }) {
+export function SyllabusDownload({ courseSlug, appearance = "keynote" }: { courseSlug: string; appearance?: "keynote" | "argus" }) {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -88,7 +88,7 @@ export function SyllabusDownload({ courseSlug }: { courseSlug: string }) {
           setNotReady(false);
           setError(null);
         }}
-        className="rounded-full border border-white/40 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white"
+        className={appearance === "argus" ? "argus-btn argus-btn-secondary" : "rounded-full border border-white/40 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white"}
       >
         Download syllabus
       </button>

@@ -58,6 +58,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Sales & CRM",
     items: [
       { href: "/admin/leads", label: "Leads" },
+      { href: "/admin/enquiries", label: "Enquiries" },
       { href: "/admin/tasks", label: "Tasks" },
       { href: "/admin/funnel", label: "Funnel" },
       { href: "/admin/engagement", label: "Engagement" },

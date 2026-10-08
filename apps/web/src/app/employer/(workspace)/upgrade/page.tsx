@@ -1,4 +1,4 @@
-import { PageHead, Tile, Label, PrimaryButton } from "@/components/employer/ui";
+import { PageHead, Tile, PrimaryButton } from "@/components/employer/ui";
 import { CrownIcon } from "@/components/employer/icons";
 
 const PERKS = [

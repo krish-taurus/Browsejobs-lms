@@ -5,11 +5,9 @@
  * his positioning sentence, and the fictional scores inside the labelled
  * sample report. Do not add salaries, client logos, testimonials, or other rates.
  *
- * Enquiry CTAs use the published hello@browsejobs.ai address. There is no
- * separate employer lead form in the product yet.
+ * Hiring enquiries go to /employers/enquire. The published hello@ address
+ * stays in the footer for everything else.
  */
-
-import { contact } from "@/content/landing";
 
 export const EMPLOYER_META = {
   path: "/employers",
@@ -18,17 +16,13 @@ export const EMPLOYER_META = {
     "Share a role on WhatsApp. Bots screen applicants, run a proctored AI interview, and send a performance report with the CV. Hiring time drops from 90 days to 3 days.",
 } as const;
 
-export function employerMail(subject: string): string {
-  return `mailto:${contact.email}?subject=${encodeURIComponent(subject)}`;
-}
-
 export const EMPLOYER_WAYS = [
   {
     id: "partner",
     title: "Onboard BrowseJobs as your hiring partner",
     body: "We run hiring with you. You share the role on WhatsApp. The bots screen, interview, verify, and keep the candidate in the loop. You meet people who already cleared.",
     cta: "Onboard us as your hiring partner",
-    href: employerMail("Onboard BrowseJobs as our hiring partner"),
+    href: "/employers/enquire?path=partner",
     primary: true,
   },
   {
@@ -36,7 +30,7 @@ export const EMPLOYER_WAYS = [
     title: "Use our tool for your own hiring",
     body: "Your team runs the same bots on the roles you hire for. You stay in charge. The interview, the report, and the WhatsApp updates still happen.",
     cta: "Use our tool for your own hiring",
-    href: employerMail("Use the BrowseJobs hiring tool for our own hiring"),
+    href: "/employers/enquire?path=tool",
     primary: false,
   },
 ] as const;
@@ -127,7 +121,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "What do we actually receive?",
-    a: "A full performance report and the CV. The report has the overall score, a skill breakdown, a proctoring summary, communication notes, strengths and risks, transcript excerpts, and BGV status. The sample on this page is an example, not a real person.",
+    a: "A full performance report and the CV. The report has the overall score, a skill breakdown, a proctoring summary, communication notes, strengths and risks, transcript excerpts, and BGV status. The sample on the how-it-works page is an example, not a real person.",
   },
   {
     q: "Are the interviews proctored?",
@@ -139,7 +133,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "Can we hire with you, or use the tool ourselves?",
-    a: "Both. You can onboard BrowseJobs as your hiring partner, and we run the path with you. Or your team can use the tool for your own hiring. Use the two buttons on this page to tell us which one you want.",
+    a: "Both. You can onboard BrowseJobs as your hiring partner, and we run the path with you. Or your team can use the tool for your own hiring. The two links on the employers page tell us which one you want.",
   },
   {
     q: "Do you guarantee a hire?",

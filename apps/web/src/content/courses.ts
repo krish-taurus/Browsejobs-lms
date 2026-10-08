@@ -535,6 +535,30 @@ export function getCourseDetail(slug: string): CourseDetail | undefined {
   return courseDetails.find((c) => c.slug === slug);
 }
 
+/** Live programmes only. Outcome line is the first published outcome, or the tagline when none exists. */
+export function careerCourseCards(): {
+  slug: string;
+  name: string;
+  line: string;
+  duration: string;
+  format: string;
+  href: string;
+}[] {
+  return courseDetails.flatMap((course) => {
+    if (!course.live) return [];
+    return [
+      {
+        slug: course.slug,
+        name: course.name,
+        line: course.outcomes[0] ?? course.tagline,
+        duration: course.duration,
+        format: course.format,
+        href: `/courses/${course.slug}`,
+      },
+    ];
+  });
+}
+
 /** Shared brochure content used on every course page. */
 export const situationCards = [
   {

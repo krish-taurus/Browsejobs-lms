@@ -811,7 +811,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       clearTimeout(nudgeTimer);
       clearTimeout(advanceTimer);
     };
-  }, [step, session?.status, session?.ready_to_finish, question?.id, typedAnswer, transcript, phase, speaking, speak, sendAnswer]);
+  }, [step, session, question?.id, typedAnswer, transcript, phase, speaking, speak, sendAnswer]);
 
   const skipQuestion = useCallback(() => {
     recognitionRef.current?.stop();

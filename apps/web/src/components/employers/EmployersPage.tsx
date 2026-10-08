@@ -95,6 +95,13 @@ export function EmployersPage() {
             <Disclaimer className="mt-4 max-w-2xl" />
           </ScrollReveal>
           <HiringJourney />
+          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-ink2">
+            The hiring floor is sample data, with fictional names. We call and screen, run pre-BGV, and prepare the offer. A person always releases it.{" "}
+            <Link href="/employers/mission-control-demo" className="font-semibold text-trust hover:text-deep">
+              Open the demo
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
@@ -109,7 +116,7 @@ export function EmployersPage() {
               <article key={way.id} className="flex flex-col rounded-[22px] border border-line bg-paper p-6 md:p-8">
                 <h3 className="display text-2xl text-ink">{way.title}</h3>
                 <p className="mt-3 flex-1 text-[15px] leading-relaxed text-ink2">{way.body}</p>
-                <a
+                <Link
                   href={way.href}
                   className={
                     way.primary
@@ -118,7 +125,7 @@ export function EmployersPage() {
                   }
                 >
                   {way.cta}
-                </a>
+                </Link>
               </article>
             ))}
           </div>
