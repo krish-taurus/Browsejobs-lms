@@ -15,7 +15,12 @@ export function SceneHost() {
 
   useEffect(() => {
     const sections = () => [...document.querySelectorAll<HTMLElement>("[data-scene]")];
-    if (sections().length === 0) return;
+    if (sections().length === 0) {
+      hideScene();
+      setWebgl(false);
+      document.documentElement.classList.remove("argus-live");
+      return;
+    }
 
     const narrow = window.matchMedia("(max-width: 767px)");
     const reduced = prefersReducedMotion();

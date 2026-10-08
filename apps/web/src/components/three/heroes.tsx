@@ -36,13 +36,17 @@ const RING_FRAG = `
   }
   void main() {
     float reveal = smoothstep(uProgress + 0.02, uProgress - 0.06, vUv.x);
-    float rim = pow(1.0 - abs(dot(normalize(vN), vec3(0.0, 0.0, 1.0))), 1.2);
-    vec3 col = mix(uColor, uHot, clamp(rim + 0.35, 0.0, 1.0));
+    float band = abs(vUv.y - 0.5) * 2.0;
+    float edge = smoothstep(1.0, 0.28, band);
+    float core = smoothstep(0.15, 0.85, 1.0 - band);
+    vec3 mist = vec3(0.722, 0.722, 0.741);
+    vec3 ink = vec3(0.420, 0.420, 0.435);
+    vec3 col = mix(mist, ink, core);
     float side = uClip > 0.0 ? smoothstep(uClip, uClip + 0.16, gl_FragCoord.x / max(uRes.x, 1.0)) : 1.0;
     vec2 suv = gl_FragCoord.xy / max(uRes, vec2(1.0));
     suv.y = 1.0 - suv.y;
     float ui = max(cover(uCard, suv), cover(uBtn, suv));
-    float alpha = reveal * (0.55 + rim) * uFade * side * mix(1.0, 0.38, ui);
+    float alpha = reveal * edge * (0.22 + core * 0.42) * uFade * side * mix(1.0, 0.07, ui);
     if (alpha < 0.02) discard;
     gl_FragColor = vec4(col, alpha);
   }
@@ -175,11 +179,12 @@ export function HorizonRing({
   });
   return (
     <mesh ref={mesh} rotation={[1.25, 0, 0]} position={[0, 0.45, 0]}>
-      <torusGeometry args={[2.35, 0.062, 16, 220]} />
+      <torusGeometry args={[2.35, 0.025, 12, 220]} />
       <shaderMaterial
         ref={mat}
         transparent
         depthWrite={false}
+        toneMapped={false}
         uniforms={uniforms}
         vertexShader={RING_VERT}
         fragmentShader={RING_FRAG}
@@ -285,6 +290,33 @@ export function GlassSphere({ fades }: { fades: MutableRefObject<Record<SceneId,
   );
 }
 
+const ECLIPSE_FRAG = `
+  uniform float uFade;
+  varying vec3 vN;
+  void main() {
+    vec3 n = normalize(vN);
+    float facing = max(dot(n, vec3(0.0, 0.0, 1.0)), 0.0);
+    float rim = pow(1.0 - facing, 2.15);
+    float shade = pow(facing, 0.62);
+    vec3 col = mix(vec3(0.035, 0.035, 0.04), vec3(0.20, 0.20, 0.21), shade);
+    col = mix(col, vec3(0.62, 0.62, 0.65), rim);
+    float alpha = uFade;
+    if (alpha < 0.02) discard;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+const CONTACT_FRAG = `
+  uniform float uFade;
+  varying vec2 vUv;
+  void main() {
+    float d = length(vUv * 2.0 - 1.0);
+    float alpha = smoothstep(1.0, 0.2, d) * 0.22 * uFade;
+    if (alpha < 0.02) discard;
+    gl_FragColor = vec4(0.10, 0.10, 0.11, alpha);
+  }
+`;
+
 export function Eclipse({
   progress,
   fades,
@@ -294,28 +326,30 @@ export function Eclipse({
   fades: MutableRefObject<Record<SceneId, number>>;
   anchor?: SceneAnchor;
 }) {
-  const dark = useRef<THREE.Mesh>(null);
-  const bright = useRef<THREE.Mesh>(null);
+  const body = useRef<THREE.Mesh>(null);
+  const shadow = useRef<THREE.Mesh>(null);
+  const bodyMat = useRef<THREE.ShaderMaterial>(null);
+  const shadowMat = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
+  const shadowUniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
   useFrame(() => {
-    if (!dark.current) return;
     const slide = anchor === "aside" ? 0.82 : progress.current;
-    dark.current.position.x = -2.35 + slide * 1.7;
+    const x = -2.35 + slide * 1.7;
+    if (body.current) body.current.position.x = x;
+    if (shadow.current) shadow.current.position.x = x;
     const fade = fades.current.eclipse;
-    const material = dark.current.material as THREE.MeshBasicMaterial;
-    material.opacity = fade;
-    const glow = bright.current?.material as THREE.MeshBasicMaterial | undefined;
-    if (glow) glow.opacity = fade;
+    if (bodyMat.current) bodyMat.current.uniforms.uFade.value = fade;
+    if (shadowMat.current) shadowMat.current.uniforms.uFade.value = fade;
   });
   return (
     <group>
-      <mesh ref={bright} position={[0, 0, -0.35]}>
-        <sphereGeometry args={[1.15, 48, 48]} />
-        <meshBasicMaterial color="#8e8e93" transparent />
+      <mesh ref={shadow} rotation={[-Math.PI / 2, 0, 0]} position={[-2.35, -1.28, 0.02]}>
+        <circleGeometry args={[1.55, 48]} />
+        <shaderMaterial ref={shadowMat} transparent depthWrite={false} toneMapped={false} uniforms={shadowUniforms} vertexShader={RING_VERT} fragmentShader={CONTACT_FRAG} />
       </mesh>
-      <pointLight position={[0, 0, -0.8]} intensity={6} color="#ffffff" distance={6} />
-      <mesh ref={dark} position={[-2.35, 0, 0.15]}>
-        <sphereGeometry args={[1.12, 48, 48]} />
-        <meshBasicMaterial color="#111111" transparent />
+      <mesh ref={body} position={[-2.35, 0, 0.15]}>
+        <sphereGeometry args={[1.12, 64, 64]} />
+        <shaderMaterial ref={bodyMat} transparent depthWrite={false} toneMapped={false} uniforms={uniforms} vertexShader={RING_VERT} fragmentShader={ECLIPSE_FRAG} />
       </mesh>
     </group>
   );
@@ -362,6 +396,49 @@ function GlobePin({ lat, lng, label }: { lat: number; lng: number; label: string
   );
 }
 
+const DISC_FRAG = `
+  uniform float uFade;
+  varying vec3 vN;
+  void main() {
+    vec3 n = normalize(vN);
+    float facing = max(dot(n, vec3(0.0, 0.0, 1.0)), 0.0);
+    float rim = pow(1.0 - facing, 1.55);
+    float lift = n.y * 0.5 + 0.5;
+    vec3 col = mix(vec3(1.0), vec3(0.90, 0.90, 0.925), rim * 0.85);
+    col *= mix(0.94, 1.0, lift);
+    float alpha = uFade;
+    if (alpha < 0.02) discard;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+const DOT_VERT = `
+  varying float vDepth;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vec3 n = normalize(normalMatrix * normalize(position));
+    vDepth = clamp(n.z * 0.5 + 0.5, 0.0, 1.0);
+    gl_PointSize = clamp(1.15 * (4.8 / max(-mv.z, 0.35)), 1.05, 2.15);
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const DOT_FRAG = `
+  uniform float uFade;
+  varying float vDepth;
+  void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.42) discard;
+    float soft = smoothstep(0.42, 0.08, d);
+    vec3 farCol = vec3(0.557, 0.557, 0.576);
+    vec3 nearCol = vec3(0.227, 0.227, 0.235);
+    vec3 col = mix(farCol, nearCol, vDepth);
+    float alpha = soft * uFade;
+    if (alpha < 0.02) discard;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
 export function DotGlobe({
   fades,
   pins = PINS,
@@ -371,8 +448,11 @@ export function DotGlobe({
 }) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const group = useRef<THREE.Group>(null);
-  const material = useRef<THREE.PointsMaterial>(null);
+  const dots = useRef<THREE.ShaderMaterial>(null);
+  const disc = useRef<THREE.ShaderMaterial>(null);
   const invalidate = useThree((state) => state.invalidate);
+  const dotUniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
+  const discUniforms = useMemo(() => ({ uFade: { value: 1 } }), []);
 
   useEffect(() => {
     let dead = false;
@@ -424,18 +504,20 @@ export function DotGlobe({
       if (claims) group.current.rotation.y = CLAIM_YAW;
       else if (!prefersReducedMotion()) group.current.rotation.y += delta * 0.08;
     }
-    if (material.current) material.current.opacity = fades.current.globe;
+    const fade = fades.current.globe;
+    if (dots.current) dots.current.uniforms.uFade.value = fade;
+    if (disc.current) disc.current.uniforms.uFade.value = fade;
   });
 
   return (
     <group ref={group}>
       <mesh>
-        <sphereGeometry args={[1.55, 32, 32]} />
-        <meshBasicMaterial color="#f5f5f7" />
+        <sphereGeometry args={[1.52, 48, 48]} />
+        <shaderMaterial ref={disc} transparent depthWrite toneMapped={false} uniforms={discUniforms} vertexShader={RING_VERT} fragmentShader={DISC_FRAG} />
       </mesh>
       {geometry ? (
         <points geometry={geometry} frustumCulled={false}>
-          <pointsMaterial ref={material} color="#2c2c2e" size={0.028} sizeAttenuation transparent depthWrite={false} />
+          <shaderMaterial ref={dots} transparent depthWrite={false} toneMapped={false} uniforms={dotUniforms} vertexShader={DOT_VERT} fragmentShader={DOT_FRAG} />
         </points>
       ) : null}
       {pins.map((pin) => (
@@ -478,6 +560,7 @@ function placed(id: SceneId, anchor: SceneAnchor): { position: [number, number, 
   if (id === "ring" && anchor === "top") return { position: [0.45, 0.2, 0], scale: 1.08 };
   if (id === "score" && anchor === "halo") return { position: [0.15, 0.95, 0], scale: 0.5 };
   if (id === "sphere" && anchor === "right") return { position: [1.7, 0.05, 0], scale: 0.72 };
+  if (id === "sphere" && anchor === "aside") return { position: [2.2, 0.02, 0], scale: 0.56 };
   if (id === "eclipse" && anchor === "right") return { position: [1.55, 0.08, 0], scale: 0.74 };
   if (id === "score" && anchor === "behind") return { position: [1.62, 0.05, 0], scale: 0.42 };
   if (id === "eclipse" && anchor === "aside") return { position: [1.95, 0.02, 0], scale: 0.52 };

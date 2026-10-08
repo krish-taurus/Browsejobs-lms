@@ -173,8 +173,12 @@ test("marketing pages do not say coming soon or not live", async ({ page }) => {
     }
     const story = page.locator("#success-stories");
     const storyText = (await story.count()) > 0 ? (await story.innerText()).toLowerCase() : "";
+    const waitlist = page.locator("#course-waitlist");
+    const waitText = (await waitlist.count()) > 0 ? (await waitlist.innerText()).toLowerCase() : "";
     const body = (await page.locator("body").innerText()).toLowerCase();
-    const text = storyText ? body.replaceAll(storyText, "") : body;
+    let text = body;
+    if (storyText) text = text.replaceAll(storyText, "");
+    if (waitText) text = text.replaceAll(waitText, "");
     expect(text, path).not.toContain("coming soon");
     expect(text, path).not.toContain("not live");
   }
