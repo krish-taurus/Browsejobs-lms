@@ -16,6 +16,7 @@ use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Drive\DriveClient;
 use App\Support\Drive\GoogleDriveClient;
 use App\Support\Drive\NullDriveClient;
+use App\Support\Enquiries\ClientIp;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
@@ -252,6 +253,12 @@ class AppServiceProvider extends ServiceProvider
         // Tight limit for AI-backed endpoints (CLAUDE.md: rate limit AI endpoints).
         RateLimiter::for('ai', fn (Request $request) => Limit::perMinute(20)->by(
             $request->user()?->getAuthIdentifier() ?? $request->ip(),
+        ));
+
+        // Public enquiry forms. Keyed by the real client IP, including the
+        // address a loopback proxy forwards.
+        RateLimiter::for('enquiries', fn (Request $request) => Limit::perMinute(8)->by(
+            ClientIp::resolve($request),
         ));
 
         // Note: the P2.4 SendLeadWelcomeMessage listener on LeadCaptured is

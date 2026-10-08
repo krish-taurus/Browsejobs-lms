@@ -21,11 +21,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     dated("/", 1),
     dated("/courses", 0.9),
+    dated("/courses/enquire", 0.7),
     ...liveCourseSlugs.map((slug) => dated(`/courses/${slug}`, 0.8)),
     dated("/masterclass", 0.9),
     dated("/employers", 0.9),
     dated("/employers/how-it-works", 0.7),
     dated("/employers/faq", 0.6),
+    dated("/employers/enquire", 0.7),
     dated("/how-it-works", 0.8),
     dated("/get-hired", 0.9),
     dated("/jobs", 0.8),

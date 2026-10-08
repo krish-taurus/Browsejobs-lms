@@ -11,6 +11,7 @@ const COLUMNS = [
       { href: "/how-it-works", label: "How it works" },
       { href: "/get-hired", label: "Get hired" },
       { href: "/courses", label: "Courses" },
+      { href: "/courses/enquire", label: "Ask about a course" },
       { href: "/jobs", label: "Jobs" },
     ],
   },
@@ -21,6 +22,7 @@ const COLUMNS = [
       { href: "/employers/how-it-works", label: "How it works" },
       { href: "/employers/mission-control-demo", label: "Watch the demo" },
       { href: "/employers/faq", label: "FAQ" },
+      { href: "/employers/enquire", label: "Enquire" },
     ],
   },
   {

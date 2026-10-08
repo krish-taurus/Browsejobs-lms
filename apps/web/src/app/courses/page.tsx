@@ -28,6 +28,11 @@ export default function CoursesPage() {
           <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-6xl">
             Every program, rebuilt monthly from real interviews
           </h1>
+          <p className="mt-6">
+            <Link href="/courses/enquire" className="font-semibold text-trust hover:underline">
+              Ask about a course
+            </Link>
+          </p>
         </ScrollReveal>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">

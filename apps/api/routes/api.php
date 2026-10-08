@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestControll
 use App\Http\Controllers\Admin\DayBuilderController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\EmployerAdminController;
+use App\Http\Controllers\Admin\EnquiryAdminController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FlashcardController;
 use App\Http\Controllers\Admin\FundingNewsController;
@@ -108,6 +109,7 @@ use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
+use App\Http\Controllers\Enquiries\EnquiryController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\JobBoardSegmentedController;
@@ -228,6 +230,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 
     Route::post('leads', [LeadController::class, 'store'])
         ->middleware('throttle:10,1');
+
+    Route::post('enquiries', [EnquiryController::class, 'store'])
+        ->middleware('throttle:enquiries');
 
     // Free Career Direction Report — server-gated: registering as a lead IS
     // the price of the analysis (name+phone+consent validated before it runs).
@@ -828,6 +833,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Built-in CRM (PRD §6.12).
     Route::middleware('can:manage-leads')->group(function () {
+        Route::get('enquiries/export', [EnquiryAdminController::class, 'export']);
+        Route::get('enquiries', [EnquiryAdminController::class, 'index']);
+        Route::patch('enquiries/{enquiry}', [EnquiryAdminController::class, 'update']);
+
         // Review protection & retention (PRD §6.20) — counselor care desk.
         Route::get('care', [CareAdminController::class, 'index']);
         Route::post('care/alerts/{alert}/handle', [CareAdminController::class, 'handleAlert']);

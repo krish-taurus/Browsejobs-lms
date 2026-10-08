@@ -39,7 +39,10 @@ export default function EmployerHowPage() {
           <p className="mx-auto mt-5 max-w-[36rem] text-[19px] leading-snug md:text-[21px]">
             From a message to day 3. Calls, background checks, offers, and joining chats are not live yet.
           </p>
-          <p className="mt-4">
+          <p className="mt-4 flex flex-wrap items-center justify-center gap-x-7">
+            <Link href="/employers/enquire" className="apple-pill">
+              Get started
+            </Link>
             <Link href="/employers/mission-control-demo" className="apple-more">
               Watch the demo <span aria-hidden>›</span>
             </Link>

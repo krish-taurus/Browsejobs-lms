@@ -34,8 +34,8 @@ test("employer page offers both ways to work and a labelled sample report", asyn
 
   const partner = page.getByRole("link", { name: "Onboard us as your hiring partner" });
   const tool = page.getByRole("link", { name: "Use our tool for your own hiring" });
-  await expect(partner).toHaveAttribute("href", /mailto:hello@browsejobs\.ai/);
-  await expect(tool).toHaveAttribute("href", /mailto:hello@browsejobs\.ai/);
+  await expect(partner).toHaveAttribute("href", "/employers/enquire?path=partner");
+  await expect(tool).toHaveAttribute("href", "/employers/enquire?path=tool");
 
   await page.goto("/employers/how-it-works");
   const report = page.locator("#report");

@@ -161,14 +161,14 @@ export function EmployerProduct() {
           <div className="mx-auto mt-8 flex max-w-[640px] flex-col items-center gap-2">
             {EMPLOYER_WAYS.map((way) =>
               way.primary ? (
-                <a key={way.id} href={way.href} className="apple-pill w-full max-w-[22rem] whitespace-normal px-6 text-center leading-snug">
+                <Link key={way.id} href={way.href} className="apple-pill w-full max-w-[22rem] whitespace-normal px-6 text-center leading-snug">
                   {way.cta}
-                </a>
+                </Link>
               ) : (
-                <a key={way.id} href={way.href} className="apple-more max-w-full whitespace-normal text-center">
+                <Link key={way.id} href={way.href} className="apple-more max-w-full whitespace-normal text-center">
                   {way.cta}
                   <span aria-hidden="true">›</span>
-                </a>
+                </Link>
               ),
             )}
           </div>

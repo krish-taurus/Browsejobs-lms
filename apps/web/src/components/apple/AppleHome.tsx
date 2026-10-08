@@ -42,6 +42,9 @@ export function AppleHome() {
             <More href="/employers" about="about hiring">
               Learn more
             </More>
+            <More href="/employers/enquire" about="to hire">
+              Get started
+            </More>
           </div>
           <div className="mt-10">
             <MacFloor tone="dark" />

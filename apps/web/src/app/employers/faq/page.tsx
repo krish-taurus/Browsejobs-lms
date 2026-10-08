@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AppleShell } from "@/components/apple/AppleShell";
 import { EMPLOYER_FAQ } from "@/content/employer-landing";
 import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
@@ -46,6 +47,11 @@ export default function EmployerFaqPage() {
                 </details>
               ))}
             </div>
+            <p className="mt-10 text-center">
+              <Link href="/employers/enquire" className="apple-pill">
+                Get started
+              </Link>
+            </p>
           </div>
         </section>
       </AppleShell>
