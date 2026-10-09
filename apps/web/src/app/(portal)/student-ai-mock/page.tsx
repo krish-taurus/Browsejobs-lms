@@ -1,7 +1,7 @@
 "use client";
 
 import { MockKindTabs } from "@/components/mocks/MockKindTabs";
-import { TextPracticeCard, VoiceInterviewCard, useMockSummary } from "@/components/mocks/MockCards";
+import { VoiceInterviewCard, useMockSummary } from "@/components/mocks/MockCards";
 
 export default function MockHubPage() {
   const { summary, loading, reload } = useMockSummary();
@@ -24,8 +24,8 @@ export default function MockHubPage() {
     <div className="mx-auto max-w-2xl">
       <h1 className="display text-2xl text-ink">Mock Interviews</h1>
       <p className="mt-1 text-sm text-muted">
-        A realistic text interview for your target role. You get a scorecard with model answers and
-        the three things to fix next.
+        A spoken interview with the AI interviewer for your target role. You get a scorecard with model
+        answers and the three things to fix next.
       </p>
 
       {summary.human_mock_unlocked && (
@@ -68,8 +68,9 @@ export default function MockHubPage() {
         </div>
       )}
 
-      <TextPracticeCard summary={summary} />
-      <VoiceInterviewCard summary={summary} reload={reload} />
+      <div className="mt-2">
+        <VoiceInterviewCard summary={summary} reload={reload} />
+      </div>
 
       {summary.gap_report.items.length > 0 && (
         <div className="mt-8">
