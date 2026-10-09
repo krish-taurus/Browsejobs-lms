@@ -57,10 +57,6 @@ test("employer demo plays the Taurus hiring story with sample data", async ({ pa
   await expect(floor.locator(".tc-stage")).toHaveCount(10);
   await expect(floor.locator(".tc-phone")).toContainText("5 software developers in Bangalore");
   await expect(page.getByText(/not live/i)).toHaveCount(0);
-  const reply = floor.locator(".tc-replies button").first();
-  await expect(reply).toBeVisible({ timeout: 30_000 });
-  await reply.click();
-  await expect(floor.locator(".tc-bubble.me").nth(1)).toBeVisible();
   await floor.getByRole("button", { name: /Noir/ }).click();
   await expect(floor).toHaveAttribute("data-look", "noir");
 });

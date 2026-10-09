@@ -77,10 +77,10 @@ test("enquiry pages are in the sitemap and linked from the product pages", async
   expect(xml).not.toContain("/courses/agentic-ai");
 
   await page.goto("/courses");
-  await expect(page.locator("#content").getByRole("link", { name: "Ask about a course" })).toHaveAttribute("href", "/courses/enquire");
+  await expect(page.locator("#main").getByRole("link", { name: "Ask about a course" }).first()).toHaveAttribute("href", "/courses/enquire");
 
   await page.goto("/courses/data-engineering");
-  await expect(page.getByRole("link", { name: "Ask about this course" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Ask about this course" }).first()).toHaveAttribute(
     "href",
     "/courses/enquire?course=data-engineering",
   );
