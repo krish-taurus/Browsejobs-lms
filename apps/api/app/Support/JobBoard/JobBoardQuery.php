@@ -95,6 +95,7 @@ final readonly class JobBoardQuery
                 'id' => $job->id,
                 'title' => $job->title,
                 'company' => $job->workspace?->name,
+                'company_logo' => $job->workspace?->logoUrl(),
                 'locations' => $job->locations ?? [],
                 'remote' => (bool) $job->remote,
                 'skills' => array_slice($job->skills ?? [], 0, 8),
