@@ -7,6 +7,10 @@ import { MOCK_KINDS, MOCK_KIND_META, mockListPath, type MockKind } from "@/lib/m
 
 type Counts = Partial<Record<MockKind, number>>;
 
+// Text practice is retired for students (Oct 2026) — only spoken interviews
+// are offered. Old practice scorecards still open at their own URLs.
+const STUDENT_KINDS = MOCK_KINDS.filter((kind) => kind !== "practice");
+
 /**
  * Practice · Voice · Job · CV — one tab per interview kind, each its own URL.
  * Pass counts when the page already has them; otherwise they load here.
@@ -25,7 +29,7 @@ export function MockKindTabs({ active, counts: given }: { active?: MockKind; cou
 
   return (
     <nav aria-label="Interview types" className="flex gap-2 overflow-x-auto pb-1">
-      {MOCK_KINDS.map((kind) => {
+      {STUDENT_KINDS.map((kind) => {
         const on = kind === active;
         return (
           <Link

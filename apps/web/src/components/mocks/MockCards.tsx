@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { mockPath, type MockKind } from "@/lib/mockKinds";
@@ -56,81 +54,6 @@ export function useMockSummary() {
   useEffect(() => { reload(); }, [reload]);
 
   return { summary, loading, reload };
-}
-
-export function TextPracticeCard({ summary }: { summary: MockSummary }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [chosen, setChosen] = useState<string>("");
-
-  // A dispatched mock links here as ?start=<blueprintId> — preselect it.
-  useEffect(() => {
-    const start = new URLSearchParams(window.location.search).get("start");
-    if (start) setChosen(start);
-  }, []);
-
-  async function start() {
-    setError(null);
-    setBusy(true);
-    try {
-      const body = chosen ? JSON.stringify({ blueprint_id: Number(chosen) }) : undefined;
-      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", { method: "POST", body });
-      router.push(mockPath("practice", r.data.id));
-    } catch (err) {
-      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
-      setBusy(false);
-    }
-  }
-
-  if (!summary.enabled) {
-    return (
-      <div className="mt-6 rounded-2xl border border-line bg-white p-6">
-        <p className="text-sm text-muted">Text practice isn&apos;t switched on for your batch yet — voice interviews are ready when you are.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-6 rounded-2xl border border-line bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted">Text practice · free</p>
-      {summary.in_progress_id ? (
-        <>
-          <p className="mt-2 text-sm text-ink">You have a practice interview in progress.</p>
-          <Link
-            href={mockPath("practice", summary.in_progress_id)}
-            className="mt-3 inline-block rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white"
-          >
-            Resume interview →
-          </Link>
-        </>
-      ) : (
-        <>
-          <p className="mt-2 text-sm text-ink">Ready when you are — it takes about 10 minutes.</p>
-          {summary.blueprints.length > 1 && (
-            <select
-              value={chosen}
-              onChange={(e) => setChosen(e.target.value)}
-              className="mt-3 block rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust"
-            >
-              <option value="">Pick a skill…</option>
-              {summary.blueprints.map((b) => (
-                <option key={b.id} value={b.id}>{b.skill ?? b.role_title}</option>
-              ))}
-            </select>
-          )}
-          {error && <p className="mt-2 text-sm text-warn">{error}</p>}
-          <button
-            onClick={start}
-            disabled={busy || (summary.blueprints.length > 1 && !chosen)}
-            className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {busy ? "Setting up…" : "Start a mock interview"}
-          </button>
-        </>
-      )}
-    </div>
-  );
 }
 
 export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; reload: () => void }) {
