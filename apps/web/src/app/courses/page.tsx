@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ArgusFrame } from "@/components/argus/ArgusFrame";
-import { CoursesHub } from "@/components/argus/courses/CoursesHub";
+import { ApShell } from "@/components/ap/ApShell";
+import { SRead, SSection1, SSoon, SStories, STop } from "@/components/ap/generated/courses";
 import { careerCourseCards } from "@/content/courses";
 import { canonical, SITE_ORIGIN } from "@/lib/seo";
 
@@ -28,9 +28,13 @@ export default function CoursesPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(list) }} />
-      <ArgusFrame className="argus-home argus-courses-page">
-        <CoursesHub />
-      </ArgusFrame>
+      <ApShell current="courses">
+        <STop />
+        <SSection1 />
+        <SStories />
+        <SSoon />
+        <SRead />
+      </ApShell>
     </>
   );
 }

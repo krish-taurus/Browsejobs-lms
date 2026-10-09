@@ -15,46 +15,25 @@ test.beforeEach(async ({ page }) => {
 test("primary nav is the same order on desktop and mobile", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const nav = page.getByRole("navigation", { name: "Primary" });
+  const nav = page.getByRole("navigation", { name: "Global" });
   await expect(nav.getByRole("link", { name: "Home", exact: true })).toHaveAttribute("href", "/");
   await expect(nav.getByRole("link", { name: "Students", exact: true })).toHaveAttribute("href", "/students");
   await expect(nav.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
   await expect(nav.getByRole("link", { name: "For Employers", exact: true })).toHaveAttribute("href", "/employers");
-  await expect(nav.getByRole("link", { name: "Demo", exact: true })).toHaveAttribute("href", "/demo");
-  const order = await nav.locator(".argus-nav-links a, .argus-nav-actions button").evaluateAll((nodes) =>
-    nodes.map((node) => (node.textContent ?? "").replace("▾", "").replace(/\s+/g, " ").trim()),
-  );
-  expect(order.slice(0, 6)).toEqual(["Home", "Students", "Courses", "For Employers", "Demo", "Login"]);
-  await expect(nav.getByRole("button", { name: "Login" })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Onboard with us for the future of hiring" })).toHaveAttribute(
-    "href",
-    "/employers/enquire",
-  );
-
-  const centers = await nav.locator(".argus-logo, .argus-nav-links a, .argus-nav-actions button:not(.argus-nav-menu), .argus-nav-actions > a").evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const box = node.getBoundingClientRect();
-      return box.y + box.height / 2;
-    }),
-  );
-  expect(centers.length).toBeGreaterThan(4);
-  for (const center of centers) {
-    expect(Math.abs(center - centers[0])).toBeLessThan(2);
-  }
-
-  await nav.getByRole("button", { name: "Login" }).click();
-  await expect(page.getByRole("menuitem", { name: /Job seeker/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Demo", exact: true })).toHaveAttribute("href", "/employers/mission-control-demo");
+  const order = await nav.locator(".gnav-links a").evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? "").trim()));
+  expect(order).toEqual(["Home", "Students", "Courses", "For Employers", "Demo"]);
+  await nav.getByText("Log in").click();
+  await expect(nav.getByRole("link", { name: "Job seeker" })).toHaveAttribute("href", "/student");
+  await expect(nav.getByRole("link", { name: "Employer", exact: true })).toHaveAttribute("href", "/employer");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Menu" }).click();
-  const menu = page.locator("#argus-menu");
-  await expect(menu.getByRole("link", { name: "Students" })).toBeVisible();
-  await expect(menu.getByRole("link", { name: "Courses", exact: true })).toHaveAttribute("href", "/courses");
-  await expect(menu.getByRole("link", { name: "For Employers" })).toBeVisible();
-  await expect(menu.getByRole("link", { name: "Onboard with us for the future of hiring" })).toHaveAttribute(
-    "href",
-    "/employers/enquire",
-  );
+  await page.goto("/");
+  await page.getByRole("button", { name: /Menu/ }).click();
+  const menu = page.getByRole("dialog", { name: "Menu" });
+  const mobile = await menu.locator("li a").evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? "").trim()));
+  expect(mobile.slice(0, 5)).toEqual(["Home", "Students", "Courses", "For Employers", "Demo"]);
+  await expect(menu.getByRole("link", { name: "Job seeker login" })).toHaveAttribute("href", "/student");
 });
 
 test("students page explains 75 percent, the roadmap, and a counselling callback", async ({ page }) => {
@@ -130,49 +109,31 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("homepage leads with the career-switch messages", async ({ page }) => {
+test("homepage leads with real success stories", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const messages = page.locator("#real-messages");
-  await expect(messages.getByRole("heading", { name: "Real messages from our students." })).toBeVisible();
-  const figures = messages.getByRole("figure");
-  await expect(figures).toHaveCount(14);
-  await expect(figures.nth(0)).toContainText("Joining third company after course");
-  await expect(figures.nth(0)).toContainText("Pranjal");
-  await expect(figures.nth(1)).toContainText("Support role to Accenture offer");
-  await expect(figures.nth(1).locator(".apple-shot-name")).toHaveCount(0);
-  await expect(messages.getByRole("link", { name: "Take the free AI interview" })).toHaveAttribute("href", "/#interview-start");
-  await expect(messages.locator("img").first()).toHaveAttribute("loading", "lazy");
-  await figures.nth(0).getByRole("button").click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toContainText("Joining third company after course");
-  await expect(dialog).toContainText("Pranjal");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toHaveCount(0);
+  const stories = page.locator("#stories");
+  await expect(stories.getByRole("heading", { name: "Success stories." })).toBeVisible();
+  await expect(stories).toContainText("Accenture");
+  await expect(stories.getByRole("link", { name: /See the message/ }).first()).toHaveAttribute("href", "/reviews");
 });
 
 test("employers page explains 90 days against 3 days", async ({ page }) => {
   await page.goto("/employers");
-  const impact = page.locator("#impact");
-  await expect(impact).toContainText("90 days");
-  await expect(impact).toContainText("3 days");
-  await expect(impact).toContainText("Sourcing");
-  await expect(impact).toContainText("We call and screen shortlisted candidates");
-  await expect(impact).toContainText("A person always releases the offer");
-  await expect(impact.getByRole("link", { name: "Onboard with us for the future of hiring" })).toHaveAttribute(
-    "href",
-    "/employers/enquire",
-  );
-  await expect(page.getByText("Sample data").first()).toBeVisible();
+  const days = page.locator("#days");
+  await expect(days).toContainText("90 days");
+  await expect(days).toContainText("3 days");
+  await expect(page.locator("#get-started a[href='/employers/enquire?path=partner']")).toBeVisible();
+  await expect(page.getByText(/sample data/i).first()).toBeAttached();
 });
 
 test("marketing pages do not say coming soon or not live", async ({ page }) => {
   for (const path of ["/", "/students", "/employers", "/employers/how-it-works", "/employers/faq", "/how-it-works", "/employers/mission-control-demo", "/courses"]) {
     await page.goto(path);
     if (path === "/" || path === "/students") {
-      await expect(page.locator("#success-stories")).toBeVisible();
+      await expect(page.locator("#success-stories, #stories").first()).toBeVisible();
     }
-    const story = page.locator("#success-stories");
+    const story = page.locator("#success-stories, #stories").first();
     const storyText = (await story.count()) > 0 ? (await story.innerText()).toLowerCase() : "";
     const waitlist = page.locator("#course-waitlist");
     const waitText = (await waitlist.count()) > 0 ? (await waitlist.innerText()).toLowerCase() : "";

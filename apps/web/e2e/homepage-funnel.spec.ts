@@ -11,9 +11,9 @@ test("homepage hero offers the free AI interview above the fold", async ({ page 
 
   const hero = page.locator("#top");
   await expect(hero.getByRole("heading", { level: 1 })).toContainText(/Take a free\s+AI interview/i);
-  await expect(hero).toContainText("It's free.");
+  await expect(hero).toContainText("about 15 questions");
   await expect(hero).toContainText("75%");
-  await expect(hero).toContainText("in front of HR");
+  await expect(hero).toContainText("3,000 HR recruiters");
 
   const phone = hero.getByLabel("Phone number");
   const cta = hero.getByRole("button", { name: "Take your free AI interview" });
@@ -61,31 +61,23 @@ test("desktop hero keeps the interview form as the first action", async ({ page 
   expect(box).not.toBeNull();
   expect(box!.y + box!.height).toBeLessThanOrEqual(800);
 
-  await expect(page.getByRole("link", { name: "Take your free AI interview" }).first()).toHaveAttribute(
+  await expect(page.getByRole("navigation", { name: "Global" }).getByRole("link", { name: "Take the free AI interview" })).toHaveAttribute(
     "href",
-    "/#interview-start",
+    "/#top",
   );
 });
 
-test("how it works scrolls into the employer section without a pin", async ({ page }) => {
-  for (const width of [390, 768, 1280]) {
+test("how it works walks the five steps, then the candidate film", async ({ page }) => {
+  for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/");
-
-    const stickyInsideSteps = await page.locator("#how *").evaluateAll((nodes) =>
-      nodes.some((node) => getComputedStyle(node).position === "sticky"),
-    );
-    expect(stickyInsideSteps, `sticky pin at ${width}`).toBe(false);
-    await expect(page.locator("#how")).toContainText("Interview");
-    await expect(page.locator("#how")).toContainText("Get seen");
-
-    const card = page.getByText("Walk me through a pipeline you would ship this month");
-    const next = page.locator("#for-employers");
-    const cardBox = await card.boundingBox();
-    const nextBox = await next.boundingBox();
-    expect(cardBox, `interview card at ${width}`).not.toBeNull();
-    expect(nextBox, `employer section at ${width}`).not.toBeNull();
-    expect(nextBox!.y).toBeGreaterThan(cardBox!.y + cardBox!.height);
+    const journey = page.locator("#journey");
+    await expect(journey).toContainText("Share your CV.");
+    await expect(journey).toContainText("HR sees your CV");
+    await expect(journey).toContainText("Get a call for an interview.");
+    const film = page.locator("#journey-film video");
+    await expect(film).toHaveAttribute("src", "/media/journey/candidate-journey.mp4");
+    await expect(film).toHaveAttribute("preload", "none");
   }
 
   await page.goto("/how-it-works");
@@ -96,7 +88,7 @@ test("how it works scrolls into the employer section without a pin", async ({ pa
 test("homepage employer CTA opens the employer page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const cta = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "For Employers" });
+  const cta = page.getByRole("navigation", { name: "Global" }).getByRole("link", { name: "For Employers" });
   await cta.scrollIntoViewIfNeeded();
   await cta.click();
   await expect(page).toHaveURL(/\/employers$/);

@@ -1,0 +1,61 @@
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Service",
+   "name": "BrowseJobs AI Recruiter",
+   "provider": {
+    "@id": "https://browsejobs.ai/#org"
+   },
+   "areaServed": "IN",
+   "serviceType": "AI recruiting and pre-screened hiring",
+   "description": "Pre-screened candidates who passed a proctored AI interview, screening calls, L1 and L2 rounds and pre-BGV. A person always approves the offer."
+  },
+  {
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "How does hiring go from 90 days to about 3 days?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You share the role on WhatsApp on day 0. Screening, a proctored AI interview, a report, your interview with people who already passed, a background check and the offer all follow on one automated path. That path takes about 3 days. The usual way takes about 90 days of manual calls."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What does a clear score mean?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "A clear means the candidate scored 75% or more in a proctored AI interview. You only interview candidates who cleared. Anyone below 75% is not sent to you as a clear."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can we hire with you, or use the tool ourselves?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Both. You can make BrowseJobs your hiring partner and we run the path with you, or your team can use the same tool for your own hiring."
+     }
+    }
+   ]
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Home",
+     "item": "https://browsejobs.ai/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "For Employers",
+     "item": "https://browsejobs.ai/employers"
+    }
+   ]
+  }
+ ]
+}

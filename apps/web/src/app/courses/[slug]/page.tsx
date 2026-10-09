@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArgusFrame } from "@/components/argus/ArgusFrame";
-import { CourseDetail } from "@/components/argus/courses/CourseDetail";
+import { ApShell } from "@/components/ap/ApShell";
+import { ApCourseDetail, courseFaqs } from "@/components/ap/ApCourseDetail";
 import { courseDetails, getCourseDetail } from "@/content/courses";
-import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
+import { breadcrumbNode, canonical, courseNode, faqNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 /**
  * Live course page. JSON-LD stays here. The /v3 preview still uses the keynote.
@@ -50,14 +50,15 @@ export default async function CoursePage({
       { name: course.name, path },
     ]),
     ...(node ? [node] : []),
+    faqNode(courseFaqs(course)),
   ]);
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ArgusFrame className="argus-home argus-course-page">
-        <CourseDetail course={course} />
-      </ArgusFrame>
+      <ApShell current="courses" staticNav>
+        <ApCourseDetail course={course} />
+      </ApShell>
     </>
   );
 }

@@ -24,7 +24,7 @@ export function InterviewStartForm({
 }: {
   next?: string;
   id?: string;
-  tone?: "night" | "apple" | "argus";
+  tone?: "night" | "apple" | "argus" | "ap";
 }) {
   const router = useRouter();
   const destination = safeNextPath(next) ?? AFTER_AUTH;
@@ -37,7 +37,8 @@ export function InterviewStartForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const apple = tone === "apple";
+  const ap = tone === "ap";
+  const apple = tone === "apple" || ap;
   const argus = tone === "argus";
   const inputCls = apple
     ? "h-12 w-full rounded-full border border-black/15 bg-white px-5 text-[17px] text-[#1d1d1f] outline-none placeholder:text-[#6e6e73] focus-visible:border-[#1b6df0] focus-visible:ring-2 focus-visible:ring-[#1b6df0]"
@@ -116,14 +117,40 @@ export function InterviewStartForm({
   }
 
   return (
-    <div id={id} className={argus ? "argus-start scroll-mt-28" : apple ? "mx-auto mt-5 w-full max-w-[26rem] scroll-mt-28 text-left" : "mt-5 max-w-md scroll-mt-28 md:mt-8"}>
+    <div id={id} className={ap ? "capsule-form" : argus ? "argus-start scroll-mt-28" : apple ? "mx-auto mt-5 w-full max-w-[26rem] scroll-mt-28 text-left" : "mt-5 max-w-md scroll-mt-28 md:mt-8"}>
       {error && (
         <p className="mb-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn" role="alert">
           {error}
         </p>
       )}
 
-      {step === "phone" && (
+      {step === "phone" && ap && (
+        <form onSubmit={requestLogin}>
+          <div className="capsule">
+            <span className="cc" aria-hidden="true">
+              +91
+            </span>
+            <input
+              required
+              name="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              minLength={8}
+              placeholder="10-digit mobile number"
+              aria-label="Phone number"
+            />
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              {busy ? "Checking…" : "Take your free AI interview"}
+            </button>
+          </div>
+          <p className="capsule-note">Free. One code by SMS. No card.</p>
+        </form>
+      )}
+
+      {step === "phone" && !ap && (
         <form onSubmit={requestLogin} className={argus ? "argus-capsule" : "space-y-3"}>
           <label className="block">
             <span className={labelCls}>Phone number</span>
@@ -237,7 +264,7 @@ export function InterviewStartForm({
         </form>
       )}
 
-      {step === "phone" && <GoogleButton next={destination} />}
+      {step === "phone" && !ap && <GoogleButton next={destination} />}
     </div>
   );
 }

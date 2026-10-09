@@ -15,7 +15,8 @@ export function SceneHost() {
 
   useEffect(() => {
     const sections = () => [...document.querySelectorAll<HTMLElement>("[data-scene]")];
-    if (sections().length === 0) {
+    // Pages on the Apple-direction shell (.ap) run their own scroll scenes and 3D.
+    if (sections().length === 0 || document.querySelector(".ap")) {
       hideScene();
       setWebgl(false);
       document.documentElement.classList.remove("argus-live");

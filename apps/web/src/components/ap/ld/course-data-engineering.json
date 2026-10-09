@@ -1,0 +1,86 @@
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Course",
+   "name": "Data Engineering Course with Placement",
+   "provider": {
+    "@id": "https://browsejobs.ai/#org"
+   },
+   "description": "A six-month, live online Data Engineering course: Python, SQL, Spark, AWS, Databricks, Airflow and Azure, with three CV-ready projects.",
+   "inLanguage": "en",
+   "url": "https://browsejobs.ai/courses/data-engineering",
+   "hasCourseInstance": {
+    "@type": "CourseInstance",
+    "courseMode": "online",
+    "courseWorkload": "P6M"
+   },
+   "offers": {
+    "@type": "Offer",
+    "category": "Registration",
+    "price": 30000,
+    "priceCurrency": "INR"
+   }
+  },
+  {
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "How long is the BrowseJobs Data Engineering course?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Six months. Classes are live online, and you also get the recordings."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What will I learn in the Data Engineering course?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Python, Pandas, SQL, Spark and PySpark, AWS, Databricks with Delta Lake, Airflow and Azure, plus a module that prepares you for real interviews. You finish with three projects for your CV."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I pay before I get a job?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Registration is ₹30,000, paid after three free steps. The placement fee is your first three months' CTC (salary), due only after you accept a job offer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is a job guaranteed after the course?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Nobody can honestly guarantee a job, because the job market decides. What we put in writing is the process."
+     }
+    }
+   ]
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Home",
+     "item": "https://browsejobs.ai/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Courses",
+     "item": "https://browsejobs.ai/courses"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Data Engineering",
+     "item": "https://browsejobs.ai/courses/data-engineering"
+    }
+   ]
+  }
+ ]
+}

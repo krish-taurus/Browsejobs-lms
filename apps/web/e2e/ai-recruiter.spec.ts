@@ -33,10 +33,11 @@ test("homepage has one heading, valid JSON-LD, and no agentic-ai link", async ({
 test("homepage demo is labelled and links to the full floor", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
-  const stage = page.locator("#ai-recruiter");
+  const stage = page.locator("#recruiter");
   await stage.scrollIntoViewIfNeeded();
-  await expect(stage.getByText("Demo data").first()).toBeVisible();
-  await expect(stage.getByRole("heading", { level: 2, name: "Your AI Recruiter." })).toBeVisible();
+  await expect(stage.getByRole("heading", { level: 2, name: "Hiring? Meet your AI Recruiter." })).toBeVisible();
+  await expect(stage.getByText(/Sample data/).first()).toBeVisible();
+  await expect(stage.locator("video")).toHaveAttribute("src", "/media/taurus/taurus-hiring-story.mp4");
   const full = stage.getByRole("link", { name: "Watch the demo" });
   await expect(full).toHaveAttribute("href", "/employers/mission-control-demo");
   await page.goto("/employers/how-it-works");
@@ -47,78 +48,23 @@ test("homepage demo is labelled and links to the full floor", async ({ page }) =
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
 });
 
-test("hiring floor shows demo data, stage counts, calls, and a candidate drawer", async ({ page }) => {
+test("employer demo plays the Taurus hiring story with sample data", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/employers/mission-control-demo?at=52");
-
-  await expect(page.getByText("Demo data").first()).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: "BrowseJobs AI Recruiter" })).toBeVisible();
-  await expect(page.getByText("Powered by Taurus AI").first()).toBeVisible();
-  await expect(page.getByText("Sample data").first()).toBeVisible();
+  await page.goto("/employers/mission-control-demo");
+  await expect(page.getByRole("heading", { level: 1, name: /BrowseJobs AI Recruiter demo/ })).toBeAttached();
+  const floor = page.locator(".tc").first();
+  await expect(floor.getByText("SAMPLE DATA")).toBeVisible();
+  await expect(floor.locator(".tc-stage")).toHaveCount(10);
+  await expect(floor.locator(".tc-phone")).toContainText("5 software developers in Bangalore");
   await expect(page.getByText(/not live/i)).toHaveCount(0);
-  await expect(page.getByText(/coming soon/i)).toHaveCount(0);
-
-  const counts = page.getByRole("list", { name: "Stage counts" });
-  await expect(counts).toBeVisible();
-  await expect(counts.getByText("AI interview", { exact: true })).toBeVisible();
-  await expect(counts.getByText("L1", { exact: true })).toBeVisible();
-  await expect(counts.getByText("L2", { exact: true })).toBeVisible();
-  await expect(counts.getByText("BGV", { exact: true })).toBeVisible();
-  await expect(counts.getByText("Offer", { exact: true })).toBeVisible();
-  await expect(counts.getByText("Needs your approval")).toBeVisible();
-  await expect(page.getByText("Offers always need a human.").first()).toBeVisible();
-  await page.getByRole("button", { name: "Ask before each step" }).click();
-  await expect(page.getByRole("button", { name: "Autonomous on" })).toBeVisible();
-  await expect(page.getByText("Offers always need a human.").first()).toBeVisible();
-  await expect(page.getByText("Needs your approval").first()).toBeVisible();
-
-  const calls = page.getByRole("region", { name: "Calls" });
-  await expect(calls).toBeVisible();
-  await expect(calls).toContainText("Sample Rohan Mehta");
-  await expect(calls).toContainText("Interested");
-
-  await page.getByRole("button", { name: "Open Sample Asha Iyer" }).click();
-  const drawer = page.getByRole("dialog");
-  await expect(drawer).toBeVisible();
-  await expect(drawer).toContainText("Demo data");
-  await expect(drawer).toContainText("Timeline");
-  await expect(drawer).toContainText("Verified");
-  await expect(drawer).toContainText("Fictional candidate");
-  await page.keyboard.press("Escape");
-  await expect(drawer).toHaveCount(0);
+  await floor.getByRole("button", { name: /Noir/ }).click();
+  await expect(floor).toHaveAttribute("data-look", "noir");
 });
 
-test("a typed role updates the demo brief", async ({ page }) => {
-  await page.goto("/employers/mission-control-demo?at=52");
-  await page.getByLabel("Tell the recruiter").fill("Hire 2 backend engineers in Hyderabad, 3-5 yrs, notice 15 days");
-  await page.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(page.locator(".job-line")).toHaveText("backend engineers · Hyderabad · 2 openings");
-});
-
-test("hiring floor stays readable on a phone", async ({ page }) => {
+test("employer demo stays readable on a phone", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/employers/mission-control-demo?at=52");
-  await expect(page.getByText("Demo data").first()).toBeVisible();
+  await page.goto("/employers/mission-control-demo");
+  await expect(page.locator(".tc-phone")).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
-  await page.getByRole("button", { name: "Candidates" }).click();
-  await expect(page.getByRole("list", { name: "Stage counts" })).toBeVisible();
-  await page.getByRole("button", { name: "Open Sample Asha Iyer" }).click();
-  await expect(page.getByRole("dialog")).toContainText("Timeline");
-});
-
-test("talk answers a floor question from demo data", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/employers/mission-control-demo?at=52");
-  await page.getByRole("button", { name: "Talk", exact: true }).click();
-  const talk = page.getByRole("region", { name: "Talk to Recruiter" });
-  await talk.getByLabel("Ask the recruiter").fill("how many are at L2?");
-  await talk.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(talk).toContainText("at L2");
-  await talk.getByLabel("Ask the recruiter").fill("who's interested?");
-  await talk.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(talk).toContainText("Sample Asha Iyer");
-  await talk.getByLabel("Ask the recruiter").fill("BGV status for Asha?");
-  await talk.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(talk).toContainText("Verified");
 });

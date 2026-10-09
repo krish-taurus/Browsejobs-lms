@@ -1,0 +1,110 @@
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What is the BrowseJobs AI interview?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It is a free online interview of about 15 questions, based on your CV. An AI gives you a score out of 100. It shows how ready you are for real hiring. It is not a job offer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is the AI interview free?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. The AI interview is free, and so is taking it again. You only need your phone number: we send a one-time code by SMS. No card."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What does a 75% score mean?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "75 out of 100 is the pass mark, called a clear. If you clear, we send your CV with your score to 3,000 HR recruiters, and you are almost 60% more likely to get an interview call. It is still not a promise of a job."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What happens if I score below 75%?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You get a free counselling call, a personal plan, time to practise, and a free retake. We suggest a course only if you need one to close the gap."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I have to pay for a course?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Only if you choose to join one. Registration is ₹30,000, paid after three free steps. The placement fee is your first three months' CTC (salary), and it is due only after you accept a job offer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does BrowseJobs guarantee a job?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Nobody can honestly guarantee a job, because the job market decides. What we put in writing is the process."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How does an employer hire with BrowseJobs?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "The employer shares the role. We find people who already passed the AI interview, call and screen them, and run the first and second interview rounds (L1, L2) and the background check (pre-BGV). A person at the company always approves the offer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is the hiring screen on this site real data?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. The hiring screen on these pages uses sample data with made-up names. Nothing on it is sent to a real candidate."
+     }
+    }
+   ]
+  },
+  {
+   "@type": "HowTo",
+   "name": "How the BrowseJobs free AI interview works",
+   "step": [
+    {
+     "@type": "HowToStep",
+     "position": 1,
+     "name": "Share your CV.",
+     "text": "Upload your CV. The interview questions come from it."
+    },
+    {
+     "@type": "HowToStep",
+     "position": 2,
+     "name": "Answer about 15 questions.",
+     "text": "Speak or type your answers, like a real interview. It's free."
+    },
+    {
+     "@type": "HowToStep",
+     "position": 3,
+     "name": "Get your score out of 100.",
+     "text": "You see your score and where your answers were weak."
+    },
+    {
+     "@type": "HowToStep",
+     "position": 4,
+     "name": "Score 75% or more, and HR sees your CV.",
+     "text": "We send your CV, with your score, to 3,000 HR recruiters."
+    },
+    {
+     "@type": "HowToStep",
+     "position": 5,
+     "name": "Get a call for an interview.",
+     "text": "Passing makes an interview call almost 60% more likely. The job market still decides."
+    }
+   ]
+  }
+ ]
+}
