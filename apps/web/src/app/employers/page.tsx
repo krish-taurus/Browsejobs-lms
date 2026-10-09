@@ -796,7 +796,7 @@ const STORY_LINES = [
   "The AI caller screens the interested candidates by phone.",
   "The shortlist comes back to you on WhatsApp.",
   "On your yes: L1, then L2 AI interviews.",
-  "On your yes: pre-BGV on EPFO and DigiLocker, with consent.",
+  "Optional pre-BGV on EPFO and DigiLocker, with consent.",
   "Your panel interviews the finalists.",
   "Offer letters go out only when you approve.",
 ] as const;

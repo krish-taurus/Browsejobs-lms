@@ -19,7 +19,7 @@ export const STORY_STAGES: FloorZone[] = [
   { key: "shortlist", label: "Shortlist" },
   { key: "l1", label: "L1" },
   { key: "l2", label: "L2" },
-  { key: "bgv", label: "Pre-BGV" },
+  { key: "bgv", label: "Pre-BGV (optional)" },
   { key: "human", label: "Human round" },
   { key: "offer", label: "Offer" },
 ];
@@ -242,21 +242,27 @@ export function hiringStory(): ConsoleSource {
     push();
     log("AI interviewer · L2", "done", "6 cleared L2 · avg 78/100");
     bot("l2", "idle", "6 cleared L2");
-    await say("6 candidates cleared L2. Shall I run a pre-BGV check?");
-    await ask(["Yes, run pre-BGV"]);
+    await say("6 candidates cleared L2. Shall I run a pre-BGV check? It's optional.");
+    const bgvChoice = await ask(["Yes, run pre-BGV", "Skip pre-BGV"]);
 
-    step(8, "Pre-BGV", "With each candidate's consent, the BGV agent checks EPFO employment history and DigiLocker documents.");
+    step(8, "Pre-BGV · optional", "If you opt in, the BGV agent checks EPFO employment history and DigiLocker documents, with each candidate's consent.");
+    let pick = "Book all 6";
+    if (bgvChoice === "Skip pre-BGV") {
+      await say("Skipping pre-BGV for this role.", undefined, 900);
+      bot("bgv", "idle", "Skipped for this role");
+    } else {
     bot("bgv", "working", "Checking EPFO history and DigiLocker documents");
     await count("bgv", 6, 2400, "l2");
     log("BGV agent", "done", "5 verified · 1 flagged for review (employment dates don't match)");
     bot("bgv", "idle", "5 verified · 1 flagged");
     await say("5 verified. 1 is flagged for your review because the employment dates don't match. Nobody is rejected automatically. Who should I book for your interview round?");
-    const pick = await ask(["Book the 5 verified", "Book all 6"]);
+    pick = await ask(["Book the 5 verified", "Book all 6"]);
+    }
     const finalists = pick === "Book all 6" ? 6 : 5;
 
     step(9, "Human round", "Your panel interviews the finalists. Taurus books the slots and collects the decision.");
     bot("scheduler", "working", `Booking ${finalists} interviews with your panel`);
-    await count("human", finalists, 1600, "bgv");
+    await count("human", finalists, 1600, bgvChoice === "Skip pre-BGV" ? "l2" : "bgv");
     await say(`Booked ${finalists} interviews with your panel for Thursday, 11:00 to 15:00.`);
     bot("scheduler", "idle", `${finalists} interviews booked`);
     await wait(1600);

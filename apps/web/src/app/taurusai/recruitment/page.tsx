@@ -20,7 +20,7 @@ const storySteps = [
   ["Shortlist on WhatsApp", "The shortlist arrives in your chat with notes from every call, and Taurus asks whether to start L1."],
   ["L1 round", "Everyone on the shortlist gets a link to a role-specific AI interview, graded after it finishes."],
   ["L2 round", "Candidates who clear L1 move to a deeper technical AI round."],
-  ["Pre-BGV", "On your yes, and with each candidate's consent, employment history is checked on EPFO and documents on DigiLocker. A mismatch is flagged for you, never auto-rejected."],
+  ["Pre-BGV (optional)", "If you want it for the role, and with each candidate's consent, employment history is checked on EPFO and documents on DigiLocker. A mismatch is flagged for you, never auto-rejected."],
   ["Your interview round", "Taurus books your panel's interviews with the finalists and collects the decision."],
   ["Offer", "Offer letters go out only after you approve them in the chat."],
 ] as const;

@@ -9,9 +9,8 @@
  * verification — are labelled samples in the stage copy and in HONESTY_LIMITS.
  *
  * Anything not yet built also lives in ROADMAP and is rendered in a visually
- * distinct band: the public API, webhooks and ATS import are phase E4, and the
- * full Trust Score verification chain (DigiLocker / PAN / EPFO) needs its own
- * ADR per PRD-E §7 before build.
+ * distinct band: the public API, webhooks and ATS import are phase E4.
+ * Pre-BGV (EPFO + DigiLocker, consent-based, optional per role) is live.
  *
  * Brand voice rules apply (CLAUDE.md §Brand Voice): no hype adjectives, no
  * guaranteed-hire claims, no fabricated performance statistics. Every number on
@@ -163,10 +162,6 @@ export const ROADMAP = [
   {
     title: "Run it on your own stack",
     body: "A public employer API, HMAC-signed webhooks and CSV/ATS import, so the pipeline reads and writes against the systems you already have.",
-  },
-  {
-    title: "Full background verification",
-    body: "A Trust Score built from DigiLocker ID, PAN, education certificates and EPFO employment history — with each component and its status shown, never a black box.",
   },
   {
     title: "Semantic candidate search",
@@ -341,7 +336,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "Do you run background verification?",
-    a: "Not yet. Verification is on the roadmap as a Trust Score built from DigiLocker ID, PAN, education certificates and EPFO employment history. What you get today is the interview: the answers, per-dimension scores once graded, and the written strong and weak moments. Camera and window-switch proctoring are not captured.",
+    a: "Yes, as an optional step. With each candidate's consent, pre-BGV checks employment history on EPFO and documents through DigiLocker, and you choose whether to run it for a role. A mismatch is flagged for your review. It never auto-rejects anyone. You also get the interview: the answers, per-dimension scores once graded, and the written strong and weak moments. Camera and window-switch proctoring are not captured.",
   },
   {
     q: "Can candidates tell they are speaking to an AI?",
@@ -469,10 +464,6 @@ export const HONESTY_LIMITS = [
   {
     title: "No proctoring capture",
     body: "Camera and window-switch signals are not recorded. The profile says proctoring was not captured. An empty integrity panel is empty. It is not a pass.",
-  },
-  {
-    title: "No background verification yet",
-    body: "DigiLocker, PAN, education certificates and EPFO employment history are on the roadmap. What you can read today is the interview: answers, scores after grading, strong moments, concerns.",
   },
   {
     title: "No ATS plugin yet",

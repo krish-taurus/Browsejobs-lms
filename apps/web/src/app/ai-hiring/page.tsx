@@ -45,7 +45,7 @@ const faqs = [
   },
   {
     q: "Do you run background verification?",
-    a: "Not the full check. A Trust Score built from DigiLocker ID, PAN, education certificates, and EPFO employment history is on the roadmap and is not available. What you get today is the interview: the answers, per-rubric scores once graded, and a written read of what was strong and what was thin. Camera and window-switch checks are not captured, so a blank panel is not a pass. A flag, when you have one, never auto-rejects anyone.",
+    a: "Yes, as an optional step. With each candidate's consent, pre-BGV checks employment history on EPFO and documents through DigiLocker, and you choose whether to run it for a role. A mismatch is flagged for your review. It never auto-rejects anyone. Alongside it you get the interview: the answers, per-rubric scores once graded, and a written read of what was strong and what was thin. Camera and window-switch checks are not captured, so a blank panel is not a pass.",
   },
   {
     q: "Will this connect to the ATS we already pay for?",
@@ -164,8 +164,8 @@ export default function AiHiringPage() {
 
       <MoneySection id="roadmap" kicker="Not yet" heading="Say this out loud before a vendor review">
         <p>
-          A hiring team evaluating software should know the absences. Full background verification, a public API,
-          ATS import, and semantic candidate search are written down as not built. Treating the roadmap as the
+          A hiring team evaluating software should know the absences. A public API, ATS import, and semantic
+          candidate search are written down as not built. Treating the roadmap as the
           product is how evaluations go wrong. If one of these is a condition of signing, raise it on the call and
           expect a direct answer about timing.
         </p>

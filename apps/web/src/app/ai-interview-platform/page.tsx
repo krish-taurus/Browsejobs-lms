@@ -161,9 +161,9 @@ export default function AiInterviewPlatformPage() {
           <TextLink href="/employers">for employers</TextLink>. This page is only the interview.
         </p>
         <p>
-          Full background verification — DigiLocker, PAN, education certificates, EPFO — is not part of the
-          interview and is not live. Do not write it into a candidate communication as if the brief included it. The
-          brief includes interview evidence. Say that.
+          Pre-BGV (EPFO employment history and DigiLocker documents, with the candidate&apos;s consent) is an optional
+          step you can switch on after the interviews. It is not part of the interview brief itself, so don&apos;t describe
+          the brief as a verification report. The brief includes interview evidence. Say that.
         </p>
       </MoneySection>
 
