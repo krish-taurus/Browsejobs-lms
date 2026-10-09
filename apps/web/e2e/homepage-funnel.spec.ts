@@ -28,11 +28,12 @@ test("homepage hero offers the free AI interview above the fold", async ({ page 
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL("/");
 
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai");
+
+  await page.goto("/how-it-works");
   const gaps = page.locator("#gaps");
   await expect(gaps).toContainText("blocking interviews");
   await expect(gaps.getByRole("button", { name: "Book free counselling" })).toBeVisible();
-  const gapsBox = await gaps.boundingBox();
-  expect(gapsBox!.y).toBeGreaterThan(ctaBox!.y);
 
   for (const slug of ["data-engineering", "devops-cloud", "python-backend", "data-analytics"]) {
     await expect(page.locator(`#courses a[href="/courses/${slug}"]`).first()).toBeVisible();
@@ -41,7 +42,6 @@ test("homepage hero offers the free AI interview above the fold", async ({ page 
   await expect(page.locator('a[href="/courses/agentic-ai"]')).toHaveCount(0);
   await expect(page.locator('a[href="/courses/cyber-security"]')).toHaveCount(0);
   await expect(page.locator('a[href="/courses/servicenow"]')).toHaveCount(0);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai");
 
   const main = page.locator("main");
   await expect(main).not.toContainText("98%");
@@ -63,12 +63,48 @@ test("desktop hero keeps the interview form as the first action", async ({ page 
 
   await expect(page.getByRole("link", { name: "Take your free AI interview" }).first()).toHaveAttribute(
     "href",
-    "#interview-start",
+    "/#interview-start",
   );
 });
 
-test("counselling modal opens from the miss path", async ({ page }) => {
+test("how it works scrolls into the employer section without a pin", async ({ page }) => {
+  for (const width of [390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+
+    const stickyInsideSteps = await page.locator("#how *").evaluateAll((nodes) =>
+      nodes.some((node) => getComputedStyle(node).position === "sticky"),
+    );
+    expect(stickyInsideSteps, `sticky pin at ${width}`).toBe(false);
+    await expect(page.locator("#how")).toContainText("Interview");
+    await expect(page.locator("#how")).toContainText("Get seen");
+
+    const card = page.getByText("Walk me through a pipeline you would ship this month");
+    const next = page.locator("#for-employers");
+    const cardBox = await card.boundingBox();
+    const nextBox = await next.boundingBox();
+    expect(cardBox, `interview card at ${width}`).not.toBeNull();
+    expect(nextBox, `employer section at ${width}`).not.toBeNull();
+    expect(nextBox!.y).toBeGreaterThan(cardBox!.y + cardBox!.height);
+  }
+
+  await page.goto("/how-it-works");
+  await expect(page.locator("#how")).toContainText("almost 60%");
+  await expect(page.locator("#how")).toContainText("3,000 HR recruiters");
+});
+
+test("homepage employer CTA opens the employer page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
+  const cta = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "For Employers" });
+  await cta.scrollIntoViewIfNeeded();
+  await cta.click();
+  await expect(page).toHaveURL(/\/employers$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Your AI Recruiter/i);
+});
+
+test("counselling modal opens from the miss path", async ({ page }) => {
+  await page.goto("/how-it-works");
   const counselling = page.locator("#gaps").getByRole("button", { name: "Book free counselling" });
   await counselling.scrollIntoViewIfNeeded();
   await counselling.click();

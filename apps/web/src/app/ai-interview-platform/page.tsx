@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "Do candidates know the interviewer is an AI?",
-    a: "The interview is an AI interview. We do not present it as a person on the phone. There is no outbound dialler. Counselling calls on the student side are recorded and AI-monitored. That is a different door from this interview.",
+    a: "The interview is an AI interview, and we do not present it as a person. The AI screening call that confirms interest, notice period and salary is also an AI. Counselling calls on the student side are recorded and AI-monitored. That is a different door from this interview.",
   },
   {
     q: "Who writes the questions?",
@@ -104,12 +104,13 @@ export default function AiInterviewPlatformPage() {
         ]}
       />
 
-      <MoneySection id="call" kicker="First conversation" heading="An AI interview, not a phone call we place">
+      <MoneySection id="call" kicker="First conversation" heading="An AI screening call, then an AI interview">
         <p>
           What runs today is an async interview against the rubric for that job. The candidate answers, spoken or
           typed. Questions are generated with the job description and can be previewed before anyone is invited. A
           round goes out by hand, or on its own when a score clears the bar you set. Below the bar, nothing is sent
-          and nobody is rejected. An outbound phone dialler is not connected.
+          and nobody is rejected. Before the interview, an AI screening call can phone shortlisted candidates to confirm
+          interest, notice period and expected salary.
         </p>
         <p>
           The interview is an AI interview. We do not dress it up as a recruiter ringing them. We also do not publish

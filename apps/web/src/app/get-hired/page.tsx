@@ -7,7 +7,7 @@ const page = {
   path: "/get-hired",
   title: "Get hired: free AI interview, then HR sees your score",
   description:
-    "Take a free AI interview. You get a score and feedback. Clear it and we put you in front of HR with your score. Miss it and free counselling shows what's blocking you. A course comes only if you need it. The placement fee is due only after you accept an offer.",
+    "Take a free AI interview and get a score with feedback. Clear it and HR sees your score; miss it and free counselling shows what to fix.",
 } as const;
 
 export const metadata: Metadata = moneyMetadata(page);

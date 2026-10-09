@@ -4,7 +4,7 @@ import { MarketingShell } from "@/components/landing/MarketingShell";
 import { SalaryDetail } from "@/components/salaries/SalaryDetail";
 import { getSalaryPage, salaryPages } from "@/content/salaries";
 import { DISCLAIMER } from "@/content/landing";
-import { canonical } from "@/lib/seo";
+import { canonical, OG_IMAGES } from "@/lib/seo";
 
 /**
  * Programmatic salary SEO pages (/salaries/data-engineer-bengaluru):
@@ -23,7 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = `${page.role} Salary in ${page.city} — ₹${band.p25}–${band.p75} LPA`;
   const description = `${page.role} pay in ${page.city}: entry offers around ₹${band.p25} LPA, median ₹${band.p50} LPA, strong offers ₹${band.p75} LPA. ${DISCLAIMER}`;
   const url = canonical(`/salaries/${page.slug}`);
-  return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
+  return { title, description, alternates: { canonical: url }, openGraph: {
+    images: OG_IMAGES, title, description, url } };
 }
 
 export default async function SalaryPage({ params }: { params: Promise<{ slug: string }> }) {

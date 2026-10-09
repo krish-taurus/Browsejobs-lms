@@ -96,8 +96,8 @@ export default function AiHiringPage() {
             BrowseJobs AI hiring is a pipeline for teams, not a student course. You bring a role. The product
             structures the job description, ranks applicants with a written reason, runs a role-specific AI
             interview, and hands your HR team a graded brief before a human meeting. The first six months are free.
-            We do not publish a hire rate, a time-to-fill, or a claim that this beats another ATS. An outbound
-            phone dialler is not connected.
+            We do not publish a hire rate, a time-to-fill, or a claim that this beats another ATS. An AI
+            screening call can phone shortlisted candidates to confirm interest, notice period and salary.
           </p>
         }
       />

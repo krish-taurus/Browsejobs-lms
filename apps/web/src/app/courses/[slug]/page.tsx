@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { CourseDetail } from "@/components/argus/courses/CourseDetail";
 import { courseDetails, getCourseDetail } from "@/content/courses";
-import CourseKeynote from "@/components/courses/CourseKeynote";
-import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 /**
- * Course detail page — keynote template (approved from the /v3 preview):
- * hero → tools → live market demand → interactive module journey → smart
- * systems on this course → interview intel + downloadable question bank →
- * projects → reviews → free-first closer. SEO metadata + Course JSON-LD kept
- * from the previous page.
+ * Live course page. JSON-LD stays here. The /v3 preview still uses the keynote.
  */
 
 export function generateStaticParams() {
@@ -29,7 +26,8 @@ export async function generateMetadata({
     title,
     description: course.hero,
     alternates: { canonical: url },
-    openGraph: { title, description: course.hero, url },
+    openGraph: {
+    images: OG_IMAGES, title, description: course.hero, url },
   };
 }
 
@@ -57,7 +55,9 @@ export default async function CoursePage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <CourseKeynote course={course} />
+      <ArgusFrame className="argus-home argus-course-page">
+        <CourseDetail course={course} />
+      </ArgusFrame>
     </>
   );
 }

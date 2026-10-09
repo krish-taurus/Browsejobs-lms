@@ -5,8 +5,8 @@
  * PIPELINE describes the hiring flow. Stages that the workspace actually runs
  * (JD drafting, graded ranking, async AI interviews, automation rules, evidence
  * after grading, human-only offers) are written as product. Scenes that run
- * ahead of the code — outbound phone screening, camera proctoring, background
- * verification — are labelled samples in the stage copy and in HONESTY_LIMITS.
+ * ahead of the code — camera proctoring — are labelled samples in the stage copy
+ * and in HONESTY_LIMITS. AI screening calls and pre-BGV are live.
  *
  * Anything not yet built also lives in ROADMAP and is rendered in a visually
  * distinct band: the public API, webhooks and ATS import are phase E4.
@@ -79,12 +79,12 @@ export const PIPELINE: readonly PipelineStage[] = [
     step: "03",
     kicker: "First screen",
     title: "The facts, filed before a person sits down.",
-    body: "What runs today is an async, role-specific AI interview — spoken or typed — graded against that job's rubric. The scene beside this is a sample of the facts a first screen should capture. An outbound phone dialler is not connected.",
+    body: "An AI screening call then phones shortlisted candidates to confirm interest, notice period and expected salary, and files the outcome for your team. Then comes an async, role-specific AI interview, spoken or typed, graded against that job's rubric.",
     points: [
       "Questions are generated with the job description and can be previewed before anyone is invited",
       "A round goes out by hand, or on its own when a score clears the bar you set",
       "Below the bar, nothing is sent and nobody is rejected — a person decides",
-      "Notice period, pay and outcome in the scene are a sample checklist, not a live call recording",
+      "The names and numbers in the scene are samples; your floor shows your own candidates",
     ],
     accent: "#0ba860",
     demo: "call",
@@ -332,7 +332,7 @@ export const EMPLOYER_FAQ = [
   },
   {
     q: "What exactly does the AI screening call do?",
-    a: "The interview that runs today is asynchronous and role-specific. The candidate answers — spoken or typed — against the rubric generated for that job. Scores, a summary, and the strong and weak moments are written only after grading. The phone-call checklist on this page is a sample of facts a first screen should capture. An outbound dialler is not connected, so we do not claim a recording from a call we did not place.",
+    a: "It phones shortlisted candidates to confirm interest, notice period and expected salary, and files the outcome for your team. After that comes the AI interview: asynchronous, role-specific, spoken or typed, and graded against the rubric generated for that job. Scores, a summary, and the strong and weak moments are written only after grading.",
   },
   {
     q: "Do you run background verification?",
@@ -457,10 +457,6 @@ export const WORKSPACE_FACTS = [
  * Rendered as their own band so they cannot be skimmed as features.
  */
 export const HONESTY_LIMITS = [
-  {
-    title: "No outbound dialler",
-    body: "The screening-call scene is a sample checklist. The interview that runs is async. We do not place the call, so we do not attach a recording of one.",
-  },
   {
     title: "No proctoring capture",
     body: "Camera and window-switch signals are not recorded. The profile says proctoring was not captured. An empty integrity panel is empty. It is not a pass.",

@@ -55,14 +55,26 @@ test("get-hired is in the sitemap", async ({ request }) => {
   expect(await response.text()).toContain("https://browsejobs.ai/get-hired");
 });
 
-test("hiring pages do not claim a dialler, proctoring, or Taurus as the product", async ({ page }) => {
+test("hiring pages name the AI Recruiter, with Taurus as the engine", async ({ page }) => {
   for (const path of ["/ai-hiring", "/ai-interview-platform", "/employers"]) {
     await page.goto(path);
     const html = await page.content();
+    // The live phone step is described as an "AI screening call" everywhere.
     expect(html, path).not.toContain("AI caller");
+  }
+  await page.goto("/employers");
+  const html = await page.content();
+  expect(html).toContain("BrowseJobs AI Recruiter");
+  expect(html).toContain("Powered by Taurus AI");
+  await expect(page.locator('a[href="/taurusai/hiring-demo"]').first()).toBeAttached();
+});
+
+test("product pages keep the honest limit on proctoring capture", async ({ page }) => {
+  for (const path of ["/ai-hiring", "/ai-interview-platform"]) {
+    await page.goto(path);
+    const html = await page.content();
     expect(html, path).not.toContain("proctored");
     expect(html, path).not.toContain("proctoring record");
-    expect(html, path).not.toContain("Taurus");
   }
 });
 

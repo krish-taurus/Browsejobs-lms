@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/landing/JsonLd";
-import { MarketingShell } from "@/components/landing/MarketingShell";
-import { HomeHero } from "@/components/home/HomeHero";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { GapFork } from "@/components/home/GapFork";
-import { CourseStrip } from "@/components/home/CourseStrip";
-import { ProofAndPay } from "@/components/home/ProofAndPay";
-import { HomeClose } from "@/components/home/HomeClose";
-import { homeNav } from "@/content/home";
-import { canonical } from "@/lib/seo";
+import { ArgusFrame } from "@/components/argus/ArgusFrame";
+import { HomePage } from "@/components/argus/home/HomePage";
+import { canonical, OG_IMAGES } from "@/lib/seo";
 
 const TITLE = "Free AI Interview — 75% Clear Puts You in Front of HR | BrowseJobs";
 const DESCRIPTION =
-  "Take a free AI interview. Fifteen questions from your CV, scored out of 100. A score of 75% or more counts as clear and puts you in front of HR with your score. Counselling and a course come only if you still need them.";
+  "Free AI interview: about 15 questions from your CV. Score 75% or more and we send your CV to 3,000 HR recruiters. Below that, free help and a retake.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: canonical("/") },
   openGraph: {
+    images: OG_IMAGES,
     title: TITLE,
     description: DESCRIPTION,
     url: canonical("/"),
@@ -29,22 +24,13 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Home — night job-first funnel. The document title, description and
- * canonical stay the production homepage metadata. /v3 keeps the keynote.
- */
 export default function Home() {
   return (
     <>
       <JsonLd />
-      <MarketingShell links={homeNav} ctaLabel="Take your free AI interview" ctaHref="#interview-start" tone="night">
-        <HomeHero />
-        <HowItWorks />
-        <GapFork />
-        <CourseStrip />
-        <ProofAndPay />
-        <HomeClose />
-      </MarketingShell>
+      <ArgusFrame className="argus-home">
+        <HomePage />
+      </ArgusFrame>
     </>
   );
 }
