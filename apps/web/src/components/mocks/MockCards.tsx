@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { mockPath, type MockKind } from "@/lib/mockKinds";
 
@@ -11,7 +11,7 @@ export type GapItem = {
   gap: boolean;
 };
 
-type VoiceTopup = {
+export type VoiceTopup = {
   product_id: number;
   sku: string;
   name: string;
@@ -39,7 +39,7 @@ export type MockSummary = {
   kind_counts?: Partial<Record<MockKind, number>>;
 };
 
-/** The /me/mocks summary shared by the hub and the Practice / Voice pages. */
+/** The /me/mocks summary shared by the hub and the Voice page. */
 export function useMockSummary() {
   const [summary, setSummary] = useState<MockSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,62 +56,89 @@ export function useMockSummary() {
   return { summary, loading, reload };
 }
 
+/**
+ * Where a student stands on voice interviews, from the server's own numbers.
+ * "browser" = the in-browser room (capped attempts, no credits); "call" = a
+ * telephony provider is configured and each session spends one credit.
+ */
+export function voiceStatus(summary: MockSummary) {
+  const v = summary.voice;
+  const mode: "browser" | "call" = v.provider_ready ? "call" : "browser";
+  const remaining = mode === "call" ? v.credits : Math.max(0, v.room_attempts_limit - v.room_attempts_used);
+
+  return {
+    mode,
+    used: v.room_attempts_used,
+    limit: v.room_attempts_limit,
+    credits: v.credits,
+    remaining,
+    exhausted: remaining <= 0,
+    joinUrl: v.in_progress?.join_url ?? null,
+    maxMinutes: v.max_minutes,
+    topups: v.topups,
+  };
+}
+
+export type VoiceStatus = ReturnType<typeof voiceStatus>;
+
+/**
+ * Start (or resume) a voice interview. The server resumes an unfinished
+ * voice session instead of creating a second one; the ref guard also stops a
+ * double click from firing two requests before the first one answers.
+ */
+export function useVoiceInterview(summary: MockSummary | null, reload: () => void) {
+  const [busy, setBusy] = useState<number | "start" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const inFlight = useRef(false);
+
+  const start = useCallback(async () => {
+    if (!summary || inFlight.current) return;
+    inFlight.current = true;
+    setError(null);
+    setBusy("start");
+    try {
+      if (summary.voice.provider_ready) {
+        const r = await apiJson<{ data: { join_url: string | null } }>("/api/v1/me/mocks/voice", { method: "POST" });
+        if (r.data.join_url) window.open(r.data.join_url, "_blank", "noopener");
+        reload();
+        setBusy(null);
+        inFlight.current = false;
+      } else {
+        // No telephony provider: the spoken interview runs in the browser —
+        // same interviewer and scorecard, capped at a flat number of attempts
+        // (is_room is what the server counts against that cap).
+        const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", {
+          method: "POST",
+          body: JSON.stringify({ is_room: true }),
+        });
+        window.location.href = mockPath("voice", r.data.id, true);
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
+      setBusy(null);
+      inFlight.current = false;
+    }
+  }, [summary, reload]);
+
+  const buyTopup = useCallback(async (t: VoiceTopup) => {
+    setError(null);
+    setBusy(t.product_id);
+    try {
+      await apiJson("/api/v1/me/purchases", { method: "POST", body: JSON.stringify({ product_id: t.product_id }) });
+      setNotice("Order created — complete the payment from the Store page and your sessions land instantly.");
+    } catch (err) {
+      setError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the purchase.");
+    } finally {
+      setBusy(null);
+    }
+  }, []);
+
+  return { busy, error, notice, start, buyTopup };
+}
+
 export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; reload: () => void }) {
-  const [voiceBusy, setVoiceBusy] = useState<number | "start" | null>(null);
-  const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
-
-  async function startVoice() {
-    setVoiceError(null);
-    setVoiceBusy("start");
-    try {
-      const r = await apiJson<{ data: { join_url: string | null } }>("/api/v1/me/mocks/voice", { method: "POST" });
-      if (r.data.join_url) window.open(r.data.join_url, "_blank", "noopener");
-      reload();
-    } catch (err) {
-      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
-    } finally {
-      setVoiceBusy(null);
-    }
-  }
-
-  // No telephony provider configured: run the spoken interview in the browser
-  // instead — same interviewer and scorecard, using the browser's own speech
-  // engine. Free of the voice_mock credit wallet entirely, but capped at a
-  // flat number of attempts per blueprint (CRM-editable, separate from the
-  // employer-JD interview cap) — is_room is what tells the backend to count
-  // and gate this one against that cap, rather than treating it as
-  // unmetered text practice.
-  async function startBrowserVoice() {
-    setVoiceError(null);
-    setVoiceBusy("start");
-    try {
-      const r = await apiJson<{ data: { id: number } }>("/api/v1/me/mocks", {
-        method: "POST",
-        body: JSON.stringify({ is_room: true }),
-      });
-      window.location.href = mockPath("voice", r.data.id, true);
-    } catch (err) {
-      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Something went wrong.");
-      setVoiceBusy(null);
-    }
-  }
-
-  async function buyTopup(t: VoiceTopup) {
-    setVoiceError(null);
-    setVoiceBusy(t.product_id);
-    try {
-      await apiJson("/api/v1/me/purchases", {
-        method: "POST",
-        body: JSON.stringify({ product_id: t.product_id }),
-      });
-      setVoiceNotice("Order created — complete the payment from the Store page and your sessions land instantly.");
-    } catch (err) {
-      setVoiceError(err instanceof ApiError ? (err.firstError ?? err.message) : "Could not start the purchase.");
-    } finally {
-      setVoiceBusy(null);
-    }
-  }
+  const { busy, error, notice, start, buyTopup } = useVoiceInterview(summary, reload);
 
   return (
     <div className="mt-4 rounded-2xl border border-line bg-white p-6">
@@ -125,8 +152,8 @@ export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; 
             : `${summary.voice.room_attempts_used}/${summary.voice.room_attempts_limit} attempts used`}
         </span>
       </div>
-      {voiceError && <p className="mt-2 text-sm text-warn">{voiceError}</p>}
-      {voiceNotice && <p className="mt-2 text-sm text-verify">{voiceNotice}</p>}
+      {error && <p className="mt-2 text-sm text-warn">{error}</p>}
+      {notice && <p className="mt-2 text-sm text-verify">{notice}</p>}
 
       {summary.voice.in_progress?.join_url ? (
         <>
@@ -152,11 +179,11 @@ export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; 
               are transcribed as you speak. You get the same scorecard afterwards.
             </p>
             <button
-              onClick={startBrowserVoice}
-              disabled={voiceBusy === "start"}
+              onClick={start}
+              disabled={busy === "start"}
               className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
-              {voiceBusy === "start" ? "Opening the room…" : "Start a voice interview"}
+              {busy === "start" ? "Opening the room…" : "Start a voice interview"}
             </button>
             <p className="mt-2 text-xs text-muted">
               Runs in your browser — no credit is used. Works best in Chrome or Edge, with your
@@ -171,11 +198,11 @@ export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; 
             the same scorecard afterwards.
           </p>
           <button
-            onClick={startVoice}
-            disabled={voiceBusy === "start"}
+            onClick={start}
+            disabled={busy === "start"}
             className="mt-3 rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {voiceBusy === "start" ? "Opening the room…" : "Start a voice interview"}
+            {busy === "start" ? "Opening the room…" : "Start a voice interview"}
           </button>
           <p className="mt-2 text-xs text-muted">
             Each session uses 1 credit. Finish a module to unlock another — dropped calls are refunded.
@@ -189,10 +216,10 @@ export function VoiceInterviewCard({ summary, reload }: { summary: MockSummary; 
               <button
                 key={t.product_id}
                 onClick={() => buyTopup(t)}
-                disabled={voiceBusy === t.product_id}
+                disabled={busy === t.product_id}
                 className="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
               >
-                {voiceBusy === t.product_id
+                {busy === t.product_id
                   ? "Creating order…"
                   : `${t.sessions} session${t.sessions === 1 ? "" : "s"} · ₹${Math.round(t.price_paise / 100)}`}
               </button>
