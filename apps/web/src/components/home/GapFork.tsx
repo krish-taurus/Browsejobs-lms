@@ -9,10 +9,12 @@ export function GapFork() {
 
   return (
     <section id="gaps" className="scroll-mt-28 border-t border-white/10">
-      <div className="mx-auto grid max-w-6xl items-start gap-12 px-5 py-16 md:py-24 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+      <div className="mx-auto grid max-w-6xl items-start gap-16 px-5 py-28 md:py-40 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <ScrollReveal>
           <p className="kicker text-amber">If you don&apos;t clear</p>
-          <h2 className="display mt-3 text-4xl text-fg md:text-6xl">Didn&apos;t clear? Here&apos;s what&apos;s blocking interviews.</h2>
+          <h2 className="display mt-6 max-w-xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
+            Didn&apos;t clear? Here&apos;s what&apos;s blocking interviews.
+          </h2>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
             A miss still helps. You see the questions that slipped, and the skills that role is
             hiring for. Free counselling walks you through what&apos;s blocking you. A course is only

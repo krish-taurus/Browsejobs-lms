@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\DataRequestController as AdminDataRequestControll
 use App\Http\Controllers\Admin\DayBuilderController;
 use App\Http\Controllers\Admin\DunningController;
 use App\Http\Controllers\Admin\EmployerAdminController;
+use App\Http\Controllers\Admin\EnquiryAdminController;
 use App\Http\Controllers\Admin\FeePlanController;
 use App\Http\Controllers\Admin\FlashcardController;
 use App\Http\Controllers\Admin\FundingNewsController;
@@ -66,6 +67,8 @@ use App\Http\Controllers\Admin\SupportDocumentController;
 use App\Http\Controllers\Admin\SyllabusController;
 use App\Http\Controllers\Admin\SyllabusImportController;
 use App\Http\Controllers\Admin\SyllabusRecommendationController;
+use App\Http\Controllers\Admin\Taurus\PlatformBrainController as TaurusPlatformBrainController;
+use App\Http\Controllers\Admin\Taurus\WorkspaceAdminController as TaurusWorkspaceAdminController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
@@ -80,6 +83,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\Auth\StudentAuthController;
+use App\Http\Controllers\Auth\TaurusAuthController;
 use App\Http\Controllers\BatchChatController;
 use App\Http\Controllers\Care\CareController;
 use App\Http\Controllers\CertificateVerifyController;
@@ -93,6 +97,7 @@ use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationCo
 use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
 use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
+use App\Http\Controllers\Employer\HiringFloorController as EmployerHiringFloorController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
 use App\Http\Controllers\Employer\InviteController as EmployerInviteController;
@@ -108,6 +113,7 @@ use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
+use App\Http\Controllers\Enquiries\EnquiryController;
 use App\Http\Controllers\FeeStatusController;
 use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\JobBoardSegmentedController;
@@ -160,6 +166,9 @@ use App\Http\Controllers\Public\SalaryController;
 use App\Http\Controllers\Reviews\ReviewController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Support\StudentTicketController;
+use App\Http\Controllers\Taurus\IngestController as TaurusIngestController;
+use App\Http\Controllers\Taurus\WorkspaceBrainController as TaurusWorkspaceBrainController;
+use App\Http\Controllers\Taurus\WorkspaceController as TaurusWorkspaceController;
 use App\Http\Controllers\Testimonials\TestimonialController;
 use App\Http\Controllers\Tutor\TutorController;
 use App\Http\Controllers\Webhooks\MetaLeadController;
@@ -230,6 +239,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
     Route::post('leads', [LeadController::class, 'store'])
         ->middleware('throttle:10,1');
 
+    Route::post('enquiries', [EnquiryController::class, 'store'])
+        ->middleware('throttle:enquiries');
+
     // Free Career Direction Report — server-gated: registering as a lead IS
     // the price of the analysis (name+phone+consent validated before it runs).
     Route::post('career-report', CareerReportController::class)
@@ -275,6 +287,9 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
         Route::post('employer/login', [EmployerAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:staff-login');
         Route::post('staff/2fa', [StaffAuthController::class, 'verify'])->middleware('throttle:10,1');
+        // Taurus clients (ADR 0052): claim a workspace invite, then sign in.
+        Route::post('taurus/claim', [TaurusAuthController::class, 'claim'])->middleware('throttle:10,1');
+        Route::post('taurus/login', [TaurusAuthController::class, 'login'])->middleware('throttle:staff-login');
     });
 });
 
@@ -500,6 +515,9 @@ Route::middleware('tenant.domain')->prefix('v1/employer')->group(function (): vo
 Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group(function () {
     Route::get('workspaces', [EmployerWorkspaceController::class, 'index']);
     Route::get('workspaces/{workspace}/dashboard', [EmployerDashboardController::class, 'show']);
+    // The pipeline drawn as the Taurus recruitment floor (ADR 0052).
+    Route::get('workspaces/{workspace}/hiring-floor', [EmployerHiringFloorController::class, 'show']);
+    Route::post('workspaces/{workspace}/hiring-floor/ask', [EmployerHiringFloorController::class, 'ask'])->middleware('throttle:ai');
     Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
     Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
     Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);
@@ -836,6 +854,10 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
 
     // Built-in CRM (PRD §6.12).
     Route::middleware('can:manage-leads')->group(function () {
+        Route::get('enquiries/export', [EnquiryAdminController::class, 'export']);
+        Route::get('enquiries', [EnquiryAdminController::class, 'index']);
+        Route::patch('enquiries/{enquiry}', [EnquiryAdminController::class, 'update']);
+
         // Review protection & retention (PRD §6.20) — counselor care desk.
         Route::get('care', [CareAdminController::class, 'index']);
         Route::post('care/alerts/{alert}/handle', [CareAdminController::class, 'handleAlert']);
@@ -969,6 +991,46 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/admin')->group(fu
     });
 });
 
+// Taurus AI (ADR 0052) — workspace console for members. Non-members get 404,
+// suspended workspaces 403; `:manage` = owner/admin only.
+Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/taurus/workspaces')->group(function (): void {
+    Route::get('/', [TaurusWorkspaceController::class, 'index']);
+
+    Route::middleware('taurus.member')->scopeBindings()->group(function (): void {
+        Route::get('{workspace}/state', [TaurusWorkspaceController::class, 'state']);
+        Route::post('{workspace}/ask', [TaurusWorkspaceController::class, 'ask'])->middleware('throttle:ai');
+        Route::post('{workspace}/speak', [TaurusWorkspaceController::class, 'speak'])->middleware('throttle:120,1');
+    });
+
+    Route::middleware('taurus.member:manage')->scopeBindings()->group(function (): void {
+        Route::post('{workspace}/tasks/{task}/approve', [TaurusWorkspaceController::class, 'approve']);
+        Route::post('{workspace}/tasks/{task}/reject', [TaurusWorkspaceController::class, 'reject']);
+        Route::get('{workspace}/members', [TaurusWorkspaceController::class, 'members']);
+
+        Route::get('{workspace}/brain', [TaurusWorkspaceBrainController::class, 'show']);
+        Route::put('{workspace}/brain', [TaurusWorkspaceBrainController::class, 'update']);
+        Route::delete('{workspace}/brain/providers/{provider}', [TaurusWorkspaceBrainController::class, 'clearProvider']);
+        Route::post('{workspace}/brain/test', [TaurusWorkspaceBrainController::class, 'test'])->middleware('throttle:ai');
+        Route::post('{workspace}/ingest-token', [TaurusWorkspaceBrainController::class, 'rotateIngestToken']);
+    });
+});
+
+// Taurus owner console (ADR 0052): every workspace in the tenant (no agent
+// data, no keys) and the platform brain. Owner-only by role (+ optional email
+// allow-list), never by a grantable permission.
+Route::middleware(['auth:sanctum', 'tenant.user', 'taurus.owner'])->prefix('v1/admin/taurus')->group(function (): void {
+    Route::get('workspaces', [TaurusWorkspaceAdminController::class, 'index']);
+    Route::post('workspaces', [TaurusWorkspaceAdminController::class, 'store']);
+    Route::patch('workspaces/{workspace}', [TaurusWorkspaceAdminController::class, 'update']);
+    Route::post('workspaces/{workspace}/invites', [TaurusWorkspaceAdminController::class, 'invite']);
+    Route::post('hq', [TaurusWorkspaceAdminController::class, 'hq']);
+
+    Route::get('platform', [TaurusPlatformBrainController::class, 'show']);
+    Route::put('platform', [TaurusPlatformBrainController::class, 'update']);
+    Route::delete('platform/providers/{provider}', [TaurusPlatformBrainController::class, 'clearProvider']);
+    Route::post('platform/test', [TaurusPlatformBrainController::class, 'test'])->middleware('throttle:ai');
+});
+
 // Signature-verified inbound webhooks (no user auth).
 Route::post('webhooks/zoom', ZoomWebhookController::class)
     ->middleware('zoom.signed')
@@ -1005,3 +1067,12 @@ Route::post('webhooks/whatsapp', [WhatsAppController::class, 'store'])
     ->middleware('whatsapp.signed')
     ->withoutMiddleware('throttle:api')
     ->name('webhooks.whatsapp.store');
+
+// Taurus bots (ADR 0052). Machine-to-machine: the bearer token identifies one workspace.
+Route::middleware(['taurus.ingest', 'throttle:taurus-ingest'])
+    ->withoutMiddleware('throttle:api')
+    ->prefix('v1/taurus')
+    ->group(function (): void {
+        Route::post('ingest', [TaurusIngestController::class, 'store'])->name('taurus.ingest');
+        Route::get('decisions', [TaurusIngestController::class, 'decisions'])->name('taurus.decisions');
+    });

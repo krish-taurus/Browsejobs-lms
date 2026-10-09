@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
@@ -990,7 +989,7 @@ export default function TaurusAiPage() {
     asking === "experience" ? "e.g. 3 to 5 years — or say any"
       : asking === "location" ? "e.g. Hyderabad — or remote"
         : asking === "openings" ? "e.g. 3"
-          : "Ask Taurus about hiring…";
+          : "Ask about hiring…";
 
   return (
     <div className="flex h-full flex-col space-y-5 pb-6">
@@ -999,7 +998,7 @@ export default function TaurusAiPage() {
           <p className="font-mono text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--bj-dash-primary)" }}>
             Your AI hiring companion
           </p>
-          <h1 className="bj-dash-serif mt-1" style={{ fontSize: "var(--bj-dash-title-size)", color: "var(--bj-dash-ink)" }}>Taurus AI</h1>
+          <h1 className="bj-dash-serif mt-1" style={{ fontSize: "var(--bj-dash-title-size)", color: "var(--bj-dash-ink)" }}>AI Recruiter voice</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--bj-dash-muted)" }}>A helping hand for every hiring decision.</p>
         </div>
         <button
@@ -1026,7 +1025,7 @@ export default function TaurusAiPage() {
               className="absolute right-2 top-2 flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-xs font-semibold shadow-sm sm:right-4 sm:top-4"
               style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
             >
-              Taurus
+              Voice
               <span className="flex items-center gap-1" style={{ color: "var(--bj-dash-primary)" }}>
                 <span className="size-1.5 rounded-full" style={{ background: "var(--bj-dash-primary)" }} />
                 {robotState === "listening" ? "Listening…" : robotState === "thinking" ? "Thinking…" : robotState === "speaking" ? "Speaking…" : robotState === "error" ? "Hit a snag" : "Ready to help"}
@@ -1042,7 +1041,7 @@ export default function TaurusAiPage() {
             style={{ background: listening ? "#a5352f" : "var(--bj-dash-primary)" }}
           >
             <MicIcon className="size-4" />
-            {listening ? "Stop — send it" : "Talk to Taurus"}
+            {listening ? "Stop — send it" : "Talk"}
           </button>
           <p className="mt-2 text-xs" style={{ color: "var(--bj-dash-muted)" }}>Use your voice or type a message.</p>
         </div>
@@ -1055,7 +1054,7 @@ export default function TaurusAiPage() {
             </span>
             <div>
               <p className="text-sm font-semibold" style={{ color: "var(--bj-dash-ink)" }}>Your hiring assistant</p>
-              <p className="text-xs" style={{ color: "var(--bj-dash-muted)" }}>Taurus AI</p>
+              <p className="text-xs" style={{ color: "var(--bj-dash-muted)" }}>AI Recruiter voice</p>
             </div>
           </div>
 
@@ -1076,7 +1075,7 @@ export default function TaurusAiPage() {
             {turns.map((turn, i) => (
               <div key={i} className={turn.who === "you" ? "text-right" : ""}>
                 <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--bj-dash-muted)" }}>
-                  {turn.who === "you" ? "You" : "Taurus AI"}
+                  {turn.who === "you" ? "You" : "AI Recruiter"}
                 </p>
                 <p
                   className="mt-0.5 inline-block max-w-full whitespace-pre-line rounded-xl px-3.5 py-2 text-sm"

@@ -1,16 +1,18 @@
+import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 import { BookCta } from "@/components/landing/BookCta";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { recruiterFaqs } from "@/content/home";
 import { faqs, freeLadder, promisesKept, promisesNever } from "@/content/landing";
 
 export function HomeClose() {
   return (
     <>
       <section id="verify" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
           <ScrollReveal>
             <p className="kicker text-trust">In writing</p>
-            <h2 className="display mt-3 max-w-2xl text-4xl text-fg md:text-5xl">
+            <h2 className="display mt-6 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
               What we promise — and what we never will
             </h2>
           </ScrollReveal>
@@ -44,10 +46,10 @@ export function HomeClose() {
       </section>
 
       <section id="free-steps" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-5 py-28 md:py-40">
           <ScrollReveal>
             <p className="kicker text-verify">Three free steps first</p>
-            <h2 className="display mt-3 max-w-3xl text-4xl text-fg md:text-5xl">
+            <h2 className="display mt-6 max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] tracking-[-0.04em] text-fg">
               You pay nothing until you have seen the work.
             </h2>
           </ScrollReveal>
@@ -72,10 +74,26 @@ export function HomeClose() {
       </section>
 
       <section id="faq" className="scroll-mt-28 border-t border-white/10">
-        <div className="mx-auto max-w-3xl px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-5 py-28 md:py-40">
           <p className="kicker text-trust">Questions</p>
-          <h2 className="display mt-3 text-3xl text-fg md:text-4xl">Straight answers.</h2>
+          <h2 className="display mt-6 text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">Straight answers.</h2>
           <div className="mt-8 divide-y divide-white/10 border-y border-white/10">
+            {recruiterFaqs.map((item) => (
+              <details key={item.q} className="group py-5">
+                <summary className="cursor-pointer list-none text-lg font-semibold text-fg [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-start justify-between gap-4">
+                    {item.q}
+                    <span aria-hidden className="mono inline-block text-muted transition-transform group-open:rotate-45">
+                      +
+                    </span>
+                  </span>
+                </summary>
+                <p className="mt-3 text-base leading-relaxed text-muted">{item.a}</p>
+              </details>
+            ))}
+          </div>
+          <Disclaimer className="mt-4" />
+          <div className="mt-2 divide-y divide-white/10 border-b border-white/10">
             {faqs.map((item) => (
               <details key={item.q} className="group py-4">
                 <summary className="cursor-pointer list-none text-base font-semibold text-fg [&::-webkit-details-marker]:hidden">
@@ -94,19 +112,21 @@ export function HomeClose() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-t border-white/10">
+      <section id="close" className="relative scroll-mt-28 overflow-hidden border-t border-white/10">
         <div aria-hidden className="home-glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-3xl px-5 py-24 text-center md:py-32">
+        <div className="relative mx-auto max-w-4xl px-5 py-28 text-center md:py-40">
           <ScrollReveal>
-            <h2 className="display text-5xl text-fg md:text-7xl">Start with the interview.</h2>
+            <h2 className="display text-[clamp(2.75rem,7vw,6rem)] leading-[0.92] tracking-[-0.04em] text-fg">
+              Start with the interview.
+            </h2>
             <p className="mx-auto mt-4 max-w-md text-lg text-muted">The course can wait until you know what to fix.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="#interview-start"
+              <Link
+                href="/#interview-start"
                 className="inline-flex items-center justify-center rounded-full bg-trust px-8 py-3.5 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
               >
                 Take your free AI interview
-              </a>
+              </Link>
               <BookCta ghost variant="masterclass">
                 Book the free masterclass
               </BookCta>

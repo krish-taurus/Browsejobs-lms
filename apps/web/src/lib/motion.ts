@@ -1,3 +1,5 @@
+import { SCENE_IDS, type SceneId } from "@/lib/scene-bus";
+
 /**
  * Motion tokens (CLAUDE.md §6.23). One signature easing, a fixed duration
  * scale, and a standard stagger — never inline ad-hoc values in components.
@@ -30,3 +32,22 @@ export const staggerContainer = {
     transition: { staggerChildren: stagger },
   },
 } as const;
+
+/**
+ * Argus scene ids and motion gates.
+ * SplitText is a Club GSAP plugin and is not licensed here. <SplitHeading>
+ * splits words in the DOM instead.
+ */
+export { SCENE_IDS, type SceneId };
+
+export function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function isMobileViewport(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+}
+
+export function isSceneId(value: string | null | undefined): value is SceneId {
+  return !!value && (SCENE_IDS as readonly string[]).includes(value);
+}

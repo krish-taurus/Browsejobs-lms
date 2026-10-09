@@ -8,6 +8,7 @@ use App\Enums\AiEventStatus;
 use App\Enums\AiPurpose;
 use App\Models\AiEvent;
 use App\Models\User;
+use App\Support\AI\ClientFactory;
 use App\Support\AI\ProviderResolver;
 use App\Support\Tenancy\TenantContext;
 use Throwable;
@@ -26,8 +27,15 @@ final class AiGateway
     ) {}
 
     /**
+     * `provider` in $opts routes this one call to a specific configured
+     * provider (via ClientFactory) instead of the platform's active one — the
+     * Taurus brain uses it. Budget, prompt rendering and ai_events logging are
+     * identical either way. `client` goes one step further: a prebuilt
+     * transport (a Taurus workspace's own key, via ClientFactory::fromCredentials)
+     * — pass `model` with it, since the platform default would be wrong.
+     *
      * @param  array<string, string>  $vars
-     * @param  array{system?: string, model?: string, max_tokens?: int}  $opts
+     * @param  array{system?: string, model?: string, max_tokens?: int, provider?: string, client?: AiClient}  $opts
      */
     public function complete(User $user, AiPurpose $purpose, string $promptName, int $version, array $vars = [], array $opts = []): AiResult
     {
@@ -37,7 +45,10 @@ final class AiGateway
             $prompt = $this->prompts->render($promptName, $version, $vars);
             // Default to the ACTIVE provider's model, not the global Anthropic
             // default — otherwise e.g. Kimi is sent "claude-sonnet-5" and rejects it.
-            $model = $opts['model'] ?? $this->defaultModel();
+            $provider = isset($opts['provider']) && $opts['provider'] !== '' ? (string) $opts['provider'] : null;
+            $model = $opts['model'] ?? ($provider !== null
+                ? (string) config("ai.providers.{$provider}.model", config('ai.model'))
+                : $this->defaultModel());
 
             $message = new AiMessage(
                 user: $prompt,
@@ -49,7 +60,8 @@ final class AiGateway
             $start = hrtime(true);
 
             try {
-                $result = $this->client->complete($message);
+                $client = $opts['client'] ?? ($provider !== null ? ClientFactory::for($provider) : $this->client);
+                $result = $client->complete($message);
             } catch (Throwable $e) {
                 $this->log($user, $purpose, $model, 0, 0, 0, 0, AiEventStatus::Failed, ['error' => substr($e->getMessage(), 0, 250)]);
                 throw $e;

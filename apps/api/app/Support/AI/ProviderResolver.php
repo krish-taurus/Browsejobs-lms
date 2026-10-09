@@ -17,7 +17,7 @@ namespace App\Support\AI;
 final class ProviderResolver
 {
     /** Preference order when auto-selecting a configured provider. */
-    private const ORDER = ['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'];
+    private const ORDER = ['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom', 'gemini', 'groq'];
 
     /**
      * The provider the AI client should build for. Honours an explicit choice

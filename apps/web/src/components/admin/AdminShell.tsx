@@ -59,6 +59,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Sales & CRM",
     items: [
       { href: "/admin/leads", label: "Leads" },
+      { href: "/admin/enquiries", label: "Enquiries" },
       { href: "/admin/tasks", label: "Tasks" },
       { href: "/admin/funnel", label: "Funnel" },
       { href: "/admin/engagement", label: "Engagement" },
@@ -82,6 +83,14 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { href: "/admin/support", label: "Support" },
       { href: "/admin/care", label: "Care desk" },
       { href: "/admin/risk", label: "Risk" },
+    ],
+  },
+  {
+    label: "Taurus AI",
+    items: [
+      { href: "/admin/taurus/console", label: "Command centre", role: "super-admin" },
+      { href: "/admin/taurus/brain", label: "Brain & voice", role: "super-admin" },
+      { href: "/admin/taurus/clients", label: "Clients", role: "super-admin" },
     ],
   },
   {

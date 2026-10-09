@@ -32,7 +32,7 @@ return [
                     'key' => 'provider',
                     'label' => 'Active provider',
                     'type' => 'select',
-                    'options' => ['auto', 'anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'],
+                    'options' => ['auto', 'anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom', 'gemini', 'groq'],
                     'config' => 'ai.provider',
                 ]],
                 $provider('anthropic', 'Anthropic'),
@@ -41,7 +41,36 @@ return [
                 $provider('deepseek', 'DeepSeek'),
                 $provider('grok', 'Grok / xAI'),
                 $provider('custom', 'Custom (OpenAI-compatible)'),
+                $provider('gemini', 'Google Gemini'),
+                $provider('groq', 'Groq'),
             ),
+        ],
+
+        /*
+        | Taurus AI command centre (ADR 0052). LLM keys themselves are the
+        | shared provider keys in the AI / LLM group above — this group only
+        | picks which one the brain uses, plus the voice and the bot token.
+        | It is edited only on the owner-gated Taurus console (Brain & voice).
+        */
+        'taurus' => [
+            // Owner-only: hidden from Admin → Settings and refused by its save;
+            // read and written solely through the owner-gated Taurus endpoints.
+            'owner_only' => true,
+            'label' => 'Taurus AI',
+            'help' => 'The brain is the AI that answers questions on the Taurus floor. Leave it on "platform" to use the same AI as the rest of the site, or pick a provider to give Taurus its own (its key is the one saved under AI / LLM). The ElevenLabs key gives Taurus a voice. These platform keys power the BrowseJobs recruitment brain on employer hiring floors; each Taurus workspace keeps its own keys and bot token.',
+            'fields' => [
+                [
+                    'key' => 'brain_provider',
+                    'label' => 'Brain — provider',
+                    'type' => 'select',
+                    'options' => ['platform', 'anthropic', 'openai', 'gemini', 'kimi', 'deepseek', 'grok', 'groq', 'custom'],
+                    'config' => 'taurus.brain.provider',
+                ],
+                ['key' => 'brain_model', 'label' => 'Brain — model (blank = provider default)', 'type' => 'text', 'config' => 'taurus.brain.model'],
+                ['key' => 'elevenlabs_api_key', 'label' => 'ElevenLabs — API key', 'type' => 'secret', 'config' => 'services.elevenlabs.api_key'],
+                ['key' => 'elevenlabs_voice_id', 'label' => 'ElevenLabs — voice ID', 'type' => 'text', 'config' => 'services.elevenlabs.voice_id'],
+                ['key' => 'elevenlabs_model', 'label' => 'ElevenLabs — model', 'type' => 'text', 'config' => 'services.elevenlabs.model'],
+            ],
         ],
 
         'whatsapp' => [

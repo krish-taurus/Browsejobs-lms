@@ -52,6 +52,20 @@ return [
             'base_url' => env('GROK_BASE_URL', 'https://api.x.ai/v1'),
             'model' => env('GROK_MODEL', 'grok-4'),
         ],
+        // Google Gemini speaks its own dialect (generateContent), so it has
+        // its own driver rather than riding on openai_compatible.
+        'gemini' => [
+            'driver' => 'gemini',
+            'api_key' => env('GEMINI_API_KEY', ''),
+            'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+            'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        ],
+        'groq' => [
+            'driver' => 'openai_compatible',
+            'api_key' => env('GROQ_API_KEY', ''),
+            'base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+            'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        ],
         // Any other OpenAI-compatible endpoint (Ollama, Together, vLLM, …).
         'custom' => [
             'driver' => 'openai_compatible',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Services\AI\AiClient;
 use App\Services\AI\AiMessage;
 use App\Services\AI\AnthropicClient;
+use App\Services\AI\GeminiClient;
 use App\Services\AI\OpenAiCompatibleClient;
 use Illuminate\Support\Facades\Http;
 
@@ -19,6 +20,8 @@ it('binds the driver matching AI_PROVIDER', function (string $provider, string $
     ['deepseek', OpenAiCompatibleClient::class],
     ['grok', OpenAiCompatibleClient::class],
     ['custom', OpenAiCompatibleClient::class],
+    ['gemini', GeminiClient::class],
+    ['groq', OpenAiCompatibleClient::class],
 ]);
 
 it('rejects an unknown provider with a clear error', function () {

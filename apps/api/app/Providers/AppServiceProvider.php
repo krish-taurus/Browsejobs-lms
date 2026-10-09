@@ -6,16 +6,16 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Services\AI\AiClient;
-use App\Services\AI\AnthropicClient;
-use App\Services\AI\OpenAiCompatibleClient;
 use App\Services\Crm\LeadScorer;
 use App\Services\Crm\RuleBasedLeadScorer;
+use App\Support\AI\ClientFactory;
 use App\Support\AI\ProviderResolver;
 use App\Support\Certificates\CertificateRenderer;
 use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Drive\DriveClient;
 use App\Support\Drive\GoogleDriveClient;
 use App\Support\Drive\NullDriveClient;
+use App\Support\Enquiries\ClientIp;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
 use App\Support\Interviews\NullTranscriptionClient;
@@ -59,7 +59,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -164,19 +163,11 @@ class AppServiceProvider extends ServiceProvider
         // nothing else. ProviderResolver picks the effective provider: the
         // chosen one when it has a key, else the first provider that does — so
         // `auto` (or a keyless choice) transparently uses whatever is set up.
+        // Drivers (anthropic | openai_compatible | gemini) are built by
+        // ClientFactory, which the Taurus brain also uses to reach a specific
+        // provider without changing the platform default.
         $this->app->bind(AiClient::class, function (): AiClient {
-            $provider = app(ProviderResolver::class)->resolve();
-            $config = config("ai.providers.{$provider}");
-
-            if (! is_array($config)) {
-                throw new RuntimeException("Unknown AI provider [{$provider}] — see config/ai.php.");
-            }
-
-            return match ($config['driver'] ?? null) {
-                'anthropic' => new AnthropicClient($config),
-                'openai_compatible' => new OpenAiCompatibleClient($config),
-                default => throw new RuntimeException("Unknown AI driver for provider [{$provider}]."),
-            };
+            return ClientFactory::build(app(ProviderResolver::class)->resolve());
         });
 
         // Interview transcript speech-to-text (P4.2). Null until a provider is
@@ -252,6 +243,20 @@ class AppServiceProvider extends ServiceProvider
         // Tight limit for AI-backed endpoints (CLAUDE.md: rate limit AI endpoints).
         RateLimiter::for('ai', fn (Request $request) => Limit::perMinute(20)->by(
             $request->user()?->getAuthIdentifier() ?? $request->ip(),
+        ));
+
+        // Taurus bot ingest (ADR 0052): machine-to-machine, so keyed by the
+        // bearer token's hash (never the token itself), falling back to IP.
+        RateLimiter::for('taurus-ingest', function (Request $request): Limit {
+            $token = (string) $request->bearerToken();
+
+            return Limit::perMinute(600)->by($token !== '' ? 'tok:'.hash('sha256', $token) : 'ip:'.$request->ip());
+        });
+
+        // Public enquiry forms. Keyed by the real client IP, including the
+        // address a loopback proxy forwards.
+        RateLimiter::for('enquiries', fn (Request $request) => Limit::perMinute(8)->by(
+            ClientIp::resolve($request),
         ));
 
         // Note: the P2.4 SendLeadWelcomeMessage listener on LeadCaptured is

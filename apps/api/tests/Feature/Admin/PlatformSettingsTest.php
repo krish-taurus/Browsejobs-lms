@@ -161,3 +161,50 @@ it('refuses a select value outside its declared options', function () {
         ->toBeFalse()
         ->and(config('verification.routing.identity'))->toBe('manual');
 });
+
+it('keeps the owner-only Taurus group off the generic settings page', function () {
+    PlatformSetting::query()->create(['group' => 'taurus', 'key' => 'elevenlabs_api_key', 'value' => 'xi-taurus-secret-4455']);
+    PlatformSetting::query()->create(['group' => 'taurus', 'key' => 'brain_model', 'value' => 'gemini-2.5-pro']);
+
+    Sanctum::actingAs($this->super);
+    $response = $this->getJson('/api/v1/admin/settings')->assertOk();
+
+    expect(collect($response->json('data'))->pluck('key')->all())->not->toContain('taurus')
+        ->and($response->getContent())->not->toContain('xi-taurus-secret-4455');
+
+    // A generic save cannot write it either, not even as a super-admin.
+    $this->putJson('/api/v1/admin/settings', ['settings' => [
+        'taurus' => ['elevenlabs_api_key' => 'xi-hijacked-key-0000', 'brain_model' => 'hijacked', 'brain_provider' => 'openai'],
+        'ai' => ['provider' => 'openai'],
+    ]])->assertOk();
+
+    expect(PlatformSetting::query()->where('group', 'taurus')->where('key', 'brain_model')->sole()->value)->toBe('gemini-2.5-pro')
+        ->and(PlatformSetting::query()->where('group', 'taurus')->where('key', 'elevenlabs_api_key')->sole()->value)->toBe('xi-taurus-secret-4455')
+        ->and(PlatformSetting::query()->where('group', 'taurus')->where('key', 'brain_provider')->exists())->toBeFalse()
+        // The shared AI group still saves normally.
+        ->and(PlatformSetting::query()->where('group', 'ai')->where('key', 'provider')->sole()->value)->toBe('openai');
+
+    // The Taurus console still reaches the group through the service directly.
+    $taurus = collect(app(PlatformSettings::class)->schema(true))->firstWhere('key', 'taurus');
+    expect(collect($taurus['fields'])->pluck('key')->all())->toBe([
+        'brain_provider', 'brain_model', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_model',
+    ])
+        ->and(collect($taurus['fields'])->firstWhere('key', 'brain_provider')['options'])
+        ->toBe(['platform', 'anthropic', 'openai', 'gemini', 'kimi', 'deepseek', 'grok', 'groq', 'custom']);
+
+    $ai = collect($response->json('data'))->firstWhere('key', 'ai');
+    expect(collect($ai['fields'])->firstWhere('key', 'provider')['options'])->toContain('gemini', 'groq')
+        ->and(collect($ai['fields'])->pluck('key')->all())->toContain('gemini_api_key', 'groq_api_key');
+});
+
+it('restores the env value in-process when a stored setting is cleared', function () {
+    config(['services.elevenlabs.voice_id' => 'env-voice']);
+    PlatformSetting::query()->create(['group' => 'taurus', 'key' => 'elevenlabs_voice_id', 'value' => 'db-voice']);
+    app(PlatformSettings::class)->refresh();
+    expect(config('services.elevenlabs.voice_id'))->toBe('db-voice');
+
+    app(PlatformSettings::class)->clear(['taurus' => ['elevenlabs_voice_id']]);
+
+    expect(config('services.elevenlabs.voice_id'))->toBe('env-voice')
+        ->and(PlatformSetting::query()->where('key', 'elevenlabs_voice_id')->exists())->toBeFalse();
+});

@@ -26,6 +26,25 @@
      pages just were not using them. */
   --bj-surface: #ffffff;
   --bj-fg: #0a1220;
+
+  /* Argus system. White field, black and graphite accents. The old violet
+     names still point at the accent scale so existing var(--violet-*) rules
+     follow the new palette without a second set of tokens. */
+  --bg: #ffffff;
+  --bg-elev: #f5f5f7;
+  --bg-elev-2: #e5e5ea;
+  --violet-600: #111111;
+  --violet-400: #2c2c2e;
+  --violet-200: #111111;
+  --glow-hot: #0a0a0a;
+  --text: #0a0a0a;
+  --text-muted: #6e6e73;
+  --text-dim: #6e6e73;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: #d1d1d6;
+  --success: #0f7a3a;
+  --radius-argus-card: 24px;
+  --radius-argus-panel: 32px;
 }
 
 /*
@@ -78,6 +97,18 @@
   --font-display: var(--font-sora);
   --font-body: var(--font-inter);
   --font-mono: var(--font-plex-mono);
+
+  --color-argus-bg: var(--bg);
+  --color-argus-elev: var(--bg-elev);
+  --color-argus-elev-2: var(--bg-elev-2);
+  --color-violet-600: var(--violet-600);
+  --color-violet-400: var(--violet-400);
+  --color-violet-200: var(--violet-200);
+  --color-glow-hot: var(--glow-hot);
+  --color-argus-text: var(--text);
+  --color-argus-muted: var(--text-muted);
+  --color-argus-dim: var(--text-dim);
+  --color-argus-success: var(--success);
 }
 
 html {

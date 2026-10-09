@@ -815,6 +815,9 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
                 Book the free masterclass
               </button>
             </Magnetic>
+            <Link href={`/courses/enquire?course=${course.slug}`} className="text-lg font-semibold" style={{ color: accent }}>
+              Ask about this course
+            </Link>
             <a href="#journey" className="group text-lg font-semibold" style={{ color: accent }}>
               Explore the journey <span className="inline-block transition-transform group-hover:translate-y-0.5">↓</span>
             </a>

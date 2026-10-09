@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import { employerApi, nextStage, STAGE_LABELS, type ApplicationRow, type EmployerApplicationsPage as ApplicationsPage } from "@/lib/employer";
 import { PipelineHeader } from "./components/PipelineHeader";
@@ -95,7 +95,10 @@ export default function PipelineBoardPage() {
   // (job_id + search, stage NOT applied), so either is equally authoritative.
   const counts = (view === "list" ? listData : boardData)?.counts ?? null;
 
-  const rows: ApplicationRow[] = view === "list" ? (listData?.data ?? []) : (boardData?.data ?? []);
+  const rows: ApplicationRow[] = useMemo(
+    () => (view === "list" ? (listData?.data ?? []) : (boardData?.data ?? [])),
+    [view, listData, boardData],
+  );
 
   // If the selected application drops out of view (filtered away, moved to
   // a stage no longer shown), clear selection instead of showing a stale

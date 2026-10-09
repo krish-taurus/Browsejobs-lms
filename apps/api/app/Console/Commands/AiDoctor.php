@@ -8,6 +8,7 @@ use App\Models\AiEvent;
 use App\Services\AI\AiClient;
 use App\Services\AI\AiMessage;
 use App\Services\AI\AnthropicClient;
+use App\Services\AI\GeminiClient;
 use App\Services\AI\JsonOutput;
 use App\Services\AI\OpenAiCompatibleClient;
 use App\Support\AI\ProviderResolver;
@@ -29,7 +30,7 @@ final class AiDoctor extends Command
     protected $description = 'Diagnose the active AI provider with a live test call.';
 
     /** Same preference order the resolver uses, so the output reads in the order keys are picked. */
-    private const PROVIDERS = ['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'];
+    private const PROVIDERS = ['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom', 'gemini', 'groq'];
 
     public function handle(ProviderResolver $resolver): int
     {
@@ -169,6 +170,7 @@ final class AiDoctor extends Command
             $client = match ($config['driver'] ?? null) {
                 'anthropic' => new AnthropicClient($config),
                 'openai_compatible' => new OpenAiCompatibleClient($config),
+                'gemini' => new GeminiClient($config),
                 default => null,
             };
 

@@ -49,9 +49,6 @@ export const TaurusRobotScene = forwardRef<TaurusRobotHandle, { state: TaurusRob
         viewRef.current?.dispose();
         viewRef.current = null;
       };
-      // Mounted once per visit to this page — state/energy are pushed via
-      // the effects below rather than remounting the whole renderer.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => { viewRef.current?.setState(state); }, [state]);

@@ -34,5 +34,6 @@ enum AiPurpose: string
     case GithubPortfolio = 'github_portfolio';
     case InterviewPrep = 'interview_prep';
     case Coach = 'coach';
+    case Taurus = 'taurus';
     case General = 'general';
 }

@@ -26,8 +26,16 @@ const OPTIONS = [
   },
 ];
 
-export function LoginMenu({ tone = "light" }: { tone?: "light" | "night" } = {}) {
-  const night = tone === "night";
+export function LoginMenu({
+  tone = "light",
+  appearance = "default",
+}: {
+  tone?: "light" | "night";
+  appearance?: "default" | "apple" | "argus";
+} = {}) {
+  const argus = appearance === "argus";
+  const night = tone === "night" && !argus;
+  const apple = appearance === "apple";
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -56,9 +64,15 @@ export function LoginMenu({ tone = "light" }: { tone?: "light" | "night" } = {})
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-          night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
-        }`}
+        className={
+          apple
+            ? "inline-flex h-8 items-center gap-1 text-[12px] leading-none"
+            : argus
+              ? "inline-flex h-11 items-center gap-1 px-2 text-[14px] text-[#3a3a3c] hover:text-[#0a0a0a]"
+              : `flex items-center gap-1 text-sm font-medium transition-colors ${
+                  night ? "text-white/70 hover:text-white" : "text-muted hover:text-ink"
+                }`
+        }
       >
         Login
         <span
@@ -92,7 +106,7 @@ export function LoginMenu({ tone = "light" }: { tone?: "light" | "night" } = {})
             <Link
               href="/register"
               onClick={() => setOpen(false)}
-              className="text-xs font-semibold text-trust hover:text-deep"
+              className={`text-xs font-semibold ${argus ? "text-[#0a0a0a] hover:text-[#2c2c2e]" : "text-trust hover:text-deep"}`}
             >
               New here? Create a free account →
             </Link>
