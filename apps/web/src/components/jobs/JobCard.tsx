@@ -7,11 +7,14 @@ import { FOCUS_RING, StatusChip } from "@/components/jobs/ReadinessBanner";
 import type { InternalJob } from "@/lib/candidate";
 
 /**
- * Company mark. The jobs API carries no logo yet, so BrowseJobs' own roles
- * use the real BrowseJobs mark and every other company gets a neutral
- * initials tile.
+ * Company mark: the employer's own logo when one is set in the CRM, else the
+ * real BrowseJobs mark for BrowseJobs' own roles, else an initials tile.
  */
-function CompanyTile({ company }: { company: string | null }) {
+function CompanyTile({ company, logo }: { company: string | null; logo?: string | null }) {
+  if (logo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={logo} alt="" className="h-12 w-12 shrink-0 rounded-xl border border-line bg-white object-contain p-1" />;
+  }
   if (company !== null && company.trim().toLowerCase() === "browsejobs") {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src="/logo.svg" alt="" className="h-12 w-12 shrink-0 rounded-xl" />;
@@ -129,7 +132,7 @@ export function JobCard({
   return (
     <article aria-labelledby={`job-${job.id}-title`} className="rounded-[18px] border border-line bg-white p-5 shadow-soft sm:p-6">
       <div className="flex items-start gap-4">
-        <CompanyTile company={job.company} />
+        <CompanyTile company={job.company} logo={job.company_logo} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

@@ -92,6 +92,8 @@ export type InternalJob = {
   id: number;
   title: string;
   company: string | null;
+  // Public URL of the employer's logo (set in the CRM), or null.
+  company_logo?: string | null;
   locations: string[];
   remote: boolean;
   skills: string[];

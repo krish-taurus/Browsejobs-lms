@@ -41,8 +41,6 @@ const GRADES: NavItem = { href: "/grades", label: "Grades", icon: "M6 3h9l3 3v15
 const REPORTS: NavItem = { href: "/reports", label: "Reports", icon: "M4 5h16v14H4zM8 9v6M12 7v8M16 11v4" };
 const CERTIFICATES: NavItem = { href: "/certificates", label: "Certificates", icon: "M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9 2.6.9-5.5-4-3.9 5.5-.8zM8 20v-4M16 20v-4" };
 const PULSE: NavItem = { href: "/pulse", label: "Pulse", icon: "M3 12h4l2-7 4 14 2-7h6" };
-const ALERTS: NavItem = { href: "/notifications", label: "Alerts", icon: "M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0" };
-const CHECKIN: NavItem = { href: "/checkin", label: "Check-in", icon: "M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9ZM8 11h2l1.5-3 2 5 1.5-2h2" };
 const STORE: NavItem = { href: "/store", label: "Store", icon: "M4 7h16l-1 12H5L4 7ZM9 7a3 3 0 0 1 6 0" };
 const SUPPORT: NavItem = { href: "/support", label: "Support", icon: "M12 3a9 9 0 0 0-9 9v5a2 2 0 0 0 2 2h2v-6H5v-1a7 7 0 0 1 14 0v1h-2v6h2a2 2 0 0 0 2-2v-5a9 9 0 0 0-9-9Z" };
 const PROFILE: NavItem = { href: "/profile", label: "Profile", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 20a7 7 0 0 1 14 0" };
@@ -52,7 +50,8 @@ export const navGroups: NavGroup[] = [
   { label: "Learn", items: [DASHBOARD, CLASSES, BATCH_CHAT, RECORDINGS, PRACTICE, QUIZZES, TUTOR] },
   { label: "Progress", items: [GRADES, REPORTS, CERTIFICATES] },
   { label: "Career", items: [MOCK_INTERVIEWS, MENTORS, PLACEMENT, JOBS, CV, STORE] },
-  { label: "You", items: [PULSE, ALERTS, CHECKIN, SUPPORT, PROFILE] },
+  // Alerts and Check-in removed from the menu (Oct 2026); both pages still open by URL.
+  { label: "You", items: [PULSE, SUPPORT, PROFILE] },
 ];
 
 /** Flat list of destinations — the ⌘K command palette searches this. */

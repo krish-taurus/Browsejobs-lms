@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -87,5 +88,19 @@ final class EmployerWorkspace extends Model
     public function roleFor(User $user): ?EmployerRole
     {
         return $this->memberFor($user)?->role;
+    }
+
+    /**
+     * Public URL of the company logo, or null. Set by employer:set-logo
+     * (public disk, employer-logos/…); a full URL is passed through as-is.
+     */
+    public function logoUrl(): ?string
+    {
+        $path = $this->logo_path;
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        return str_starts_with($path, 'http') ? $path : Storage::disk('public')->url($path);
     }
 }
