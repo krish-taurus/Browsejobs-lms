@@ -11,7 +11,9 @@ import { Spotlight } from "@/components/motion/Spotlight";
 import { BookCta } from "@/components/landing/BookCta";
 
 /**
- * The Daily Market Brief funnel page: the emailed headline lands here.
+ * The Daily Market Brief funnel page. Shell copy last changed 2026-07-19;
+ * bump PAGE_UPDATED["/brief"] in content/last-modified.ts when it changes.
+ * The emailed headline lands here.
  * The brief renders blurred behind a register-to-read card (one submit to
  * /api/v1/leads unlocks it, remembered locally) — and the unlocked view ends
  * in the masterclass recommendation, closing the loop the daily message

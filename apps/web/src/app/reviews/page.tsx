@@ -8,6 +8,8 @@ import { ReviewWall } from "@/components/reviews/ReviewWall";
 import { reviewAggregates } from "@/content/landing";
 import { canonical } from "@/lib/seo";
 
+/** Page copy last changed 2026-07-15. Bump PAGE_UPDATED["/reviews"] in content/last-modified.ts when it changes. Review cards are not separate sitemap URLs. */
+
 export const metadata: Metadata = {
   title: "Reviews",
   description:

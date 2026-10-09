@@ -3,7 +3,15 @@
  * already tracks (market-pulse cities + salary-page roles). Qualitative
  * direction only, consistent with spec §3. Each page cross-links roles,
  * cities, tracks and related skills for crawl depth.
+ *
+ * SKILLS_UPDATED is sitemap <lastmod> for /skills and every /skills/*
+ * page that does not set its own updatedAt. All twelve skills were
+ * published together on 2026-07-19. Bump the constant when the copy
+ * changes. If only one skill changes, set updatedAt on that definition.
  */
+
+/** Sitemap lastmod for the skills hub and skills without their own updatedAt. */
+export const SKILLS_UPDATED = "2026-07-19";
 
 export type SkillPage = {
   slug: string;
@@ -15,6 +23,8 @@ export type SkillPage = {
   roles: { name: string; salarySlug: string | null }[];
   track: { name: string; href: string } | null;
   related: string[];
+  /** Sitemap lastmod (YYYY-MM-DD) when this skill changed on its own. */
+  updatedAt?: string;
 };
 
 const kebab = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

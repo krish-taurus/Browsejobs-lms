@@ -8,6 +8,8 @@ import { courses } from "@/content/landing";
 import { canonical } from "@/lib/seo";
 import { seoMoneyLinks } from "@/content/seo-nav";
 
+/** Hub copy last changed 2026-10-06. Bump PAGE_UPDATED["/courses"] in content/last-modified.ts when it changes. */
+
 export const metadata: Metadata = {
   title: "Programs",
   description:

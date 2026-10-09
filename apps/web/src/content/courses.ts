@@ -3,6 +3,12 @@
  * NOT invent topics). Per founder instruction, Data Engineering excludes
  * real-time/Kafka from the core syllabus — those live in `exploreLater` as
  * optional self-study. Python Backend has no brochure yet: minimal entry only.
+ *
+ * `updatedAt` is the sitemap <lastmod> for /courses/[slug] (YYYY-MM-DD).
+ * Bump it in the same edit that changes that course's visible copy. Do not
+ * bump it for styling. Seeded from git: the shared course-page disclaimer
+ * (and Data Engineering's H1) landed 2026-10-05; Data Analytics duration
+ * copy changed 2026-10-06.
  */
 
 export type CourseModuleContent = {
@@ -45,6 +51,8 @@ export type CourseDetail = {
   };
   /** True when the full brochure syllabus is loaded. */
   hasSyllabus: boolean;
+  /** Sitemap lastmod (YYYY-MM-DD). Bump when this course's visible copy changes. */
+  updatedAt: string;
 };
 
 export const courseDetails: CourseDetail[] = [
@@ -54,6 +62,7 @@ export const courseDetails: CourseDetail[] = [
     name: "Data Engineering",
     tagline: "Pipelines, warehouses, and the modern data stack.",
     live: true,
+    updatedAt: "2026-10-05",
     seoTitle: "Data Engineering Course with Placement — Pay After You're Hired",
     headline: "Data Engineering Course with Placement",
     headlinePayoff: "Pay after you're hired.",
@@ -213,6 +222,7 @@ export const courseDetails: CourseDetail[] = [
     name: "DevOps & Cloud",
     tagline: "Ship, scale, and run production systems.",
     live: true,
+    updatedAt: "2026-10-05",
     hero: "Own the pipeline from commit to production. A six-month, hands-on program whose syllabus is rebuilt every month from real DevOps interview questions — build, automate, deploy, monitor.",
     duration: "6 months",
     format: "Live online + recordings",
@@ -376,6 +386,7 @@ export const courseDetails: CourseDetail[] = [
     name: "Data Analytics",
     tagline: "SQL, dashboards, and decisions from data.",
     live: true,
+    updatedAt: "2026-10-06",
     hero: "From data to decisions. Turn information into impact. A career-focused program whose syllabus is rebuilt every month from real Data Analyst interviews — Excel, SQL, Python, Statistics, Power BI.",
     duration: "6 months",
     format: "Live online + recordings",
@@ -517,6 +528,7 @@ export const courseDetails: CourseDetail[] = [
     name: "Python Backend",
     tagline: "APIs, databases, and production Python.",
     live: true,
+    updatedAt: "2026-10-05",
     hero: "Production Python for the backend roles companies are hiring for — APIs, databases, and the engineering practices interviews test.",
     duration: "6 months",
     format: "Live online + recordings",

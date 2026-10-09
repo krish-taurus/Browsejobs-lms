@@ -12,10 +12,11 @@ import { BookCta } from "@/components/landing/BookCta";
 import { MASTERCLASS_RECORDING_URL } from "@/content/landing";
 
 /**
- * /masterclass — watch-anytime page. When a recording URL is configured it
- * embeds behind the same one-time register gate the brief uses (a watch is a
- * lead); until then the page sells the live session honestly. The live CTA
- * is always the loudest element.
+ * /masterclass — watch-anytime page. Copy last changed 2026-07-19. Bump
+ * PAGE_UPDATED["/masterclass"] in content/last-modified.ts when it changes.
+ * When a recording URL is configured it embeds behind the same one-time
+ * register gate the brief uses (a watch is a lead); until then the page
+ * sells the live session honestly. The live CTA is always the loudest element.
  */
 
 const UNLOCK_KEY = "bj-brief-unlocked"; // one registration unlocks brief + recording

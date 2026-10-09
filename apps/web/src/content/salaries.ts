@@ -4,7 +4,16 @@
  * programmatic /salaries pages: statically rendered for SEO, upgraded
  * client-side from /api/v1/salaries when live. Every figure renders with
  * the shared <Disclaimer/>.
+ *
+ * SALARIES_UPDATED is sitemap <lastmod> for /salaries and every
+ * /salaries/* row that does not set its own updatedAt. The dataset was
+ * published in one commit on 2026-07-19. Bump the constant when the
+ * figures or blurbs change. If only one city changes, set updatedAt on
+ * that row instead of moving every salary URL.
  */
+
+/** Sitemap lastmod for the salary hub and rows without their own updatedAt. */
+export const SALARIES_UPDATED = "2026-07-19";
 
 export type SalaryBand = { band: string; p25: number; p50: number; p75: number };
 
@@ -16,6 +25,8 @@ export type SalaryPage = {
   skills: string[];
   track: { name: string; href: string } | null;
   blurb: string;
+  /** Sitemap lastmod (YYYY-MM-DD) when this city/role changed on its own. */
+  updatedAt?: string;
 };
 
 const kebab = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

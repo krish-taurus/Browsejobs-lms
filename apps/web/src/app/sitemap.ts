@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 import { answerPages, answerPath, priorityAnswerSlugs } from "@/content/answers";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
-import { salaryPages } from "@/content/salaries";
-import { skillPages } from "@/content/skills";
-import { SITE_ORIGIN } from "@/lib/seo";
+import { contentLastModified, PAGE_UPDATED } from "@/content/last-modified";
+import { SALARIES_UPDATED, salaryPages } from "@/content/salaries";
 import { seoMoneyLinks } from "@/content/seo-nav";
+import { SKILLS_UPDATED, skillPages } from "@/content/skills";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 /** Only URLs that both content sources agree are live, so the sitemap never lists a 404. */
 const liveCourseSlugs = courses
@@ -13,28 +14,41 @@ const liveCourseSlugs = courses
   .map((course) => course.slug);
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const dated = (path: string, priority: number): MetadataRoute.Sitemap[number] => ({
+  const dated = (path: string, priority: number, lastModified: string): MetadataRoute.Sitemap[number] => ({
     url: path === "/" ? SITE_ORIGIN : `${SITE_ORIGIN}${path}`,
+    lastModified: contentLastModified(path, lastModified),
     priority,
   });
 
   return [
-    dated("/", 1),
-    dated("/courses", 0.9),
-    ...liveCourseSlugs.map((slug) => dated(`/courses/${slug}`, 0.8)),
-    dated("/masterclass", 0.9),
-    dated("/employers", 0.9),
-    dated("/get-hired", 0.9),
-    dated("/jobs", 0.8),
-    dated("/brief", 0.8),
-    dated("/salaries", 0.8),
-    ...salaryPages.map((page) => dated(`/salaries/${page.slug}`, 0.7)),
-    dated("/skills", 0.8),
-    ...skillPages.map((page) => dated(`/skills/${page.slug}`, 0.7)),
-    dated("/reviews", 0.6),
-    ...seoMoneyLinks.map((page) => dated(page.path, page.priority)),
-    dated("/founder", 0.5),
-    dated("/answers", 0.75),
-    ...answerPages.map((page) => dated(answerPath(page.slug), priorityAnswerSlugs.has(page.slug) ? 0.8 : 0.7)),
+    dated("/", 1, PAGE_UPDATED["/"]),
+    dated("/courses", 0.9, PAGE_UPDATED["/courses"]),
+    ...liveCourseSlugs.map((slug) => {
+      const detail = courseDetails.find((course) => course.slug === slug);
+      if (!detail) {
+        throw new Error(`Live course ${slug} is missing from courseDetails.`);
+      }
+      return dated(`/courses/${slug}`, 0.8, detail.updatedAt);
+    }),
+    dated("/masterclass", 0.9, PAGE_UPDATED["/masterclass"]),
+    dated("/employers", 0.9, PAGE_UPDATED["/employers"]),
+    dated("/get-hired", 0.9, PAGE_UPDATED["/get-hired"]),
+    dated("/jobs", 0.8, PAGE_UPDATED["/jobs"]),
+    dated("/brief", 0.8, PAGE_UPDATED["/brief"]),
+    dated("/salaries", 0.8, SALARIES_UPDATED),
+    ...salaryPages.map((page) => dated(`/salaries/${page.slug}`, 0.7, page.updatedAt ?? SALARIES_UPDATED)),
+    dated("/skills", 0.8, SKILLS_UPDATED),
+    ...skillPages.map((page) => dated(`/skills/${page.slug}`, 0.7, page.updatedAt ?? SKILLS_UPDATED)),
+    dated("/reviews", 0.6, PAGE_UPDATED["/reviews"]),
+    ...seoMoneyLinks.map((page) => dated(page.path, page.priority, page.updatedAt)),
+    dated("/founder", 0.5, PAGE_UPDATED["/founder"]),
+    dated("/answers", 0.75, PAGE_UPDATED["/answers"]),
+    ...answerPages.map((page) =>
+      dated(
+        answerPath(page.slug),
+        priorityAnswerSlugs.has(page.slug) ? 0.8 : 0.7,
+        page.updatedAt ?? PAGE_UPDATED["/answers"],
+      ),
+    ),
   ];
 }

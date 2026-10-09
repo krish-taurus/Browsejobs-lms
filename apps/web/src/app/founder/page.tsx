@@ -5,6 +5,8 @@ import { MoneyArticle } from "@/components/seo/MoneyArticle";
 import { founder, founderSameAs, pressCoverage } from "@/content/entity";
 import { FOUNDER_ID, breadcrumbNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
+/** Bio last changed 2026-10-06. Bump FOUNDER_UPDATED in content/entity.ts when this page or the press list changes. */
+
 const page = {
   path: "/founder",
   title: "Dr Krish Bharggav",

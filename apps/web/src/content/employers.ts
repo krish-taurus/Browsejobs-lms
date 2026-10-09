@@ -19,6 +19,12 @@
  */
 
 /**
+ * Sitemap lastmod for /employers. Bump when this page's copy changes.
+ * Seeded from the hiring-flow rewrite on 2026-10-06.
+ */
+export const EMPLOYERS_UPDATED = "2026-10-06";
+
+/**
  * Employer-side counterpart to the student DISCLAIMER. Rendered wherever the
  * page shows an example funnel or timeline, so nothing on the page can be read
  * as a performance promise.
