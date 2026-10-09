@@ -43,7 +43,8 @@ export function Footer() {
           <div>
             <p className="kicker text-sky/60">Guides</p>
             <ul className="mt-3 space-y-1.5 text-sm">
-              {seoMoneyLinks.map((item) => (
+              {/* Taurus pages are linked from the employer side, not the student guides. */}
+              {seoMoneyLinks.filter((item) => !item.path.startsWith("/taurusai")).map((item) => (
                 <li key={item.path}>
                   <Link href={item.path} className="text-sky/80 hover:text-white">
                     {item.footerLabel}

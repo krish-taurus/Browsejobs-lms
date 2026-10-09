@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import "@/components/apple/apple.css";
 import { EnquiryForm } from "@/components/apple/EnquiryForm";
@@ -50,7 +51,18 @@ export function HomeCourses({ interviewHref = "/#interview-start" }: { interview
           {cards.map((course, index) => (
             <li key={course.slug} className="argus-card">
               <span className="argus-card-no">{String(index + 1).padStart(2, "0")}</span>
-              <CourseIcon kind={ICONS[course.slug] ?? "code"} />
+              {ICONS[course.slug] ? (
+                <Image
+                  className="argus-course-cover"
+                  src={`/media/courses/${course.slug}.webp`}
+                  alt=""
+                  width={960}
+                  height={716}
+                  sizes="(min-width: 1024px) 520px, 90vw"
+                />
+              ) : (
+                <CourseIcon kind="code" />
+              )}
               <p className="argus-kicker">
                 {course.duration} · {course.format}
               </p>
