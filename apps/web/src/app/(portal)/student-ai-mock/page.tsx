@@ -1,18 +1,28 @@
 "use client";
 
-import { MockKindTabs } from "@/components/mocks/MockKindTabs";
-import { VoiceInterviewCard, useMockSummary } from "@/components/mocks/MockCards";
+import { AiInterviewsHub } from "@/components/mocks/AiInterviewsHub";
+import { useMockSummary } from "@/components/mocks/MockCards";
 
 export default function MockHubPage() {
   const { summary, loading, reload } = useMockSummary();
 
-  if (loading) return <div className="mx-auto max-w-2xl"><div className="shimmer h-64 rounded-[14px]" /></div>;
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl" aria-busy="true">
+        <div className="shimmer h-24 rounded-[18px]" />
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="shimmer h-80 rounded-[18px] lg:col-span-2" />
+          <div className="shimmer h-80 rounded-[18px]" />
+        </div>
+      </div>
+    );
+  }
 
   if (!summary) {
     return (
       <div className="mx-auto max-w-2xl">
         <h1 className="display text-2xl text-ink">Mock Interviews</h1>
-        <div className="mt-6 rounded-2xl border border-line bg-white p-8 text-center">
+        <div className="mt-6 rounded-[18px] border border-line bg-white p-8 text-center">
           <p className="text-sm text-ink">Practice interviews aren&apos;t available right now.</p>
           <p className="mt-1 text-sm text-muted">Ask your counselor — or check back soon.</p>
         </div>
@@ -21,31 +31,14 @@ export default function MockHubPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="display text-2xl text-ink">Mock Interviews</h1>
-      <p className="mt-1 text-sm text-muted">
-        A spoken interview with the AI interviewer for your target role. You get a scorecard with model
-        answers and the three things to fix next.
-      </p>
-
-      {summary.human_mock_unlocked && (
-        <div className="mt-6 rounded-2xl border border-verify/30 bg-verify-bg p-5">
-          <p className="text-sm font-semibold text-verify">Human mock unlocked 🎉</p>
-          <p className="mt-1 text-sm text-ink">
-            Your best score is {summary.best_score} — you&apos;re ready for a live mock with a mentor.
-            Your counselor will reach out to schedule it.
-          </p>
-        </div>
-      )}
-
+    <AiInterviewsHub summary={summary} reload={reload}>
       {summary.module_mocks.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Module mocks</p>
+        <section aria-labelledby="module-mocks-title" className="mt-6 rounded-[18px] border border-line bg-white p-6 shadow-soft sm:p-7">
+          <h2 id="module-mocks-title" className="display text-xl text-ink">Module mocks</h2>
           <p className="mt-1 text-sm text-muted">
-            Each module you finish unlocks a set of mocks to clear. Any mock you complete counts toward
-            the next one due.
+            Each module you finish unlocks a set of mocks to clear. Any mock you complete counts toward the next one due.
           </p>
-          <ul className="mt-3 space-y-2.5">
+          <ul className="mt-4 space-y-3">
             {summary.module_mocks.map((m, i) => (
               <li key={i} className="flex items-center justify-between gap-3">
                 <span className="min-w-0 flex-1 truncate text-sm text-ink">{m.module ?? "Module"}</span>
@@ -57,7 +50,7 @@ export default function MockHubPage() {
                     />
                   </span>
                   {m.cleared ? (
-                    <span className="mono text-[11px] font-semibold uppercase tracking-widest text-verify">Cleared ✓</span>
+                    <span className="mono text-[11px] font-semibold uppercase tracking-widest text-verify">Cleared</span>
                   ) : (
                     <span className="mono text-xs text-muted">{m.completed}/{m.required}</span>
                   )}
@@ -65,28 +58,23 @@ export default function MockHubPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
 
-      <div className="mt-2">
-        <VoiceInterviewCard summary={summary} reload={reload} />
-      </div>
-
       {summary.gap_report.items.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
+        <section aria-labelledby="gap-title" className="mt-6 rounded-[18px] border border-line bg-white p-6 shadow-soft sm:p-7">
+          <h2 id="gap-title" className="display text-xl text-ink">
             What real {summary.gap_report.role_title ?? ""} interviews test
           </h2>
-          <p className="mt-1 text-xs text-muted">
-            Weights come from questions asked in actual interviews. Your score is from your best mock —
-            close the red gaps first.
+          <p className="mt-1 text-sm text-muted">
+            Weights come from questions asked in actual interviews. Your score is from your best mock — close the red gaps first.
           </p>
-          <div className="mt-3 space-y-3 rounded-2xl border border-line bg-white p-5">
+          <div className="mt-4 space-y-3">
             {summary.gap_report.items.map((item) => (
               <div key={item.topic}>
-                <div className="flex items-baseline justify-between text-sm">
+                <div className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="text-ink">{item.topic}</span>
-                  <span className="mono text-xs text-muted">
+                  <span className="mono shrink-0 text-xs text-muted">
                     real weight {item.real_weight_pct}% ·{" "}
                     {item.your_score !== null ? (
                       <span className={item.gap ? "text-warn" : "text-verify"}>you: {item.your_score}</span>
@@ -104,14 +92,8 @@ export default function MockHubPage() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
-
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-widest text-muted">Your interviews</h2>
-      <p className="mt-1 text-xs text-muted">Each type keeps its own list — pick one to see its scorecards.</p>
-      <div className="mt-3">
-        <MockKindTabs counts={summary.kind_counts ?? {}} />
-      </div>
-    </div>
+    </AiInterviewsHub>
   );
 }

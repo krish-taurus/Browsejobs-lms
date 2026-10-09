@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" role="img" aria-label="Speech bubbles">
+  <!-- Standalone copy of SpeechBubblesIllustration (components/mocks/InterviewIllustrations.tsx). -->
+  <path d="M30 4h30a10 10 0 0 1 10 10v14a10 10 0 0 1-10 10h-2v8l-9-8H30a10 10 0 0 1-10-10V14A10 10 0 0 1 30 4Z" fill="#1B6DF0" fill-opacity="0.22"/>
+  <path d="M12 16h28a10 10 0 0 1 10 10v12a10 10 0 0 1-10 10H22l-9 7v-7h-1A10 10 0 0 1 2 38V26a10 10 0 0 1 10-10Z" fill="#1B6DF0" fill-opacity="0.85"/>
+  <g fill="#FFFFFF">
+    <circle cx="17" cy="32" r="2.4"/>
+    <circle cx="26" cy="32" r="2.4"/>
+    <circle cx="35" cy="32" r="2.4"/>
+  </g>
+</svg>
