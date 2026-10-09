@@ -1,42 +1,48 @@
-import { ArgusFrame } from "@/components/argus/ArgusFrame";
-import { EmployersPage } from "@/components/argus/employers/EmployersPage";
-import { EMPLOYER_FAQ, EMPLOYER_META } from "@/content/employer-landing";
-import { contact } from "@/content/landing";
-import { breadcrumbNode, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { ApShell } from "@/components/ap/ApShell";
+import { ApTaurusFilm } from "@/components/ap/ApFilm";
+import { SDays, SFaq, SGetStarted, SHow, SOverview, STop } from "@/components/ap/generated/employers";
+import employersLd from "@/components/ap/ld/employers.json";
 
-const SHORT_FAQ = EMPLOYER_FAQ.filter((_, index) => index === 0 || index === 1 || index === 5);
-
+/** For employers, in the approved Apple-direction design (Oct 2026). Metadata lives in layout.tsx. */
 export default function EmployersRoute() {
-  const jsonLd = jsonLdGraph([
-    webPageNode(EMPLOYER_META),
-    breadcrumbNode([
-      { name: "Home", path: "/" },
-      { name: "Employers", path: EMPLOYER_META.path },
-    ]),
-    {
-      "@type": "Service",
-      name: "BrowseJobs hiring",
-      serviceType: "Hiring with the BrowseJobs AI Recruiter",
-      url: "https://browsejobs.ai/employers",
-      provider: {
-        "@type": "Organization",
-        name: "BrowseJobs",
-        email: contact.email,
-        telephone: contact.phone,
-        url: "https://browsejobs.ai",
-      },
-      areaServed: "IN",
-      description: EMPLOYER_META.description,
-    },
-    faqNode(SHORT_FAQ),
-  ]);
-
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ArgusFrame className="argus-home argus-employers">
-        <EmployersPage />
-      </ArgusFrame>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(employersLd) }} />
+      <ApShell current="employers" staticNav cta={{ label: "Onboard", href: "#get-started" }}>
+        <nav className="lnav lnav--dark" aria-label="AI Recruiter">
+          <div className="lnav-inner">
+            <span className="lnav-title">
+              BrowseJobs AI Recruiter<small>Powered by Taurus AI</small>
+            </span>
+            <div className="lnav-right">
+              <ul className="lnav-links">
+                <li>
+                  <a href="#overview">Overview</a>
+                </li>
+                <li>
+                  <a href="#how">How it works</a>
+                </li>
+                <li>
+                  <a href="#taurus-demo">Demo</a>
+                </li>
+                <li>
+                  <a href="#faq">FAQ</a>
+                </li>
+              </ul>
+              <a className="btn btn-primary" href="#get-started">
+                Onboard with us
+              </a>
+            </div>
+          </div>
+        </nav>
+        <STop />
+        <SDays />
+        <SOverview />
+        <SHow />
+        <ApTaurusFilm />
+        <SFaq />
+        <SGetStarted />
+      </ApShell>
     </>
   );
 }

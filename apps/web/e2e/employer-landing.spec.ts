@@ -21,8 +21,8 @@ test("employer page keeps its canonical, FAQ, and service schema", async ({ page
   await expect(page.getByText("75%").first()).toBeVisible();
   await expect(page.getByText("90 days").first()).toBeVisible();
   await expect(page.getByText("3 days").first()).toBeVisible();
-  await expect(page.getByText("Needs your approval")).toBeVisible();
-  await expect(page.getByText("A person must always release the offer letter")).toBeVisible();
+  await expect(page.getByText("You approve the offer.").first()).toBeVisible();
+  await expect(page.getByText(/A person must always approve and send the offer letter/).first()).toBeVisible();
 
   await page.goto("/employers/how-it-works");
   await expect(page.getByRole("heading", { name: "Screening Bot" })).toBeVisible();
@@ -34,10 +34,10 @@ test("employer page keeps its canonical, FAQ, and service schema", async ({ page
 test("employer page offers both ways to work and a labelled sample report", async ({ page }) => {
   await page.goto("/employers");
 
-  const partner = page.getByRole("link", { name: "Onboard us as your hiring partner" });
-  const tool = page.getByRole("link", { name: "Use our tool for your own hiring" });
-  await expect(partner).toHaveAttribute("href", "/employers/enquire?path=partner");
-  await expect(tool).toHaveAttribute("href", "/employers/enquire?path=tool");
+  const partner = page.locator('#get-started a[href="/employers/enquire?path=partner"]');
+  const tool = page.locator('#get-started a[href="/employers/enquire?path=tool"]');
+  await expect(partner).toContainText("We hire for you");
+  await expect(tool).toContainText("You use our tool");
 
   await page.goto("/employers/how-it-works");
   const report = page.locator("#report");
