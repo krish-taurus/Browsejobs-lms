@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArgusFrame } from "@/components/argus/ArgusFrame";
 import { CourseDetail } from "@/components/argus/courses/CourseDetail";
 import { courseDetails, getCourseDetail } from "@/content/courses";
-import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { breadcrumbNode, canonical, courseNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 /**
  * Live course page. JSON-LD stays here. The /v3 preview still uses the keynote.
@@ -26,7 +26,8 @@ export async function generateMetadata({
     title,
     description: course.hero,
     alternates: { canonical: url },
-    openGraph: { title, description: course.hero, url },
+    openGraph: {
+    images: OG_IMAGES, title, description: course.hero, url },
   };
 }
 

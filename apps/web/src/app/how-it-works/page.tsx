@@ -8,18 +8,19 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { ProofAndPay } from "@/components/home/ProofAndPay";
 import { faqs } from "@/content/landing";
 import { recruiterFaqs } from "@/content/home";
-import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 const TITLE = "How the free AI interview works";
 const DESCRIPTION =
-  "Sit a free AI interview, get a score, and see what happens at 75%. Score 75% and your CV is sent to 3,000 HR recruiters. Clearing raises your chance of an interview call by almost 60%. A free counselling session if you miss. A course only if you need it.";
+  "How the free AI interview works: answer about 15 questions, get a score out of 100, and see what happens at 75%, and what happens if you miss.";
 const PATH = "/how-it-works";
 
 export const metadata: Metadata = {
   title: { absolute: `${TITLE} · BrowseJobs` },
   description: DESCRIPTION,
   alternates: { canonical: canonical(PATH) },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
+  openGraph: {
+    images: OG_IMAGES, title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
 };
 
 export default function HowItWorksPage() {

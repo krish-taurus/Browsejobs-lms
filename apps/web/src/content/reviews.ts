@@ -173,31 +173,3 @@ export function reviewExcerpt(text: string): { excerpt: string; truncated: boole
   return { excerpt: truncated ? `${slice} …` : slice, truncated };
 }
 
-export function googleReviewsJsonLd(): Record<string, unknown> | null {
-  const published = googleReviews.filter((review) => review.published && review.text.trim() !== "");
-  if (published.length === 0) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "@id": "https://browsejobs.ai/#organization",
-    name: "BrowseJobs",
-    url: "https://browsejobs.ai",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: GOOGLE_RATING_VALUE,
-      reviewCount: GOOGLE_REVIEW_COUNT,
-      bestRating: "5",
-    },
-    review: published.map((review) => ({
-      "@type": "Review",
-      author: { "@type": "Person", name: review.name },
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: String(review.stars),
-        bestRating: "5",
-      },
-      reviewBody: review.text,
-      url: review.url,
-    })),
-  };
-}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArgusFrame } from "@/components/argus/ArgusFrame";
 import { ArgusButton } from "@/components/argus/ui";
 import { EMPLOYER_FAQ } from "@/content/employer-landing";
-import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 const TITLE = "Employer questions";
 const DESCRIPTION =
@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   title: { absolute: `${TITLE} · BrowseJobs` },
   description: DESCRIPTION,
   alternates: { canonical: canonical(PATH) },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
+  openGraph: {
+    images: OG_IMAGES, title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
 };
 
 export default function EmployerFaqPage() {

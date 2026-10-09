@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { SkillDetail } from "@/components/skills/SkillDetail";
 import { getSkillPage, skillPages } from "@/content/skills";
-import { canonical } from "@/lib/seo";
+import { canonical, OG_IMAGES } from "@/lib/seo";
 
 export function generateStaticParams() {
   return skillPages.map((p) => ({ slug: p.slug }));
@@ -15,7 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = `${page.name} — Demand, Interview Questions & Salaries in India`;
   const description = `${page.blurb} Where ${page.name} is hiring (${page.cities.join(", ")}), what interviews ask, and what the roles pay.`;
   const url = canonical(`/skills/${page.slug}`);
-  return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
+  return { title, description, alternates: { canonical: url }, openGraph: {
+    images: OG_IMAGES, title, description, url } };
 }
 
 export default async function SkillPage({ params }: { params: Promise<{ slug: string }> }) {

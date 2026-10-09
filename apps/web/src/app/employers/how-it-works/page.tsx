@@ -6,7 +6,7 @@ import { BotGrid } from "@/components/employers/BotGrid";
 import { HiringJourney } from "@/components/employers/HiringJourney";
 import { SampleReport } from "@/components/employers/SampleReport";
 import { HomeStages } from "@/components/home/HomeStages";
-import { breadcrumbNode, canonical, jsonLdGraph, webPageNode } from "@/lib/seo";
+import { breadcrumbNode, canonical, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
 const TITLE = "How the AI Recruiter works";
 const DESCRIPTION =
@@ -17,7 +17,8 @@ export const metadata: Metadata = {
   title: { absolute: `${TITLE} · BrowseJobs` },
   description: DESCRIPTION,
   alternates: { canonical: canonical(PATH) },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
+  openGraph: {
+    images: OG_IMAGES, title: TITLE, description: DESCRIPTION, url: canonical(PATH) },
 };
 
 export default function EmployerHowPage() {

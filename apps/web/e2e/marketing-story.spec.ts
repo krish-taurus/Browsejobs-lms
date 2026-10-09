@@ -87,9 +87,10 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   expect(html).toContain('"@type":"FAQPage"');
   expect(html).toContain('"@type":"ItemList"');
   expect(html).toContain('"@type":"EducationalOrganization"');
-  expect(html).toContain('"@type":"AggregateRating"');
-  expect(html).toContain('"reviewCount":"473"');
-  expect(html).toContain('"@type":"Review"');
+  // Google reviews are shown, not marked up: self-serving review markup (ratings
+  // from Google Maps re-published on our own site) risks a manual action.
+  expect(html).not.toContain('"@type":"AggregateRating"');
+  expect(html).not.toContain('"@type":"Review"');
   expect(html).not.toContain("/courses/agentic-ai");
 
   const courses = page.locator("#career-courses");

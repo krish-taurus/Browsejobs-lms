@@ -6,7 +6,6 @@ import {
   GOOGLE_LISTING_URL,
   GOOGLE_RATING_LINE,
   googleReviews,
-  googleReviewsJsonLd,
   reviewExcerpt,
   type GoogleReview,
 } from "@/content/reviews";
@@ -48,12 +47,13 @@ function ReviewCard({ review, expanded, onToggle }: { review: GoogleReview; expa
 export function GoogleReviews({ tone = "apple" }: { tone?: "apple" | "argus" }) {
   const reviews = googleReviews.filter((review) => review.published && review.name.trim() !== "" && review.text.trim() !== "");
   const [open, setOpen] = useState<string | null>(null);
-  const jsonLd = googleReviewsJsonLd();
-  if (reviews.length === 0 || !jsonLd) return null;
+  // Reviews stay on the page, but they are not marked up as AggregateRating/Review:
+  // Google treats ratings collected on Google Maps and re-published on your own
+  // site as self-serving review markup (manual-action risk).
+  if (reviews.length === 0) return null;
 
   return (
     <div id="google-reviews" className="mt-14">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <p className="text-center">
         <a href={GOOGLE_LISTING_URL} className={tone === "argus" ? "argus-rating-link" : "apple-rating-link"} target="_blank" rel="noreferrer">
           {tone === "argus" ? (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell } from "@/components/landing/MarketingShell";
 import { buildJobPosting } from "@/lib/job-posting";
-import { canonical } from "@/lib/seo";
+import { canonical, OG_IMAGES } from "@/lib/seo";
 
 /**
  * One role, readable without an account (PRD-E F10).
@@ -63,6 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     description: job.description.slice(0, 155),
     alternates: { canonical: url },
     openGraph: {
+    images: OG_IMAGES,
       title: `${job.title} at ${company}`,
       description: job.description.slice(0, 155),
       url,

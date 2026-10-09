@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ArgusFrame } from "@/components/argus/ArgusFrame";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, OG_IMAGES } from "@/lib/seo";
 
 const TITLE = "BrowseJobs AI Recruiter — demo";
 const DESCRIPTION =
@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   robots: { index: false, follow: false, nocache: true },
   alternates: { canonical: absoluteUrl(PATH) },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: absoluteUrl(PATH) },
+  openGraph: {
+    images: OG_IMAGES, title: TITLE, description: DESCRIPTION, url: absoluteUrl(PATH) },
   twitter: { title: TITLE, description: DESCRIPTION },
 };
 

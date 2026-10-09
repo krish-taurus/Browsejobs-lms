@@ -31,6 +31,13 @@ export const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 export const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
 export const FOUNDER_ID = `${SITE_ORIGIN}/#founder`;
 
+/**
+ * Share image for pages that set their own `openGraph`. Next.js replaces the
+ * layout's openGraph object wholesale, so a page that omits `images` shares
+ * with no picture at all.
+ */
+export const OG_IMAGES = [{ url: "/og.png", width: 1200, height: 630, alt: "BrowseJobs" }];
+
 export function absoluteUrl(path: string): string {
   if (path === "/") return `${SITE_ORIGIN}/`;
   return `${SITE_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
