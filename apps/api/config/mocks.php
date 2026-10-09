@@ -28,4 +28,10 @@ return [
     // Best AI-mock overall score that unlocks the human mock (PRD progression
     // gate: AI mock threshold → human mock → placement pool).
     'human_gate_score' => (int) env('MOCKS_HUMAN_GATE_SCORE', 70),
+
+    // Room for the scorecard reply. It carries a model answer per question, so
+    // a 6-15 question interview needs far more than a chat reply: at 900 the
+    // JSON was cut off mid-way, failed validation and every such session got
+    // the conservative fallback 40/100 (13 of 18 completed sessions, Sep 2026).
+    'scorecard_max_tokens' => (int) env('MOCKS_SCORECARD_MAX_TOKENS', 4000),
 ];

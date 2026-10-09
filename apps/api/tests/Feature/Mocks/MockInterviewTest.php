@@ -176,6 +176,22 @@ it('rejects answering someone else\'s or a cross-tenant mock', function () {
 
 /* ---- Finish + scorecard ---- */
 
+it('gives the scorecard enough room that a long interview is graded, not cut off', function () {
+    ['student' => $student] = mockReadyStudent($this->tenant);
+    $this->fake->replies = ['Q2?', 'Q3?', scorecardJson(77)];
+    $id = startedMock($student);
+
+    postJson("/api/v1/me/mocks/{$id}/finish")
+        ->assertOk()
+        ->assertJsonPath('data.overall_score', 77)
+        ->assertJsonPath('data.scorecard_source', 'ai');
+
+    // The scorecard request is the last AI call. 900 tokens truncated the
+    // JSON for 6-15 question interviews and forced the fallback 40/100.
+    $scorecardCall = end($this->fake->calls);
+    expect($scorecardCall->maxTokens)->toBeGreaterThanOrEqual(3000);
+});
+
 it('refuses to finish before the minimum number of answers', function () {
     ['student' => $student] = mockReadyStudent($this->tenant);
     $id = startedMock($student, answers: 1);

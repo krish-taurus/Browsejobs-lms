@@ -98,7 +98,7 @@ final readonly class FinishMockInterview
                 'role_title' => $blueprint->role_title,
                 'competencies' => implode(', ', $blueprint->competencies),
                 'transcript' => $this->answers->transcript($interview),
-            ], ['max_tokens' => 900]);
+            ], ['max_tokens' => (int) config('mocks.scorecard_max_tokens', 4000)]);
 
             $decoded = JsonOutput::object($result->text);
 
