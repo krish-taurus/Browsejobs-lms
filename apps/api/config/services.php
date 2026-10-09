@@ -178,6 +178,10 @@ return [
         'api_key' => env('ELEVENLABS_API_KEY', ''),
         'voice_id' => env('ELEVENLABS_VOICE_ID', ''),
         'model' => env('ELEVENLABS_MODEL', 'eleven_turbo_v2_5'),
+        // Speech-to-text for interview answers in browsers without
+        // SpeechRecognition (TranscribeMockAnswer).
+        'stt_model' => env('ELEVENLABS_STT_MODEL', 'scribe_v1'),
+        'stt_language' => env('ELEVENLABS_STT_LANGUAGE', 'en'),
     ],
 
     /*

@@ -144,6 +144,7 @@ use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
+use App\Http\Controllers\Mocks\TranscribeMockAnswer;
 use App\Http\Controllers\MyVoucherController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFeedbackController;
@@ -433,6 +434,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Reads a question aloud in the configured ElevenLabs voice. Answers 204
     // when no voice is set up, and the room falls back to the browser's own.
     Route::post('me/mocks/{mock}/speak', SpeakMockQuestion::class)->middleware('throttle:60,1');
+    // Speech-to-text for browsers without SpeechRecognition (Firefox, Safari,
+    // Brave): the room uploads the spoken answer, ElevenLabs transcribes it.
+    Route::post('me/mocks/{mock}/transcribe', TranscribeMockAnswer::class)->middleware('throttle:30,1');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
     Route::post('me/mocks/{mock}/recording', [MockController::class, 'uploadRecording'])->middleware('throttle:10,1');
     // Candidate's own view of their recording, and the option to remove it —

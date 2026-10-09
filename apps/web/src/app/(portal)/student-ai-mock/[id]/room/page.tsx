@@ -186,6 +186,14 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // once on mount, never mid-interview, so the control bar doesn't swap
   // layouts under someone's hands while they're answering.
   const [voiceSupported] = useState(() => speechRecognitionCtor() !== null);
+  // Browsers without SpeechRecognition (Firefox, Safari, Brave) still answer
+  // by voice: the answer is recorded from the room's own microphone and
+  // transcribed on the server (ElevenLabs, /transcribe). Typing stays available.
+  const [serverStt] = useState(() => !voiceSupported && typeof MediaRecorder !== "undefined");
+  const [typeInstead, setTypeInstead] = useState(false);
+  const answerRecorderRef = useRef<MediaRecorder | null>(null);
+  const answerChunksRef = useRef<Blob[]>([]);
+  const answerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [typedAnswer, setTypedAnswer] = useState("");
   // "Are you still there?" idle check (Sept 2026) — separate from proctoring:
   // this is a check-in, not a violation, and never counts against the
@@ -805,7 +813,8 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     // was cutting the question off mid-sentence before it ever finished.
     if (
       step !== "live" || session === null || session.status !== "in_progress" || session.ready_to_finish ||
-      phase === "thinking" || phase === "grading" || speaking
+      phase === "thinking" || phase === "grading" || speaking ||
+      (phase === "listening" && serverStt)
     ) {
       return;
     }
@@ -826,13 +835,98 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       clearTimeout(nudgeTimer);
       clearTimeout(advanceTimer);
     };
-  }, [step, session?.status, session?.ready_to_finish, question?.id, typedAnswer, transcript, phase, speaking, speak, sendAnswer]);
+  }, [step, session?.status, session?.ready_to_finish, question?.id, typedAnswer, transcript, phase, speaking, speak, sendAnswer, serverStt]);
+
+  /** Stops a server-transcribed answer's recording and hands back the clip (or null). */
+  const takeRecordedAnswer = useCallback((): Promise<Blob | null> => {
+    if (answerTimerRef.current !== null) {
+      clearTimeout(answerTimerRef.current);
+      answerTimerRef.current = null;
+    }
+    const recorder = answerRecorderRef.current;
+    answerRecorderRef.current = null;
+    if (recorder === null) return Promise.resolve(null);
+    const clip = () => (answerChunksRef.current.length > 0
+      ? new Blob(answerChunksRef.current, { type: recorder.mimeType || "audio/webm" })
+      : null);
+    if (recorder.state === "inactive") return Promise.resolve(clip());
+    return new Promise((resolve) => {
+      recorder.onstop = () => resolve(clip());
+      recorder.stop();
+    });
+  }, []);
+
+  /** Uploads the recorded answer, gets the words back, and sends them as the answer. */
+  const sendRecordedAnswer = useCallback(async () => {
+    const clip = await takeRecordedAnswer();
+    if (clip === null || clip.size < 1000) {
+      setMicError("We didn't catch that — tap Answer and speak again.");
+      setPhase("idle");
+      return;
+    }
+    setPhase("thinking");
+    try {
+      const form = new FormData();
+      const ext = clip.type.includes("ogg") ? "ogg" : clip.type.includes("mp4") ? "m4a" : "webm";
+      form.append("audio", clip, `answer.${ext}`);
+      const r = await apiJson<{ data: { text: string } }>(`/api/v1/me/mocks/${id}/transcribe`, { method: "POST", body: form });
+      if (r.data.text.trim() === "") {
+        setMicError("We didn't catch any words — tap Answer and try again, a little closer to the mic.");
+        setPhase("idle");
+        return;
+      }
+      await sendAnswer(r.data.text);
+    } catch {
+      setMicError("Couldn't turn that into text — tap Answer to try again, or type your answer.");
+      setPhase("idle");
+    }
+  }, [id, sendAnswer, takeRecordedAnswer]);
+
+  // The 3-minute cap needs the latest sendRecordedAnswer from inside a timer.
+  const sendRecordedAnswerRef = useRef(sendRecordedAnswer);
+  useEffect(() => { sendRecordedAnswerRef.current = sendRecordedAnswer; }, [sendRecordedAnswer]);
+
+  /** Starts recording a spoken answer from the room's own microphone stream. */
+  const startRecordingAnswer = useCallback(() => {
+    const audioTracks = streamRef.current?.getAudioTracks() ?? [];
+    if (audioTracks.length === 0) {
+      setMicError("We can't hear your microphone — allow it in the address bar, or type your answer.");
+      return;
+    }
+    window.speechSynthesis?.cancel();
+    stopAudio();
+    setSpeaking(false);
+    setMicError(null);
+    setTranscript("");
+    try {
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"]
+        .find((t) => MediaRecorder.isTypeSupported(t));
+      const recorder = new MediaRecorder(new MediaStream(audioTracks), mimeType ? { mimeType } : undefined);
+      answerChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) answerChunksRef.current.push(e.data); };
+      recorder.start(1000);
+      answerRecorderRef.current = recorder;
+      setPhase("listening");
+      // A very long answer is sent as it stands after 3 minutes.
+      answerTimerRef.current = setTimeout(() => { void sendRecordedAnswerRef.current(); }, 180_000);
+    } catch {
+      setMicError("Recording didn't start in this browser — type your answer instead.");
+      setTypeInstead(true);
+    }
+  }, []);
+
+  // Never leave the answer recorder or its timer running after the room closes.
+  useEffect(() => () => {
+    if (answerTimerRef.current !== null) clearTimeout(answerTimerRef.current);
+    answerRecorderRef.current?.stop();
+  }, []);
 
   const skipQuestion = useCallback(() => {
     recognitionRef.current?.stop();
     recognitionRef.current = null;
+    void takeRecordedAnswer(); // discard a half-recorded answer
     void sendAnswer("(Skipped this question.)");
-  }, [sendAnswer]);
+  }, [sendAnswer, takeRecordedAnswer]);
 
   const startListening = useCallback(() => {
     const Ctor = speechRecognitionCtor();
@@ -906,6 +1000,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
   async function finish() {
     recognitionRef.current?.stop();
+    void takeRecordedAnswer();
     window.speechSynthesis.cancel();
     stopAudio();
     setPhase("grading");
@@ -1250,6 +1345,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               {phase === "grading" ? "Grading your interview…" : "…"}
             </p>
           )}
+          {serverStt && listening && (
+            <p className="mt-2 text-sm text-white/60">Recording your answer — tap Done when you&apos;ve finished. Your words appear once it&apos;s sent.</p>
+          )}
           {micError && <p className="mt-2 text-sm text-warn">{micError}</p>}
         </div>
       </main>
@@ -1258,7 +1356,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       <footer className="flex flex-wrap items-center justify-center gap-3 px-5 pb-6 pt-3">
         {session.ready_to_finish ? (
           <p className="w-full text-center text-xs text-white/60">That&apos;s the full round — end the interview to get your scorecard.</p>
-        ) : !voiceSupported ? (
+        ) : !voiceSupported && (!serverStt || typeInstead) ? (
           // No SpeechRecognition in this browser (Brave and some other
           // Chromium forks block it by default) — typing is the only way
           // to answer at all here, not a lesser option next to the mic.
@@ -1278,7 +1376,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 raiseViolation("⚠️ Pasting isn't allowed — type your own answer. One more time and this interview closes.");
               }}
               disabled={phase === "thinking" || phase === "grading"}
-              placeholder="Voice input isn't available in this browser — type your answer…"
+              placeholder={serverStt ? "Type your answer…" : "Voice input isn't available in this browser — type your answer…"}
               className="flex-1 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-trust disabled:opacity-40"
             />
             <button
@@ -1288,22 +1386,42 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             >
               Send
             </button>
+            {serverStt && (
+              <button
+                type="button"
+                onClick={() => setTypeInstead(false)}
+                className="shrink-0 rounded-full border border-white/20 px-4 py-3 text-sm text-white/80 hover:border-white/40"
+              >
+                Answer by voice
+              </button>
+            )}
           </form>
         ) : listening ? (
           <button
-            onClick={stopAndSend}
+            onClick={serverStt ? () => { void sendRecordedAnswer(); } : stopAndSend}
             className="rounded-full bg-verify px-6 py-3 text-sm font-semibold text-white"
           >
             ✓ Done — send answer
           </button>
         ) : (
-          <button
-            onClick={startListening}
-            disabled={phase === "thinking" || phase === "grading"}
-            className="rounded-full bg-trust px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
-          >
-            🎙 Answer
-          </button>
+          <>
+            <button
+              onClick={serverStt ? startRecordingAnswer : startListening}
+              disabled={phase === "thinking" || phase === "grading"}
+              className="rounded-full bg-trust px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              🎙 Answer
+            </button>
+            {serverStt && (
+              <button
+                onClick={() => setTypeInstead(true)}
+                disabled={phase === "thinking" || phase === "grading"}
+                className="rounded-full border border-white/20 px-4 py-3 text-sm text-white/80 hover:border-white/40 disabled:opacity-40"
+              >
+                Type instead
+              </button>
+            )}
+          </>
         )}
 
         <button
