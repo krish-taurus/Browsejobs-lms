@@ -13,7 +13,7 @@
  * live or historical performance claim — no fabricated stats.
  */
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { MotionConfig, motion } from "framer-motion";
 import { Wordmark } from "@/components/brand/Wordmark";
@@ -788,6 +788,99 @@ function HowItWorks() {
   );
 }
 
+/* ------------------------------ Taurus demo video ------------------------------ */
+
+const STORY_LINES = [
+  "You ask on WhatsApp: “5 software developers in Bangalore.”",
+  "The screening agent filters the CVs and asks: “38 match. Shall I get in touch?”",
+  "The AI caller screens the interested candidates by phone.",
+  "The shortlist comes back to you on WhatsApp.",
+  "On your yes: L1, then L2 AI interviews.",
+  "On your yes: pre-BGV on EPFO and DigiLocker, with consent.",
+  "Your panel interviews the finalists.",
+  "Offer letters go out only when you approve.",
+] as const;
+
+function DemoVideo() {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e?.isIntersecting) void v.play().catch(() => undefined);
+        else v.pause();
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <video
+      ref={ref}
+      className="block aspect-video w-full rounded-[18px] bg-black"
+      src="/media/taurus/taurus-hiring-story.mp4"
+      poster="/media/taurus/taurus-hiring-story-poster.jpg"
+      muted
+      loop
+      playsInline
+      controls
+      preload="none"
+      aria-label="Taurus hiring demo: a role filled through WhatsApp, from request to offer"
+    />
+  );
+}
+
+function TaurusStory() {
+  return (
+    <section id="taurus-demo" className="relative overflow-hidden px-6 py-16 md:py-24">
+      <div className="relative mx-auto max-w-[1320px]">
+        <Reveal className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <Eyebrow>Taurus for hiring</Eyebrow>
+            <h2 className="font-display mt-3 text-3xl font-bold tracking-[-0.02em] text-white md:text-[2.75rem]">
+              Hire over WhatsApp. Watch every step.
+            </h2>
+          </div>
+          <p className="max-w-sm text-sm leading-relaxed text-white/50">
+            Taurus runs the screening, calls and interview rounds, and checks with you in the chat before anything goes to a candidate.
+          </p>
+        </Reveal>
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.7fr_1fr] lg:items-center">
+          <Reveal>
+            <div className="rounded-[22px] border border-[var(--eb-border)] bg-[var(--eb-navy)] p-2 shadow-[0_30px_80px_rgba(0,0,0,.45)]">
+              <DemoVideo />
+            </div>
+            <p className="mt-3 font-mono text-[11px] text-white/35">An illustration with sample numbers, recorded from the live Taurus demo.</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <ol className="space-y-3">
+              {STORY_LINES.map((line, i) => (
+                <li key={line} className="flex gap-3 text-[14px] leading-relaxed text-white/70">
+                  <span className="font-mono text-[11px] font-semibold text-[var(--eb-blue2)]">{String(i + 1).padStart(2, "0")}</span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/taurusai/hiring-demo"
+                className="rounded-full bg-[var(--eb-blue)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--eb-blue2)]"
+              >
+                Try the interactive demo
+              </Link>
+              <Link href="/taurusai/recruitment" className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/80 hover:text-white">
+                How Taurus hiring works
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------------------------- proof ---------------------------------- */
 
 function Proof() {
@@ -1006,6 +1099,7 @@ export default function EmployersLanding() {
         <Hero />
         <Workspace />
         <HowItWorks />
+        <TaurusStory />
         <Proof />
         <FinalCta />
         <PageFooter />

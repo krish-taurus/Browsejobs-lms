@@ -28,6 +28,15 @@ final class PlatformSettings
     private ?array $cache = null;
 
     /**
+     * Config paths this instance has overridden, with the value they held
+     * before (the .env default). Lets a cleared setting fall back to env in the
+     * same process instead of keeping the stale override until the next boot.
+     *
+     * @var array<string, mixed>
+     */
+    private array $overridden = [];
+
+    /**
      * Override `config()` from stored values. Called in AppServiceProvider::boot, before
      * any client binding resolves. A blank stored value is skipped so it falls back to
      * env. Fail-safe: if the table is missing (fresh install, mid-migration) or the DB is
@@ -46,9 +55,18 @@ final class PlatformSettings
         $values = $this->values();
 
         foreach ($this->fields() as $field) {
+            $path = $field['config'];
             $value = $values[$field['group']][$field['key']] ?? '';
+
             if ($value !== '') {
-                config([$field['config'] => $value]);
+                if (! array_key_exists($path, $this->overridden)) {
+                    $this->overridden[$path] = config($path);
+                }
+                config([$path => $value]);
+            } elseif (array_key_exists($path, $this->overridden)) {
+                // Was ours, now blank/removed: hand the path back to env.
+                config([$path => $this->overridden[$path]]);
+                unset($this->overridden[$path]);
             }
         }
     }
@@ -69,14 +87,21 @@ final class PlatformSettings
      * The admin form schema with current values. Secret values are never included — only
      * whether one is set, plus a masked hint. Non-secret values are returned in full.
      *
+     * Owner-only groups (`owner_only => true`, e.g. Taurus) are left out unless
+     * asked for: the generic Settings page must not reveal or edit them.
+     *
      * @return array<int, array<string, mixed>>
      */
-    public function schema(): array
+    public function schema(bool $includeOwnerOnly = false): array
     {
         $values = $this->values();
         $groups = [];
 
         foreach ((array) config('platform_settings.groups') as $groupKey => $group) {
+            if (! $includeOwnerOnly && ($group['owner_only'] ?? false)) {
+                continue;
+            }
+
             $fields = [];
             foreach ($group['fields'] as $field) {
                 $stored = $values[$groupKey][$field['key']] ?? '';
@@ -157,6 +182,69 @@ final class PlatformSettings
             $this->cache = null;
             $this->apply();
             $this->audit->log('platform_settings.updated', null, ['keys' => $changed], $actor);
+        }
+    }
+
+    /**
+     * save() for the generic Admin → Settings page: owner-only groups are
+     * dropped from the input, so that page can never write them even though
+     * it shares the gate-free service underneath.
+     *
+     * @param  array<string, array<string, mixed>>  $input
+     */
+    public function saveShared(array $input, ?User $actor = null): void
+    {
+        foreach ($this->ownerOnlyGroups() as $group) {
+            unset($input[$group]);
+        }
+
+        $this->save($input, $actor);
+    }
+
+    /** @return list<string> */
+    public function ownerOnlyGroups(): array
+    {
+        $out = [];
+        foreach ((array) config('platform_settings.groups') as $groupKey => $group) {
+            if ($group['owner_only'] ?? false) {
+                $out[] = (string) $groupKey;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Remove stored values outright — the explicit "forget this key" that
+     * save() deliberately refuses for a blank secret. The config path falls
+     * back to its .env default immediately. Only whitelisted keys are touched;
+     * the audit records which keys were cleared, never their values.
+     *
+     * @param  array<string, list<string>>  $keys  group => [key, …]
+     */
+    public function clear(array $keys, ?User $actor = null): void
+    {
+        $cleared = [];
+
+        foreach ($this->fields() as $field) {
+            if (! in_array($field['key'], $keys[$field['group']] ?? [], true)) {
+                continue;
+            }
+
+            $deleted = PlatformSetting::query()
+                ->where('group', $field['group'])
+                ->where('key', $field['key'])
+                ->delete();
+
+            if ($deleted > 0) {
+                $cleared[] = "{$field['group']}.{$field['key']}";
+            }
+        }
+
+        if ($cleared !== []) {
+            $this->cache = null;
+            $this->apply();
+            $this->audit->log('platform_settings.cleared', null, ['keys' => $cleared], $actor);
         }
     }
 

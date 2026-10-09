@@ -11,7 +11,7 @@ function resolver(): ProviderResolver
 
 beforeEach(function () {
     // Start from a clean slate: no provider has a key.
-    foreach (['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'] as $p) {
+    foreach (['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom', 'gemini', 'groq'] as $p) {
         config(["ai.providers.{$p}.api_key" => '']);
     }
     config(['ai.providers.custom.base_url' => '']);

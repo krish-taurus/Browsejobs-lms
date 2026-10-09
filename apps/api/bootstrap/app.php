@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\AuthenticateTaurusIngest;
 use App\Http\Middleware\EnsureCareerPlus;
+use App\Http\Middleware\EnsureTaurusMember;
+use App\Http\Middleware\EnsureTaurusOwner;
 use App\Http\Middleware\ResolveTenantByDomain;
 use App\Http\Middleware\ResolveTenantByUser;
 use App\Http\Middleware\VerifyMetaWebhookSignature;
@@ -45,6 +48,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'whatsapp.signed' => VerifyWhatsAppWebhookSignature::class,
             'voice.signed' => VerifyVoiceWebhookSignature::class,
             'career-plus' => EnsureCareerPlus::class,
+            'taurus.ingest' => AuthenticateTaurusIngest::class,
+            'taurus.owner' => EnsureTaurusOwner::class,
+            'taurus.member' => EnsureTaurusMember::class,
         ]);
 
         // Tenant resolution MUST run before route-model binding so the global

@@ -41,6 +41,7 @@ const NAV = [
   { href: "/employer/dashboard", label: "Dashboard", icon: HomeIcon },
   { href: "/employer/jobs", label: "Jobs", icon: BriefcaseIcon },
   { href: "/employer/pipeline", label: "Pipeline", icon: PipelineIcon },
+  { href: "/employer/hiring-floor", label: "Hiring floor", icon: RobotIcon, badge: "3D" },
   { href: "/employer/team", label: "Team", icon: UsersIcon },
 ];
 

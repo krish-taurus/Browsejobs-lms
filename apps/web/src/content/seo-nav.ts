@@ -52,6 +52,22 @@ export const SEO_PAGES = {
     footerLabel: "AI interview platform",
     priority: 0.75,
   },
+  taurusAi: {
+    path: "/taurusai",
+    title: "Taurus AI: One Live Floor for Every AI Agent You Run",
+    description:
+      "See every AI agent you run as a robot at its desk: what it is doing, what is done, what it spent and what waits for your approval. Ask it out loud.",
+    footerLabel: "Taurus AI",
+    priority: 0.7,
+  },
+  taurusRecruitment: {
+    path: "/taurusai/recruitment",
+    title: "Taurus Hiring Floor: Watch Hiring Move Stage by Stage",
+    description:
+      "A live 3D view of your hiring pipeline: eight stages from applied to hired, and what each hiring bot is doing right now. Offers stay a human decision.",
+    footerLabel: "Taurus hiring floor",
+    priority: 0.7,
+  },
 } as const;
 
 export type SeoPageKey = keyof typeof SEO_PAGES;

@@ -85,6 +85,14 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: "Taurus AI",
+    items: [
+      { href: "/admin/taurus/console", label: "Command centre", role: "super-admin" },
+      { href: "/admin/taurus/brain", label: "Brain & voice", role: "super-admin" },
+      { href: "/admin/taurus/clients", label: "Clients", role: "super-admin" },
+    ],
+  },
+  {
     label: "Platform",
     items: [
       { href: "/admin/team", label: "Team", role: "admin" },

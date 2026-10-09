@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {
-    foreach (['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom'] as $p) {
+    foreach (['anthropic', 'openai', 'kimi', 'deepseek', 'grok', 'custom', 'gemini', 'groq'] as $p) {
         config(["ai.providers.{$p}.api_key" => '']);
     }
 });

@@ -30,7 +30,8 @@ final class SettingsController extends Controller
         /** @var array<string, array<string, mixed>> $input */
         $input = $request->input('settings', []);
 
-        $settings->save($input, $request->user());
+        // Owner-only groups (Taurus) are dropped here; they have their own gated console.
+        $settings->saveShared($input, $request->user());
 
         return response()->json(['data' => $settings->schema(), 'ai' => $ai->status()]);
     }
