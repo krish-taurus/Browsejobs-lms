@@ -237,7 +237,9 @@ final class MockController extends Controller
     public function uploadRecording(Request $request, int $mock): JsonResponse
     {
         $request->validate([
-            'recording' => ['required', 'file', 'max:76800'], // 75MB — ~15 min of webcam+mic at modest bitrate
+            // 95 MB, under nginx's 100M body limit. The room records at
+            // ~0.45 Mbit/s, so this holds a ~25-minute interview.
+            'recording' => ['required', 'file', 'max:97280'],
         ]);
 
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
@@ -245,8 +247,21 @@ final class MockController extends Controller
             $file = $request->file('recording');
             $extension = strtolower($file->getClientOriginalExtension()) ?: 'webm';
             $path = "mock-recordings/{$interview->tenant_id}/{$interview->id}.{$extension}";
+            $disk = Storage::disk('s3');
 
-            Storage::disk('s3')->put($path, (string) $file->get());
+            // A shorter clip never replaces a longer recording already saved —
+            // e.g. after a reload the room only has the last few seconds. The
+            // short one is still kept alongside, never thrown away.
+            $existing = $interview->recording_url;
+            if ($existing !== null && ! str_starts_with($existing, 'http') && $disk->exists($existing)
+                && $disk->size($existing) > (int) $file->getSize()) {
+                // Streamed, not read into memory — a full interview is tens of MB.
+                $disk->putFileAs("mock-recordings/{$interview->tenant_id}", $file, "{$interview->id}-".now()->format('YmdHis').".{$extension}");
+
+                return response()->json(['ok' => true, 'kept' => 'existing']);
+            }
+
+            $disk->putFileAs("mock-recordings/{$interview->tenant_id}", $file, "{$interview->id}.{$extension}");
             $interview->update(['recording_url' => $path]);
 
             return response()->json(['ok' => true]);

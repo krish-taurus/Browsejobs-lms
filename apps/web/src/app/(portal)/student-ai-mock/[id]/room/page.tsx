@@ -332,7 +332,13 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         ? new MediaStream([...streamRef.current.getVideoTracks(), ...mix.stream.getAudioTracks()])
         : streamRef.current; // No mix available — falls back to the plain mic-only stream.
 
-      const recorder = new MediaRecorder(recordedStream, { mimeType });
+      // ~0.45 Mbit/s: a 20-minute interview is ~70 MB, inside the upload
+      // limit. The browser default (~2.5 Mbit/s) overran it after ~4 minutes.
+      const recorder = new MediaRecorder(recordedStream, {
+        mimeType,
+        videoBitsPerSecond: 400_000,
+        audioBitsPerSecond: 48_000,
+      });
       recordedChunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
       recorder.start(1000);
@@ -998,6 +1004,18 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     setPhase("listening");
   }, []);
 
+  // The recording lives in this tab until it is uploaded at the end — a reload
+  // or a closed tab mid-interview or while grading loses it. Ask first.
+  useEffect(() => {
+    if (step !== "live" && phase !== "grading") return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [step, phase]);
+
   async function finish() {
     recognitionRef.current?.stop();
     void takeRecordedAnswer();
@@ -1010,20 +1028,29 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     // because it fired too early would defeat the point of recording at all.
     const recording = await stopRecording();
 
-    try {
-      await apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST" });
-    } catch {
+    // Save the recording at the same time as grading, never after it. Grading
+    // can take a minute; a recording that waited for it was lost whenever the
+    // page was reloaded or closed meanwhile (Oct 2026: a 10-minute interview
+    // kept only its last 17 seconds). Retried, and still best-effort — the
+    // score stands on its own without it.
+    const upload = recording === null ? Promise.resolve() : (async () => {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const form = new FormData();
+          form.append("recording", recording, `interview-${id}.webm`);
+          await apiJson(`/api/v1/me/mocks/${id}/recording`, { method: "POST", body: form });
+          return;
+        } catch {
+          if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 2000));
+        }
+      }
+    })();
+
+    const grade = apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST" }).catch(() => {
       // The session page shows the precise error state.
-    }
+    });
 
-    if (recording !== null) {
-      const form = new FormData();
-      form.append("recording", recording, `interview-${id}.webm`);
-      // Best-effort — a failed upload should never strand the candidate on
-      // this screen. The score already stands on its own without it.
-      await apiJson(`/api/v1/me/mocks/${id}/recording`, { method: "POST", body: form }).catch(() => {});
-    }
-
+    await Promise.allSettled([upload, grade]);
     router.push(sessionHref);
   }
 
@@ -1343,6 +1370,11 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           ) : (
             <p className="mt-2 text-sm text-white/40">
               {phase === "grading" ? "Grading your interview…" : "…"}
+            </p>
+          )}
+          {phase === "grading" && (
+            <p className="mt-2 text-sm text-white/70">
+              Saving your recording and preparing your scorecard — this can take up to a minute. Please keep this page open.
             </p>
           )}
           {serverStt && listening && (
