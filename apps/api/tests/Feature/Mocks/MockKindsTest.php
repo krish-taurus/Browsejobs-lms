@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\BatchMemberStatus;
+use App\Enums\BatchType;
+use App\Models\Batch;
+use App\Models\BatchMember;
 use App\Models\Course;
 use App\Models\EmployerJob;
 use App\Models\EmployerWorkspace;
@@ -13,6 +17,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\postJson;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
@@ -32,8 +37,8 @@ function studentWithEveryKind(Tenant $tenant): array
 
     $blueprints = [
         'course' => MockBlueprint::factory()->for($tenant)->create(['course_id' => $course->id, 'role_title' => 'Data Engineer']),
-        'job' => MockBlueprint::factory()->for($tenant)->create(['course_id' => $course->id, 'employer_job_id' => $job->id, 'role_title' => 'Data Engineer · BrowseJobs']),
-        'cv' => MockBlueprint::factory()->for($tenant)->create(['course_id' => $course->id, 'user_id' => $student->id, 'role_title' => 'AI Readiness Interview']),
+        'job' => MockBlueprint::factory()->for($tenant)->create(['course_id' => $course->id, 'employer_job_id' => $job->id, 'role_title' => 'Data Engineer · BrowseJobs', 'is_active' => false]),
+        'cv' => MockBlueprint::factory()->for($tenant)->create(['course_id' => $course->id, 'user_id' => $student->id, 'role_title' => 'AI Readiness Interview', 'is_active' => false]),
     ];
 
     $make = fn (MockBlueprint $b, array $extra = []) => MockInterview::withoutGlobalScopes()->create([
@@ -49,7 +54,7 @@ function studentWithEveryKind(Tenant $tenant): array
         ...$extra,
     ])->id;
 
-    return ['student' => $student, 'company' => $workspace->name, 'ids' => [
+    return ['student' => $student, 'company' => $workspace->name, 'course' => $course, 'ids' => [
         'practice' => $make($blueprints['course']),
         'voice' => $make($blueprints['course'], ['is_room' => true]),
         'job' => $make($blueprints['job'], ['is_room' => true]),
@@ -109,6 +114,30 @@ it('only offers to resume an unfinished practice interview on the practice card'
         ->update(['status' => MockInterview::STATUS_IN_PROGRESS, 'completed_at' => null]));
 
     getJson('/api/v1/me/mocks')->assertOk()->assertJsonPath('data.in_progress_id', $ids['practice']);
+});
+
+it('starts a voice interview instead of reopening an unfinished job or AI Readiness interview', function () {
+    config(['monetization.text_practice_enabled' => true]);
+    ['student' => $student, 'course' => $course, 'ids' => $ids] = studentWithEveryKind($this->tenant);
+    $batch = Batch::factory()->for($this->tenant)->create(['course_id' => $course->id, 'type' => BatchType::Paid->value]);
+    BatchMember::factory()->for($this->tenant)->create([
+        'batch_id' => $batch->id, 'user_id' => $student->id, 'status' => BatchMemberStatus::Enrolled->value,
+    ]);
+    // Exactly the reported state: job and CV rooms left open, newest last.
+    withinTenant($this->tenant, fn () => MockInterview::query()->whereKey([$ids['cv'], $ids['job']])
+        ->update(['status' => MockInterview::STATUS_IN_PROGRESS, 'completed_at' => null]));
+    Sanctum::actingAs($student);
+
+    $voice = postJson('/api/v1/me/mocks', ['is_room' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.kind', 'voice')
+        ->json('data.id');
+    expect($voice)->not->toBe($ids['job'])->not->toBe($ids['cv']);
+
+    // A second click resumes that voice session, still not the job one.
+    postJson('/api/v1/me/mocks', ['is_room' => true])->assertCreated()->assertJsonPath('data.id', $voice);
+
+    postJson('/api/v1/me/mocks')->assertCreated()->assertJsonPath('data.kind', 'practice');
 });
 
 it('rejects an unknown kind', function () {

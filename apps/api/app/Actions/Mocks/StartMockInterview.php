@@ -34,10 +34,15 @@ final readonly class StartMockInterview
     {
         abort_unless($this->entitlements->settings()->text_practice_enabled, 403, 'Text practice is not enabled.');
 
+        // Resume only this experience's own unfinished session. A job or
+        // AI Readiness interview is also a text-mode room — without the kind
+        // filter "Start a voice interview" reopened whichever of those was
+        // newest (Oct 2026: a student's voice button landed on a job interview).
         $existing = MockInterview::query()
             ->where('user_id', $student->id)
             ->where('mode', MockInterview::MODE_TEXT)
             ->where('is_room', $isRoom)
+            ->ofKind($isRoom ? MockInterview::KIND_VOICE : MockInterview::KIND_PRACTICE)
             ->where('status', MockInterview::STATUS_IN_PROGRESS)
             ->latest('id')
             ->first();
