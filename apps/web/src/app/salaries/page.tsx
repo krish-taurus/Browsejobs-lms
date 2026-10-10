@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell } from "@/components/landing/MarketingShell";
-import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { Kicker } from "@/components/brand/Kicker";
-import { Disclaimer } from "@/components/brand/Disclaimer";
+import { DISCLAIMER } from "@/content/landing";
+import "@/components/ap/pages/marketing.css";
 import { salaryPages } from "@/content/salaries";
 import { canonical } from "@/lib/seo";
 
@@ -20,46 +19,44 @@ export default function SalariesIndex() {
 
   return (
     <MarketingShell>
-      <section className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <ScrollReveal>
-          <Kicker>Salary intelligence</Kicker>
-          <h1 className="display mt-3 max-w-3xl text-3xl text-ink md:text-6xl">
-            What tech actually pays, city by city
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-ink2/70">
-            Percentile benchmarks per role, city and experience band — the same
-            numbers our counsellors use when a student weighs an offer.
+      <section className="s-white pg-hero">
+        <div className="wrap center">
+          <p className="eyebrow">Salary intelligence</p>
+          <h1 className="h-hero">What tech actually pays, city by city</h1>
+          <p className="lead">
+            Percentile benchmarks per role, city and experience band — the same numbers our counsellors use when a
+            student weighs an offer.
           </p>
-        </ScrollReveal>
+        </div>
+      </section>
 
-        {roles.map((role, ri) => (
-          <ScrollReveal key={role} delay={ri * 0.05}>
-            <h2 className="display mt-12 text-xl text-ink md:text-2xl">{role}</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              {salaryPages
-                .filter((p) => p.role === role)
-                .map((p) => {
-                  const b = p.bands[p.bands.length - 1];
-                  return (
-                    <Link
-                      key={p.slug}
-                      href={`/salaries/${p.slug}`}
-                      className="group rounded-[14px] border border-line bg-white p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-trust/40"
-                    >
-                      <span className="mono text-[10px] uppercase tracking-[0.18em] text-muted">{p.city}</span>
-                      <p className="mono mt-1.5 text-2xl font-semibold text-ink">₹{b.p50} LPA</p>
-                      <span className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-trust">
-                        Full breakdown
-                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </span>
-                    </Link>
-                  );
-                })}
+      <section className="s-paper chapter">
+        <div className="wrap">
+          {roles.map((role) => (
+            <div key={role} data-reveal="">
+              <h2 className="pg-sub">{role}</h2>
+              <ul className="pg-tiles">
+                {salaryPages
+                  .filter((p) => p.role === role)
+                  .map((p) => {
+                    const b = p.bands[p.bands.length - 1];
+                    return (
+                      <li key={p.slug}>
+                        <Link href={`/salaries/${p.slug}`} className="pg-tile">
+                          <span className="eyebrow-sm">{p.city}</span>
+                          <span className="pg-big">₹{b.p50} LPA</span>
+                          <span className="more">
+                            Full breakdown <span className="chev" aria-hidden="true">›</span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+              </ul>
             </div>
-          </ScrollReveal>
-        ))}
-
-        <Disclaimer className="mt-10" />
+          ))}
+          <p className="fine pg-index-fine">{DISCLAIMER}</p>
+        </div>
       </section>
     </MarketingShell>
   );

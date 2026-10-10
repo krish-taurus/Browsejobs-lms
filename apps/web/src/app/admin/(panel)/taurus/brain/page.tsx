@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@/components/ap/pages/taurus-ui.css";
+import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { BrainSettings } from "@/components/taurus/BrainSettings";
 import { ApiError, apiJson } from "@/lib/api";
 import { listMyWorkspaces, workspaceBase, type TaurusWorkspace } from "@/lib/taurus-floor/live";
@@ -26,18 +28,30 @@ export default function TaurusBrainPage() {
       .catch((e) => setError(e instanceof ApiError && e.status === 403 ? "Taurus keys are available to the platform owner only." : "Couldn't load your Taurus workspace."));
   }, []);
 
-  if (error) return <p className="mx-auto max-w-3xl rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">{error}</p>;
-  if (!ws) return <div className="shimmer mx-auto h-40 max-w-3xl rounded-[14px]" />;
+  const root = `tx-ap tx-ap--card ${taurusDisplayFont.variable}`;
+  if (error)
+    return (
+      <div className={root}>
+        <p className="tx-note tx-note--warn tx-narrow">{error}</p>
+      </div>
+    );
+  if (!ws)
+    return (
+      <div className={root}>
+        <div className="shimmer tx-skel tx-narrow" style={{ height: 160 }} />
+      </div>
+    );
 
   return (
     <QueryClientProvider client={client}>
-      <BrainSettings
-        base={workspaceBase(ws.id)}
-        kicker={`Taurus AI · ${ws.name}`}
-        heading="Brain & voice"
-        intro="The keys behind your live agents. Only you can see this workspace; clients never use these keys. Keys are encrypted on the server and only the last four characters are shown."
-      />
-      <div className="mx-auto mt-14 max-w-3xl border-t border-line pt-10">
+      <div className={root}>
+        <BrainSettings
+          base={workspaceBase(ws.id)}
+          kicker={`Taurus AI · ${ws.name}`}
+          heading="Brain & voice"
+          intro="The keys behind your live agents. Only you can see this workspace; clients never use these keys. Keys are encrypted on the server and only the last four characters are shown."
+        />
+        <hr className="tx-divider tx-narrow" />
         <BrainSettings
           base="/api/v1/admin/taurus/platform"
           variant="platform"

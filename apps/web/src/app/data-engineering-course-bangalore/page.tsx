@@ -146,7 +146,9 @@ export default function DataEngineeringBangalorePage() {
           module list as published. If a line is not in that list, it is not something we are claiming you will be
           taught.
         </p>
-        <CourseSyllabus slug="data-engineering" />
+        <div className="pg-syllabus">
+          <CourseSyllabus slug="data-engineering" />
+        </div>
       </MoneySection>
 
       <MoneySection id="projects" kicker="Proof you can talk about" heading="Three projects. No invented employment.">
@@ -243,9 +245,7 @@ export default function DataEngineeringBangalorePage() {
         </p>
       </MoneySection>
 
-      <div className="overflow-x-clip">
-        <PromiseCards />
-      </div>
+      <PromiseCards />
 
       <MoneyFaq faqs={faqs} />
       <RelatedLinks

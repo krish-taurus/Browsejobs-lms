@@ -2,9 +2,12 @@
  * Taurus console — scoped theme for the cinematic 3D floor (ADR 0052).
  * Like the employer dashboard's --bj-dash-* theme, this is a deliberate
  * sub-brand: three "looks" (obsidian / titanium / noir) are token sets on
- * .tc[data-look]. Typefaces stay the site's binding trio (Sora display,
- * Inter body, IBM Plex Mono numbers). Only transform/opacity animate, and
- * everything decorative stops under prefers-reduced-motion.
+ * .tc[data-look]. The HUD chrome follows the Apple-direction site design
+ * (Oct 2026): system / Inter Tight type with tabular numbers, 12-18px radii,
+ * glass panels with 1px hairlines, pill buttons, calm grey labels. Status
+ * colours stay. Noir keeps its monospace film-credit lettering. Only
+ * transform/opacity animate, and everything decorative stops under
+ * prefers-reduced-motion.
  */
 .tc {
   --tc-bg: #000000;
@@ -16,7 +19,7 @@
   --tc-hi: rgba(255, 255, 255, 0.12);
   --tc-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
   --tc-blur: blur(36px) saturate(170%);
-  --tc-r: 22px;
+  --tc-r: 16px;
   --tc-accent: #64d2ff;
   --tc-track: rgba(255, 255, 255, 0.1);
   --tc-seg: rgba(255, 255, 255, 0.92);
@@ -35,10 +38,11 @@
   --tc-done: #30d158;
   --tc-lb: 0px;
   --tc-lbh: 11%;
-  --tc-disp: var(--font-sora), system-ui, sans-serif;
-  --tc-body: var(--font-inter), system-ui, sans-serif;
-  --tc-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --tc-num-w: 300;
+  --tc-disp: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter-tight), var(--font-inter), "Segoe UI", system-ui, sans-serif;
+  --tc-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), "Segoe UI", system-ui, sans-serif;
+  /* numbers use the text face with tabular figures; Noir swaps in a true mono */
+  --tc-mono: var(--tc-body);
+  --tc-num-w: 500;
 
   position: relative;
   isolation: isolate;
@@ -49,6 +53,8 @@
   background: var(--tc-bg);
   color: var(--tc-ink);
   font-family: var(--tc-body);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   transition: background 0.9s ease;
 }
@@ -77,7 +83,7 @@
   --tc-idle: #6e6e73;
   --tc-offline: #aeaeb2;
   --tc-done: #1f8a3a;
-  --tc-num-w: 500;
+  --tc-num-w: 600;
 }
 .tc[data-look="noir"] {
   --tc-bg: #050406;
@@ -108,6 +114,8 @@
   --tc-done: #a6e08f;
   --tc-num-w: 400;
   --tc-lb: var(--tc-lbh);
+  --tc-mono: var(--font-plex-mono), ui-monospace, monospace;
+  letter-spacing: 0;
 }
 .tc.tc-intro:not([data-look="noir"]) {
   --tc-lb: 8%;
@@ -191,7 +199,7 @@
   width: 232px;
   margin-bottom: 8px;
   padding: 12px 14px;
-  border-radius: 15px;
+  border-radius: 14px;
   background: var(--tc-panel);
   border: 1px solid var(--tc-line);
   box-shadow: var(--tc-shadow);
@@ -254,8 +262,16 @@
   border: 1px solid var(--tc-line);
   background: transparent;
   color: var(--tc-ink);
-  font: 600 12px/1 var(--tc-body);
+  font: 500 12.5px/1 var(--tc-body);
+  letter-spacing: -0.01em;
   cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.tc .tf-btn:hover,
+.tc .tc-btn:hover {
+  border-color: var(--tc-ink3);
 }
 .tc .tf-btn.primary,
 .tc .tc-btn.primary {
@@ -266,7 +282,7 @@
 .tc .tf-zone .tf-in {
   transform: translate(-50%, -50%);
   font: 600 10px/1 var(--tc-body);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tc-ink3);
   white-space: nowrap;
@@ -329,8 +345,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font: 500 10.5px/1 var(--tc-mono);
-  letter-spacing: 0.04em;
+  font: 500 11.5px/1 var(--tc-mono);
+  letter-spacing: 0;
   color: var(--c);
   white-space: nowrap;
 }
@@ -370,7 +386,7 @@
 .tc-mark b {
   display: block;
   font: 600 17px/1 var(--tc-disp);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 .tc-mark small {
   display: block;
@@ -388,14 +404,14 @@
   min-width: 0;
   flex: 0 1 150px;
   padding: 11px 16px 12px;
+  border-radius: 14px;
 }
 .tc-kpi .l {
   display: flex;
   align-items: center;
   gap: 7px;
-  font: 500 10.5px/1 var(--tc-body);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 500 12px/1.1 var(--tc-body);
+  letter-spacing: -0.005em;
   color: var(--tc-ink2);
   white-space: nowrap;
   overflow: hidden;
@@ -404,14 +420,14 @@
 .tc-kpi .v {
   display: block;
   margin-top: 8px;
-  font: var(--tc-num-w) 27px/1 var(--tc-mono);
+  font: var(--tc-num-w) 26px/1 var(--tc-disp);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 .tc-kpi .v em {
   margin-left: 6px;
-  font: 500 9px/1 var(--tc-mono);
+  font: 500 9px/1 var(--tc-body);
   font-style: normal;
   letter-spacing: 0.06em;
   color: var(--tc-ink3);
@@ -429,23 +445,31 @@
 }
 .tc-meta {
   text-align: right;
-  font: 500 11px/1.4 var(--tc-mono);
+  font: 500 12px/1.4 var(--tc-body);
   color: var(--tc-ink2);
 }
 .tc-meta time {
   display: block;
-  font: 500 15px/1.2 var(--tc-mono);
+  font: 600 15px/1.2 var(--tc-disp);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
   color: var(--tc-ink);
 }
 .tc-sample {
   display: inline-block;
-  margin-top: 3px;
-  padding: 3px 8px;
+  margin-top: 4px;
+  padding: 4px 9px;
   border-radius: 999px;
+  background: var(--tc-track);
   border: 1px solid var(--tc-line);
+  color: var(--tc-ink);
+  font: 600 10px/1.2 var(--tc-body);
+  letter-spacing: 0.06em;
+}
+.tc[data-look="noir"] .tc-sample {
+  background: transparent;
   color: var(--tc-needs);
-  font: 600 9.5px/1.2 var(--tc-mono);
-  letter-spacing: 0.08em;
+  font-family: var(--tc-mono);
 }
 
 /* ------------------------------------------------ side panels */
@@ -463,13 +487,12 @@
   display: flex;
   justify-content: space-between;
   margin: 0 0 4px;
-  font: 600 11px/1 var(--tc-body);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--tc-ink2);
+  font: 600 13px/1.1 var(--tc-disp);
+  letter-spacing: -0.01em;
+  color: var(--tc-ink);
 }
 .tc-side h3 span {
-  font-family: var(--tc-mono);
+  font: 500 12px/1.1 var(--tc-mono);
   letter-spacing: 0;
   color: var(--tc-ink3);
 }
@@ -538,7 +561,7 @@
 .tc-feed li:first-child { border-top: 0; }
 .tc-feed time {
   padding-top: 2px;
-  font: 500 11px/1.2 var(--tc-mono);
+  font: 500 11.5px/1.2 var(--tc-mono);
   color: var(--tc-ink3);
 }
 .tc-feed .t {
@@ -579,16 +602,21 @@
 }
 .tc-stage .l {
   display: block;
-  font: 500 10px/1.2 var(--tc-body);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 500 11.5px/1.2 var(--tc-body);
+  letter-spacing: -0.005em;
   color: var(--tc-ink2);
   white-space: nowrap;
+}
+.tc[data-look="noir"] .tc-stage .l {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .tc-stage .v {
   display: block;
   margin-top: 5px;
-  font: var(--tc-num-w) 21px/1 var(--tc-mono);
+  font: var(--tc-num-w) 21px/1 var(--tc-disp);
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 .tc-stage .s {
@@ -644,7 +672,8 @@
   border: 0;
   background: transparent;
   color: var(--tc-ink);
-  font: 400 14px/1.3 var(--tc-body);
+  font: 400 15px/1.3 var(--tc-body);
+  letter-spacing: -0.01em;
 }
 .tc-askbar input::placeholder { color: var(--tc-ink3); }
 .tc-askbar input:focus { outline: none; }
@@ -680,9 +709,9 @@
 .tc-answer small {
   display: block;
   margin-bottom: 6px;
-  font: 500 10.5px/1 var(--tc-mono);
-  letter-spacing: 0.08em;
-  color: var(--tc-accent);
+  font: 600 11px/1 var(--tc-body);
+  letter-spacing: 0.04em;
+  color: var(--tc-ink2);
 }
 
 /* hiring floors stack the ask bar above the stage strip */
@@ -708,13 +737,13 @@
   border-radius: 999px;
   background: var(--tc-seg);
   color: var(--tc-seg-ink);
-  font: 600 10.5px/1.2 var(--tc-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 600 11.5px/1.2 var(--tc-body);
+  letter-spacing: -0.005em;
 }
 .tc-caption p {
   margin: 10px 0 0;
-  font: 500 16px/1.45 var(--tc-body);
+  font: 500 17px/1.45 var(--tc-disp);
+  letter-spacing: -0.012em;
   color: var(--tc-ink);
   text-shadow: 0 2px 18px var(--tc-bg);
   text-wrap: balance;
@@ -736,7 +765,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 30px;
+  border-radius: 32px;
   border: 6px solid #111316;
   background: var(--wa-bg);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -918,14 +947,15 @@
   border-radius: 999px;
   background: transparent;
   color: var(--tc-ink);
-  font: 600 12.5px/1 var(--tc-body);
+  font: 500 13px/1 var(--tc-body);
+  letter-spacing: -0.01em;
   white-space: nowrap;
   cursor: pointer;
   transition: background 0.4s, color 0.4s;
 }
 .tc-looks button span {
-  font: 500 10.5px/1 var(--tc-mono);
-  opacity: 0.6;
+  font: 500 11px/1 var(--tc-body);
+  opacity: 0.5;
 }
 .tc-looks button[aria-pressed="true"] {
   background: var(--tc-seg);
@@ -942,15 +972,15 @@
   animation: tc-card 3.2s ease-in-out forwards;
 }
 .tc-title small {
-  font: 500 11px/1 var(--tc-mono);
-  letter-spacing: 0.3em;
+  font: 600 12px/1 var(--tc-body);
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--tc-accent);
 }
 .tc-title h2 {
   margin: 12px 0 8px;
   font: 600 clamp(40px, 7vw, 112px)/0.95 var(--tc-disp);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   animation: tc-focus 1.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -976,13 +1006,18 @@
   left: 50%;
   top: 112px;
   translate: -50% 0;
+  max-width: calc(100% - 32px);
   padding: 9px 14px;
   border-radius: 999px;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   background: rgba(255, 69, 58, 0.14);
   border: 1px solid rgba(255, 69, 58, 0.4);
   color: var(--tc-ink);
   font: 500 12.5px/1.3 var(--tc-body);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tc-nogl {
   position: absolute;
@@ -1022,6 +1057,12 @@
   color: var(--tc-accent);
 }
 .tc[data-look="noir"] .tc-kpi .v { font-size: 24px; }
+.tc[data-look="noir"] .tc-kpi .v,
+.tc[data-look="noir"] .tc-stage .v,
+.tc[data-look="noir"] .tc-meta time {
+  font-family: var(--tc-mono);
+  letter-spacing: -0.01em;
+}
 .tc[data-look="noir"] .tc-side { top: calc(max(var(--tc-lbh), 72px) + 22px); }
 .tc[data-look="noir"] .tc-now {
   left: 4%;

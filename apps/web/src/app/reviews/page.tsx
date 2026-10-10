@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { MarketingShell } from "@/components/landing/MarketingShell";
-import { BookCta } from "@/components/landing/BookCta";
-import { Disclaimer } from "@/components/brand/Disclaimer";
+import { ApLeadButton } from "@/components/ap/pages/ApLeadButton";
 import { MonoCounter } from "@/components/motion/MonoCounter";
-import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ReviewWall } from "@/components/reviews/ReviewWall";
-import { reviewAggregates } from "@/content/landing";
+import { DISCLAIMER, reviewAggregates } from "@/content/landing";
+import "@/components/ap/pages/marketing.css";
 import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -18,58 +17,53 @@ export const metadata: Metadata = {
 export default function ReviewsPage() {
   return (
     <MarketingShell>
-      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <ScrollReveal>
-          <p className="kicker text-trust">Reviews</p>
-          <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-5xl">
-            Real stories. Real people. Real success.
-          </h1>
-          <p className="mt-4 max-w-2xl text-muted">
-            From Google and WhatsApp — as students wrote them. And when
-            you&apos;re done reading ours, search “BrowseJobs” yourself and read
-            the rest.
+      <section className="s-white pg-hero">
+        <div className="wrap center">
+          <p className="eyebrow">Reviews</p>
+          <h1 className="h-hero">Real stories. Real people. Real success.</h1>
+          <p className="lead">
+            From Google and WhatsApp — as students wrote them. And when you&apos;re done reading ours, search
+            “BrowseJobs” yourself and read the rest.
           </p>
-        </ScrollReveal>
+        </div>
+      </section>
 
-        {/* Aggregate band (brochure figures) + mandatory disclaimer */}
-        <ScrollReveal delay={0.08}>
-          <div className="mt-10 rounded-[22px] bg-ink px-6 py-10 text-white shadow-soft md:px-10">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-              {reviewAggregates.map((s) => (
-                <div key={s.label} className="text-center">
-                  <div className="display text-3xl md:text-4xl">
-                    <MonoCounter
-                      value={s.value}
-                      suffix={"suffix" in s ? s.suffix : ""}
-                      decimals={"decimals" in s ? s.decimals : 0}
-                      plain={s.value > 1900 && s.value < 2100}
-                    />
-                  </div>
-                  <p className="mt-2 text-sm text-sky/70">{s.label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mx-auto mt-7 max-w-2xl text-center">
-              <Disclaimer className="text-sky/50" />
-            </div>
-          </div>
-        </ScrollReveal>
+      {/* Aggregate band (brochure figures) + mandatory disclaimer */}
+      <section className="s-paper chapter reviews-stats">
+        <div className="wrap center">
+          <ul className="pg-stats" data-reveal-kids="">
+            {reviewAggregates.map((s) => (
+              <li key={s.label}>
+                <b>
+                  <MonoCounter
+                    value={s.value}
+                    suffix={"suffix" in s ? s.suffix : ""}
+                    decimals={"decimals" in s ? s.decimals : 0}
+                    plain={s.value > 1900 && s.value < 2100}
+                  />
+                </b>
+                <span>{s.label}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="fine">{DISCLAIMER}</p>
+        </div>
+      </section>
 
-        <div className="mt-12">
+      <section className="s-white chapter reviews-wall">
+        <div className="wrap">
           <ReviewWall />
         </div>
+      </section>
 
-        <ScrollReveal>
-          <div className="mt-16 rounded-[22px] bg-trust px-8 py-12 text-center text-white shadow-soft">
-            <h2 className="display mx-auto max-w-xl text-2xl md:text-3xl">
-              Decide for yourself — the first three steps are free
-            </h2>
-            <div className="mt-6">
-              <BookCta ghost className="border-white bg-white px-8 py-3.5 text-trust" />
-            </div>
+      <section className="s-black chapter pg-closing">
+        <div className="wrap">
+          <h2 className="h-section">Decide for yourself — the first three steps are free</h2>
+          <div className="cta-row">
+            <ApLeadButton />
           </div>
-        </ScrollReveal>
-      </div>
+        </div>
+      </section>
     </MarketingShell>
   );
 }

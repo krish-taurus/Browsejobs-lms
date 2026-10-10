@@ -3024,3 +3024,268 @@
     display: none;
   }
 }
+
+/* =====================================================================
+   Bridge: older pages inside the Apple shell.
+   Re-maps the site's Tailwind tokens (--bj-*) to Apple neutrals and
+   restyles shared utilities, so every page that renders inside ApShell
+   reads as one design without rewriting its markup.
+   ===================================================================== */
+.ap {
+  --bj-ink: #1d1d1f;
+  --bj-ink2: #424245;
+  --bj-deep: #000000;
+  --bj-trust: #1d1d1f;
+  --bj-sky: #f5f5f7;
+  --bj-paper: #f5f5f7;
+  --bj-line: #d2d2d7;
+  --bj-muted: #6e6e73;
+  --bj-surface: #ffffff;
+  --bj-fg: #1d1d1f;
+  --bj-verify: #248a3d;
+  --bj-verify-bg: #e9f6ec;
+}
+.ap .display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.026em;
+  line-height: 1.06;
+}
+.ap .mono {
+  font-family: var(--font-text);
+  letter-spacing: 0;
+}
+.ap .text-trust {
+  color: #0066cc;
+}
+.ap .bg-trust {
+  background-color: #1d1d1f;
+  color: #ffffff;
+}
+.ap .hover\:bg-deep:hover {
+  background-color: #000000;
+}
+.ap .kicker {
+  font: 600 15px/1.25 var(--font-display);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-2);
+}
+.ap [class*="shadow-[0_6px_24px_rgba(27,109,240"],
+.ap [class*="shadow-[0_30px_80px_rgba(10,18,32"] {
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- SEO / article pages (components/seo/MoneyArticle) ---------- */
+.ap .ap-article {
+  background: var(--white);
+}
+.ap .ap-narrow {
+  width: min(100% - 2 * var(--gutter), 820px);
+  margin-inline: auto;
+}
+.ap .ap-hero {
+  padding-block: clamp(96px, 11vw, 150px) clamp(48px, 6vw, 80px);
+  text-align: center;
+}
+.ap .ap-hero .h-hero {
+  font-size: clamp(40px, 6.4vw, 76px);
+  text-wrap: balance;
+}
+.ap .ap-crumbs {
+  margin-bottom: 26px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+.ap .ap-crumbs a {
+  color: var(--fg-2);
+}
+.ap .ap-crumbs a:hover {
+  color: var(--fg);
+}
+.ap .ap-lede {
+  margin: 22px auto 0;
+  max-width: 680px;
+  font: 500 clamp(19px, 2vw, 23px) / 1.42 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg-2);
+}
+.ap .ap-lede > * + * {
+  margin-top: 12px;
+}
+.ap .ap-hero .cta-row {
+  justify-content: center;
+  margin-top: 30px;
+}
+.ap .ap-sec {
+  padding-block: clamp(64px, 8vw, 112px);
+  background: var(--white);
+}
+.ap .ap-article > .ap-sec:nth-of-type(even) {
+  background: var(--paper);
+}
+.ap .ap-sec .h-section {
+  font-size: clamp(32px, 4.6vw, 54px);
+  text-wrap: balance;
+}
+.ap .ap-prose {
+  margin-top: 24px;
+  font-size: 19px;
+  line-height: 1.6;
+  letter-spacing: -0.004em;
+  color: var(--fg-2);
+}
+.ap .ap-prose > * + * {
+  margin-top: 18px;
+}
+.ap .ap-prose h3 {
+  color: var(--fg);
+}
+.ap .ap-prose strong,
+.ap .ap-prose b {
+  color: var(--fg);
+}
+.ap .ap-prose a:not(.btn):not([class*="rounded"]),
+.ap .ap-link {
+  color: #0066cc;
+}
+.ap .ap-prose a:not(.btn):hover,
+.ap .ap-link:hover {
+  text-decoration: underline;
+}
+.ap .ap-prose pre {
+  font-size: 13px;
+}
+.ap .ap-row-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.ap .ap-contact {
+  margin-top: 16px;
+  font: 600 19px/1.4 var(--font-display);
+  color: var(--fg);
+}
+.ap .ap-contents {
+  padding-bottom: 12px;
+}
+.ap .ap-contents ol {
+  display: grid;
+  gap: 6px 28px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .ap .ap-contents ol {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.ap .ap-contents a {
+  font-size: 15px;
+  color: var(--fg-2);
+}
+.ap .ap-contents a:hover {
+  color: var(--fg);
+}
+.ap .ap-contents .n {
+  margin-right: 10px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+/* Legal pages */
+.ap .ap-legal h2 {
+  margin-top: 40px;
+  font: 600 26px/1.2 var(--font-display);
+  letter-spacing: -0.016em;
+  color: var(--fg);
+}
+.ap .ap-legal ul {
+  padding-left: 22px;
+  list-style: disc;
+}
+.ap .ap-legal li + li {
+  margin-top: 6px;
+}
+
+/* ---------- Pages from the Argus frame, inside the Apple shell ---------- */
+.ap .argus-in-ap {
+  --bg: var(--white);
+  --text: var(--ink);
+  min-height: 0;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-text);
+}
+.ap .argus-in-ap .argus-h1,
+.ap .argus-in-ap .argus-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+.ap .argus-in-ap .argus-h1 {
+  font-size: clamp(46px, 8vw, 92px);
+  letter-spacing: -0.032em;
+}
+.ap .argus-in-ap .argus-h2 {
+  font-size: clamp(36px, 5.6vw, 68px);
+  letter-spacing: -0.028em;
+}
+.ap .argus-in-ap .argus-kicker {
+  font: 600 clamp(17px, 1.6vw, 21px) / 1.2 var(--font-display);
+  letter-spacing: 0.004em;
+  text-transform: none;
+  color: var(--ink-2);
+}
+.ap .argus-in-ap .argus-body {
+  font: 500 clamp(19px, 2vw, 23px) / 1.42 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+.ap .argus-in-ap .argus-btn {
+  border-radius: 999px;
+  font: 500 17px/1 var(--font-text);
+}
+.ap .argus-in-ap .argus-btn-primary {
+  background: var(--ink);
+  color: var(--white);
+}
+.ap .argus-in-ap .argus-btn-primary:hover {
+  background: #000000;
+}
+.ap .argus-in-ap .argus-more {
+  font: 400 17px/1.2 var(--font-text);
+  color: var(--ink);
+}
+.ap .argus-in-ap .argus-card {
+  border-radius: var(--r-tile);
+  background: var(--paper);
+  border-color: transparent;
+}
+.ap .argus-in-ap .argus-section:nth-of-type(even) {
+  background: var(--paper);
+}
+
+/* Tailwind's `ring` utility also matches the score-ring class; keep rings outline-free. */
+.ap .ring {
+  box-shadow: none;
+}
+
+/* Floating labels stay on one line in narrow fields (e.g. country code on phones). */
+.ap .field label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 28px);
+}
+.ap .field select {
+  padding-right: 38px;
+}
+@media (max-width: 734px) {
+  .ap .field-phone {
+    grid-template-columns: 136px minmax(0, 1fr);
+  }
+}

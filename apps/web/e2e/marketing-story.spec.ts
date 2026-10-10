@@ -56,7 +56,7 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   await form.getByLabel("Email", { exact: true }).fill("ada@example.test");
   await form.getByLabel("Phone", { exact: true }).fill("9840011111");
   await form.getByLabel("City", { exact: true }).fill("Bengaluru");
-  await form.getByLabel("Preferred time to call").selectOption("morning");
+  await form.getByLabel("Best time to call").selectOption("morning");
   await form.getByRole("checkbox", { name: /may call or email/ }).check();
   await page.waitForTimeout(3500);
   await form.getByRole("button", { name: "Request a callback" }).click();

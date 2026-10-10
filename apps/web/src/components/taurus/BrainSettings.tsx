@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import "@/components/ap/pages/taurus-ui.css";
 import { ApiError, apiJson, apiPostBlob } from "@/lib/api";
 
 type Provider = {
@@ -24,7 +25,6 @@ type Brain = {
 };
 type TestResult = { ok: boolean; message: string; latency_ms: number };
 
-const inputCls = "w-full rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-trust";
 const KEY_HINTS: Record<string, string> = {
   anthropic: "console.anthropic.com → API keys",
   openai: "platform.openai.com → API keys",
@@ -38,10 +38,16 @@ const KEY_HINTS: Record<string, string> = {
 
 const errText = (e: unknown, fallback: string) => (e instanceof ApiError ? (e.firstError ?? e.message) : fallback);
 
+/** "key · …a91f" when a key is saved, otherwise "No key". The key itself is never sent to the browser. */
+function KeyBadge({ configured, mask }: { configured: boolean; mask: string | null }) {
+  return configured ? <span className="tx-badge tx-badge--ok tx-num">key · {mask}</span> : <span className="tx-badge">No key</span>;
+}
+
 /**
  * Taurus → Brain & voice. Keys go to the encrypted platform_settings store
  * via /api/v1/admin/taurus/brain and are never returned — the page only
  * ever sees "configured" and the last four characters.
+ * Styled as Apple Settings-style grouped lists (components/ap/pages/taurus-ui.css).
  */
 export function BrainSettings({
   base,
@@ -80,18 +86,18 @@ export function BrainSettings({
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-3">
+      <div className="tx-narrow" aria-busy="true">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="shimmer h-32 rounded-[14px]" />
+          <div key={i} className="shimmer tx-skel" style={{ height: 120, marginTop: i ? 14 : 0 }} />
         ))}
       </div>
     );
   }
   if (error || !data) {
     return (
-      <div className="mx-auto max-w-3xl">
-        <h1 className="display text-3xl text-ink">{heading}</h1>
-        <p className="mt-4 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">
+      <div className="tx-narrow">
+        <h1 className="tx-title">{heading}</h1>
+        <p className="tx-note tx-note--warn">
           {error instanceof ApiError && (error.status === 403 || error.status === 404) ? "You don't have access to this workspace's keys." : "Couldn't load Taurus settings. Refresh to try again."}
         </p>
       </div>
@@ -99,121 +105,127 @@ export function BrainSettings({
   }
 
   const active = data.brain.active;
+  const onSaved = (b: Brain, text: string) => {
+    refresh(b);
+    setNotice({ tone: "ok", text });
+  };
+  const onError = (t: string) => setNotice({ tone: "warn", text: t });
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <p className="kicker text-trust">{kicker}</p>
-      <h1 className="display mt-2 text-3xl text-ink">{heading}</h1>
-      <p className="mt-1 text-sm text-muted">
+    <div className="tx-narrow">
+      <p className="tx-eyebrow">{kicker}</p>
+      <h1 className="tx-title">{heading}</h1>
+      <p className="tx-sub">
         {intro ??
           "Pick the language model Taurus thinks with, give it a voice, and connect your agents. Keys are encrypted on the server and never shown again; only the last four characters appear here."}
       </p>
 
       {notice && (
-        <p className={`mt-4 rounded-[10px] px-3 py-2 text-sm ${notice.tone === "ok" ? "bg-verify-bg text-ink" : "bg-warn/10 text-warn"}`} role="status">
+        <p className={`tx-note ${notice.tone === "ok" ? "tx-note--ok" : "tx-note--warn"}`} role="status">
           {notice.text}
         </p>
       )}
 
       {/* ------------------------------------------------ which brain */}
-      <section className="mt-6 rounded-[14px] border border-line bg-white p-5">
-        <h2 className="display text-lg text-ink">Taurus brain</h2>
-        <p className="mt-1 text-xs text-muted">
-          {data.brain.allows_platform ? "“Platform default” uses whichever provider the rest of BrowseJobs uses. Choose a provider to give this workspace its own." : "Taurus thinks with one of the providers below. Add a key, test it, then choose it here."}
-        </p>
-        <div className="mt-3 rounded-[10px] border border-line bg-paper p-3 text-sm text-ink">
-          {active ? (
-            <>
-              Taurus is <span className="font-semibold text-verify">live</span>, thinking with <span className="mono font-semibold">{active.provider}</span> ·{" "}
-              <span className="mono">{active.model}</span>.
-            </>
-          ) : (
-            <span className="text-warn">No brain yet. Add a key to any provider below, then choose it here.</span>
-          )}
+      <section className="tx-section">
+        <div className="tx-section-head">
+          <h2 className="tx-h2">Taurus brain</h2>
+          <p className="tx-section-note">
+            {data.brain.allows_platform ? "“Platform default” uses whichever provider the rest of BrowseJobs uses. Choose a provider to give this workspace its own." : "Taurus thinks with one of the providers below. Add a key, test it, then choose it here."}
+          </p>
         </div>
-        <BrainPicker allowPlatform={variant === "platform" || !!data.brain.allows_platform} data={data} onSaved={(b) => { refresh(b); setNotice({ tone: "ok", text: "Brain updated." }); }} onError={(t) => setNotice({ tone: "warn", text: t })} put={put} />
+        <div className="tx-group">
+          <div className="tx-row">
+            <span className="tx-row-label">Status</span>
+            {active ? (
+              <span className="tx-row-value" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span className="tx-dot tx-dot--ok" aria-hidden="true" />
+                <span>
+                  Taurus is <b style={{ color: "var(--tx-green)" }}>live</b>, thinking with <span className="tx-mono">{active.provider}</span> ·{" "}
+                  <span className="tx-mono">{active.model}</span>.
+                </span>
+              </span>
+            ) : (
+              <span className="tx-row-value tx-inline-warn">No brain yet. Add a key to any provider below, then choose it here.</span>
+            )}
+          </div>
+          <div className="tx-row tx-row--block">
+            <BrainPicker allowPlatform={variant === "platform" || !!data.brain.allows_platform} data={data} onSaved={(b) => onSaved(b, "Brain updated.")} onError={onError} put={put} />
+          </div>
+        </div>
       </section>
 
       {/* ------------------------------------------------ providers */}
-      <h2 className="display mt-8 text-xl text-ink">Model providers</h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {data.providers.map((p) => (
-          <ProviderCard
-            base={brainPath}
-            key={p.id}
-            provider={p}
-            isBrain={active?.provider === p.id}
-            put={put}
-            onSaved={(b, text) => {
-              refresh(b);
-              setNotice({ tone: "ok", text });
-            }}
-            onError={(t) => setNotice({ tone: "warn", text: t })}
-          />
-        ))}
-      </div>
+      <section className="tx-section">
+        <div className="tx-section-head">
+          <h2 className="tx-h2">Model providers</h2>
+          <p className="tx-section-note">Add a key for any provider you want Taurus to use. Only the last four characters are ever shown.</p>
+        </div>
+        <div className="tx-group">
+          {data.providers.map((p) => (
+            <ProviderRow base={brainPath} key={p.id} provider={p} isBrain={active?.provider === p.id} put={put} onSaved={onSaved} onError={onError} />
+          ))}
+        </div>
+      </section>
 
       {/* ------------------------------------------------ voice */}
-      <VoiceCard
-        base={brainPath}
-        speakPath={variant === "workspace" ? `${base}/speak` : null}
-        voice={data.voice}
-        put={put}
-        onSaved={(b, text) => {
-          refresh(b);
-          setNotice({ tone: "ok", text });
-        }}
-        onError={(t) => setNotice({ tone: "warn", text: t })}
-      />
+      <VoiceCard base={brainPath} speakPath={variant === "workspace" ? `${base}/speak` : null} voice={data.voice} put={put} onSaved={onSaved} onError={onError} />
 
       {/* ------------------------------------------------ bots */}
       {data.ingest && (
-      <section className="mt-8 rounded-[14px] border border-line bg-white p-5">
-        <h2 className="display text-lg text-ink">Connect your bots</h2>
-        <p className="mt-1 text-xs text-muted">
-          Each bot posts updates to the endpoint below with the bot token. Creating a new token replaces the old one, so update your bots after.
-        </p>
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex flex-wrap justify-between gap-2">
-            <dt className="text-muted">Endpoint</dt>
-            <dd className="mono break-all text-ink">{data.ingest.endpoint}</dd>
+        <section className="tx-section">
+          <div className="tx-section-head">
+            <h2 className="tx-h2">Connect your bots</h2>
+            <p className="tx-section-note">
+              Each bot posts updates to the endpoint below with the bot token. Creating a new token replaces the old one, so update your bots after.
+            </p>
           </div>
-          <div className="flex flex-wrap justify-between gap-2">
-            <dt className="text-muted">Bot token</dt>
-            <dd className="mono text-ink">{data.ingest.configured ? `saved · ${data.ingest.mask}` : "Not created yet"}</dd>
-          </div>
-        </dl>
-        {token && (
-          <div className="mt-4 rounded-[10px] border border-verify/40 bg-verify-bg p-3">
-            <p className="text-xs font-semibold text-ink">Copy this token now. It won&apos;t be shown again.</p>
-            <div className="mt-2 flex gap-2">
-              <input readOnly value={token} className={`${inputCls} mono`} onFocus={(e) => e.currentTarget.select()} aria-label="New bot token" />
-              <button
-                type="button"
-                className="rounded-full bg-ink px-4 text-sm font-semibold text-white"
-                onClick={() => {
-                  navigator.clipboard?.writeText(token).then(
-                    () => setNotice({ tone: "ok", text: "Token copied." }),
-                    () => setNotice({ tone: "warn", text: "Copy blocked by the browser. Select the token and copy it." }),
-                  );
-                }}
-              >
-                Copy
-              </button>
+          <div className="tx-group">
+            <dl style={{ margin: 0 }}>
+              <div className="tx-row">
+                <dt className="tx-row-label">Endpoint</dt>
+                <dd className="tx-row-value tx-mono" style={{ margin: 0 }}>
+                  {data.ingest.endpoint}
+                </dd>
+              </div>
+              <div className="tx-row">
+                <dt className="tx-row-label">Bot token</dt>
+                <dd className="tx-row-value" style={{ margin: 0 }}>
+                  {data.ingest.configured ? <span className="tx-badge tx-badge--ok tx-num">saved · {data.ingest.mask}</span> : <span className="tx-badge">Not created yet</span>}
+                </dd>
+              </div>
+            </dl>
+            <div className="tx-row tx-row--block">
+              {token && (
+                <div className="tx-reveal" style={{ marginTop: 0, marginBottom: 14 }}>
+                  <p>Copy this token now. It won&apos;t be shown again.</p>
+                  <div className="tx-copy">
+                    <input readOnly value={token} className="tx-input tx-mono" onFocus={(e) => e.currentTarget.select()} aria-label="New bot token" />
+                    <button
+                      type="button"
+                      className="tx-btn tx-btn-primary"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(token).then(
+                          () => setNotice({ tone: "ok", text: "Token copied." }),
+                          () => setNotice({ tone: "warn", text: "Copy blocked by the browser. Select the token and copy it." }),
+                        );
+                      }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="tx-actions">
+                <button type="button" onClick={() => rotate.mutate()} disabled={rotate.isPending} className="tx-btn tx-btn-secondary">
+                  {rotate.isPending ? "Creating…" : data.ingest.configured ? "Create a new token" : "Create bot token"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => rotate.mutate()}
-          disabled={rotate.isPending}
-          className="mt-4 rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50"
-        >
-          {rotate.isPending ? "Creating…" : data.ingest.configured ? "Create a new token" : "Create bot token"}
-        </button>
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-trust">Example request</summary>
-          <pre className="mono mt-2 overflow-x-auto rounded-[10px] bg-ink p-4 text-[12px] leading-relaxed text-white">
+            <div className="tx-row tx-row--block">
+              <details className="tx-disclosure">
+                <summary>Example request</summary>
+                <pre className="tx-code">
 {`curl -X POST ${data.ingest.endpoint} \\
   -H "Authorization: Bearer $TAURUS_TOKEN" \\
   -H "Content-Type: application/json" \\
@@ -224,9 +236,11 @@ export function BrainSettings({
 # then poll for your decision:
 curl "${data.ingest.endpoint.replace(/ingest$/, "decisions")}?since=2026-01-01T00:00:00Z" \\
   -H "Authorization: Bearer $TAURUS_TOKEN"`}
-          </pre>
-        </details>
-      </section>
+                </pre>
+              </details>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );
@@ -241,10 +255,12 @@ function BrainPicker({ allowPlatform, data, put, onSaved, onError }: { allowPlat
     onError: (e) => onError(errText(e, "Couldn't save the brain.")),
   });
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-      <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink">Provider</span>
-        <select id="taurus-brain-provider" value={provider} onChange={(e) => setProvider(e.target.value)} className={inputCls}>
+    <div className="tx-fields tx-fields--brain">
+      <div>
+        <label className="tx-label" htmlFor="taurus-brain-provider">
+          Provider
+        </label>
+        <select id="taurus-brain-provider" value={provider} onChange={(e) => setProvider(e.target.value)} className="tx-select tx-select--field">
           {allowPlatform && <option value="platform">Platform default</option>}
           {data.providers.map((p) => (
             <option key={p.id} value={p.id} disabled={!p.configured}>
@@ -253,24 +269,21 @@ function BrainPicker({ allowPlatform, data, put, onSaved, onError }: { allowPlat
             </option>
           ))}
         </select>
-      </label>
-      <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink">Model (optional)</span>
-        <input id="taurus-brain-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Use the provider's model" className={`${inputCls} mono`} />
-      </label>
-      <button
-        type="button"
-        onClick={() => save.mutate()}
-        disabled={save.isPending}
-        className="rounded-full bg-trust px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-      >
+      </div>
+      <div>
+        <label className="tx-label" htmlFor="taurus-brain-model">
+          Model (optional)
+        </label>
+        <input id="taurus-brain-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Use the provider's model" className="tx-input tx-mono" />
+      </div>
+      <button type="button" onClick={() => save.mutate()} disabled={save.isPending} className="tx-btn tx-btn-primary" style={{ minHeight: 44 }}>
         {save.isPending ? "Saving…" : "Use this brain"}
       </button>
     </div>
   );
 }
 
-function ProviderCard({
+function ProviderRow({
   base,
   provider: p,
   isBrain,
@@ -317,63 +330,67 @@ function ProviderCard({
   });
 
   return (
-    <section className={`rounded-[14px] border bg-white p-4 ${isBrain ? "border-trust" : "border-line"}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="display text-base text-ink">{p.label}</h3>
-          <p className="mt-0.5 text-[11px] text-muted">{KEY_HINTS[p.id] ?? "API key"}</p>
-        </div>
-        <span className={`mono shrink-0 rounded-full px-2.5 py-1 text-[10.5px] ${p.configured ? "bg-verify-bg text-verify" : "border border-line text-muted"}`}>
-          {p.configured ? `key · ${p.mask}` : "no key"}
-        </span>
+    <div className="tx-row">
+      <div className="tx-row-main">
+        <h3 className="tx-row-label">
+          {p.label}
+          {isBrain && <span className="tx-badge tx-badge--blue">Taurus brain</span>}
+        </h3>
+        <p className="tx-row-sub">{KEY_HINTS[p.id] ?? "API key"}</p>
+        {p.model && !open && (
+          <p className="tx-row-sub">
+            Model · <span className="tx-mono">{p.model}</span>
+          </p>
+        )}
+        {test && (
+          <p className={`tx-row-sub ${test.ok ? "tx-inline-ok" : "tx-inline-warn"}`} role="status">
+            {test.ok ? `Connected in ${test.latency_ms} ms.` : test.message}
+          </p>
+        )}
       </div>
-      {isBrain && <p className="mono mt-2 text-[10.5px] uppercase tracking-widest text-trust">Taurus brain</p>}
-      {p.model && !open && <p className="mono mt-2 text-xs text-ink2">model · {p.model}</p>}
-      {test && (
-        <p className={`mt-2 text-xs ${test.ok ? "text-verify" : "text-warn"}`} role="status">
-          {test.ok ? `Connected in ${test.latency_ms} ms.` : test.message}
-        </p>
-      )}
+      <KeyBadge configured={p.configured} mask={p.mask} />
       {open ? (
-        <div className="mt-3 space-y-2">
-          <input
-            id={`key-${p.id}`}
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder={p.configured ? "New key (leave blank to keep)" : "Paste API key"}
-            autoComplete="off"
-            className={`${inputCls} mono`}
-            aria-label={`${p.label} API key`}
-          />
-          <input id={`model-${p.id}`} value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model" className={`${inputCls} mono`} aria-label={`${p.label} model`} />
-          {(p.needs_base_url || p.base_url) && (
+        <div className="tx-span-all" style={{ flexBasis: "100%" }}>
+          <div className="tx-fields">
             <input
-              id={`base-${p.id}`}
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder={p.default_base_url ?? "https://…/v1"}
-              className={`${inputCls} mono`}
-              aria-label={`${p.label} base URL`}
+              id={`key-${p.id}`}
+              type="password"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder={p.configured ? "New key (leave blank to keep)" : "Paste API key"}
+              autoComplete="off"
+              className="tx-input tx-mono"
+              aria-label={`${p.label} API key`}
             />
-          )}
-          <div className="flex gap-2">
-            <button type="button" onClick={() => save.mutate()} disabled={save.isPending || (!p.configured && !key.trim())} className="rounded-full bg-trust px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
-              {save.isPending ? "Saving…" : "Save"}
-            </button>
-            <button type="button" onClick={() => setOpen(false)} className="rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
-              Cancel
-            </button>
+            <input id={`model-${p.id}`} value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model" className="tx-input tx-mono" aria-label={`${p.label} model`} />
+            {(p.needs_base_url || p.base_url) && (
+              <input
+                id={`base-${p.id}`}
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder={p.default_base_url ?? "https://…/v1"}
+                className="tx-input tx-mono"
+                aria-label={`${p.label} base URL`}
+              />
+            )}
+            <div className="tx-actions">
+              <button type="button" onClick={() => save.mutate()} disabled={save.isPending || (!p.configured && !key.trim())} className="tx-btn tx-btn-primary tx-btn-sm">
+                {save.isPending ? "Saving…" : "Save"}
+              </button>
+              <button type="button" onClick={() => setOpen(false)} className="tx-btn tx-btn-quiet tx-btn-sm">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setOpen(true)} className="rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink hover:border-trust">
+        <div className="tx-actions" style={{ flexBasis: "100%" }}>
+          <button type="button" onClick={() => setOpen(true)} className="tx-btn tx-btn-secondary tx-btn-sm">
             {p.configured ? "Edit" : "Add key"}
           </button>
           {p.configured && (
             <>
-              <button type="button" onClick={() => runTest.mutate()} disabled={runTest.isPending} className="rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50">
+              <button type="button" onClick={() => runTest.mutate()} disabled={runTest.isPending} className="tx-btn tx-btn-secondary tx-btn-sm">
                 {runTest.isPending ? "Testing…" : "Test connection"}
               </button>
               <ConfirmRemove label={p.label} busy={remove.isPending} onConfirm={() => remove.mutate()} />
@@ -381,7 +398,7 @@ function ProviderCard({
           )}
         </div>
       )}
-    </section>
+    </div>
   );
 }
 
@@ -389,17 +406,17 @@ function ConfirmRemove({ label, busy, onConfirm }: { label: string; busy: boolea
   const [asking, setAsking] = useState(false);
   if (!asking)
     return (
-      <button type="button" onClick={() => setAsking(true)} className="rounded-full px-3 py-1.5 text-sm text-muted hover:text-warn">
+      <button type="button" onClick={() => setAsking(true)} className="tx-btn tx-btn-danger tx-btn-sm">
         Remove
       </button>
     );
   return (
-    <span className="flex items-center gap-2 text-xs text-ink">
+    <span className="tx-actions" style={{ fontSize: 13 }}>
       Remove the {label} key?
-      <button type="button" onClick={onConfirm} disabled={busy} className="rounded-full bg-warn px-3 py-1 font-semibold text-white disabled:opacity-50">
+      <button type="button" onClick={onConfirm} disabled={busy} className="tx-btn tx-btn-danger-fill tx-btn-sm">
         {busy ? "Removing…" : "Remove"}
       </button>
-      <button type="button" onClick={() => setAsking(false)} className="text-muted hover:text-ink">
+      <button type="button" onClick={() => setAsking(false)} className="tx-btn tx-btn-quiet tx-btn-sm">
         Keep
       </button>
     </span>
@@ -474,46 +491,69 @@ function VoiceCard({
   };
 
   return (
-    <section className="mt-8 rounded-[14px] border border-line bg-white p-5">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="display text-lg text-ink">Voice · ElevenLabs</h2>
-          <p className="mt-1 text-xs text-muted">elevenlabs.io → Profile → API keys. The voice ID is under Voices → your voice → ID. </p>
+    <section className="tx-section">
+      <div className="tx-section-head">
+        <h2 className="tx-h2">Voice</h2>
+        <p className="tx-section-note">elevenlabs.io → Profile → API keys. The voice ID is under Voices → your voice → ID.</p>
+      </div>
+      <div className="tx-group">
+        <div className="tx-row">
+          <span className="tx-row-label">ElevenLabs</span>
+          <KeyBadge configured={voice.configured} mask={voice.mask} />
         </div>
-        <span className={`mono shrink-0 rounded-full px-2.5 py-1 text-[10.5px] ${voice.configured ? "bg-verify-bg text-verify" : "border border-line text-muted"}`}>
-          {voice.configured ? `key · ${voice.mask}` : "no key"}
-        </span>
-      </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <label className="block sm:col-span-3">
-          <span className="mb-1 block text-xs font-medium text-ink">API key</span>
-          <input id="voice-key" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={voice.configured ? "New key (leave blank to keep)" : "Paste ElevenLabs API key"} autoComplete="off" className={`${inputCls} mono`} />
-        </label>
-        <label className="block sm:col-span-2">
-          <span className="mb-1 block text-xs font-medium text-ink">Voice ID</span>
-          <input id="voice-id" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" className={`${inputCls} mono`} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink">Model</span>
-          <input id="voice-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="eleven_turbo_v2_5" className={`${inputCls} mono`} />
-        </label>
-      </div>
-      {test && <p className={`mt-3 text-xs ${test.ok ? "text-verify" : "text-warn"}`}>{test.ok ? `Connected in ${test.latency_ms} ms.` : test.message}</p>}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={() => save.mutate()} disabled={save.isPending} className="rounded-full bg-trust px-5 py-2 text-sm font-semibold text-white disabled:opacity-50">
-          {save.isPending ? "Saving…" : "Save voice"}
-        </button>
-        {voice.configured && (
-          <>
-            <button type="button" onClick={() => runTest.mutate()} disabled={runTest.isPending} className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50">
-              {runTest.isPending ? "Testing…" : "Test connection"}
+        <div className="tx-row tx-row--block">
+          <div className="tx-fields tx-fields--3">
+            <div className="tx-span-all">
+              <label className="tx-label" htmlFor="voice-key">
+                API key
+              </label>
+              <input
+                id="voice-key"
+                type="password"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder={voice.configured ? "New key (leave blank to keep)" : "Paste ElevenLabs API key"}
+                autoComplete="off"
+                className="tx-input tx-mono"
+              />
+            </div>
+            <div className="tx-span-2">
+              <label className="tx-label" htmlFor="voice-id">
+                Voice ID
+              </label>
+              <input id="voice-id" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" className="tx-input tx-mono" />
+            </div>
+            <div>
+              <label className="tx-label" htmlFor="voice-model">
+                Model
+              </label>
+              <input id="voice-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="eleven_turbo_v2_5" className="tx-input tx-mono" />
+            </div>
+          </div>
+          {test && (
+            <p className={`tx-row-sub ${test.ok ? "tx-inline-ok" : "tx-inline-warn"}`} style={{ marginTop: 12 }} role="status">
+              {test.ok ? `Connected in ${test.latency_ms} ms.` : test.message}
+            </p>
+          )}
+          <div className="tx-actions" style={{ marginTop: 16 }}>
+            <button type="button" onClick={() => save.mutate()} disabled={save.isPending} className="tx-btn tx-btn-primary">
+              {save.isPending ? "Saving…" : "Save voice"}
             </button>
-            {speakPath && <button type="button" onClick={() => void hear()} disabled={playing} className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-trust disabled:opacity-50">
-              {playing ? "Playing…" : "Hear a sample"}
-            </button>}
-            <ConfirmRemove label="ElevenLabs" busy={remove.isPending} onConfirm={() => remove.mutate()} />
-          </>
-        )}
+            {voice.configured && (
+              <>
+                <button type="button" onClick={() => runTest.mutate()} disabled={runTest.isPending} className="tx-btn tx-btn-secondary">
+                  {runTest.isPending ? "Testing…" : "Test connection"}
+                </button>
+                {speakPath && (
+                  <button type="button" onClick={() => void hear()} disabled={playing} className="tx-btn tx-btn-secondary">
+                    {playing ? "Playing…" : "Hear a sample"}
+                  </button>
+                )}
+                <ConfirmRemove label="ElevenLabs" busy={remove.isPending} onConfirm={() => remove.mutate()} />
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

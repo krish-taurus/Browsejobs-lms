@@ -7,7 +7,8 @@ import "./ap.css";
 
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-inter-tight", display: "swap" });
 
-type Current = "home" | "students" | "courses" | "employers" | "demo";
+export type ApCurrent = "home" | "students" | "courses" | "employers" | "demo";
+type Current = ApCurrent;
 
 const LINKS: { key: Current; label: string; href: string }[] = [
   { key: "home", label: "Home", href: "/" },
@@ -28,7 +29,7 @@ export function ApShell({
   staticNav = false,
   children,
 }: {
-  current: Current;
+  current?: Current;
   cta?: { label: string; href: string };
   staticNav?: boolean;
   children: ReactNode;

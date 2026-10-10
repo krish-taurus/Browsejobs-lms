@@ -139,7 +139,9 @@ export default function DataEngineeringIndiaPage() {
           watermarks — stay in the self-study note under the modules. A job description that leads with streaming
           is a reason to read that note with a mentor, not a reason for us to pretend it was week one.
         </p>
-        <CourseSyllabus slug="data-engineering" />
+        <div className="pg-syllabus">
+          <CourseSyllabus slug="data-engineering" />
+        </div>
         <p>
           The canonical syllabus URL is <TextLink href="/courses/data-engineering">/courses/data-engineering</TextLink>.
           If you specifically want the Whitefield framing, use{" "}

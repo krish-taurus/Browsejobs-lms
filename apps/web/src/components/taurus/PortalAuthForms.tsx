@@ -2,27 +2,64 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from "react";
+import "@/components/ap/pages/taurus-ui.css";
+import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { ApiError, apiJson } from "@/lib/api";
 
-const inputCls = "w-full rounded-[10px] border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-sky";
+/** The Taurus mark, shared by the sign-in pages and the portal bar. */
+export function TaurusMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" className={className}>
+      <circle cx="20" cy="20" r="18" strokeWidth="1.3" opacity=".9" />
+      <circle cx="20" cy="20" r="13" strokeWidth="1" strokeDasharray="2.5 2.5" opacity=".55" />
+      <path d="M12.5 14h15L20 27.5z" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="20" cy="18.2" r="1.7" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 function Frame({ title, lede, children }: { title: string; lede: string; children: ReactNode }) {
   return (
-    <main className="grid min-h-screen place-items-center bg-ink px-5 py-16 text-white">
-      <div className="w-full max-w-sm">
-        <Link href="/taurusai" className="display text-lg tracking-[0.3em] text-white/90">
-          TAURUS
+    <div className={`tx-ap tx-auth ${taurusDisplayFont.variable}`}>
+      <header className="tx-auth-top">
+        <Link href="/taurusai" className="tx-wordmark" aria-label="Taurus AI by BrowseJobs">
+          <b>BrowseJobs</b>
+          <span>Taurus</span>
         </Link>
-        <h1 className="display mt-8 text-3xl">{title}</h1>
-        <p className="mt-2 text-sm text-white/60">{lede}</p>
-        {children}
-      </div>
-    </main>
+        <Link href="/taurusai" className="tx-auth-link">
+          What is Taurus?
+        </Link>
+      </header>
+      <main className="tx-auth-main">
+        <div className="tx-auth-card">
+          <span className="tx-auth-mark">
+            <TaurusMark />
+          </span>
+          <h1>{title}</h1>
+          <p className="tx-sub">{lede}</p>
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
 
 const message = (e: unknown, fallback: string) => (e instanceof ApiError ? (e.firstError ?? e.message) : fallback);
+
+/** A floating-label field: the label sits in the box and moves up once there's text. */
+function Field({
+  id,
+  label,
+  ...input
+}: { id: string; label: string } & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="tx-float">
+      <input id={id} placeholder=" " {...input} />
+      <label htmlFor={id}>{label}</label>
+    </div>
+  );
+}
 
 export function TaurusLoginForm() {
   const router = useRouter();
@@ -45,27 +82,32 @@ export function TaurusLoginForm() {
   }
 
   return (
-    <Frame title="Sign in to Taurus" lede="Your command centre: your agents, your keys, nobody else's.">
-      <form onSubmit={submit} className="mt-8 space-y-3">
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-white/70">Email</span>
-          <input id="taurus-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-white/70">Password</span>
-          <input id="taurus-password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
-        </label>
-        {error && <p className="rounded-[10px] bg-warn/15 px-3 py-2 text-sm text-white" role="alert">{error}</p>}
-        <button type="submit" disabled={busy} className="w-full rounded-full bg-trust px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
+    <Frame title="Sign in to Taurus." lede="Your command centre: your agents, your keys, nobody else's.">
+      <form onSubmit={submit} className="tx-auth-form">
+        <Field id="taurus-email" label="Email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Field
+          id="taurus-password"
+          label="Password"
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && (
+          <p className="tx-note tx-note--error" role="alert">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy} className="tx-btn tx-btn-primary tx-btn-lg tx-btn-block">
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
-      <p className="mt-6 text-xs text-white/45">
-        No account yet? Taurus workspaces are set up by invitation.{" "}
-        <Link href="/taurusai" className="text-white/80 underline-offset-2 hover:underline">
-          See what Taurus does
-        </Link>
-        .
+      <p className="tx-auth-fine">
+        No account yet? Taurus workspaces are set up by invitation. <Link href="/taurusai">See what Taurus does</Link>.
+      </p>
+      <p className="tx-auth-fine">
+        Accounts with two-factor sign-in can&apos;t sign in here. Use the <Link href="/admin">BrowseJobs admin sign-in</Link> instead.
       </p>
     </Frame>
   );
@@ -100,25 +142,39 @@ export function TaurusClaimForm({ token }: { token: string }) {
   }
 
   return (
-    <Frame title="Join your Taurus workspace" lede="Set your name and a password. You'll land straight on your command centre.">
-      <form onSubmit={submit} className="mt-8 space-y-3">
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-white/70">Your name</span>
-          <input id="claim-name" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-white/70">Password (at least 10 characters)</span>
-          <input id="claim-password" type="password" required minLength={10} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-white/70">Confirm password</span>
-          <input id="claim-confirm" type="password" required minLength={10} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputCls} />
-        </label>
-        {error && <p className="rounded-[10px] bg-warn/15 px-3 py-2 text-sm text-white" role="alert">{error}</p>}
-        <button type="submit" disabled={busy} className="w-full rounded-full bg-trust px-5 py-3 text-sm font-semibold text-white disabled:opacity-60">
+    <Frame title="Join your Taurus workspace." lede="Set your name and a password. You'll land straight on your command centre.">
+      <form onSubmit={submit} className="tx-auth-form">
+        <Field id="claim-name" label="Your name" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
+        <Field
+          id="claim-password"
+          label="Password (at least 10 characters)"
+          type="password"
+          required
+          minLength={10}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Field
+          id="claim-confirm"
+          label="Confirm password"
+          type="password"
+          required
+          minLength={10}
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        {error && (
+          <p className="tx-note tx-note--error" role="alert">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy} className="tx-btn tx-btn-primary tx-btn-lg tx-btn-block">
           {busy ? "Setting up…" : "Join workspace"}
         </button>
       </form>
+      <p className="tx-auth-fine">This invite link works once and expires. If it doesn&apos;t work, ask the person who invited you for a fresh one.</p>
     </Frame>
   );
 }

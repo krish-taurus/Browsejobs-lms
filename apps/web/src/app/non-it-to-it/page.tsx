@@ -312,9 +312,7 @@ export default function NonItToItPage() {
         </p>
       </MoneySection>
 
-      <div className="overflow-x-clip">
-        <PromiseCards />
-      </div>
+      <PromiseCards />
       <MoneyFaq faqs={faqs} />
       <RelatedLinks
         links={[

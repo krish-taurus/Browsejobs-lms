@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Kicker } from "@/components/brand/Kicker";
 import {
   ContactStrip,
   Contents,
@@ -37,49 +36,46 @@ export function AnswerView({
 
   return (
     <MoneyArticle jsonLd={jsonLd}>
-      <header className="mx-auto max-w-3xl px-5 pb-12 pt-16 md:pt-24">
-        <nav aria-label="Breadcrumb" className="mono text-[11px] text-muted">
-          {crumbs.map((crumb, index) => (
-            <span key={crumb.path}>
-              {index > 0 && <span aria-hidden>{" / "}</span>}
-              {index < crumbs.length - 1 ? (
-                <Link href={crumb.path} className="hover:text-ink">
-                  {crumb.name}
-                </Link>
-              ) : (
-                <span className="text-ink2">{crumb.name}</span>
-              )}
-            </span>
-          ))}
-        </nav>
-        <Kicker className="mt-6">{page.kicker}</Kicker>
-        <h1 className="display mt-3 text-4xl text-ink md:text-5xl">{page.title}</h1>
-        <p className="mono mt-4 text-xs text-muted">
-          Updated <time dateTime={ANSWERS_UPDATED}>{formatUpdated(ANSWERS_UPDATED)}</time>
-        </p>
-        <p data-direct-answer className="mt-6 text-lg leading-relaxed text-ink">
-          {page.directAnswer}
-        </p>
-        <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-          <Link
-            href={primary.href}
-            className="inline-flex items-center justify-center rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
-          >
-            {primary.label}
-          </Link>
-          <Link href={page.secondary.href} className="text-sm font-semibold text-ink hover:text-trust">
-            {page.secondary.label}
-          </Link>
-        </div>
-        {page.audience === "employer" && (
-          <p className="mt-4 text-sm text-muted">
-            Looking for a job instead?{" "}
-            <Link href="/register" className="font-semibold text-trust hover:underline">
-              Take the free AI interview
-            </Link>
-            .
+      <header className="ap-hero s-white">
+        <div className="ap-narrow center">
+          <nav aria-label="Breadcrumb" className="ap-crumbs">
+            {crumbs.map((crumb, index) => (
+              <span key={crumb.path}>
+                {index > 0 && <span aria-hidden>{" › "}</span>}
+                {index < crumbs.length - 1 ? (
+                  <Link href={crumb.path}>{crumb.name}</Link>
+                ) : (
+                  <span aria-current="page">{crumb.name}</span>
+                )}
+              </span>
+            ))}
+          </nav>
+          <p className="eyebrow">{page.kicker}</p>
+          <h1 className="h-hero">{page.title}</h1>
+          <p className="fine">
+            Updated <time dateTime={ANSWERS_UPDATED}>{formatUpdated(ANSWERS_UPDATED)}</time>
           </p>
-        )}
+          <div className="ap-lede">
+            <p data-direct-answer>{page.directAnswer}</p>
+          </div>
+          <div className="cta-row">
+            <Link href={primary.href} className="btn btn-primary">
+              {primary.label}
+            </Link>
+            <Link href={page.secondary.href} className="more">
+              {page.secondary.label} <span className="chev" aria-hidden="true">›</span>
+            </Link>
+          </div>
+          {page.audience === "employer" && (
+            <p className="fine">
+              Looking for a job instead?{" "}
+              <Link href="/register" className="ap-link">
+                Take the free AI interview
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       </header>
       <Contents items={page.sections.map((section) => ({ href: `#${section.id}`, label: section.heading }))} />
       {page.sections.map((section) => (

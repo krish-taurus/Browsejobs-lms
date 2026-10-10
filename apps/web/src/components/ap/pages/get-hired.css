@@ -1,0 +1,284 @@
+/* /get-hired — page-specific blocks. Scoped under .ap; tokens from ap.css. */
+
+.ap .gh-hero .h-hero span {
+  display: block;
+}
+.ap .gh-hero .h-hero .gh-hero-sub {
+  color: var(--fg-3);
+}
+
+/* Hero sample screen (light rebuild of the old dark product demo). */
+.ap .gh-screen-wrap {
+  margin-top: clamp(48px, 6vw, 80px);
+}
+.ap .gh-screen {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: var(--r-tile);
+  background: var(--paper);
+  text-align: left;
+}
+.ap .gh-screen > .eyebrow-sm {
+  color: var(--fg-3);
+}
+.ap .gh-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.ap .gh-phases li {
+  padding: 5px 12px;
+  border-radius: 980px;
+  background: var(--white);
+  font: 600 12px/1.2 var(--font-text);
+  color: var(--fg-3);
+}
+.ap .gh-phases li.is-on {
+  background: var(--ink);
+  color: var(--white);
+}
+.ap .gh-screen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.ap .gh-card {
+  padding: 20px;
+  border-radius: var(--r-card);
+  background: var(--white);
+}
+.ap .gh-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font: 600 15px/1.3 var(--font-text);
+  color: var(--fg);
+}
+.ap .gh-muted {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.ap .gh-quote {
+  margin: 14px 0 0;
+  font: 500 17px/1.4 var(--font-display);
+  letter-spacing: -0.008em;
+  color: var(--fg);
+}
+.ap .gh-bars {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ap .gh-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.ap .gh-bar {
+  height: 6px;
+  border-radius: 980px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.ap .s-paper .gh-bar {
+  background: var(--line);
+}
+.ap .gh-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transform-origin: left center;
+}
+.ap .gh-pass {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 5px 12px;
+  border-radius: 980px;
+  background: var(--bj-verify);
+  font: 600 12px/1.2 var(--font-text);
+  color: var(--white);
+}
+.ap .gh-queue ul {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ap .gh-queue li {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.ap .gh-queue li.is-you {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--ink);
+  color: var(--white);
+}
+.ap .gh-queue li.is-you b {
+  display: block;
+  font-size: 14px;
+}
+.ap .gh-queue li.is-you small {
+  display: block;
+  font-size: 12px;
+  color: var(--on-black-2);
+}
+.ap .gh-priority {
+  padding: 3px 10px;
+  border-radius: 980px;
+  background: var(--bj-verify-bg);
+  font: 600 11px/1.2 var(--font-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bj-verify);
+}
+.ap .gh-hero .gh-screen > .fine {
+  max-width: none;
+  margin: 16px 0 0;
+}
+
+/* How it works tiles. */
+.ap .gh-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ap .gh-steps .tile {
+  display: flex;
+  flex-direction: column;
+}
+.ap .gh-steps .h-card {
+  margin-top: 10px;
+}
+.ap .gh-steps .body {
+  font-size: 15px;
+}
+.ap .gh-detail {
+  margin-top: auto;
+  padding-top: 22px;
+}
+.ap .gh-detail .gh-quote {
+  margin-top: 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--paper);
+  font-size: 15px;
+}
+.ap .gh-ways {
+  display: grid;
+  gap: 10px;
+}
+.ap .gh-ways p {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--paper);
+  font-size: 14px;
+  color: var(--fg-2);
+}
+.ap .gh-ways b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--fg);
+}
+.ap .gh-ways p:first-child b {
+  color: var(--bj-verify);
+}
+
+/* Course tiles + the AI waitlist note. */
+.ap #tracks .pg-tile .h-card {
+  font-size: clamp(24px, 2.4vw, 30px);
+}
+.ap .gh-ai {
+  margin-top: 20px;
+}
+.ap .gh-ai .body {
+  max-width: 720px;
+}
+.ap .gh-ai .cta-row {
+  margin-top: 22px;
+  gap: 12px 22px;
+}
+.ap .gh-soon {
+  margin: 0;
+}
+
+/* Fees chapter. */
+.ap .gh-fees-head .h-section {
+  font-size: clamp(30px, 4vw, 48px);
+}
+.ap #fees .pg-fees {
+  margin-top: 0;
+}
+
+/* Proof chapter. */
+.ap .gh-prose {
+  margin-top: 28px;
+}
+.ap .gh-center-row {
+  justify-content: center;
+}
+
+@media (max-width: 734px) {
+  .ap .gh-screen-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Sample-screen tabs (buttons) and the "You" card before it moves to HR. */
+.ap .gh-phases button {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 980px;
+  background: var(--white);
+  font: 600 12px/1.2 var(--font-text);
+  color: var(--fg-3);
+  cursor: pointer;
+}
+.ap .gh-phases button.is-on {
+  background: var(--ink);
+  color: var(--white);
+}
+.ap .gh-card-foot {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  min-height: 72px;
+  margin-top: 16px;
+}
+.ap .gh-card-foot .gh-pass {
+  margin-top: 0;
+}
+.ap .gh-you {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--paper);
+}
+.ap .gh-you b {
+  display: block;
+  font-size: 14px;
+}
+.ap .gh-you small {
+  font-size: 12px;
+  color: var(--fg-3);
+}

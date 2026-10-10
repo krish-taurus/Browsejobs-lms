@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { ArgusFrame } from "@/components/argus/ArgusFrame";
-import { StudentsPage as StudentsView } from "@/components/argus/home/StudentsPage";
+import { StudentsAp } from "@/components/ap/pages/StudentsAp";
 import { recruiterFaqs } from "@/content/home";
 import { breadcrumbNode, canonical, faqNode, jsonLdGraph, webPageNode, OG_IMAGES } from "@/lib/seo";
 
@@ -31,9 +30,7 @@ export default function StudentsPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ArgusFrame className="argus-home">
-        <StudentsView />
-      </ArgusFrame>
+      <StudentsAp />
     </>
   );
 }

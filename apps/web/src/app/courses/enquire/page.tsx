@@ -30,7 +30,7 @@ export default function CourseEnquirePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <EnquiryStage
+      <EnquiryStage current="courses"
         title="Ask about a course."
         lede="Tell us which course, and a time to call. Three free steps come before any fee."
       >
