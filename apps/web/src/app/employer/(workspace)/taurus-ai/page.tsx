@@ -10,6 +10,7 @@ import { JobDescription } from "@/components/jobs/JobDescription";
 import { DocumentIcon, MicIcon, PipelineIcon, RobotIcon, SendIcon, UsersIcon } from "@/components/employer/icons";
 import { TaurusRobotScene, type TaurusRobotHandle } from "./components/TaurusRobotScene";
 import { QuickPrompt } from "./components/QuickPrompt";
+import { WhatsAppJobPosting } from "@/components/employer/WhatsAppJobPosting";
 import type { TaurusRobotState } from "@/lib/taurus/mount-taurus";
 
 /**
@@ -1010,6 +1011,8 @@ export default function TaurusAiPage() {
           <span aria-hidden>+</span> New conversation
         </button>
       </div>
+
+      <WhatsAppJobPosting />
 
       <div className="grid flex-1 gap-5 lg:grid-cols-2">
         {/* Robot scene */}

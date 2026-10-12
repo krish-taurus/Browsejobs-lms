@@ -128,6 +128,18 @@ export type CandidateSourcesData = {
   import?: CandidateImport;
 };
 
+/** "Post jobs on WhatsApp": the member's QR and the phones linked to this workspace. */
+export type WhatsAppPostingData = {
+  /** Null for a hiring manager — only owners/recruiters can post jobs. */
+  code: string | null;
+  business_number: string | null;
+  chat_url: string | null;
+  /** Server-rendered SVG of chat_url. */
+  qr_svg: string | null;
+  links: { id: number; phone: string; profile_name: string | null; acts_as: string | null; state: string; last_message_at: string | null }[];
+  messages: { id: number; phone: string; direction: "in" | "out"; body: string; status: string; at: string | null }[];
+};
+
 export type TalentPoolCandidateCv = {
   summary: string | null;
   skills: string[];
@@ -612,6 +624,12 @@ export const employerApi = {
   },
   clearCandidates: (ws: number, source: "client_db" | "naukri") =>
     apiJson<{ data: CandidateSourcesData }>(`${base}/workspaces/${ws}/candidate-sources/${source}`, { method: "DELETE" }),
+
+  whatsappPosting: (ws: number) => apiJson<{ data: WhatsAppPostingData }>(`${base}/workspaces/${ws}/whatsapp`),
+  regenerateWhatsappCode: (ws: number) =>
+    apiJson<{ data: WhatsAppPostingData }>(`${base}/workspaces/${ws}/whatsapp/regenerate`, { method: "POST" }),
+  unlinkWhatsapp: (ws: number, link: number) =>
+    apiJson(`${base}/workspaces/${ws}/whatsapp/links/${link}`, { method: "DELETE" }),
 
   members: (ws: number) => apiJson<{ data: MemberRow[] }>(`${base}/workspaces/${ws}/members`),
   /** People invited but not yet joined — only visible to an owner. */

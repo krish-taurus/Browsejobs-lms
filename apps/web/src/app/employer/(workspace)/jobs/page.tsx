@@ -5,6 +5,7 @@ import { useWorkspace } from "@/components/employer/EmployerShell";
 import { TwoPanelBanner } from "@/components/employer/TwoPanelBanner";
 import { employerApi, type EmployerJobCounts, type EmployerJobRow, type EmployerJobsPage as JobsPageData } from "@/lib/employer";
 import { JobsHeader } from "./components/JobsHeader";
+import { WhatsAppJobPosting } from "@/components/employer/WhatsAppJobPosting";
 import { JobsSummary } from "./components/JobsSummary";
 import { JobsFilters, type StatusFilter } from "./components/JobsFilters";
 import { PublishedRoles } from "./components/PublishedRoles";
@@ -130,6 +131,8 @@ export default function EmployerJobsPage() {
   return (
     <div className="space-y-5 pb-6">
       <JobsHeader />
+
+      <WhatsAppJobPosting />
 
       <TwoPanelBanner
         topLine="Clear roles."

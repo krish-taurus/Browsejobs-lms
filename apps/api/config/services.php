@@ -66,6 +66,9 @@ return [
         'verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN', ''),
         'app_secret' => env('WHATSAPP_APP_SECRET', ''),
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v21.0'),
+        // The business number clients chat with ("post jobs on WhatsApp" QR).
+        // Empty = read display_phone_number from Meta and cache it.
+        'display_number' => env('WHATSAPP_DISPLAY_NUMBER', ''),
         // Maps the connected WABA to a tenant slug (single-business P2.4).
         'tenant_slug' => env('WHATSAPP_TENANT_SLUG', ''),
     ],

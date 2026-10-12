@@ -114,6 +114,7 @@ use App\Http\Controllers\Employer\ShortlistAgentController as EmployerShortlistA
 use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
+use App\Http\Controllers\Employer\WhatsAppLinkController as EmployerWhatsAppLinkController;
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\Enquiries\EnquiryController;
 use App\Http\Controllers\FeeStatusController;
@@ -605,6 +606,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::get('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'index']);
     Route::post('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'import'])->middleware('throttle:20,1');
     Route::delete('workspaces/{workspace}/candidate-sources/{source}', [EmployerCandidateSourceController::class, 'clear'])->whereIn('source', ['client_db', 'naukri']);
+
+    // Post jobs on WhatsApp (hiring step 1): the member's QR + linked phones.
+    Route::get('workspaces/{workspace}/whatsapp', [EmployerWhatsAppLinkController::class, 'show']);
+    Route::post('workspaces/{workspace}/whatsapp/regenerate', [EmployerWhatsAppLinkController::class, 'regenerate'])->middleware('throttle:10,1');
+    Route::delete('workspaces/{workspace}/whatsapp/links/{link}', [EmployerWhatsAppLinkController::class, 'unlink']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is
