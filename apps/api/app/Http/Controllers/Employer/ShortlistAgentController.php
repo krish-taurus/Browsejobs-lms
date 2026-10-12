@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Employer;
 
 use App\Actions\Employers\RunShortlistAgent;
+use App\Actions\Employers\SendInterviewInvites;
 use App\Enums\EmployerJobStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employers\UpdateShortlistSettingsRequest;
@@ -12,9 +13,11 @@ use App\Http\Resources\JobShortlistEntryResource;
 use App\Models\EmployerCandidate;
 use App\Models\EmployerJob;
 use App\Models\EmployerWorkspace;
+use App\Models\InterviewInvite;
 use App\Models\JobShortlistEntry;
 use App\Models\JobShortlistRun;
 use App\Support\Audit\AuditLogger;
+use App\Support\Employers\InterviewTemplates;
 use App\Support\Employers\ResolvesMembership;
 use App\Support\Employers\ShortlistSettings;
 use Illuminate\Http\JsonResponse;
@@ -107,6 +110,36 @@ final class ShortlistAgentController extends Controller
         return response()->json(['data' => $this->payload($workspace, $job)]);
     }
 
+    /**
+     * The message agent: WhatsApp everyone on the shortlist (or the chosen
+     * entries) to pick a day for the first interview round.
+     */
+    public function invite(Request $request, EmployerWorkspace $workspace, EmployerJob $job, SendInterviewInvites $invites): JsonResponse
+    {
+        $member = $this->membershipOrFail($workspace, $request->user());
+        abort_unless($member->role->managesPipeline(), 403);
+        abort_unless($job->employer_workspace_id === $workspace->id, 404);
+        abort_if($job->status === EmployerJobStatus::Closed, 422, 'This JD is closed.');
+        $validated = $request->validate(['entry_ids' => ['nullable', 'array'], 'entry_ids.*' => ['integer']]);
+
+        $result = $invites->handle($job, $request->user(), $validated['entry_ids'] ?? null);
+
+        return response()->json(['data' => [...$this->payload($workspace, $job), 'invite_result' => $result]]);
+    }
+
+    /** Submit the two WhatsApp templates the message agent needs (once). */
+    public function submitTemplates(Request $request, EmployerWorkspace $workspace, EmployerJob $job, InterviewTemplates $templates, AuditLogger $audit): JsonResponse
+    {
+        $member = $this->membershipOrFail($workspace, $request->user());
+        abort_unless($member->role->managesPipeline(), 403);
+        abort_unless($job->employer_workspace_id === $workspace->id, 404);
+
+        $result = $templates->submitMissing();
+        $audit->log('employer.interview_templates_submitted', $workspace, $result, $request->user());
+
+        return response()->json(['data' => [...$this->payload($workspace, $job), 'template_result' => $result]]);
+    }
+
     /** @return array<string, mixed> */
     private function payload(EmployerWorkspace $workspace, EmployerJob $job): array
     {
@@ -128,7 +161,31 @@ final class ShortlistAgentController extends Controller
             ->groupBy('source')
             ->pluck('n', 'source');
 
+        // Each person's interview invite, found through their account's application for this JD.
+        $userOf = $entries->mapWithKeys(fn (JobShortlistEntry $e) => [$e->id => $e->candidate_user_id ?? $e->employerCandidate?->user_id]);
+        $invites = InterviewInvite::query()
+            ->where('employer_job_id', $job->id)
+            ->where('round', 'l1')
+            ->get()
+            ->keyBy('candidate_user_id');
+        $inviteFor = function (JobShortlistEntry $e) use ($userOf, $invites): ?array {
+            $invite = $invites->get($userOf[$e->id] ?? 0);
+
+            return $invite === null ? null : [
+                'status' => $invite->status,
+                'day' => $invite->chosen_date !== null ? SendInterviewInvites::label($invite->chosen_date->toDateString()) : null,
+                'error' => $invite->error,
+            ];
+        };
+        $templates = app(InterviewTemplates::class)->statuses();
+
         return [
+            'message_agent' => [
+                'templates' => $templates,
+                'ready' => ($templates[InterviewTemplates::INVITE] ?? null) === 'APPROVED',
+                'invites' => InterviewInvite::query()->where('employer_job_id', $job->id)
+                    ->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
+            ],
             'settings' => ShortlistSettings::forJob($job)->toArray(),
             'source_counts' => [
                 EmployerCandidate::SOURCE_CLIENT_DB => (int) ($counts[EmployerCandidate::SOURCE_CLIENT_DB] ?? 0),
@@ -143,9 +200,9 @@ final class ShortlistAgentController extends Controller
                 'settings' => $run->settings,
                 'created_at' => $run->created_at?->toIso8601String(),
             ],
-            'entries' => JobShortlistEntryResource::collection(
-                $entries->where('status', JobShortlistEntry::STATUS_SHORTLISTED)->values()
-            )->resolve(),
+            'entries' => $entries->where('status', JobShortlistEntry::STATUS_SHORTLISTED)->values()
+                ->map(fn (JobShortlistEntry $e) => [...(new JobShortlistEntryResource($e))->resolve(), 'invite' => $inviteFor($e)])
+                ->all(),
             'removed' => JobShortlistEntryResource::collection(
                 $entries->where('status', JobShortlistEntry::STATUS_REMOVED)->values()
             )->resolve(),

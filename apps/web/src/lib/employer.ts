@@ -88,6 +88,8 @@ export type ShortlistEntry = {
   email: string | null;
   phone: string | null;
   removed_at: string | null;
+  /** The message agent's WhatsApp invite for the first interview round, once sent. */
+  invite?: { status: string; day: string | null; error: string | null } | null;
 };
 
 export type ShortlistRun = {
@@ -101,6 +103,15 @@ export type ShortlistRun = {
 };
 
 export type ShortlistData = {
+  /** Hiring step 5: WhatsApp invites to pick an interview day. */
+  message_agent: {
+    templates: Record<string, string | null>;
+    /** True once Meta approved the invite template. */
+    ready: boolean;
+    invites: Record<string, number>;
+  };
+  invite_result?: { queued: number; skipped: Record<string, number> };
+  template_result?: Record<string, string>;
   settings: ShortlistSettings;
   source_counts: { client_db: number; naukri: number };
   last_run: ShortlistRun | null;
@@ -650,6 +661,13 @@ export const employerApi = {
     }),
   runShortlist: (ws: number, job: number) =>
     apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/run`, { method: "POST" }),
+  sendInterviewInvites: (ws: number, job: number, entryIds?: number[]) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/invite`, {
+      method: "POST",
+      body: JSON.stringify(entryIds ? { entry_ids: entryIds } : {}),
+    }),
+  submitInterviewTemplates: (ws: number, job: number) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/templates`, { method: "POST" }),
   removeShortlistEntry: (ws: number, job: number, entry: number) =>
     apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/${entry}/remove`, { method: "POST" }),
   restoreShortlistEntry: (ws: number, job: number, entry: number) =>

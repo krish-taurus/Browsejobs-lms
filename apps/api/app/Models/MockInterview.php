@@ -100,7 +100,7 @@ class MockInterview extends Model
         if ($blueprint?->user_id !== null) {
             return self::KIND_CV;
         }
-        if ($blueprint?->employer_job_id !== null || $blueprint?->job_feed_item_id !== null) {
+        if ($blueprint?->employer_job_id !== null || $blueprint?->employer_job_round_id !== null || $blueprint?->job_feed_item_id !== null) {
             return self::KIND_JOB;
         }
         if ($this->is_room || $this->mode === self::MODE_VOICE) {
@@ -118,12 +118,13 @@ class MockInterview extends Model
     {
         $courseOnly = fn (Builder $b) => $b->whereNull('user_id')
             ->whereNull('employer_job_id')
+            ->whereNull('employer_job_round_id')
             ->whereNull('job_feed_item_id');
 
         return match ($kind) {
             self::KIND_CV => $query->whereHas('blueprint', fn (Builder $b) => $b->whereNotNull('user_id')),
             self::KIND_JOB => $query->whereHas('blueprint', fn (Builder $b) => $b->whereNull('user_id')
-                ->where(fn (Builder $w) => $w->whereNotNull('employer_job_id')->orWhereNotNull('job_feed_item_id'))),
+                ->where(fn (Builder $w) => $w->whereNotNull('employer_job_id')->orWhereNotNull('employer_job_round_id')->orWhereNotNull('job_feed_item_id'))),
             self::KIND_VOICE => $query->whereHas('blueprint', $courseOnly)
                 ->where(fn (Builder $w) => $w->where('is_room', true)->orWhere('mode', self::MODE_VOICE)),
             default => $query->whereHas('blueprint', $courseOnly)

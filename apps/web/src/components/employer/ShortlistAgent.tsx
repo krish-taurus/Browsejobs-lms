@@ -51,7 +51,8 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
   const canManage = workspace.my_role === "owner" || workspace.my_role === "recruiter";
   const [data, setData] = useState<ShortlistData | null>(null);
   const [draft, setDraft] = useState<ShortlistSettings | null>(null);
-  const [busy, setBusy] = useState<"save" | "run" | number | null>(null);
+  const [busy, setBusy] = useState<"save" | "run" | "invite" | "templates" | number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showRemoved, setShowRemoved] = useState(false);
 
@@ -69,11 +70,20 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
 
   useEffect(load, [load]);
 
-  async function act(kind: "save" | "run" | number, call: () => Promise<{ data: ShortlistData }>) {
+  async function act(kind: "save" | "run" | "invite" | "templates" | number, call: () => Promise<{ data: ShortlistData }>) {
     setBusy(kind);
     setError(null);
+    setNotice(null);
     try {
-      apply((await call()).data);
+      const next = (await call()).data;
+      apply(next);
+      if (next.invite_result) {
+        const skipped = Object.entries(next.invite_result.skipped).map(([why, n]) => `${n} ${why}`).join(", ");
+        setNotice(`WhatsApp invites queued for ${next.invite_result.queued}.${skipped ? ` Skipped: ${skipped}.` : ""}`);
+      }
+      if (next.template_result) {
+        setNotice(`WhatsApp templates: ${Object.entries(next.template_result).map(([name, what]) => `${name} ${what}`).join(" · ")}.`);
+      }
     } catch (err) {
       setError(errorText(err, "That did not work. Please try again."));
     } finally {
@@ -202,6 +212,22 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
         <CandidateSources canManage={canManage} onChanged={load} />
       </div>
 
+      <MessageAgentCard
+        data={data}
+        canManage={canManage}
+        busy={busy}
+        notice={notice}
+        jobClosed={jobStatus === "closed"}
+        onInvite={() => {
+          const n = data.entries.filter((e) => !e.invite).length;
+          if (n === 0) return;
+          if (confirm(`Send a WhatsApp interview invite to ${n} ${n === 1 ? "person" : "people"} on this shortlist? Each one picks a day for the first round.`)) {
+            void act("invite", () => employerApi.sendInterviewInvites(workspace.id, jobId));
+          }
+        }}
+        onSubmitTemplates={() => void act("templates", () => employerApi.submitInterviewTemplates(workspace.id, jobId))}
+      />
+
       <div className="flex items-baseline justify-between">
         <Label>AI shortlist · {data.entries.length} {data.entries.length === 1 ? "person" : "people"}</Label>
         {data.removed.length > 0 && (
@@ -275,6 +301,7 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-display text-base font-bold tracking-tight">{e.name}</p>
             <Pill tone={e.source === "browsejobs" ? "trust" : e.source === "naukri" ? "amber" : "dark"}>{SOURCE_SHORT[e.source]}</Pill>
+            {e.invite ? <InvitePill invite={e.invite} /> : null}
           </div>
           {sub && <p className="mt-0.5 text-[12px] text-[var(--bj-dash-muted)]">{sub}</p>}
           <p className="mt-1 text-[12px] text-[var(--bj-dash-muted)]">{facts.filter(Boolean).join(" · ")}</p>
@@ -440,5 +467,99 @@ function SourceUpload({
         </div>
       )}
     </div>
+  );
+}
+
+/* --------------------------- Message agent --------------------------- */
+
+const INVITE_LABEL: Record<string, string> = {
+  pending: "Invite queued",
+  sending: "Invite sending",
+  sent: "Asked to pick a day",
+  scheduled: "Interview booked",
+  open: "Interview link sent",
+  done: "Interviewed",
+  declined: "Declined",
+  failed: "Invite failed",
+};
+
+function InvitePill({ invite }: { invite: { status: string; day: string | null; error: string | null } }) {
+  const tone = invite.status === "declined" || invite.status === "failed" ? "warn" : invite.status === "done" ? "verify" : "trust";
+  return (
+    <span title={invite.error ?? undefined}>
+      <Pill tone={tone}>
+        {INVITE_LABEL[invite.status] ?? invite.status}
+        {invite.day && invite.status === "scheduled" ? ` · ${invite.day}` : ""}
+      </Pill>
+    </span>
+  );
+}
+
+function MessageAgentCard({
+  data, canManage, busy, notice, jobClosed, onInvite, onSubmitTemplates,
+}: {
+  data: ShortlistData;
+  canManage: boolean;
+  busy: string | number | null;
+  notice: string | null;
+  jobClosed: boolean;
+  onInvite: () => void;
+  onSubmitTemplates: () => void;
+}) {
+  const agent = data.message_agent;
+  const notInvited = data.entries.filter((e) => !e.invite).length;
+  const statuses = Object.entries(agent.templates);
+  const neverSubmitted = statuses.some(([, status]) => status === null);
+  const counts = agent.invites;
+  const count = (k: string) => counts[k] ?? 0;
+
+  return (
+    <Tile accent={VERIFY} hover={false}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-2xl">
+          <Label>Message agent · WhatsApp interview invites</Label>
+          <p className="mt-2 text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
+            Everyone on the shortlist gets a WhatsApp asking which of the next three working days suits them. Their reply books the
+            first round; that morning they get a link, sign in with the same number, and take a spoken AI interview that is recorded
+            and scored. L2 follows the same way once L1 is cleared.
+          </p>
+        </div>
+        {canManage && (
+          <PrimaryButton disabled={!agent.ready || notInvited === 0 || busy !== null || jobClosed} onClick={onInvite}>
+            {busy === "invite" ? "Sending…" : `Send interview invites (${notInvited})`}
+          </PrimaryButton>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[11px] text-[var(--bj-dash-muted)]">
+        <span>Asked {count("sent")}</span>
+        <span>Booked {count("scheduled")}</span>
+        <span>Links out {count("open")}</span>
+        <span>Interviewed {count("done")}</span>
+        <span>Declined {count("declined")}</span>
+        {count("failed") > 0 ? <span className="text-[var(--bj-dash-score-below)]">Failed {count("failed")}</span> : null}
+      </div>
+
+      {!agent.ready && (
+        <div className="mt-4 rounded-2xl border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] p-3 text-[12px] leading-relaxed">
+          <p className="font-semibold">Waiting for WhatsApp to approve the interview messages</p>
+          <ul className="mt-1 space-y-0.5 text-[var(--bj-dash-muted)]">
+            {statuses.map(([name, status]) => (
+              <li key={name} className="font-mono">
+                {name}: {status ? status.toLowerCase() : "not submitted"}
+              </li>
+            ))}
+          </ul>
+          {canManage && neverSubmitted ? (
+            <GhostButton disabled={busy !== null} onClick={onSubmitTemplates} className="mt-2 !py-1.5 !text-xs">
+              {busy === "templates" ? "Submitting…" : "Submit them to WhatsApp"}
+            </GhostButton>
+          ) : (
+            <p className="mt-1 text-[var(--bj-dash-muted)]">Meta usually approves within minutes to a day. This button turns on by itself.</p>
+          )}
+        </div>
+      )}
+      {notice && <p className="mt-3 text-[13px] text-[var(--bj-dash-score-strong)]">{notice}</p>}
+    </Tile>
   );
 }

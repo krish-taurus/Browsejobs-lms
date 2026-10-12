@@ -105,3 +105,11 @@ Schedule::command('market:refresh')->dailyAt('05:45');
 
 // Daily Market Brief teaser to open leads, after the morning snapshot refresh.
 Schedule::job(new SendDailyBrief)->dailyAt('08:30');
+
+// Message agent (hiring step 5): open the L1 interviews candidates booked for
+// today and WhatsApp them the link — from 9 am IST, hourly in case one was missed.
+Schedule::command('interviews:open-due')
+    ->hourlyAt(5)
+    ->between('9:00', '20:00')
+    ->timezone('Asia/Kolkata')
+    ->withoutOverlapping(30);

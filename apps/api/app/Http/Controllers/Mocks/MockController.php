@@ -11,6 +11,7 @@ use App\Actions\Mocks\StartVoiceMock;
 use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
 use App\Models\EmployerJob;
+use App\Models\EmployerJobRound;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
 use App\Models\ModuleMockRequirement;
@@ -45,7 +46,7 @@ final class MockController extends Controller
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request): JsonResponse {
             $mocks = MockInterview::query()
                 ->where('user_id', $request->user()->id)
-                ->with('blueprint:id,user_id,employer_job_id,job_feed_item_id')
+                ->with('blueprint:id,user_id,employer_job_id,employer_job_round_id,job_feed_item_id')
                 ->orderByDesc('id')
                 ->get();
 
@@ -140,7 +141,7 @@ final class MockController extends Controller
             $mocks = MockInterview::query()
                 ->where('user_id', $request->user()->id)
                 ->ofKind($kind)
-                ->with('blueprint:id,role_title,user_id,employer_job_id,job_feed_item_id')
+                ->with('blueprint:id,role_title,user_id,employer_job_id,employer_job_round_id,job_feed_item_id')
                 ->orderByDesc('id')
                 ->limit(200)
                 ->get();
@@ -372,7 +373,7 @@ final class MockController extends Controller
 
     private function session(MockInterview $interview, int $status = 200): JsonResponse
     {
-        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title,max_questions,user_id,employer_job_id,job_feed_item_id']);
+        $interview->load(['turns' => fn ($q) => $q->orderBy('id'), 'blueprint:id,role_title,max_questions,user_id,employer_job_id,employer_job_round_id,job_feed_item_id']);
         // A blueprint may run longer than the platform default (the AI
         // Readiness Interview asks 15) — mirrors AnswerMockInterview's own
         // override so the two never disagree about when the session is done.
@@ -395,7 +396,9 @@ final class MockController extends Controller
                 // reads "Job interview · Data Engineer at BrowseJobs".
                 'company' => $interview->blueprint?->employer_job_id !== null
                     ? EmployerJob::query()->with('workspace:id,name')->find($interview->blueprint->employer_job_id)?->workspace?->name
-                    : null,
+                    : ($interview->blueprint?->employer_job_round_id !== null
+                        ? EmployerJobRound::query()->with('job.workspace:id,name')->find($interview->blueprint->employer_job_round_id)?->job?->workspace?->name
+                        : null),
                 'status' => $interview->status,
                 'mode' => $interview->mode,
                 // The plain (non-room) page uses this to redirect a room-kind

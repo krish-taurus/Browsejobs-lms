@@ -51,6 +51,7 @@ final class EmployerInterview extends Model
         'tenant_id',
         'employer_job_application_id',
         'employer_job_round_id',
+        'mock_interview_id',
         'round',
         'round_name',
         'status',

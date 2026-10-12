@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $tenant_id
  * @property int $employer_workspace_id
  * @property int|null $employer_candidate_import_id
+ * @property int|null $user_id light account made when they are invited to interview
  * @property string $source
  * @property string $dedupe_key
  * @property string $name
@@ -44,7 +45,7 @@ final class EmployerCandidate extends Model
     public const SOURCES = [self::SOURCE_CLIENT_DB, self::SOURCE_NAUKRI];
 
     protected $fillable = [
-        'tenant_id', 'employer_workspace_id', 'employer_candidate_import_id', 'source', 'dedupe_key',
+        'tenant_id', 'employer_workspace_id', 'employer_candidate_import_id', 'user_id', 'source', 'dedupe_key',
         'name', 'email', 'phone', 'current_title', 'current_company', 'location', 'experience_years',
         'notice_period', 'current_ctc', 'expected_ctc', 'education', 'skills', 'summary',
     ];

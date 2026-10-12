@@ -133,6 +133,7 @@ use App\Http\Controllers\Me\DashboardBannerController;
 use App\Http\Controllers\Me\DataRequestController as MeDataRequestController;
 use App\Http\Controllers\Me\EmployerInterviewController as MeEmployerInterviewController;
 use App\Http\Controllers\Me\EmployerJobBrowseController;
+use App\Http\Controllers\Me\InterviewInviteController as MeInterviewInviteController;
 use App\Http\Controllers\Me\JobFeedController as MeJobFeedController;
 use App\Http\Controllers\Me\LeaderboardController;
 use App\Http\Controllers\Me\MyAssignmentController;
@@ -298,6 +299,12 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 });
 
 // Authenticated session endpoints (Sanctum session guard).
+// What a WhatsApp interview link is for, before the candidate logs in. Looked
+// up by its random token alone (no tenant/domain needed); no personal data.
+Route::get('v1/interview-invites/{token}', [MeInterviewInviteController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('interview-invites.show');
+
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);
     Route::get('me/coach', [CoachController::class, 'show']);
@@ -494,6 +501,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 
     // Async L1/L2 rounds for candidates (PRD-E F5).
     Route::get('me/employer-interviews', [MeEmployerInterviewController::class, 'index']);
+    // The WhatsApp interview link: start the round in the voice room (own login only).
+    Route::post('me/interview-invites/{token}/start', [MeInterviewInviteController::class, 'start'])->middleware('throttle:20,1');
     Route::get('me/employer-interviews/{interview}', [MeEmployerInterviewController::class, 'show']);
     Route::post('me/employer-interviews/{interview}/start', [MeEmployerInterviewController::class, 'start']);
     Route::post('me/employer-interviews/{interview}/submit', [MeEmployerInterviewController::class, 'submit'])->middleware('throttle:20,1');
@@ -604,6 +613,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/jobs/{job}/shortlist/run', [EmployerShortlistAgentController::class, 'run'])->middleware('throttle:20,1');
     Route::post('workspaces/{workspace}/jobs/{job}/shortlist/{entry}/remove', [EmployerShortlistAgentController::class, 'remove']);
     Route::post('workspaces/{workspace}/jobs/{job}/shortlist/{entry}/restore', [EmployerShortlistAgentController::class, 'restore']);
+    // Message agent (hiring step 5): WhatsApp the shortlist to pick an interview day.
+    Route::post('workspaces/{workspace}/jobs/{job}/shortlist/invite', [EmployerShortlistAgentController::class, 'invite'])->middleware('throttle:10,1');
+    Route::post('workspaces/{workspace}/jobs/{job}/shortlist/templates', [EmployerShortlistAgentController::class, 'submitTemplates'])->middleware('throttle:5,1');
     Route::get('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'index']);
     Route::post('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'import'])->middleware('throttle:20,1');
     Route::delete('workspaces/{workspace}/candidate-sources/{source}', [EmployerCandidateSourceController::class, 'clear'])->whereIn('source', ['client_db', 'naukri']);

@@ -8,6 +8,7 @@ use App\Jobs\ProcessEmployerWhatsAppMessage;
 use App\Models\EmployerWhatsappCode;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
+use App\Models\InterviewInvite;
 use App\Models\Tenant;
 
 /**
@@ -48,11 +49,17 @@ final readonly class ReceiveEmployerWhatsApp
             : null;
         $hasCodeText = isset($m[0]);
 
-        if ($link === null && ! $hasCodeText) {
+        // A shortlisted candidate answering the message agent ("which day suits you?").
+        $invite = $link === null && ! $hasCodeText
+            ? InterviewInvite::withoutGlobalScopes()->where('phone', $phone)
+                ->whereIn('status', InterviewInvite::LISTENING)->latest('id')->first()
+            : null;
+
+        if ($link === null && ! $hasCodeText && $invite === null) {
             return self::NOT_EMPLOYER;
         }
 
-        $tenantId = $link->tenant_id ?? $code->tenant_id ?? $this->defaultTenantId();
+        $tenantId = $link->tenant_id ?? $code->tenant_id ?? $invite->tenant_id ?? $this->defaultTenantId();
         if ($tenantId === null) {
             return self::NOT_EMPLOYER;
         }
@@ -60,6 +67,7 @@ final readonly class ReceiveEmployerWhatsApp
         $message = EmployerWhatsappMessage::withoutGlobalScopes()->create([
             'tenant_id' => $tenantId,
             'employer_whatsapp_link_id' => $link?->id,
+            'interview_invite_id' => $invite?->id,
             'phone' => $phone,
             'direction' => 'in',
             'body' => mb_substr($text, 0, 4000),

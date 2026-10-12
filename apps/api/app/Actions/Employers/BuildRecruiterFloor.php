@@ -14,6 +14,7 @@ use App\Models\EmployerJobApplication;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\EmployerWorkspace;
+use App\Models\InterviewInvite;
 use App\Models\JobShortlistEntry;
 use App\Models\JobShortlistRun;
 use Carbon\CarbonInterface;
@@ -88,12 +89,15 @@ final class BuildRecruiterFloor
         $interviews = $applications->isEmpty()
             ? collect()
             : EmployerInterview::query()->whereIn('employer_job_application_id', $applications->pluck('id'))->get();
+        $invites = $job !== null
+            ? InterviewInvite::query()->where('employer_job_id', $job->id)->get()
+            : collect();
         $transitions = $applications->isEmpty()
             ? collect()
             : ApplicationStageTransition::query()->whereIn('employer_job_application_id', $applications->pluck('id'))
                 ->latest('occurred_at')->limit(40)->get();
 
-        $people = $this->people($entries, $applications, $interviews);
+        $people = $this->people($entries, $applications, $interviews, $invites);
         $zoneCounts = collect(self::ZONES)->mapWithKeys(fn (array $z) => [$z['id'] => $people->where('zone', $z['id'])->count()]);
 
         return [
@@ -112,7 +116,7 @@ final class BuildRecruiterFloor
                 'experience' => $job->experience_min_years.($job->experience_max_years !== null ? '–'.$job->experience_max_years : '+').' yrs',
             ],
             'zones' => collect(self::ZONES)->map(fn (array $z) => [...$z, 'count' => $zoneCounts[$z['id']]])->values(),
-            'agents' => $this->agents($job, $links, $messages, $run, $entries, $applications, $interviews),
+            'agents' => $this->agents($job, $links, $messages, $run, $entries, $applications, $interviews, $invites),
             'people' => $people->take(self::MAX_PEOPLE)->values(),
             'activity' => $this->activity($jobs, $messages, $job, $run, $transitions, $interviews, $applications),
             'kpis' => [
@@ -131,9 +135,10 @@ final class BuildRecruiterFloor
      * @param  Collection<int, EmployerInterview>  $interviews
      * @return Collection<int, array<string, mixed>>
      */
-    private function people(Collection $entries, Collection $applications, Collection $interviews): Collection
+    private function people(Collection $entries, Collection $applications, Collection $interviews, Collection $invites): Collection
     {
         $byApp = $interviews->groupBy('employer_job_application_id');
+        $inviteOf = $invites->where('round', 'l1')->keyBy('employer_job_application_id');
         $appByUser = $applications->keyBy('candidate_id');
         $people = collect();
 
@@ -148,13 +153,25 @@ final class BuildRecruiterFloor
 
             $zone = match ($app->stage) {
                 EmployerApplicationStage::Applied, EmployerApplicationStage::Graded => 'shortlist',
-                EmployerApplicationStage::Shortlisted => 'final',
+                EmployerApplicationStage::Shortlisted => in_array($inviteOf->get($app->id)?->status, [InterviewInvite::PENDING, InterviewInvite::SENT, InterviewInvite::SCHEDULED, InterviewInvite::OPEN], true) ? 'invites' : 'final',
                 EmployerApplicationStage::L1 => $l1 !== null && $l1->status === EmployerInterviewStatus::Invited ? 'invites' : 'l1',
                 EmployerApplicationStage::L2 => $l2 !== null && $l2->status === EmployerInterviewStatus::Invited ? 'invites' : 'l2',
                 default => 'report',
             };
 
-            $timeline = [['label' => 'Applied', 'at' => $app->created_at?->toIso8601String()]];
+            $timeline = [['label' => 'On the pipeline', 'at' => $app->created_at?->toIso8601String()]];
+            if (($inv = $inviteOf->get($app->id)) !== null) {
+                $timeline[] = [
+                    'label' => match ($inv->status) {
+                        InterviewInvite::SCHEDULED => 'Booked L1 for '.SendInterviewInvites::label($inv->chosen_date->toDateString()),
+                        InterviewInvite::SENT => 'Asked on WhatsApp to pick an interview day',
+                        InterviewInvite::DECLINED => 'Declined the interview',
+                        InterviewInvite::FAILED => 'Invite failed: '.($inv->error ?? 'unknown'),
+                        default => 'L1 invite '.$inv->status,
+                    },
+                    'at' => ($inv->replied_at ?? $inv->sent_at ?? $inv->created_at)?->toIso8601String(),
+                ];
+            }
             foreach (['l1' => $l1, 'l2' => $l2] as $key => $round) {
                 if ($round !== null) {
                     $timeline[] = [
@@ -218,6 +235,7 @@ final class BuildRecruiterFloor
         Collection $entries,
         Collection $applications,
         Collection $interviews,
+        Collection $invites,
     ): array {
         $recent = fn (?CarbonInterface $at, int $minutes) => $at !== null && $at->gt($this->now->copy()->subMinutes($minutes));
         $count = fn (string $stage) => $applications->filter(fn (EmployerJobApplication $a) => $a->stage->value === $stage)->count();
@@ -262,12 +280,20 @@ final class BuildRecruiterFloor
             [['label' => 'On final list', 'value' => $finalCount]],
         );
 
-        // 5 · Interview invites
-        $invited = $interviews->filter(fn (EmployerInterview $i) => $i->status === EmployerInterviewStatus::Invited)->count();
-        $invites = $this->agent('invites', 'Message Agent', 'invites', $invited > 0 ? 'working' : 'idle',
-            $invited > 0 ? $this->plural($invited, 'candidate').' invited, waiting to start the interview.' : 'No interview invites out right now.',
-            $invited > 0 ? 50 : 0,
-            [['label' => 'Invited, not started', 'value' => $invited]],
+        // 5 · Message agent: WhatsApp invites, day booking, interview links
+        $by = fn (string $status) => $invites->where('status', $status)->count();
+        $waitingReply = $by(InterviewInvite::SENT);
+        $booked = $by(InterviewInvite::SCHEDULED);
+        $open = $by(InterviewInvite::OPEN);
+        $lastSent = $invites->max('sent_at');
+        $invitesAgent = $this->agent('invites', 'Message Agent', 'invites',
+            $invites->isEmpty() ? 'idle' : ($recent($lastSent, 10) ? 'working' : ($waitingReply > 0 ? 'thinking' : 'idle')),
+            $invites->isEmpty()
+                ? 'No invites yet. Press "Send interview invites" on the AI shortlist tab.'
+                : $this->plural($invites->count(), 'invite')." on WhatsApp · {$waitingReply} waiting for a reply · {$booked} booked · {$open} interview links out"
+                    .($by(InterviewInvite::DECLINED) > 0 ? ' · '.$by(InterviewInvite::DECLINED).' declined' : '').'.',
+            $invites->isEmpty() ? 0 : (int) round(($booked + $open + $by(InterviewInvite::DONE)) / max(1, $invites->count()) * 100),
+            [['label' => 'Waiting for reply', 'value' => $waitingReply], ['label' => 'Booked', 'value' => $booked], ['label' => 'Links out', 'value' => $open], ['label' => 'Declined', 'value' => $by(InterviewInvite::DECLINED)]],
         );
 
         // 6 · L1 / L2
@@ -297,7 +323,7 @@ final class BuildRecruiterFloor
             false,
         );
 
-        return [$intake, $shortlist, $bgv, $final, $invites, ...$rounds, $report];
+        return [$intake, $shortlist, $bgv, $final, $invitesAgent, ...$rounds, $report];
     }
 
     /**

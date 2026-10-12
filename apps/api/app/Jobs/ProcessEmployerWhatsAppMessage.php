@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\EmployerWhatsappMessage;
+use App\Models\InterviewInvite;
 use App\Models\Tenant;
+use App\Support\Employers\CandidateChatAgent;
 use App\Support\Employers\HiringChatAgent;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -47,7 +49,12 @@ final class ProcessEmployerWhatsAppMessage implements ShouldQueue
         }
 
         app(TenantContext::class)->run($tenant, function () use ($agent, $message): void {
-            $agent->handle($message);
+            $invite = $message->interview_invite_id !== null ? InterviewInvite::query()->find($message->interview_invite_id) : null;
+
+            // A candidate answering the message agent, or a client posting a job.
+            $invite !== null
+                ? app(CandidateChatAgent::class)->handle($message, $invite)
+                : $agent->handle($message);
             $message->update(['status' => 'processed']);
         });
     }
