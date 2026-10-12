@@ -61,6 +61,10 @@ export type ShortlistSettings = {
   second_bar: number;
   /** On: everyone shortlisted gets the WhatsApp interview invite straight away. */
   auto_invite: boolean;
+  /** Time of day (India, "HH:MM") of every L1/L2 slot offered on WhatsApp. */
+  interview_time: string;
+  /** Score that clears L1 (→ L2 invite) and L2 (→ result to the client). */
+  round_pass_mark: number;
 };
 
 export type ShortlistEntry = {
@@ -103,7 +107,7 @@ export type ShortlistEntry = {
   phone: string | null;
   removed_at: string | null;
   /** The message agent's WhatsApp invite for the first interview round, once sent. */
-  invite?: { status: string; day: string | null; error: string | null } | null;
+  invite?: { round?: string; status: string; day: string | null; on_zoom?: boolean; error: string | null } | null;
 };
 
 export type ShortlistRun = {
@@ -124,6 +128,8 @@ export type ShortlistData = {
     templates: Record<string, string | null>;
     /** True once Meta approved the invite template. */
     ready: boolean;
+    /** L1/L2 run as Zoom calls the AI interviewer bot joins (else the BrowseJobs room). */
+    zoom?: boolean;
     invites: Record<string, number>;
   };
   invite_result?: { queued: number; skipped: Record<string, number> };

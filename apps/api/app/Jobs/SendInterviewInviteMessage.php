@@ -19,7 +19,9 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Sends one interview invite ("which day suits you? 1/2/3") on WhatsApp.
+ * Sends one interview invite ("which slot suits you? 1/2/3") on WhatsApp:
+ * the first-round template for L1, the next-round template ("you cleared
+ * L1 — which slot for L2?") after that.
  * At-most-once: the invite is claimed atomically, so a retry never sends a
  * second message.
  */
@@ -50,26 +52,26 @@ final class SendInterviewInviteMessage implements ShouldQueue
 
         app(TenantContext::class)->run($tenant, function () use ($invite, $whatsapp): void {
             $job = $invite->job()->with('workspace:id,name')->first();
-            $options = array_map(SendInterviewInvites::label(...), $invite->date_options ?? []);
+            $time = SendInterviewInvites::interviewTime($invite);
+            $options = array_map(fn (string $date) => SendInterviewInvites::slotLabel($date, $time), $invite->date_options ?? []);
+            $company = (string) ($job?->workspace?->name ?? 'A company');
+            $role = (string) ($job?->title ?? 'open');
+            $slots = [$options[0] ?? '', $options[1] ?? '', $options[2] ?? ''];
 
             try {
-                $wamid = $whatsapp->sendMessage(
-                    $invite->phone,
-                    '',
-                    InterviewTemplates::INVITE,
-                    [
-                        $invite->firstName(),
-                        (string) ($job?->workspace?->name ?? 'A company'),
-                        (string) ($job?->title ?? 'open'),
-                        $options[0] ?? '',
-                        $options[1] ?? '',
-                        $options[2] ?? '',
-                    ],
-                );
+                $wamid = $invite->round === 'l1'
+                    ? $whatsapp->sendMessage($invite->phone, '', InterviewTemplates::INVITE, [$invite->firstName(), $company, $role, ...$slots])
+                    : $whatsapp->sendMessage($invite->phone, '', InterviewTemplates::NEXT_ROUND, [$invite->firstName(), self::previousRound($invite->round), $role, $company, ...$slots]);
                 $invite->update(['status' => InterviewInvite::SENT, 'wamid' => $wamid, 'sent_at' => now(), 'error' => null]);
             } catch (Throwable $e) {
                 $invite->update(['status' => InterviewInvite::FAILED, 'error' => Str::limit($e->getMessage(), 240, '')]);
             }
         });
+    }
+
+    /** "l2" → "L1": the round they just cleared. */
+    private static function previousRound(string $round): string
+    {
+        return preg_match('/^l(\d+)$/', $round, $m) === 1 && (int) $m[1] > 1 ? 'L'.((int) $m[1] - 1) : 'previous';
     }
 }

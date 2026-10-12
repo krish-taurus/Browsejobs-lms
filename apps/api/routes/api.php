@@ -119,6 +119,7 @@ use App\Http\Controllers\Employer\WhatsAppLinkController as EmployerWhatsAppLink
 use App\Http\Controllers\Employer\WorkspaceController as EmployerWorkspaceController;
 use App\Http\Controllers\Enquiries\EnquiryController;
 use App\Http\Controllers\FeeStatusController;
+use App\Http\Controllers\InterviewBotController;
 use App\Http\Controllers\Interviews\InterviewController;
 use App\Http\Controllers\JobBoardSegmentedController;
 use App\Http\Controllers\Labs\LabController;
@@ -181,6 +182,7 @@ use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use App\Http\Controllers\Webhooks\VoiceWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
+use App\Http\Middleware\ResolveInterviewBot;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Route;
 
@@ -304,6 +306,18 @@ Route::prefix('v1')->middleware('tenant.domain')->group(function () {
 Route::get('v1/interview-invites/{token}', [MeInterviewInviteController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('interview-invites.show');
+
+// The AI interviewer page a meeting bot opens inside an L1/L2 Zoom call. No
+// login: the private code is the key, and it opens only that round's
+// interview, around its booked time (ResolveInterviewBot).
+Route::prefix('v1/interview-bot/{code}')->middleware(ResolveInterviewBot::class)->group(function () {
+    Route::post('start', [InterviewBotController::class, 'start'])->middleware('throttle:20,1');
+    Route::get('mocks/{mock}', [MockController::class, 'show'])->whereNumber('mock');
+    Route::post('mocks/{mock}/answer', [MockController::class, 'answer'])->whereNumber('mock')->middleware('throttle:ai');
+    Route::post('mocks/{mock}/speak', SpeakMockQuestion::class)->whereNumber('mock')->middleware('throttle:60,1');
+    Route::post('mocks/{mock}/transcribe', TranscribeMockAnswer::class)->whereNumber('mock')->middleware('throttle:30,1');
+    Route::post('mocks/{mock}/finish', [MockController::class, 'finish'])->whereNumber('mock')->middleware('throttle:ai');
+});
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('me', [SessionController::class, 'me']);

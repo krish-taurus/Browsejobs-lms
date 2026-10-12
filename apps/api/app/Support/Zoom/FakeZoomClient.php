@@ -31,12 +31,13 @@ final class FakeZoomClient implements ZoomClient
         int $durationMinutes,
         ?string $hostUserId = null,
         ?bool $autoRecord = null,
+        bool $joinBeforeHost = false,
     ): ZoomMeeting {
         $this->sequence++;
         $id = (string) (900_000_000 + $this->sequence);
         $this->created[] = [
             'id' => $id, 'topic' => $topic, 'start' => $start, 'duration' => $durationMinutes,
-            'host' => $hostUserId, 'auto_record' => $autoRecord,
+            'host' => $hostUserId, 'auto_record' => $autoRecord, 'join_before_host' => $joinBeforeHost,
         ];
 
         return new ZoomMeeting(

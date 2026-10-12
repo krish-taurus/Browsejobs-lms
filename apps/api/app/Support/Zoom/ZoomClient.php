@@ -15,6 +15,7 @@ interface ZoomClient
     /**
      * @param  string|null  $hostUserId  Zoom user to host under; null = the account's own user ("me").
      * @param  bool|null  $autoRecord  true = cloud-record, false = never; null = leave the account default (existing behaviour).
+     * @param  bool  $joinBeforeHost  true for meetings no person hosts (an AI interview: the candidate and the interviewer bot join on their own)
      */
     public function createMeeting(
         string $topic,
@@ -22,6 +23,7 @@ interface ZoomClient
         int $durationMinutes,
         ?string $hostUserId = null,
         ?bool $autoRecord = null,
+        bool $joinBeforeHost = false,
     ): ZoomMeeting;
 
     public function updateMeeting(string $meetingId, CarbonInterface $start, int $durationMinutes): void;

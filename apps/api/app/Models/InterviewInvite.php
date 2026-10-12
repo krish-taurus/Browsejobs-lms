@@ -29,6 +29,12 @@ use Illuminate\Support\Carbon;
  * @property string $status
  * @property list<string>|null $date_options
  * @property Carbon|null $chosen_date
+ * @property Carbon|null $scheduled_at the booked slot (day + time)
+ * @property string|null $zoom_meeting_id
+ * @property string|null $zoom_join_url
+ * @property string|null $bot_code private key in the interviewer page the meeting bot opens
+ * @property string|null $bot_id
+ * @property string|null $bot_status
  * @property string $token
  * @property string|null $wamid
  * @property string|null $error
@@ -61,7 +67,8 @@ final class InterviewInvite extends Model
 
     protected $fillable = [
         'tenant_id', 'employer_job_id', 'employer_job_application_id', 'candidate_user_id', 'employer_interview_id',
-        'round', 'phone', 'status', 'date_options', 'chosen_date', 'token', 'wamid', 'error',
+        'round', 'phone', 'status', 'date_options', 'chosen_date', 'scheduled_at', 'token', 'wamid', 'error',
+        'zoom_meeting_id', 'zoom_join_url', 'bot_code', 'bot_id', 'bot_status',
         'sent_at', 'replied_at', 'opened_at', 'sent_by_user_id',
     ];
 
@@ -71,6 +78,7 @@ final class InterviewInvite extends Model
         return [
             'date_options' => 'array',
             'chosen_date' => 'date',
+            'scheduled_at' => 'datetime',
             'sent_at' => 'datetime',
             'replied_at' => 'datetime',
             'opened_at' => 'datetime',
@@ -110,6 +118,21 @@ final class InterviewInvite extends Model
     public function roundLabel(): string
     {
         return $this->round === self::ROUND_SCREEN ? 'AI screening' : strtoupper($this->round);
+    }
+
+    /** "Tue 14 Oct, 11:00 AM" in India time, or just the day when no time is set. */
+    public function slotLabel(): ?string
+    {
+        if ($this->scheduled_at !== null) {
+            return $this->scheduled_at->copy()->setTimezone('Asia/Kolkata')->format('D j M, g:i A');
+        }
+
+        return $this->chosen_date?->format('D j M');
+    }
+
+    public function onZoom(): bool
+    {
+        return $this->zoom_join_url !== null && $this->zoom_join_url !== '';
     }
 
     public function firstName(): string

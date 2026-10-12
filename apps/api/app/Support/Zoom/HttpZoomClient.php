@@ -30,6 +30,7 @@ final class HttpZoomClient implements ZoomClient
         int $durationMinutes,
         ?string $hostUserId = null,
         ?bool $autoRecord = null,
+        bool $joinBeforeHost = false,
     ): ZoomMeeting {
         // No waiting room: with it on, every student sits in a list the
         // host has to click "Admit" on one at a time, class after class.
@@ -37,7 +38,11 @@ final class HttpZoomClient implements ZoomClient
         // wait, the host hasn't started this meeting" until the host
         // actually starts it -- then everyone already there is seated at
         // once, with no per-student admit click.
-        $settings = ['waiting_room' => false, 'join_before_host' => false];
+        $settings = ['waiting_room' => false, 'join_before_host' => $joinBeforeHost];
+        if ($joinBeforeHost) {
+            // Anyone with the link can join at any time — nobody is there to start it.
+            $settings['jbh_time'] = 0;
+        }
         if ($autoRecord !== null) {
             $settings['auto_recording'] = $autoRecord ? 'cloud' : 'none';
         }

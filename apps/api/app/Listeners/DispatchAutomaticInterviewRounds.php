@@ -9,6 +9,7 @@ use App\Events\ApplicationGraded;
 use App\Events\EmployerInterviewGraded;
 use App\Models\EmployerJobApplication;
 use App\Models\EmployerJobRound;
+use App\Models\InterviewInvite;
 use App\Support\Employers\InterviewProcess;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -45,6 +46,12 @@ final class DispatchAutomaticInterviewRounds implements ShouldQueue
     /** A round landed — continue from it. */
     public function handleInterviewGraded(EmployerInterviewGraded $event): void
     {
+        // A round the message agent booked on WhatsApp: it books the next one
+        // too, as a slot the candidate picks (BookNextInterviewRound).
+        if (InterviewInvite::withoutGlobalScopes()->where('employer_interview_id', $event->interview->id)->exists()) {
+            return;
+        }
+
         $this->dispatchNext(
             $event->interview->application()->withoutGlobalScopes()->first(),
             $event->interview->overall_score,

@@ -14,6 +14,7 @@ use App\Models\JobShortlistEntry;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Employers\InterviewTemplates;
+use App\Support\Employers\ShortlistSettings;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -157,6 +158,54 @@ final readonly class SendInterviewInvites
         }
 
         return strlen($digits) < 11 ? null : $digits;
+    }
+
+    /** The JD's interview time ("11:00", India) for this invite's slots. */
+    public static function interviewTime(InterviewInvite $invite): string
+    {
+        $job = EmployerJob::withoutGlobalScopes()->find($invite->employer_job_id);
+
+        return $job !== null ? ShortlistSettings::forJob($job)->interviewTime : ShortlistSettings::DEFAULT_INTERVIEW_TIME;
+    }
+
+    /** A slot's start: the day at the interview time, India time. */
+    public static function slotStart(string $date, string $time): Carbon
+    {
+        return Carbon::parse("{$date} {$time}", 'Asia/Kolkata');
+    }
+
+    /** Minutes between two Zoom interviews on the same day (one Zoom licence runs one meeting at a time). */
+    public const ZOOM_SLOT_MINUTES = 30;
+
+    /**
+     * The first free half-hour from the interview time on that day: every Zoom
+     * interview runs under the same Zoom host, which can hold only one live
+     * meeting at once, so two candidates are never booked at the same time.
+     */
+    public static function freeZoomSlot(string $date, string $time, ?int $exceptInviteId = null): Carbon
+    {
+        $start = self::slotStart($date, $time);
+        $taken = InterviewInvite::withoutGlobalScopes()
+            ->whereIn('status', [InterviewInvite::SCHEDULED, InterviewInvite::OPEN])
+            ->whereNotNull('zoom_join_url')
+            ->when($exceptInviteId !== null, fn ($q) => $q->whereKeyNot($exceptInviteId))
+            ->whereBetween('scheduled_at', [$start->copy()->startOfDay()->utc(), $start->copy()->endOfDay()->utc()])
+            ->pluck('scheduled_at')
+            ->map(fn ($at) => Carbon::parse($at)->getTimestamp())
+            ->all();
+
+        $slot = $start->copy();
+        while (collect($taken)->contains(fn (int $at) => abs($at - $slot->getTimestamp()) < self::ZOOM_SLOT_MINUTES * 60)) {
+            $slot->addMinutes(self::ZOOM_SLOT_MINUTES);
+        }
+
+        return $slot;
+    }
+
+    /** "Tue 14 Oct, 11:00 AM" */
+    public static function slotLabel(string $date, string $time): string
+    {
+        return self::slotStart($date, $time)->format('D j M, g:i A');
     }
 
     public static function label(string $date): string

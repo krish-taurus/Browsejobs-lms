@@ -20,6 +20,7 @@ use App\Support\Audit\AuditLogger;
 use App\Support\Employers\InterviewTemplates;
 use App\Support\Employers\ResolvesMembership;
 use App\Support\Employers\ShortlistSettings;
+use App\Support\Interviews\Bots\MeetingBotClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -200,17 +201,21 @@ final class ShortlistAgentController extends Controller
 
         // Each person's interview invite, found through their account's application for this JD.
         $userOf = $entries->mapWithKeys(fn (JobShortlistEntry $e) => [$e->id => $e->candidate_user_id ?? $e->employerCandidate?->user_id]);
+        // Their latest interview round (L1, then L2 once booked).
         $invites = InterviewInvite::query()
             ->where('employer_job_id', $job->id)
-            ->where('round', 'l1')
+            ->where('round', '!=', InterviewInvite::ROUND_SCREEN)
+            ->orderBy('round')
             ->get()
             ->keyBy('candidate_user_id');
         $inviteFor = function (JobShortlistEntry $e) use ($userOf, $invites): ?array {
             $invite = $invites->get($userOf[$e->id] ?? 0);
 
             return $invite === null ? null : [
+                'round' => $invite->roundLabel(),
                 'status' => $invite->status,
-                'day' => $invite->chosen_date !== null ? SendInterviewInvites::label($invite->chosen_date->toDateString()) : null,
+                'day' => $invite->slotLabel(),
+                'on_zoom' => $invite->onZoom(),
                 'error' => $invite->error,
             ];
         };
@@ -220,6 +225,8 @@ final class ShortlistAgentController extends Controller
             'message_agent' => [
                 'templates' => $templates,
                 'ready' => ($templates[InterviewTemplates::INVITE] ?? null) === 'APPROVED',
+                // L1/L2 run as Zoom calls the AI interviewer bot joins (else the BrowseJobs room).
+                'zoom' => app(MeetingBotClient::class)->enabled(),
                 'invites' => InterviewInvite::query()->where('employer_job_id', $job->id)->where('round', 'l1')
                     ->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
             ],

@@ -126,6 +126,15 @@ return [
         'late_grace_minutes' => (int) env('ZOOM_LATE_GRACE_MINUTES', 10),
     ],
 
+    // Meeting bot (Recall.ai) that joins an L1/L2 Zoom interview and runs the
+    // AI interviewer page inside the call. No key = interviews stay in the
+    // BrowseJobs interview room (no Zoom meeting is made).
+    'recall' => [
+        'api_key' => env('RECALL_API_KEY', ''),
+        'base_url' => env('RECALL_BASE_URL', 'https://us-west-2.recall.ai/api/v1'),
+        'bot_name' => env('RECALL_BOT_NAME', 'BrowseJobs AI Interviewer'),
+    ],
+
     // Google Drive review intake (Platform Spec §3). The folder link is editable in
     // Admin → Settings so it can change without a deploy; the service-account JSON is
     // the credential the scheduled sync reads the folder with.

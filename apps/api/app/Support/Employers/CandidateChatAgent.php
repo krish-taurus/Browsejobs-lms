@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Support\Employers;
 
 use App\Actions\Employers\SendInterviewInvites;
+use App\Jobs\BookInterviewMeeting;
+use App\Jobs\CancelInterviewMeeting;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\InterviewInvite;
 use App\Support\Audit\AuditLogger;
+use App\Support\Interviews\Bots\MeetingBotClient;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Carbon;
 use Throwable;
@@ -15,9 +18,14 @@ use Throwable;
 /**
  * The message agent's side of a candidate's WhatsApp chat (hiring step 5).
  *
- *   "1" / "2" / "3" / "Tuesday" / "15"  → book that day
+ *   "1" / "2" / "3" / "Tuesday" / "15"  → book that slot (day + the JD's interview time)
  *   "not interested" / "no"              → decline, politely
  *   anything once the round is open      → the link again
+ *
+ * With a meeting bot configured, a booked slot becomes a Zoom meeting at
+ * once (BookInterviewMeeting) and the candidate gets the Zoom link in this
+ * chat; the AI interviewer joins it at that time. Without one, the link to
+ * the BrowseJobs interview room comes on the day.
  *
  * No AI here on purpose: a date choice is a fixed menu, and a wrong guess
  * would book someone on a day they did not pick. Replies are free text
@@ -30,12 +38,22 @@ final readonly class CandidateChatAgent
     public function __construct(
         private WhatsAppClient $whatsapp,
         private AuditLogger $audit,
+        private MeetingBotClient $bots,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in, InterviewInvite $invite): void
     {
         $text = trim($in->body);
         $invite->update(['replied_at' => now()]);
+
+        // On Zoom: the link again, unless they are picking another slot or declining.
+        $repick = $invite->status === InterviewInvite::SCHEDULED
+            && (preg_match(self::DECLINE, $text) === 1 || $this->pick($text, array_values((array) $invite->date_options)) !== null);
+        if ($invite->onZoom() && in_array($invite->status, [InterviewInvite::SCHEDULED, InterviewInvite::OPEN], true) && ! $repick) {
+            $this->reply($invite, self::zoomMessage($invite));
+
+            return;
+        }
 
         if ($invite->status === InterviewInvite::OPEN) {
             $this->reply($invite, "Your interview is open. Start here: {$invite->link()}\n\nLog in with this WhatsApp number. It takes about 15 minutes.");
@@ -46,6 +64,9 @@ final readonly class CandidateChatAgent
         if (preg_match(self::DECLINE, $text) === 1) {
             $invite->update(['status' => InterviewInvite::DECLINED]);
             $this->audit->log('employer.interview_invite_declined', $invite, ['round' => $invite->round]);
+            if ($invite->onZoom() || $invite->bot_id !== null) {
+                CancelInterviewMeeting::dispatch($invite->id);
+            }
             $this->reply($invite, 'Thanks for letting us know. We have told the company. All the best!');
 
             return;
@@ -55,14 +76,39 @@ final readonly class CandidateChatAgent
         $pick = $this->pick($text, $options);
 
         if ($pick === null) {
-            $this->reply($invite, "Please reply with the number of the day that suits you:\n".$this->menu($options));
+            $this->reply($invite, "Please reply with the number of the slot that suits you:\n".$this->menu($invite, $options));
 
             return;
         }
 
-        $invite->update(['status' => InterviewInvite::SCHEDULED, 'chosen_date' => $pick]);
-        $label = SendInterviewInvites::label($pick);
-        $this->reply($invite, "Booked for *{$label}*. That morning you will get a WhatsApp link to start your AI interview. It takes about 15 minutes on your phone or laptop.\n\nNeed a different day? Just reply 1, 2 or 3:\n".$this->menu($options));
+        $time = SendInterviewInvites::interviewTime($invite);
+        $invite->update([
+            'status' => InterviewInvite::SCHEDULED,
+            'chosen_date' => $pick,
+            // On Zoom, the next free half-hour that day; otherwise the slot as offered.
+            'scheduled_at' => $this->bots->enabled()
+                ? SendInterviewInvites::freeZoomSlot($pick, $time, $invite->id)
+                : SendInterviewInvites::slotStart($pick, $time),
+        ]);
+        $label = $invite->fresh()->slotLabel();
+
+        if ($this->bots->enabled()) {
+            // The Zoom meeting and the AI interviewer are booked now; the link follows in a moment.
+            $this->reply($invite, "Booked for *{$label}*. I am setting up your Zoom interview now. The link will come here in a moment.\n\nNeed a different slot? Just reply 1, 2 or 3:\n".$this->menu($invite, $options));
+            BookInterviewMeeting::dispatch($invite->id);
+
+            return;
+        }
+
+        $this->reply($invite, "Booked for *{$label}*. That morning you will get a WhatsApp link to start your AI interview. It takes about 15 minutes on your phone or laptop.\n\nNeed a different day? Just reply 1, 2 or 3:\n".$this->menu($invite, $options));
+    }
+
+    /** The Zoom link message, sent when the meeting is booked and whenever they ask again. */
+    public static function zoomMessage(InterviewInvite $invite): string
+    {
+        return "Your {$invite->roundLabel()} interview is on Zoom, *{$invite->slotLabel()}* (India time).\n\n"
+            ."Join here: {$invite->zoom_join_url}\n\n"
+            .'Join from your phone or laptop at that time, with your camera and microphone on. The BrowseJobs AI interviewer will be in the call. It asks its questions out loud and listens to your answers. It takes about 15–20 minutes and is recorded.';
     }
 
     /** @param  list<string>  $options */
@@ -91,11 +137,12 @@ final readonly class CandidateChatAgent
     }
 
     /** @param  list<string>  $options */
-    private function menu(array $options): string
+    private function menu(InterviewInvite $invite, array $options): string
     {
+        $time = SendInterviewInvites::interviewTime($invite);
         $lines = [];
         foreach ($options as $i => $date) {
-            $lines[] = ($i + 1).') '.SendInterviewInvites::label($date);
+            $lines[] = ($i + 1).') '.SendInterviewInvites::slotLabel($date, $time);
         }
 
         return implode("\n", $lines);

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Employers;
 
+use App\Enums\EmployerInterviewStatus;
 use App\Enums\EmployerJobStatus;
 use App\Models\EmployerCandidate;
+use App\Models\EmployerInterview;
 use App\Models\EmployerJob;
 use App\Models\EmployerWhatsappLink;
 use App\Models\InterviewInvite;
@@ -121,7 +123,17 @@ final class ShortlistReport
         }
 
         if ($entries->isNotEmpty() && $settings->autoInvite) {
-            $out .= "\n\n📩 Everyone shortlisted is sent a WhatsApp to pick a day for their L1 AI interview — automatically.";
+            $out .= "\n\n📩 Everyone shortlisted is sent a WhatsApp to pick a slot for their L1 AI interview — automatically.";
+        }
+
+        $progress = $this->progress($job);
+        if ($progress !== '') {
+            $out .= "\n\n".$progress;
+        }
+
+        $cleared = $this->cleared($job, $settings);
+        if ($cleared !== '') {
+            $out .= "\n\n".$cleared;
         }
 
         return $out."\n\nCVs, full list and interview status:\n{$url}";
@@ -186,6 +198,59 @@ final class ShortlistReport
         $more = $rows->count() > self::SHOW ? "\n…and ".($rows->count() - self::SHOW).' more.' : '';
 
         return "⏳ *Taking the AI interview* ({$rows->count()}) — their CV matches; they are shortlisted if the interview clears the bar too:\n{$lines}{$more}";
+    }
+
+    /** "🎙 Interviews: L1 booked 2 · L1 done 1 · L2 booked 1" */
+    private function progress(EmployerJob $job): string
+    {
+        $labels = [InterviewInvite::SENT => 'asked', InterviewInvite::SCHEDULED => 'booked', InterviewInvite::OPEN => 'today', InterviewInvite::DONE => 'done', InterviewInvite::DECLINED => 'declined'];
+        $parts = InterviewInvite::query()
+            ->where('employer_job_id', $job->id)
+            ->where('round', '!=', InterviewInvite::ROUND_SCREEN)
+            ->whereIn('status', array_keys($labels))
+            ->selectRaw('round, status, count(*) as n')
+            ->groupBy('round', 'status')
+            ->orderBy('round')
+            ->get()
+            ->map(fn ($r) => strtoupper((string) $r->round).' '.$labels[$r->status].' '.$r->n);
+
+        return $parts->isEmpty() ? '' : '🎙 Interviews: '.$parts->implode(' · ');
+    }
+
+    /** Everyone who cleared every AI round at or above the pass mark, with their scores. */
+    private function cleared(EmployerJob $job, ShortlistSettings $settings): string
+    {
+        $aiRounds = app(InterviewProcess::class)->forJob($job)
+            ->filter(fn ($r) => $r->enabled && $r->isPlatformRun())
+            ->pluck('key')
+            ->values();
+        if ($aiRounds->isEmpty()) {
+            return '';
+        }
+
+        $rows = EmployerInterview::query()
+            ->whereHas('application', fn ($q) => $q->where('employer_job_id', $job->id))
+            ->where('status', EmployerInterviewStatus::Graded->value)
+            ->whereIn('round', $aiRounds->all())
+            ->with('application.candidate:id,name')
+            ->get()
+            ->groupBy('employer_job_application_id')
+            ->filter(fn (Collection $rounds) => $aiRounds->every(
+                fn (string $key) => ($rounds->firstWhere('round', $key)?->overall_score ?? -1) >= $settings->roundPassMark
+            ));
+        if ($rows->isEmpty()) {
+            return '';
+        }
+
+        $base = rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}/candidates/";
+        $lines = $rows->values()->map(function (Collection $rounds, int $i) use ($aiRounds, $base): string {
+            $first = $rounds->first();
+            $scores = $aiRounds->map(fn (string $key) => strtoupper($key).' '.$rounds->firstWhere('round', $key)?->overall_score)->implode(' · ');
+
+            return ($i + 1).'. *'.Str::limit((string) ($first->application?->candidate?->name ?? 'Candidate'), 40)."* — {$scores}\n    {$base}{$first->employer_job_application_id}";
+        })->implode("\n");
+
+        return "🏆 *Cleared the AI interviews* ({$rows->count()}):\n{$lines}";
     }
 
     private function facts(EmployerJob $job): string

@@ -213,7 +213,26 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
             </span>
           </label>
 
-          <label className="mt-2 flex cursor-pointer items-start gap-3 text-[13px]">
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <Field label="Interview time" hint="Each L1/L2 slot, India time" htmlFor="sl-time">
+              <input
+                id="sl-time" type="time" disabled={!canManage}
+                value={draft.interview_time}
+                onChange={(e) => setDraft({ ...draft, interview_time: e.target.value })}
+                className={`${controlCls} font-mono`}
+              />
+            </Field>
+            <Field label="Pass mark" hint="L1 → L2, L2 → report to you" htmlFor="sl-pass">
+              <input
+                id="sl-pass" type="number" min={0} max={100} disabled={!canManage}
+                value={draft.round_pass_mark}
+                onChange={(e) => setDraft({ ...draft, round_pass_mark: Number(e.target.value) })}
+                className={`${controlCls} font-mono`}
+              />
+            </Field>
+          </div>
+
+          <label className="mt-4 flex cursor-pointer items-start gap-3 text-[13px]">
             <input
               type="checkbox" disabled={!canManage}
               checked={draft.auto_invite}
@@ -603,13 +622,15 @@ const INVITE_LABEL: Record<string, string> = {
   failed: "Invite failed",
 };
 
-function InvitePill({ invite }: { invite: { status: string; day: string | null; error: string | null } }) {
+function InvitePill({ invite }: { invite: NonNullable<ShortlistEntry["invite"]> }) {
   const tone = invite.status === "declined" || invite.status === "failed" ? "warn" : invite.status === "done" ? "verify" : "trust";
   return (
     <span title={invite.error ?? undefined}>
       <Pill tone={tone}>
+        {invite.round ? `${invite.round} · ` : ""}
         {INVITE_LABEL[invite.status] ?? invite.status}
-        {invite.day && invite.status === "scheduled" ? ` · ${invite.day}` : ""}
+        {invite.day && (invite.status === "scheduled" || invite.status === "open") ? ` · ${invite.day}` : ""}
+        {invite.on_zoom ? " · Zoom" : ""}
       </Pill>
     </span>
   );
@@ -639,10 +660,12 @@ function MessageAgentCard({
         <div className="max-w-2xl">
           <Label>Message agent · WhatsApp interview invites</Label>
           <p className="mt-2 text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
-            Everyone on the shortlist gets a WhatsApp asking which of the next three working days suits them
-            {data.settings.auto_invite ? " — sent automatically the moment they are shortlisted" : ""}. Their reply books the
-            first round; that morning they get a link, sign in with the same number, and take a spoken AI interview that is recorded
-            and scored. L2 follows the same way once L1 is cleared.
+            Everyone on the shortlist gets a WhatsApp offering three slots at {data.settings.interview_time}
+            {data.settings.auto_invite ? " — sent automatically the moment they are shortlisted" : ""}. Their reply books L1
+            {agent.zoom
+              ? " and creates the Zoom meeting at once; the AI interviewer joins the call at that time, asks its questions out loud, records and scores it."
+              : "; that morning they get a link and take a spoken AI interview that is recorded and scored."}{" "}
+            At {data.settings.round_pass_mark}+ they are offered L2 slots the same way, and whoever clears L2 is sent to you on WhatsApp.
           </p>
         </div>
         {canManage && (

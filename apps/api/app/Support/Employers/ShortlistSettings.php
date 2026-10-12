@@ -20,6 +20,10 @@ use App\Models\JobShortlistEntry;
  * the interview invite (pick a day for L1) straight away. With
  * require_interview off, the older single match score and min_score apply.
  *
+ * interview_time is the time of day (India) of every L1/L2 slot offered on
+ * WhatsApp; round_pass_mark is the score that clears L1 (→ the L2 invite)
+ * and L2 (→ the client's report).
+ *
  * Stored on employer_jobs.shortlist_settings; a JD that never saved any
  * gets these defaults, so publishing always runs the agent across all three
  * sources.
@@ -36,6 +40,10 @@ final readonly class ShortlistSettings
 
     public const DEFAULT_SECOND_BAR = 60;
 
+    public const DEFAULT_INTERVIEW_TIME = '11:00';
+
+    public const DEFAULT_ROUND_PASS_MARK = 60;
+
     /** @param  list<string>  $sources */
     public function __construct(
         public int $topN,
@@ -47,6 +55,8 @@ final readonly class ShortlistSettings
         public int $firstBar = self::DEFAULT_FIRST_BAR,
         public int $secondBar = self::DEFAULT_SECOND_BAR,
         public bool $autoInvite = true,
+        public string $interviewTime = self::DEFAULT_INTERVIEW_TIME,
+        public int $roundPassMark = self::DEFAULT_ROUND_PASS_MARK,
     ) {}
 
     public static function forJob(EmployerJob $job): self
@@ -72,6 +82,10 @@ final readonly class ShortlistSettings
             // The second bar can never sit above the first.
             secondBar: min($first, max(0, min(100, (int) ($data['second_bar'] ?? self::DEFAULT_SECOND_BAR)))),
             autoInvite: (bool) ($data['auto_invite'] ?? true),
+            interviewTime: is_string($data['interview_time'] ?? null) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $data['interview_time']) === 1
+                ? $data['interview_time']
+                : self::DEFAULT_INTERVIEW_TIME,
+            roundPassMark: max(0, min(100, (int) ($data['round_pass_mark'] ?? self::DEFAULT_ROUND_PASS_MARK))),
         );
     }
 
@@ -80,7 +94,7 @@ final readonly class ShortlistSettings
         return in_array($source, $this->sources, true);
     }
 
-    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_bar: int, second_bar: int, auto_invite: bool} */
+    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_bar: int, second_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int} */
     public function toArray(): array
     {
         return [
@@ -93,6 +107,8 @@ final readonly class ShortlistSettings
             'first_bar' => $this->firstBar,
             'second_bar' => $this->secondBar,
             'auto_invite' => $this->autoInvite,
+            'interview_time' => $this->interviewTime,
+            'round_pass_mark' => $this->roundPassMark,
         ];
     }
 }

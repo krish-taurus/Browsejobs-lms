@@ -105,7 +105,7 @@ it('surfaces the Zoom error when meeting creation fails', function () {
     // A client that always fails, to prove the admin sees the reason (not a silent no-op).
     app()->instance(ZoomClient::class, new class implements ZoomClient
     {
-        public function createMeeting(string $t, CarbonInterface $s, int $d, ?string $h = null, ?bool $r = null): ZoomMeeting
+        public function createMeeting(string $t, CarbonInterface $s, int $d, ?string $h = null, ?bool $r = null, bool $j = false): ZoomMeeting
         {
             throw new RuntimeException('Invalid access token, does not contain scopes: [meeting:write]');
         }

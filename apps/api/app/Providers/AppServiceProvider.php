@@ -18,6 +18,8 @@ use App\Support\Drive\NullDriveClient;
 use App\Support\Enquiries\ClientIp;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
+use App\Support\Interviews\Bots\MeetingBotClient;
+use App\Support\Interviews\Bots\RecallMeetingBotClient;
 use App\Support\Interviews\NullTranscriptionClient;
 use App\Support\Interviews\TranscriptionClient;
 use App\Support\JobFeed\ApifyTransport;
@@ -84,6 +86,14 @@ class AppServiceProvider extends ServiceProvider
             $config = config('services.zoom');
 
             return new HttpZoomClient($config);
+        });
+
+        // The bot that takes an L1/L2 interview inside a Zoom call. No key = off.
+        $this->app->bind(MeetingBotClient::class, function (): RecallMeetingBotClient {
+            /** @var array{api_key: string, base_url: string, bot_name: string} $config */
+            $config = config('services.recall');
+
+            return new RecallMeetingBotClient($config);
         });
 
         // Real fee gate (P2.3): denies access when a student has an active
