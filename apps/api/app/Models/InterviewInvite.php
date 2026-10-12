@@ -14,6 +14,10 @@ use Illuminate\Support\Carbon;
  * the dates offered on WhatsApp, the one they picked, and the private link
  * (/hire-interview/{token}) that opens the voice interview on that day.
  *
+ * Round "screen" is the AI screening interview the shortlist agent sends to
+ * someone whose CV matches but who has no AI interview for the role yet: it
+ * is open from the start (no day to pick) and runs the JD's own interview.
+ *
  * @property int $id
  * @property int $tenant_id
  * @property int $employer_job_id
@@ -49,6 +53,8 @@ final class InterviewInvite extends Model
     public const DECLINED = 'declined';
 
     public const FAILED = 'failed';
+
+    public const ROUND_SCREEN = 'screen';
 
     /** Statuses in which a WhatsApp reply from the candidate belongs to this thread. */
     public const LISTENING = [self::SENT, self::SCHEDULED, self::OPEN];
@@ -98,6 +104,12 @@ final class InterviewInvite extends Model
     public function link(): string
     {
         return rtrim((string) config('app.frontend_url'), '/').'/hire-interview/'.$this->token;
+    }
+
+    /** How the round is named to the candidate: "AI screening", "L1", "L2". */
+    public function roundLabel(): string
+    {
+        return $this->round === self::ROUND_SCREEN ? 'AI screening' : strtoupper($this->round);
     }
 
     public function firstName(): string

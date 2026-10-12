@@ -6,6 +6,7 @@ namespace App\Actions\Employers;
 
 use App\Enums\EmployerInterviewStatus;
 use App\Models\EmployerInterview;
+use App\Models\EmployerJob;
 use App\Models\InterviewInvite;
 use App\Models\MockBlueprint;
 use App\Models\MockInterview;
@@ -23,15 +24,31 @@ use Illuminate\Validation\ValidationException;
  * employer_job_id, so it cannot stand in for the JD mock a candidate needs to
  * apply). One attempt: an interview already in progress is resumed; a
  * finished one is not restarted.
+ *
+ * The AI screening invite is different: it opens the JD's own interview
+ * (StartEmployerJobMock), the same one a student can take from the job page,
+ * and its score is what the shortlist agent reads.
  */
 final readonly class StartRoundInterview
 {
+    public function __construct(private StartEmployerJobMock $jobInterview) {}
+
     public function handle(InterviewInvite $invite, User $candidate): MockInterview
     {
         if ($invite->candidate_user_id !== $candidate->id) {
             throw ValidationException::withMessages([
                 'invite' => 'This interview link belongs to someone else. Log in with the WhatsApp number it was sent to.',
             ]);
+        }
+
+        if ($invite->round === InterviewInvite::ROUND_SCREEN) {
+            if ($invite->status !== InterviewInvite::OPEN) {
+                throw ValidationException::withMessages(['invite' => 'You have already taken this interview. The company will be in touch.']);
+            }
+
+            $job = EmployerJob::withoutGlobalScopes()->findOrFail($invite->employer_job_id);
+
+            return $this->jobInterview->handle($candidate, $job);
         }
 
         return app(TenantContext::class)->run($candidate->tenant, function () use ($invite, $candidate): MockInterview {

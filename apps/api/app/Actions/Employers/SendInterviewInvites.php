@@ -29,6 +29,9 @@ use Illuminate\Validation\ValidationException;
  * a light one), put them on the pipeline at Shortlisted, and queue one
  * invite. Idempotent — someone already invited is skipped, never messaged
  * twice. Only runs when the invite template is approved by Meta.
+ *
+ * Called from the "Send interview invites" button, and by the shortlist agent
+ * itself (no actor) when the JD's auto_invite setting is on.
  */
 final readonly class SendInterviewInvites
 {
@@ -42,7 +45,7 @@ final readonly class SendInterviewInvites
      * @param  list<int>|null  $entryIds  null = everyone on the shortlist
      * @return array{queued: int, skipped: array<string, int>}
      */
-    public function handle(EmployerJob $job, User $actor, ?array $entryIds = null): array
+    public function handle(EmployerJob $job, ?User $actor, ?array $entryIds = null): array
     {
         if (! $this->templates->approved(InterviewTemplates::INVITE)) {
             throw ValidationException::withMessages([
@@ -75,11 +78,8 @@ final readonly class SendInterviewInvites
                     continue;
                 }
 
-                $phone = preg_replace('/\D+/', '', (string) $user->phone) ?? '';
-                if (strlen($phone) === 10) {
-                    $phone = '91'.$phone;
-                }
-                if (strlen($phone) < 11) {
+                $phone = self::whatsappNumber($user->phone);
+                if ($phone === null) {
                     $skip('no mobile number');
 
                     continue;
@@ -112,7 +112,7 @@ final readonly class SendInterviewInvites
                     'chosen_date' => null,
                     'token' => $invite->token ?? Str::random(40),
                     'error' => null,
-                    'sent_by_user_id' => $actor->id,
+                    'sent_by_user_id' => $actor?->id,
                 ])->save();
 
                 // A steady pace, not a burst — WhatsApp watches sending quality.
@@ -146,6 +146,17 @@ final readonly class SendInterviewInvites
         }
 
         return $out;
+    }
+
+    /** Digits with the country code (10-digit Indian numbers get 91), or null when unusable. */
+    public static function whatsappNumber(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone) ?? '';
+        if (strlen($digits) === 10) {
+            $digits = '91'.$digits;
+        }
+
+        return strlen($digits) < 11 ? null : $digits;
     }
 
     public static function label(string $date): string

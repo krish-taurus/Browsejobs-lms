@@ -14,7 +14,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Runs the shortlist agent for a JD in the background (on publish).
+ * Runs the shortlist agent for a JD in the background (on publish, and again
+ * each time someone finishes the AI screening interview it sent them).
  * Idempotent: a run only rebuilds the list from current data, and a JD that
  * is no longer published is left alone.
  */
@@ -26,7 +27,10 @@ final class RunJobShortlistAgent implements ShouldQueue
 
     public int $tries = 2;
 
-    public function __construct(public readonly int $employerJobId) {}
+    public function __construct(
+        public readonly int $employerJobId,
+        public readonly string $trigger = JobShortlistRun::TRIGGER_PUBLISH,
+    ) {}
 
     public function handle(RunShortlistAgent $agent): void
     {
@@ -35,6 +39,6 @@ final class RunJobShortlistAgent implements ShouldQueue
             return;
         }
 
-        $agent->handle($job, JobShortlistRun::TRIGGER_PUBLISH);
+        $agent->handle($job, $this->trigger);
     }
 }

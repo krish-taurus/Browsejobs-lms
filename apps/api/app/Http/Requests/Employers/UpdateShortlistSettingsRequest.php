@@ -28,6 +28,10 @@ final class UpdateShortlistSettingsRequest extends FormRequest
             'sources.*' => ['string', Rule::in(JobShortlistEntry::SOURCES)],
             'auto_on_publish' => ['required', 'boolean'],
             'students_need_readiness' => ['sometimes', 'boolean'],
+            'require_interview' => ['sometimes', 'boolean'],
+            'first_bar' => ['sometimes', 'integer', 'min:0', 'max:100'],
+            'second_bar' => ['sometimes', 'integer', 'min:0', 'max:100', Rule::when($this->has('first_bar'), 'lte:first_bar')],
+            'auto_invite' => ['sometimes', 'boolean'],
         ];
     }
 }

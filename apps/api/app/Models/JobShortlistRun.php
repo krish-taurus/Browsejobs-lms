@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<string, array{considered: int, matched: int}> $considered
  * @property int $shortlisted_count
  * @property list<array{name: string, source: string, match_score: int, matched_skills: list<string>}>|null $near_misses closest below the bar, kept only when nobody cleared it
+ * @property list<array{candidate_key: string, name: string, source: string, cv_match: int, candidate_user_id: int|null, employer_candidate_id: int|null}>|null $awaiting CV matches with no AI interview yet — sent the AI screening interview
  */
 final class JobShortlistRun extends Model
 {
@@ -30,8 +31,11 @@ final class JobShortlistRun extends Model
 
     public const TRIGGER_MANUAL = 'manual';
 
+    /** Someone finished the AI screening interview the agent sent them. */
+    public const TRIGGER_SCREENING = 'screening';
+
     protected $fillable = [
-        'tenant_id', 'employer_job_id', 'trigger', 'triggered_by_user_id', 'settings', 'considered', 'shortlisted_count', 'near_misses',
+        'tenant_id', 'employer_job_id', 'trigger', 'triggered_by_user_id', 'settings', 'considered', 'shortlisted_count', 'near_misses', 'awaiting',
     ];
 
     /** @return array<string, string> */
@@ -41,6 +45,7 @@ final class JobShortlistRun extends Model
             'settings' => 'array',
             'considered' => 'array',
             'near_misses' => 'array',
+            'awaiting' => 'array',
         ];
     }
 

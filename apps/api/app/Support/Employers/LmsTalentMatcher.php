@@ -56,6 +56,8 @@ final readonly class LmsTalentMatcher
      */
     private const MIN_ROLE_WORD_LENGTH = 4;
 
+    public function __construct(private RoleInterviewScores $interviews = new RoleInterviewScores) {}
+
     /**
      * @return Collection<int, array<string, mixed>>
      */
@@ -64,8 +66,11 @@ final readonly class LmsTalentMatcher
      *                                           gate; the shortlist agent can switch it off, so a student with a
      *                                           real CV and the right course still surfaces (ranked without the
      *                                           AI-readiness points) while few have taken that interview
+     * @param  bool  $includeApplicants  the shortlist agent keeps reading a student after
+     *                                   they are on the JD's pipeline (screened or invited);
+     *                                   the Talent Pool leaves them to the pipeline view
      */
-    public function forJob(EmployerJob $job, int $limit = 25, bool $requireReadinessInterview = true): Collection
+    public function forJob(EmployerJob $job, int $limit = 25, bool $requireReadinessInterview = true, bool $includeApplicants = false): Collection
     {
         $required = $this->normalize($job->skills ?? []);
 
@@ -74,7 +79,7 @@ final readonly class LmsTalentMatcher
         }
 
         // Students who already applied are shown in the pipeline, not the pool.
-        $applied = EmployerJobApplication::query()
+        $applied = $includeApplicants ? [] : EmployerJobApplication::query()
             ->where('employer_job_id', $job->id)
             ->pluck('candidate_id')
             ->all();
@@ -124,11 +129,7 @@ final readonly class LmsTalentMatcher
         $training = $this->trainingByUser($userIds);
 
         $roleWords = $this->roleWords($job);
-        $titleWords = array_values(array_filter(
-            preg_split('/[^a-z0-9]+/', mb_strtolower($job->title)) ?: [],
-            fn (string $w) => mb_strlen($w) >= self::MIN_ROLE_WORD_LENGTH,
-        ));
-        $roleBest = $this->bestRoleInterview($userIds, $titleWords);
+        $roleBest = $this->interviews->forJob($job, $userIds);
 
         return $profiles
             ->map(function (CvProfile $profile) use ($required, $users, $scores, $mockAverages, $training, $roleWords, $roleBest): ?array {
@@ -184,6 +185,8 @@ final readonly class LmsTalentMatcher
                     'training' => $training[$profile->user_id] ?? null,
                     'cv_ready' => ! empty($profile->data['summary'] ?? null) || ! empty($profile->data['skills'] ?? []),
                     'cv_mock_score' => $profile->cv_mock_score,
+                    // Best finished AI interview for this JD or its role; null = none yet.
+                    'role_interview' => $roleBest[$profile->user_id] ?? null,
                 ];
             })
             ->filter()
@@ -238,38 +241,6 @@ final readonly class LmsTalentMatcher
         }
 
         return false;
-    }
-
-    /**
-     * Best completed interview score per student among interviews for this
-     * JD's role: the interview's role title contains every word of the JD title.
-     *
-     * @param  list<int>  $userIds
-     * @param  list<string>  $roleWords
-     * @return array<int, int>
-     */
-    private function bestRoleInterview(array $userIds, array $roleWords): array
-    {
-        if ($roleWords === [] || $userIds === []) {
-            return [];
-        }
-
-        $best = [];
-        MockInterview::query()
-            ->whereIn('user_id', $userIds)
-            ->whereNotNull('overall_score')
-            ->with('blueprint:id,role_title')
-            ->get(['id', 'user_id', 'mock_blueprint_id', 'overall_score'])
-            ->each(function (MockInterview $m) use ($roleWords, &$best): void {
-                $title = mb_strtolower((string) $m->blueprint?->role_title);
-                $matches = count(array_filter($roleWords, fn (string $w) => str_contains($title, $w)));
-                // Every role word must appear: "Data Engineer" ≠ "Data Analyst".
-                if ($matches === count($roleWords)) {
-                    $best[$m->user_id] = max($best[$m->user_id] ?? 0, (int) $m->overall_score);
-                }
-            });
-
-        return $best;
     }
 
     private function roleWords(EmployerJob $job): array

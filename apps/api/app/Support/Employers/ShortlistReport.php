@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Support\Employers;
 
 use App\Enums\EmployerJobStatus;
+use App\Models\EmployerCandidate;
 use App\Models\EmployerJob;
 use App\Models\EmployerWhatsappLink;
+use App\Models\InterviewInvite;
 use App\Models\JobShortlistEntry;
 use App\Models\JobShortlistRun;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -44,8 +47,14 @@ final class ShortlistReport
             return "{$head}\n\nThe shortlist agent has not run on this job yet. It runs when the job goes live — send *SHORTLIST* again in a minute.\n\n{$url}";
         }
 
+        $settings = ShortlistSettings::fromArray((array) $run->settings);
+        $rule = $settings->requireInterview
+            ? "Rule: CV match *and* AI interview — {$settings->firstBar}%+ first, then {$settings->secondBar}%+."
+            : null;
+
         $looked = collect($run->considered ?? [])->map(fn ($c, $s) => (self::SOURCE[$s] ?? $s).' '.(int) ($c['considered'] ?? 0))->implode(' · ');
         $total = collect($run->considered ?? [])->sum(fn ($c) => (int) ($c['considered'] ?? 0));
+        $intro = $head.($rule !== null ? "\n{$rule}" : '');
 
         $entries = JobShortlistEntry::query()
             ->where('employer_job_id', $job->id)
@@ -53,49 +62,130 @@ final class ShortlistReport
             ->with(['employerCandidate', 'candidateUser:id,name'])
             ->orderBy('rank')
             ->get();
+        $awaiting = $this->awaiting($job, $run);
 
-        $min = (int) ($run->settings['min_score'] ?? ShortlistSettings::DEFAULT_MIN_SCORE);
-        if ($entries->isEmpty() && ! empty($run->near_misses)) {
-            $lines = [];
-            foreach ($run->near_misses as $i => $n) {
-                $skills = (array) ($n['matched_skills'] ?? []);
-                $lines[] = ($i + 1).'. *'.Str::limit((string) $n['name'], 40).'* — '.(int) $n['match_score'].'% · '.(self::SOURCE[$n['source']] ?? $n['source'])
-                    .($skills !== [] ? "\n    ✓ ".implode(', ', $skills) : '');
+        if ($entries->isEmpty() && $awaiting === '') {
+            $near = collect($run->near_misses ?? []);
+            if ($near->isEmpty()) {
+                return "{$intro}\n\nLooked at {$total} ({$looked}). *Nobody matched yet.*\n\n"
+                    ."To get matches:\n"
+                    ."• Upload your candidate Excel or Naukri export on the AI shortlist page, then press Run.\n"
+                    ."• Or lower the bar there.\n\n{$url}";
             }
 
-            return "{$head}\n\nLooked at {$total} ({$looked}). *Nobody reached your minimum match of {$min}%.*\n\n"
-                ."Closest so far:\n".implode("\n", $lines)
-                ."\n\nTo shortlist them, lower the minimum match on the AI shortlist page and press Run — or upload your own candidate Excel / Naukri export there.\n\n{$url}";
+            $lines = $near->values()->map(function (array $n, int $i): string {
+                $scores = $this->scores($n['cv_match'] ?? null, $n['interview_score'] ?? null, (int) ($n['match_score'] ?? 0));
+                $skills = (array) ($n['matched_skills'] ?? []);
+
+                return ($i + 1).'. *'.Str::limit((string) $n['name'], 40)."* — {$scores} · ".(self::SOURCE[$n['source']] ?? $n['source'])
+                    .($skills !== [] ? "\n    ✓ ".implode(', ', $skills) : '');
+            })->implode("\n");
+
+            $bar = $settings->requireInterview ? "{$settings->secondBar}%" : "{$settings->minScore}%";
+
+            return "{$intro}\n\nLooked at {$total} ({$looked}). Nobody reached your minimum match of {$bar} yet.\n\n"
+                ."Closest so far:\n{$lines}\n\n"
+                ."To shortlist them, lower the bar on the AI shortlist page and press Run — or upload your own candidate Excel / Naukri export there.\n\n{$url}";
         }
 
-        if ($entries->isEmpty()) {
-            return "{$head}\n\nLooked at {$total} ({$looked}). *Nobody matched yet.*\n\n"
-                ."To get matches:\n"
-                ."• Upload your candidate Excel or Naukri export on the AI shortlist page, then press Run.\n"
-                ."• Or lower the minimum match there.\n\n{$url}";
+        $out = "{$intro}\n\nLooked at {$total} ({$looked}) · picked *{$entries->count()}*";
+
+        if ($entries->isNotEmpty()) {
+            $groups = $settings->requireInterview
+                ? $entries->groupBy(fn (JobShortlistEntry $e) => (int) ($e->reasons['tier'] ?? 2))->sortKeys()
+                : collect([0 => $entries]);
+            $n = 0;
+            foreach ($groups as $tier => $group) {
+                $title = match ($tier) {
+                    1 => "\n\n⭐ *{$settings->firstBar}%+ (picked first)*",
+                    2 => "\n\n✅ *{$settings->secondBar}–".($settings->firstBar - 1).'%*',
+                    default => '',
+                };
+                $out .= $title === '' ? "\n" : $title;
+                foreach ($group as $e) {
+                    if (++$n > self::SHOW) {
+                        break 2;
+                    }
+                    $out .= "\n".$this->line($n, $e);
+                }
+            }
+            if ($entries->count() > self::SHOW) {
+                $out .= "\n…and ".($entries->count() - self::SHOW).' more.';
+            }
+        } else {
+            $out .= "\n\nNobody has cleared both the CV and the AI interview yet.";
         }
 
-        $lines = [];
-        foreach ($entries->take(self::SHOW) as $i => $e) {
-            $name = $e->employerCandidate?->name ?? $e->candidateUser?->name ?? 'Candidate';
-            $matched = array_slice((array) ($e->reasons['matched_skills'] ?? []), 0, 4);
-            $missing = array_slice((array) ($e->reasons['missing_skills'] ?? []), 0, 2);
-            $detail = array_filter([
-                $matched !== [] ? '✓ '.implode(', ', $matched) : null,
-                $missing !== [] ? 'missing '.implode(', ', $missing) : null,
-                $e->source === 'browsejobs' && ($e->reasons['ai_readiness'] ?? null) === null ? 'no AI interview yet' : null,
-                $e->reasons['experience'] ?? null,
-            ]);
-
-            $lines[] = ($i + 1).'. *'.Str::limit($name, 40)."* — {$e->match_score}% · ".(self::SOURCE[$e->source] ?? $e->source)
-                .($detail !== [] ? "\n    ".implode(' · ', $detail) : '');
+        if ($awaiting !== '') {
+            $out .= "\n\n".$awaiting;
         }
 
-        $more = $entries->count() > self::SHOW ? "\n…and ".($entries->count() - self::SHOW).' more.' : '';
+        if ($entries->isNotEmpty() && $settings->autoInvite) {
+            $out .= "\n\n📩 Everyone shortlisted is sent a WhatsApp to pick a day for their L1 AI interview — automatically.";
+        }
 
-        return "{$head}\n\nLooked at {$total} ({$looked}) · picked *{$entries->count()}*\n\n"
-            .implode("\n", $lines).$more
-            ."\n\nCVs, full list and WhatsApp interview invites:\n{$url}";
+        return $out."\n\nCVs, full list and interview status:\n{$url}";
+    }
+
+    private function line(int $n, JobShortlistEntry $e): string
+    {
+        $name = $e->employerCandidate?->name ?? $e->candidateUser?->name ?? 'Candidate';
+        $matched = array_slice((array) ($e->reasons['matched_skills'] ?? []), 0, 4);
+        $missing = array_slice((array) ($e->reasons['missing_skills'] ?? []), 0, 2);
+        $detail = array_filter([
+            $matched !== [] ? '✓ '.implode(', ', $matched) : null,
+            $missing !== [] ? 'missing '.implode(', ', $missing) : null,
+            $e->reasons['experience'] ?? null,
+        ]);
+        $scores = $this->scores($e->reasons['cv_match'] ?? null, $e->reasons['interview_score'] ?? null, (int) $e->match_score);
+
+        return "{$n}. *".Str::limit($name, 40)."* — {$scores} · ".(self::SOURCE[$e->source] ?? $e->source)
+            .($detail !== [] ? "\n    ".implode(' · ', $detail) : '');
+    }
+
+    /** "CV 90% · AI interview 80%", or the single match % for older runs. */
+    private function scores(mixed $cv, mixed $interview, int $match): string
+    {
+        if ($cv === null) {
+            return "{$match}%";
+        }
+
+        return "CV {$cv}% · ".($interview === null ? 'no AI interview yet' : "AI interview {$interview}%");
+    }
+
+    /** People sent the AI screening interview, with where they are. */
+    private function awaiting(EmployerJob $job, JobShortlistRun $run): string
+    {
+        /** @var Collection<int, array<string, mixed>> $rows */
+        $rows = collect($run->awaiting ?? []);
+        if ($rows->isEmpty()) {
+            return '';
+        }
+
+        $accountOf = EmployerCandidate::query()
+            ->whereIn('id', $rows->pluck('employer_candidate_id')->filter()->all())
+            ->pluck('user_id', 'id');
+        $invites = InterviewInvite::query()
+            ->where('employer_job_id', $job->id)
+            ->where('round', InterviewInvite::ROUND_SCREEN)
+            ->get()
+            ->keyBy('candidate_user_id');
+
+        $lines = $rows->take(self::SHOW)->map(function (array $r) use ($accountOf, $invites): string {
+            $userId = $r['candidate_user_id'] ?? $accountOf[$r['employer_candidate_id'] ?? 0] ?? null;
+            $invite = $userId !== null ? $invites->get($userId) : null;
+            $state = match ($invite?->status) {
+                null => 'invite not sent yet',
+                InterviewInvite::FAILED => 'could not be messaged',
+                InterviewInvite::DONE => 'interview finished',
+                default => 'AI interview invite sent',
+            };
+
+            return '• *'.Str::limit((string) $r['name'], 40)."* — CV {$r['cv_match']}% · {$state}";
+        })->implode("\n");
+        $more = $rows->count() > self::SHOW ? "\n…and ".($rows->count() - self::SHOW).' more.' : '';
+
+        return "⏳ *Taking the AI interview* ({$rows->count()}) — their CV matches; they are shortlisted if the interview clears the bar too:\n{$lines}{$more}";
     }
 
     private function facts(EmployerJob $job): string

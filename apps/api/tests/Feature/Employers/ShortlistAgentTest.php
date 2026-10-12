@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\BatchMemberStatus;
 use App\Enums\BatchType;
+use App\Events\MockCompleted;
 use App\Jobs\RunJobShortlistAgent;
 use App\Models\Batch;
 use App\Models\BatchMember;
@@ -11,15 +12,24 @@ use App\Models\Course;
 use App\Models\CvProfile;
 use App\Models\EmployerCandidate;
 use App\Models\EmployerJob;
+use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
+use App\Models\InterviewInvite;
+use App\Models\JdMock;
 use App\Models\JobShortlistEntry;
 use App\Models\JobShortlistRun;
+use App\Models\MockBlueprint;
+use App\Models\MockInterview;
 use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Employers\InterviewTemplates;
 use App\Support\Employers\ShortlistReport;
+use App\Support\WhatsApp\FakeWhatsAppClient;
+use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
@@ -175,7 +185,7 @@ it('rejects an unreadable sheet with a clear message', function (): void {
         ->assertJsonValidationErrors('file');
 });
 
-it('ranks students, the client database and Naukri together, keeping the top N above the minimum score', function (): void {
+it('in CV-only mode, ranks students, the client database and Naukri together, keeping the top N above the minimum score', function (): void {
     $student = shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws'], 80);
     $make = fn (string $source, string $name, array $skills, ?float $years, string $city, string $phone) => EmployerCandidate::create([
         'tenant_id' => $this->tenant->id,
@@ -197,6 +207,7 @@ it('ranks students, the client database and Naukri together, keeping the top N a
     Sanctum::actingAs($this->recruiter);
     $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
         'top_n' => 3, 'min_score' => 50, 'sources' => ['browsejobs', 'client_db', 'naukri'], 'auto_on_publish' => true,
+        'require_interview' => false,
     ])->assertOk();
 
     $response = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
@@ -224,6 +235,9 @@ it('never re-adds someone the client removed, and searches only the sources swit
     ]);
 
     Sanctum::actingAs($this->recruiter);
+    $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
+        'top_n' => 10, 'min_score' => 40, 'sources' => ['browsejobs', 'client_db', 'naukri'], 'auto_on_publish' => true, 'require_interview' => false,
+    ])->assertOk();
     $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
     $entry = JobShortlistEntry::query()->where('employer_candidate_id', $client->id)->firstOrFail();
 
@@ -235,7 +249,7 @@ it('never re-adds someone the client removed, and searches only the sources swit
     expect(collect($again->json('data.entries'))->pluck('employer_candidate_id')->filter()->all())->toBe([]);
 
     $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
-        'top_n' => 10, 'min_score' => 0, 'sources' => ['client_db'], 'auto_on_publish' => true,
+        'top_n' => 10, 'min_score' => 0, 'sources' => ['client_db'], 'auto_on_publish' => true, 'require_interview' => false,
     ])->assertOk();
     $onlyClient = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
     expect($onlyClient->json('data.entries'))->toBe([])
@@ -283,15 +297,20 @@ it('pulls students who have not taken the AI Readiness Interview yet, unless tol
     $student = shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws'], 60);
     CvProfile::query()->where('user_id', $student->id)->update(['cv_mock_completed_at' => null]);
     Sanctum::actingAs($this->recruiter);
+    $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
+        'top_n' => 10, 'min_score' => 40, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'require_interview' => false,
+    ])->assertOk();
 
     $run = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
     $entry = collect($run->json('data.entries'))->firstWhere('candidate_user_id', $student->id);
     expect($entry)->not->toBeNull()
         ->and($entry['reasons']['ai_readiness'])->toBeNull()
-        ->and($run->json('data.settings.students_need_readiness'))->toBeFalse();
+        ->and($run->json('data.settings.students_need_readiness'))->toBeFalse()
+        ->and($run->json('data.settings.require_interview'))->toBeFalse();
 
     $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
         'top_n' => 10, 'min_score' => 0, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'students_need_readiness' => true,
+        'require_interview' => false,
     ])->assertOk();
     $strict = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
     expect($strict->json('data.entries'))->toBe([]);
@@ -301,7 +320,7 @@ it('keeps the closest few when nobody clears the minimum match', function (): vo
     $student = shortlistStudent($this->tenant, ['python'], 10);
     Sanctum::actingAs($this->recruiter);
     $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
-        'top_n' => 10, 'min_score' => 95, 'sources' => ['browsejobs'], 'auto_on_publish' => true,
+        'top_n' => 10, 'min_score' => 95, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'require_interview' => false,
     ])->assertOk();
 
     $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->assertJsonPath('data.entries', []);
@@ -355,4 +374,135 @@ it('keeps one company\'s candidates and shortlist away from everyone else', func
     $run = $this->postJson("/api/v1/employer/workspaces/{$otherWorkspace->id}/jobs/{$otherJob->id}/shortlist/run")->assertOk();
     expect($run->json('data.entries'))->toBe([])
         ->and($run->json('data.last_run.considered.naukri.considered'))->toBe(0);
+});
+
+/** A finished AI interview for a role, as the voice room leaves it. */
+function finishedInterview(User $student, string $role, int $score): MockInterview
+{
+    $blueprint = MockBlueprint::query()->create([
+        'tenant_id' => $student->tenant_id, 'role_title' => $role, 'competencies' => ['x'], 'opening_question' => 'Hi', 'is_active' => true,
+    ]);
+
+    return MockInterview::query()->create([
+        'tenant_id' => $student->tenant_id, 'user_id' => $student->id, 'mock_blueprint_id' => $blueprint->id,
+        'mode' => 'text', 'status' => 'completed', 'overall_score' => $score, 'started_at' => now(), 'completed_at' => now(),
+    ]);
+}
+
+function screeningSetup($test): FakeWhatsAppClient
+{
+    config(['app.frontend_url' => 'https://browsejobs.ai']);
+    Cache::put('interview_template_statuses', [InterviewTemplates::INVITE => 'APPROVED', InterviewTemplates::LINK => 'APPROVED'], 600);
+    JdMock::factory()->for($test->tenant)->ready()->create(['employer_job_id' => $test->job->id]);
+    $wa = new FakeWhatsAppClient;
+    app()->instance(WhatsAppClient::class, $wa);
+
+    return $wa;
+}
+
+it('shortlists only on CV and AI interview together: 75 first, then 60, and screens a good CV with no interview', function (): void {
+    $wa = screeningSetup($this);
+    $all = ['python', 'sql', 'airflow', 'aws'];
+    $phone = fn (User $u, string $p) => tap($u)->update(['phone' => $p]);
+
+    $top = $phone(shortlistStudent($this->tenant, $all), '9000000011');
+    finishedInterview($top, 'Data Engineer', 80);
+    $next = $phone(shortlistStudent($this->tenant, $all), '9000000012');
+    finishedInterview($next, 'Senior Data Engineer', 65);
+    $cvOnly = $phone(shortlistStudent($this->tenant, $all), '9000000013');      // no interview → screened
+    $weakCv = $phone(shortlistStudent($this->tenant, ['python']), '9000000014'); // CV 25% → out, however good the interview
+    finishedInterview($weakCv, 'Data Engineer', 95);
+    $weakInterview = $phone(shortlistStudent($this->tenant, $all), '9000000015'); // interview 50 → out, not re-screened
+    finishedInterview($weakInterview, 'Data Engineer', 50);
+    $otherRole = $phone(shortlistStudent($this->tenant, $all), '9000000016');   // a Data Analyst interview does not count
+    finishedInterview($otherRole, 'Data Analyst', 90);
+
+    Sanctum::actingAs($this->recruiter);
+    $data = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->json('data');
+
+    $entries = collect($data['entries']);
+    expect($entries->pluck('candidate_user_id')->all())->toBe([$top->id, $next->id])
+        ->and($entries->pluck('reasons.tier')->all())->toBe([1, 2])
+        ->and($entries[0]['reasons']['cv_match'])->toBe(100)
+        ->and($entries[0]['reasons']['interview_score'])->toBe(80)
+        ->and($entries[0]['match_score'])->toBe(90)
+        ->and($data['settings'])->toMatchArray(['require_interview' => true, 'first_bar' => 75, 'second_bar' => 60, 'auto_invite' => true]);
+
+    // A good CV with no AI interview for the role gets the AI screening interview, not a place on the list.
+    $screened = collect($data['awaiting'])->pluck('name')->all();
+    expect($screened)->toContain($cvOnly->name)->toContain($otherRole->name)
+        ->and($screened)->not->toContain($weakCv->name)->not->toContain($weakInterview->name);
+    $invite = InterviewInvite::query()->where('candidate_user_id', $cvOnly->id)->firstOrFail();
+    $link = collect($wa->sent)->first(fn ($m) => $m['template'] === InterviewTemplates::LINK && $m['to'] === '919000000013');
+    expect($invite->round)->toBe('screen')
+        ->and($invite->status)->toBe('open')
+        ->and($link['parameters'])->toBe([$invite->firstName(), 'AI screening', 'Data Engineer'])
+        ->and(EmployerJobApplication::query()->where('candidate_id', $cvOnly->id)->first()->stage->value)->toBe('applied');
+
+    // Everyone shortlisted is invited to L1 straight away; nobody else is.
+    $l1 = InterviewInvite::query()->where('round', 'l1')->pluck('candidate_user_id')->sort()->values()->all();
+    expect($l1)->toBe(collect([$top->id, $next->id])->sort()->values()->all())
+        ->and(collect($wa->sent)->where('template', InterviewTemplates::INVITE)->count())->toBe(2);
+
+    // Running again never messages anyone twice.
+    $count = count($wa->sent);
+    $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
+    expect($wa->sent)->toHaveCount($count);
+});
+
+it('shortlists someone once they pass the AI screening interview, then invites them to L1', function (): void {
+    $wa = screeningSetup($this);
+    $student = tap(shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws']))->update(['phone' => '9000000021']);
+
+    Sanctum::actingAs($this->recruiter);
+    $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->assertJsonPath('data.entries', []);
+    $invite = InterviewInvite::query()->where('round', 'screen')->firstOrFail();
+
+    // The link page names the round; someone else's login cannot use it.
+    expect($this->getJson("/api/v1/interview-invites/{$invite->token}")->json('data.round'))->toBe('AI screening');
+    Sanctum::actingAs(User::factory()->for($this->tenant)->create(['user_type' => 'student']));
+    $this->postJson("/api/v1/me/interview-invites/{$invite->token}/start")->assertUnprocessable();
+
+    // Start opens the JD's own interview.
+    Sanctum::actingAs($student);
+    $start = $this->postJson("/api/v1/me/interview-invites/{$invite->token}/start")->assertOk()->json('data');
+    $mock = MockInterview::query()->with('blueprint')->findOrFail($start['mock_id']);
+    expect($mock->blueprint->employer_job_id)->toBe($this->job->id)
+        ->and($start['room_url'])->toBe("/job-interview/{$mock->id}/room");
+
+    // They finish with 78: the agent runs again and puts them in the first group.
+    $mock->update(['status' => MockInterview::STATUS_COMPLETED, 'overall_score' => 78, 'completed_at' => now()]);
+    MockCompleted::dispatch($student, $mock->fresh());
+
+    $entry = JobShortlistEntry::query()->where('candidate_user_id', $student->id)->firstOrFail();
+    expect($invite->fresh()->status)->toBe('done')
+        ->and($entry->reasons['tier'])->toBe(1)
+        ->and($entry->reasons['interview_score'])->toBe(78)
+        ->and(JobShortlistRun::query()->latest('id')->value('trigger'))->toBe('screening')
+        ->and(InterviewInvite::query()->where('round', 'l1')->where('candidate_user_id', $student->id)->value('status'))->toBe('sent')
+        ->and(collect($wa->sent)->last()['template'])->toBe(InterviewTemplates::INVITE);
+
+    // The finished screening link cannot be used again.
+    $this->postJson("/api/v1/me/interview-invites/{$invite->token}/start")->assertUnprocessable();
+});
+
+it('waits for Meta before sending the AI screening interview, and never shortlists on the CV alone', function (): void {
+    Cache::put('interview_template_statuses', [InterviewTemplates::INVITE => null, InterviewTemplates::LINK => null], 600);
+    shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws']);
+
+    Sanctum::actingAs($this->recruiter);
+    $data = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->json('data');
+
+    expect($data['entries'])->toBe([])
+        ->and($data['awaiting'][0]['invite_status'])->toBeNull()
+        ->and(InterviewInvite::query()->count())->toBe(0)
+        ->and(app(ShortlistReport::class)->text($this->job))->toContain('Taking the AI interview')->toContain('invite not sent yet');
+});
+
+it('keeps the second bar at or below the first', function (): void {
+    Sanctum::actingAs($this->recruiter);
+
+    $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
+        'top_n' => 10, 'min_score' => 40, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'first_bar' => 60, 'second_bar' => 75,
+    ])->assertUnprocessable()->assertJsonValidationErrors('second_bar');
 });

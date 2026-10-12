@@ -140,6 +140,43 @@ final class ShortlistAgentController extends Controller
         return response()->json(['data' => [...$this->payload($workspace, $job), 'template_result' => $result]]);
     }
 
+    /**
+     * People whose CV matches but who had no AI interview yet, and where their
+     * AI screening interview stands. Only the name and CV match — a student's
+     * contact details are never shown to the employer.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function awaiting(EmployerJob $job, ?JobShortlistRun $run): array
+    {
+        $rows = collect($run?->awaiting ?? []);
+        if ($rows->isEmpty()) {
+            return [];
+        }
+
+        $accountOf = EmployerCandidate::query()
+            ->whereIn('id', $rows->pluck('employer_candidate_id')->filter()->all())
+            ->pluck('user_id', 'id');
+        $invites = InterviewInvite::query()
+            ->where('employer_job_id', $job->id)
+            ->where('round', InterviewInvite::ROUND_SCREEN)
+            ->get()
+            ->keyBy('candidate_user_id');
+
+        return $rows->map(function (array $r) use ($accountOf, $invites): array {
+            $userId = $r['candidate_user_id'] ?? $accountOf[$r['employer_candidate_id'] ?? 0] ?? null;
+            $invite = $userId !== null ? $invites->get($userId) : null;
+
+            return [
+                'name' => $r['name'],
+                'source' => $r['source'],
+                'cv_match' => $r['cv_match'],
+                'invite_status' => $invite?->status,
+                'error' => $invite?->error,
+            ];
+        })->values()->all();
+    }
+
     /** @return array<string, mixed> */
     private function payload(EmployerWorkspace $workspace, EmployerJob $job): array
     {
@@ -183,9 +220,10 @@ final class ShortlistAgentController extends Controller
             'message_agent' => [
                 'templates' => $templates,
                 'ready' => ($templates[InterviewTemplates::INVITE] ?? null) === 'APPROVED',
-                'invites' => InterviewInvite::query()->where('employer_job_id', $job->id)
+                'invites' => InterviewInvite::query()->where('employer_job_id', $job->id)->where('round', 'l1')
                     ->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
             ],
+            'awaiting' => $this->awaiting($job, $run),
             'settings' => ShortlistSettings::forJob($job)->toArray(),
             'source_counts' => [
                 EmployerCandidate::SOURCE_CLIENT_DB => (int) ($counts[EmployerCandidate::SOURCE_CLIENT_DB] ?? 0),
@@ -197,6 +235,7 @@ final class ShortlistAgentController extends Controller
                 'by' => $run->triggeredBy?->name,
                 'considered' => $run->considered,
                 'shortlisted_count' => $run->shortlisted_count,
+                'awaiting_count' => count($run->awaiting ?? []),
                 'settings' => $run->settings,
                 'created_at' => $run->created_at?->toIso8601String(),
             ],

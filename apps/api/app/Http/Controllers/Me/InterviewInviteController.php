@@ -30,7 +30,7 @@ final class InterviewInviteController extends Controller
             'first_name' => $invite->firstName(),
             'role' => $job?->title,
             'company' => $job?->workspace?->name,
-            'round' => strtoupper($invite->round),
+            'round' => $invite->roundLabel(),
             'status' => $invite->status,
             'day' => $invite->chosen_date !== null ? SendInterviewInvites::label($invite->chosen_date->toDateString()) : null,
             'open' => $invite->status === InterviewInvite::OPEN,

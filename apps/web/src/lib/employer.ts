@@ -55,6 +55,12 @@ export type ShortlistSettings = {
   auto_on_publish: boolean;
   /** Off: students without the AI Readiness Interview still surface (ranked lower). */
   students_need_readiness: boolean;
+  /** On: CV match and AI interview must both clear first_bar (picked first), then second_bar. */
+  require_interview: boolean;
+  first_bar: number;
+  second_bar: number;
+  /** On: everyone shortlisted gets the WhatsApp interview invite straight away. */
+  auto_invite: boolean;
 };
 
 export type ShortlistEntry = {
@@ -64,6 +70,12 @@ export type ShortlistEntry = {
   match_score: number;
   status: "shortlisted" | "removed";
   reasons: {
+    /** CV match (share of the JD's skills on the CV). */
+    cv_match?: number;
+    /** Best AI interview for this JD or its role; null = none yet. */
+    interview_score?: number | null;
+    /** 1 = cleared the first bar, 2 = the second. */
+    tier?: 1 | 2;
     skill_match_pct: number;
     matched_skills: string[];
     missing_skills: string[];
@@ -96,10 +108,12 @@ export type ShortlistEntry = {
 
 export type ShortlistRun = {
   id: number;
-  trigger: "publish" | "manual";
+  trigger: "publish" | "manual" | "screening";
   by: string | null;
   considered: Partial<Record<ShortlistSource, { considered: number; matched: number }>>;
   shortlisted_count: number;
+  /** CV matches sent the AI screening interview. */
+  awaiting_count?: number;
   settings: ShortlistSettings;
   created_at: string | null;
 };
@@ -119,6 +133,17 @@ export type ShortlistData = {
   last_run: ShortlistRun | null;
   entries: ShortlistEntry[];
   removed: ShortlistEntry[];
+  /** CV matches with no AI interview yet, and where their AI screening interview stands. */
+  awaiting: ShortlistAwaiting[];
+};
+
+export type ShortlistAwaiting = {
+  name: string;
+  source: ShortlistSource;
+  cv_match: number;
+  /** null = not sent yet (e.g. waiting for Meta); open = sent; done = finished. */
+  invite_status: string | null;
+  error: string | null;
 };
 
 export type CandidateImport = {

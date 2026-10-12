@@ -9,6 +9,7 @@ import {
   employerApi,
   type CandidateImport,
   type CandidateSourcesData,
+  type ShortlistAwaiting,
   type ShortlistData,
   type ShortlistEntry,
   type ShortlistSettings,
@@ -21,8 +22,12 @@ import {
  * It searches up to three sources the client switches on: BrowseJobs
  * students, the client's own candidate database, and their Naukri export
  * (both uploaded here as Excel/CSV), scores everyone the same explainable
- * way, and keeps the top N above a minimum score. It runs by itself when
- * the JD is published, or on "Run now". Nobody is contacted at this step.
+ * way, and keeps the top N. By default nobody gets on the list on a CV
+ * alone: CV match and AI interview must both clear the first bar (picked
+ * first), then the second. A matching CV with no AI interview yet is sent
+ * the AI screening interview on WhatsApp, and everyone shortlisted gets the
+ * interview invite automatically. It runs by itself when the JD is
+ * published, after each screening interview, or on "Run now".
  */
 
 const SOURCE_LABEL: Record<ShortlistSource, string> = {
@@ -117,9 +122,12 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
               </span>
             </p>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
-              Searches BrowseJobs students, your own candidate database and your Naukri export. Everyone is scored on
-              skills, experience and location, and you see why each person was picked. It runs by itself when you
-              publish. Nobody is contacted at this step.
+              Searches BrowseJobs students, your own candidate database and your Naukri export, and you see why each
+              person was picked.{" "}
+              {data.settings.require_interview
+                ? `Nobody is picked on a CV alone: the CV match and the AI interview must both be ${data.settings.first_bar}%+ (picked first), then ${data.settings.second_bar}%+. A matching CV with no AI interview yet is sent one on WhatsApp.`
+                : "Everyone is scored on skills, experience and location."}{" "}
+              It runs by itself when you publish.
             </p>
           </div>
           {canManage && (
@@ -133,11 +141,13 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
         </div>
         {run && (
           <p className="mt-4 font-mono text-[11px] leading-relaxed text-white/60">
-            Last run {when(run.created_at)} · {run.trigger === "publish" ? "on publish" : `by ${run.by ?? "a teammate"}`} · looked at{" "}
+            Last run {when(run.created_at)} ·{" "}
+            {run.trigger === "publish" ? "on publish" : run.trigger === "screening" ? "after an AI screening interview" : `by ${run.by ?? "a teammate"}`} · looked at{" "}
             {(Object.entries(run.considered) as [ShortlistSource, { considered: number }][])
               .map(([s, c]) => `${c.considered} from ${SOURCE_SHORT[s]}`)
               .join(", ") || "no sources"}{" "}
             · picked {run.shortlisted_count}
+            {run.awaiting_count ? ` · ${run.awaiting_count} taking the AI interview` : ""}
           </p>
         )}
       </InkPanel>
@@ -156,15 +166,67 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
                 className={`${controlCls} font-mono`}
               />
             </Field>
-            <Field label="Minimum match" hint="0–100; lower shows more people" htmlFor="sl-min">
-              <input
-                id="sl-min" type="number" min={0} max={100} disabled={!canManage}
-                value={draft.min_score}
-                onChange={(e) => setDraft({ ...draft, min_score: Number(e.target.value) })}
-                className={`${controlCls} font-mono`}
-              />
-            </Field>
+            {draft.require_interview ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Pick first at" hint="CV and AI interview %" htmlFor="sl-first">
+                  <input
+                    id="sl-first" type="number" min={0} max={100} disabled={!canManage}
+                    value={draft.first_bar}
+                    onChange={(e) => setDraft({ ...draft, first_bar: Number(e.target.value) })}
+                    className={`${controlCls} font-mono`}
+                  />
+                </Field>
+                <Field label="Then at" hint="Both %" htmlFor="sl-second">
+                  <input
+                    id="sl-second" type="number" min={0} max={100} disabled={!canManage}
+                    value={draft.second_bar}
+                    onChange={(e) => setDraft({ ...draft, second_bar: Number(e.target.value) })}
+                    className={`${controlCls} font-mono`}
+                  />
+                </Field>
+              </div>
+            ) : (
+              <Field label="Minimum match" hint="0–100; lower shows more people" htmlFor="sl-min">
+                <input
+                  id="sl-min" type="number" min={0} max={100} disabled={!canManage}
+                  value={draft.min_score}
+                  onChange={(e) => setDraft({ ...draft, min_score: Number(e.target.value) })}
+                  className={`${controlCls} font-mono`}
+                />
+              </Field>
+            )}
           </div>
+
+          <label className="mt-4 flex cursor-pointer items-start gap-3 text-[13px]">
+            <input
+              type="checkbox" disabled={!canManage}
+              checked={draft.require_interview}
+              onChange={(e) => setDraft({ ...draft, require_interview: e.target.checked })}
+              className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
+            />
+            <span>
+              Shortlist only after an AI interview
+              <span className="block text-[12px] text-[var(--bj-dash-muted)]">
+                The CV match and the AI interview score must both clear the bar. A matching CV with no AI interview yet
+                is sent one on WhatsApp, and shortlisted when they pass. Off: one match score from the CV.
+              </span>
+            </span>
+          </label>
+
+          <label className="mt-2 flex cursor-pointer items-start gap-3 text-[13px]">
+            <input
+              type="checkbox" disabled={!canManage}
+              checked={draft.auto_invite}
+              onChange={(e) => setDraft({ ...draft, auto_invite: e.target.checked })}
+              className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
+            />
+            <span>
+              Send the interview invite automatically
+              <span className="block text-[12px] text-[var(--bj-dash-muted)]">
+                Everyone shortlisted gets the WhatsApp to pick a day for L1 straight away.
+              </span>
+            </span>
+          </label>
 
           <p className="mt-5 text-[13px] font-semibold text-[var(--bj-dash-ink)]">Search in</p>
           <div className="mt-2 space-y-2">
@@ -186,7 +248,7 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
             ))}
           </div>
 
-          <label className="mt-4 flex cursor-pointer items-center gap-3 text-[13px]">
+          <label className="mt-2 flex cursor-pointer items-center gap-3 text-[13px]">
             <input
               type="checkbox" disabled={!canManage}
               checked={draft.auto_on_publish}
@@ -256,9 +318,11 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
         <Tile accent={VIOLET} className="py-12 text-center" hover={false}>
           <p className="bj-dash-serif text-xl tracking-tight">{run ? "Nobody cleared the bar yet" : "The agent has not run yet"}</p>
           <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[var(--bj-dash-muted)]">
-            {run
-              ? "Upload your candidate database or Naukri export, switch more sources on, or lower the minimum match — then run it again."
-              : "It runs when the JD is published. Upload your own candidates first, then press “Run shortlist agent now”."}
+            {!run
+              ? "It runs when the JD is published. Upload your own candidates first, then press “Run shortlist agent now”."
+              : data.awaiting.length > 0
+                ? "The people below have a matching CV and were sent the AI interview. They join the list as soon as they pass."
+                : "Upload your candidate database or Naukri export, switch more sources on, or lower the bar — then run it again."}
           </p>
         </Tile>
       ) : (
@@ -274,6 +338,8 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
           ))}
         </ul>
       )}
+
+      {data.awaiting.length > 0 && <AwaitingList people={data.awaiting} />}
 
       {showRemoved && data.removed.length > 0 && (
         <ul className="space-y-3 opacity-70">
@@ -296,14 +362,18 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
   const removed = e.status === "removed";
   const color = e.match_score >= 70 ? VIOLET : TRUST;
   const sub = [e.current_title, e.current_company].filter(Boolean).join(" · ");
+  const scores = e.reasons.cv_match != null
+    ? `CV ${e.reasons.cv_match}% · ${e.reasons.interview_score != null ? `AI interview ${e.reasons.interview_score}%` : "no AI interview yet"}`
+    : null;
   const facts = e.source === "browsejobs"
     ? [
+        scores,
         e.reasons.training ? `${e.reasons.training.course} · ${e.reasons.training.status}` : null,
         typeof e.reasons.readiness_index === "number" ? `Readiness ${e.reasons.readiness_index}` : null,
-        e.reasons.mock_average ? `Mock avg ${e.reasons.mock_average}` : null,
-        e.reasons.ai_readiness != null ? `AI readiness ${e.reasons.ai_readiness}` : "No AI interview yet",
+        scores ? null : e.reasons.mock_average ? `Mock avg ${e.reasons.mock_average}` : null,
+        scores ? null : e.reasons.ai_readiness != null ? `AI readiness ${e.reasons.ai_readiness}` : "No AI interview yet",
       ]
-    : [e.reasons.experience, e.reasons.location, e.notice_period ? `Notice ${e.notice_period}` : null, e.expected_ctc ? `Expects ${e.expected_ctc}` : null];
+    : [scores, e.reasons.experience, e.reasons.location, e.notice_period ? `Notice ${e.notice_period}` : null, e.expected_ctc ? `Expects ${e.expected_ctc}` : null];
 
   return (
     <li className="rounded-3xl border border-[var(--bj-dash-border)] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.18)]">
@@ -316,6 +386,7 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-display text-base font-bold tracking-tight">{e.name}</p>
             <Pill tone={e.source === "browsejobs" ? "trust" : e.source === "naukri" ? "amber" : "dark"}>{SOURCE_SHORT[e.source]}</Pill>
+            {e.reasons.tier ? <Pill tone={e.reasons.tier === 1 ? "verify" : "trust"}>{e.reasons.tier === 1 ? "Picked first" : "Second group"}</Pill> : null}
             {e.invite ? <InvitePill invite={e.invite} /> : null}
           </div>
           {sub && <p className="mt-0.5 text-[12px] text-[var(--bj-dash-muted)]">{sub}</p>}
@@ -339,6 +410,40 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
         )}
       </div>
     </li>
+  );
+}
+
+const SCREEN_LABEL: Record<string, string> = {
+  open: "AI interview sent",
+  done: "Interview finished",
+  failed: "Could not be messaged",
+  declined: "Declined",
+};
+
+/** CV matches with no AI interview yet: sent the AI screening interview, shortlisted when they pass. */
+function AwaitingList({ people }: { people: ShortlistAwaiting[] }) {
+  return (
+    <div className="space-y-3">
+      <Label>Taking the AI interview · {people.length}</Label>
+      <p className="text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
+        Their CV matches, but nobody is shortlisted on a CV alone. Each one gets a WhatsApp with their AI interview and
+        joins the list above if they pass.
+      </p>
+      <ul className="divide-y divide-[var(--bj-dash-border)] rounded-3xl border border-[var(--bj-dash-border)] bg-white">
+        {people.map((p) => (
+          <li key={`${p.source}-${p.name}`} className="flex flex-wrap items-center gap-3 px-5 py-3">
+            <span className="min-w-0 flex-1 font-display text-sm font-bold tracking-tight">{p.name}</span>
+            <Pill tone={p.source === "browsejobs" ? "trust" : p.source === "naukri" ? "amber" : "dark"}>{SOURCE_SHORT[p.source]}</Pill>
+            <span className="font-mono text-[11px] text-[var(--bj-dash-muted)]">CV {p.cv_match}%</span>
+            <span title={p.error ?? undefined}>
+              <Pill tone={p.invite_status === "failed" ? "warn" : p.invite_status === "done" ? "verify" : "trust"}>
+                {p.invite_status ? (SCREEN_LABEL[p.invite_status] ?? p.invite_status) : "Not sent yet"}
+              </Pill>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -534,7 +639,8 @@ function MessageAgentCard({
         <div className="max-w-2xl">
           <Label>Message agent · WhatsApp interview invites</Label>
           <p className="mt-2 text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
-            Everyone on the shortlist gets a WhatsApp asking which of the next three working days suits them. Their reply books the
+            Everyone on the shortlist gets a WhatsApp asking which of the next three working days suits them
+            {data.settings.auto_invite ? " — sent automatically the moment they are shortlisted" : ""}. Their reply books the
             first round; that morning they get a link, sign in with the same number, and take a spoken AI interview that is recorded
             and scored. L2 follows the same way once L1 is cleared.
           </p>

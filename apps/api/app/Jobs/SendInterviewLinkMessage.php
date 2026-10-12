@@ -19,7 +19,8 @@ use Throwable;
 
 /**
  * "Your <round> interview is ready — reply OK for the link". Sent when a
- * round opens (the booked day for L1; straight away for L2 after L1 clears).
+ * round opens (the booked day for L1; straight away for L2 after L1 clears,
+ * and for the AI screening interview the shortlist agent sends).
  * Uses the approved template, because the candidate's last message may be
  * more than 24 hours old.
  */
@@ -52,7 +53,7 @@ final class SendInterviewLinkMessage implements ShouldQueue
                     InterviewTemplates::LINK,
                     [
                         $invite->firstName(),
-                        strtoupper($invite->round),
+                        $invite->roundLabel(),
                         (string) ($job?->title ?? 'open'),
                     ],
                 );
