@@ -13,8 +13,10 @@ use App\Models\JobShortlistEntry;
  * published, and how it decides.
  *
  * By default (require_interview) a CV match alone never gets anyone on the
- * list: the CV match AND the AI interview score must both clear first_bar
- * (picked first), then second_bar. Someone whose CV clears second_bar but who
+ * list. First priority: CV match ≥ first_cv_bar (60) AND AI interview ≥
+ * first_interview_bar (65). Second priority: CV ≥ second_cv_bar (45) AND
+ * interview ≥ second_interview_bar (45). Anyone below is not shortlisted.
+ * Someone whose CV clears second_cv_bar but who
  * has no AI interview for the role is invited on WhatsApp to take one, and
  * shortlisted when they pass. With auto_invite, everyone shortlisted is sent
  * the interview invite (pick a day for L1) straight away. With
@@ -36,9 +38,13 @@ final readonly class ShortlistSettings
 
     public const DEFAULT_MIN_SCORE = 40;
 
-    public const DEFAULT_FIRST_BAR = 75;
+    public const DEFAULT_FIRST_CV_BAR = 60;
 
-    public const DEFAULT_SECOND_BAR = 60;
+    public const DEFAULT_FIRST_INTERVIEW_BAR = 65;
+
+    public const DEFAULT_SECOND_CV_BAR = 45;
+
+    public const DEFAULT_SECOND_INTERVIEW_BAR = 45;
 
     public const DEFAULT_INTERVIEW_TIME = '11:00';
 
@@ -52,8 +58,10 @@ final readonly class ShortlistSettings
         public bool $autoOnPublish,
         public bool $studentsNeedReadiness = false,
         public bool $requireInterview = true,
-        public int $firstBar = self::DEFAULT_FIRST_BAR,
-        public int $secondBar = self::DEFAULT_SECOND_BAR,
+        public int $firstCvBar = self::DEFAULT_FIRST_CV_BAR,
+        public int $firstInterviewBar = self::DEFAULT_FIRST_INTERVIEW_BAR,
+        public int $secondCvBar = self::DEFAULT_SECOND_CV_BAR,
+        public int $secondInterviewBar = self::DEFAULT_SECOND_INTERVIEW_BAR,
         public bool $autoInvite = true,
         public string $interviewTime = self::DEFAULT_INTERVIEW_TIME,
         public int $roundPassMark = self::DEFAULT_ROUND_PASS_MARK,
@@ -78,9 +86,11 @@ final readonly class ShortlistSettings
             autoOnPublish: (bool) ($data['auto_on_publish'] ?? true),
             studentsNeedReadiness: (bool) ($data['students_need_readiness'] ?? false),
             requireInterview: (bool) ($data['require_interview'] ?? true),
-            firstBar: $first = max(0, min(100, (int) ($data['first_bar'] ?? self::DEFAULT_FIRST_BAR))),
-            // The second bar can never sit above the first.
-            secondBar: min($first, max(0, min(100, (int) ($data['second_bar'] ?? self::DEFAULT_SECOND_BAR)))),
+            firstCvBar: $firstCv = self::pct($data['first_cv_bar'] ?? self::DEFAULT_FIRST_CV_BAR),
+            firstInterviewBar: $firstInterview = self::pct($data['first_interview_bar'] ?? self::DEFAULT_FIRST_INTERVIEW_BAR),
+            // The second priority can never ask for more than the first.
+            secondCvBar: min($firstCv, self::pct($data['second_cv_bar'] ?? self::DEFAULT_SECOND_CV_BAR)),
+            secondInterviewBar: min($firstInterview, self::pct($data['second_interview_bar'] ?? self::DEFAULT_SECOND_INTERVIEW_BAR)),
             autoInvite: (bool) ($data['auto_invite'] ?? true),
             interviewTime: is_string($data['interview_time'] ?? null) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $data['interview_time']) === 1
                 ? $data['interview_time']
@@ -89,12 +99,17 @@ final readonly class ShortlistSettings
         );
     }
 
+    private static function pct(mixed $value): int
+    {
+        return max(0, min(100, (int) $value));
+    }
+
     public function uses(string $source): bool
     {
         return in_array($source, $this->sources, true);
     }
 
-    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_bar: int, second_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int} */
+    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_cv_bar: int, first_interview_bar: int, second_cv_bar: int, second_interview_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int} */
     public function toArray(): array
     {
         return [
@@ -104,8 +119,10 @@ final readonly class ShortlistSettings
             'auto_on_publish' => $this->autoOnPublish,
             'students_need_readiness' => $this->studentsNeedReadiness,
             'require_interview' => $this->requireInterview,
-            'first_bar' => $this->firstBar,
-            'second_bar' => $this->secondBar,
+            'first_cv_bar' => $this->firstCvBar,
+            'first_interview_bar' => $this->firstInterviewBar,
+            'second_cv_bar' => $this->secondCvBar,
+            'second_interview_bar' => $this->secondInterviewBar,
             'auto_invite' => $this->autoInvite,
             'interview_time' => $this->interviewTime,
             'round_pass_mark' => $this->roundPassMark,

@@ -125,7 +125,7 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
               Searches BrowseJobs students, your own candidate database and your Naukri export, and you see why each
               person was picked.{" "}
               {data.settings.require_interview
-                ? `Nobody is picked on a CV alone: the CV match and the AI interview must both be ${data.settings.first_bar}%+ (picked first), then ${data.settings.second_bar}%+. A matching CV with no AI interview yet is sent one on WhatsApp.`
+                ? `Nobody is picked on a CV alone. First priority: CV ${data.settings.first_cv_bar}%+ and AI interview ${data.settings.first_interview_bar}%+. Second: CV ${data.settings.second_cv_bar}%+ and AI interview ${data.settings.second_interview_bar}%+. A matching CV with no AI interview yet is sent one on WhatsApp.`
                 : "Everyone is scored on skills, experience and location."}{" "}
               It runs by itself when you publish.
             </p>
@@ -167,24 +167,7 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
               />
             </Field>
             {draft.require_interview ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="Pick first at" hint="CV and AI interview %" htmlFor="sl-first">
-                  <input
-                    id="sl-first" type="number" min={0} max={100} disabled={!canManage}
-                    value={draft.first_bar}
-                    onChange={(e) => setDraft({ ...draft, first_bar: Number(e.target.value) })}
-                    className={`${controlCls} font-mono`}
-                  />
-                </Field>
-                <Field label="Then at" hint="Both %" htmlFor="sl-second">
-                  <input
-                    id="sl-second" type="number" min={0} max={100} disabled={!canManage}
-                    value={draft.second_bar}
-                    onChange={(e) => setDraft({ ...draft, second_bar: Number(e.target.value) })}
-                    className={`${controlCls} font-mono`}
-                  />
-                </Field>
-              </div>
+              <div />
             ) : (
               <Field label="Minimum match" hint="0–100; lower shows more people" htmlFor="sl-min">
                 <input
@@ -212,6 +195,26 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
               </span>
             </span>
           </label>
+
+          {draft.require_interview && (
+            <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl border border-[var(--bj-dash-border)] p-3">
+              {([
+                ["first_cv_bar", "1st priority · CV %"],
+                ["first_interview_bar", "1st priority · AI interview %"],
+                ["second_cv_bar", "2nd priority · CV %"],
+                ["second_interview_bar", "2nd priority · AI interview %"],
+              ] as const).map(([key, label]) => (
+                <Field key={key} label={label} htmlFor={`sl-${key}`}>
+                  <input
+                    id={`sl-${key}`} type="number" min={0} max={100} disabled={!canManage}
+                    value={draft[key]}
+                    onChange={(e) => setDraft({ ...draft, [key]: Number(e.target.value) })}
+                    className={`${controlCls} font-mono`}
+                  />
+                </Field>
+              ))}
+            </div>
+          )}
 
           <div className="mt-4 grid grid-cols-2 gap-4">
             <Field label="Interview time" hint="Each L1/L2 slot, India time" htmlFor="sl-time">

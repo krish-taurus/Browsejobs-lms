@@ -51,7 +51,7 @@ final class ShortlistReport
 
         $settings = ShortlistSettings::fromArray((array) $run->settings);
         $rule = $settings->requireInterview
-            ? "Rule: CV match *and* AI interview — {$settings->firstBar}%+ first, then {$settings->secondBar}%+."
+            ? "Rule: first priority CV {$settings->firstCvBar}%+ and AI interview {$settings->firstInterviewBar}%+; second priority CV {$settings->secondCvBar}%+ and AI interview {$settings->secondInterviewBar}%+."
             : null;
 
         $looked = collect($run->considered ?? [])->map(fn ($c, $s) => (self::SOURCE[$s] ?? $s).' '.(int) ($c['considered'] ?? 0))->implode(' · ');
@@ -83,7 +83,7 @@ final class ShortlistReport
                     .($skills !== [] ? "\n    ✓ ".implode(', ', $skills) : '');
             })->implode("\n");
 
-            $bar = $settings->requireInterview ? "{$settings->secondBar}%" : "{$settings->minScore}%";
+            $bar = $settings->requireInterview ? "{$settings->secondCvBar}% CV" : "{$settings->minScore}%";
 
             return "{$intro}\n\nLooked at {$total} ({$looked}). Nobody reached your minimum match of {$bar} yet.\n\n"
                 ."Closest so far:\n{$lines}\n\n"
@@ -99,8 +99,8 @@ final class ShortlistReport
             $n = 0;
             foreach ($groups as $tier => $group) {
                 $title = match ($tier) {
-                    1 => "\n\n⭐ *{$settings->firstBar}%+ (picked first)*",
-                    2 => "\n\n✅ *{$settings->secondBar}–".($settings->firstBar - 1).'%*',
+                    1 => "\n\n⭐ *First priority* (CV {$settings->firstCvBar}%+ · AI interview {$settings->firstInterviewBar}%+)",
+                    2 => "\n\n✅ *Second priority* (CV {$settings->secondCvBar}%+ · AI interview {$settings->secondInterviewBar}%+)",
                     default => '',
                 };
                 $out .= $title === '' ? "\n" : $title;

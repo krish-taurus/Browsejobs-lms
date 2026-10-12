@@ -30,9 +30,9 @@ use Illuminate\Validation\ValidationException;
  * explainable way.
  *
  * How it decides (ShortlistSettings, default require_interview):
- *  - CV match and AI interview score both ≥ first_bar (75) → shortlisted first;
- *  - both ≥ second_bar (60) → shortlisted next;
- *  - CV ≥ second_bar but no AI interview for the role yet → sent the AI
+ *  - CV match ≥ 60 and AI interview ≥ 65 (first_cv_bar / first_interview_bar) → first priority;
+ *  - CV ≥ 45 and interview ≥ 45 (second_cv_bar / second_interview_bar) → second priority;
+ *  - CV ≥ second_cv_bar but no AI interview for the role yet → sent the AI
  *    screening interview on WhatsApp (SendScreeningInvites); when they finish
  *    it the agent runs again and places them;
  *  - anyone else is not shortlisted. Nobody gets on the list on a CV alone.
@@ -209,8 +209,9 @@ final readonly class RunShortlistAgent
     }
 
     /**
-     * CV and AI interview both have to clear a bar: first_bar first, then
-     * second_bar. A good CV with no interview yet goes to screening instead.
+     * CV and AI interview each have to clear their bar: the first-priority
+     * pair, else the second-priority pair. A good CV with no interview yet
+     * goes to screening instead.
      *
      * @param  Collection<int, array<string, mixed>>  $eligible
      * @return array{0: Collection<int, array<string, mixed>>, 1: Collection<int, array<string, mixed>>}
@@ -223,8 +224,8 @@ final readonly class RunShortlistAgent
 
             $c['tier'] = match (true) {
                 $interview === null => null,
-                $cv >= $settings->firstBar && $interview >= $settings->firstBar => 1,
-                $cv >= $settings->secondBar && $interview >= $settings->secondBar => 2,
+                $cv >= $settings->firstCvBar && $interview >= $settings->firstInterviewBar => 1,
+                $cv >= $settings->secondCvBar && $interview >= $settings->secondInterviewBar => 2,
                 default => null,
             };
             if ($c['tier'] !== null) {
@@ -242,7 +243,7 @@ final readonly class RunShortlistAgent
             ->values();
 
         $awaiting = $graded
-            ->filter(fn (array $c) => $c['reasons']['interview_score'] === null && $c['reasons']['cv_match'] >= $settings->secondBar)
+            ->filter(fn (array $c) => $c['reasons']['interview_score'] === null && $c['reasons']['cv_match'] >= $settings->secondCvBar)
             ->sortByDesc(fn (array $c) => $c['reasons']['cv_match'])
             ->take(min(self::MAX_SCREENING, $settings->topN * 2))
             ->values();

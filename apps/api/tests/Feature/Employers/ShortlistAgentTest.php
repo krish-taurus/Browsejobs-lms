@@ -400,7 +400,7 @@ function screeningSetup($test): FakeWhatsAppClient
     return $wa;
 }
 
-it('shortlists only on CV and AI interview together: 75 first, then 60, and screens a good CV with no interview', function (): void {
+it('shortlists on CV and AI interview together: CV 60 + interview 65 first, CV 45 + interview 45 next, and screens a good CV with no interview', function (): void {
     $wa = screeningSetup($this);
     $all = ['python', 'sql', 'airflow', 'aws'];
     $phone = fn (User $u, string $p) => tap($u)->update(['phone' => $p]);
@@ -408,12 +408,12 @@ it('shortlists only on CV and AI interview together: 75 first, then 60, and scre
     $top = $phone(shortlistStudent($this->tenant, $all), '9000000011');
     finishedInterview($top, 'Data Engineer', 80);
     $next = $phone(shortlistStudent($this->tenant, $all), '9000000012');
-    finishedInterview($next, 'Senior Data Engineer', 65);
+    finishedInterview($next, 'Senior Data Engineer', 55);                           // 55 < 65 → second priority
     $cvOnly = $phone(shortlistStudent($this->tenant, $all), '9000000013');      // no interview → screened
     $weakCv = $phone(shortlistStudent($this->tenant, ['python']), '9000000014'); // CV 25% → out, however good the interview
     finishedInterview($weakCv, 'Data Engineer', 95);
-    $weakInterview = $phone(shortlistStudent($this->tenant, $all), '9000000015'); // interview 50 → out, not re-screened
-    finishedInterview($weakInterview, 'Data Engineer', 50);
+    $weakInterview = $phone(shortlistStudent($this->tenant, $all), '9000000015'); // interview 40 → out, not re-screened
+    finishedInterview($weakInterview, 'Data Engineer', 40);
     $otherRole = $phone(shortlistStudent($this->tenant, $all), '9000000016');   // a Data Analyst interview does not count
     finishedInterview($otherRole, 'Data Analyst', 90);
 
@@ -426,7 +426,11 @@ it('shortlists only on CV and AI interview together: 75 first, then 60, and scre
         ->and($entries[0]['reasons']['cv_match'])->toBe(100)
         ->and($entries[0]['reasons']['interview_score'])->toBe(80)
         ->and($entries[0]['match_score'])->toBe(90)
-        ->and($data['settings'])->toMatchArray(['require_interview' => true, 'first_bar' => 75, 'second_bar' => 60, 'auto_invite' => true]);
+        ->and($entries[1]['match_score'])->toBe(78)
+        ->and($data['settings'])->toMatchArray([
+            'require_interview' => true, 'first_cv_bar' => 60, 'first_interview_bar' => 65,
+            'second_cv_bar' => 45, 'second_interview_bar' => 45, 'auto_invite' => true,
+        ]);
 
     // A good CV with no AI interview for the role gets the AI screening interview, not a place on the list.
     $screened = collect($data['awaiting'])->pluck('name')->all();
@@ -499,10 +503,11 @@ it('waits for Meta before sending the AI screening interview, and never shortlis
         ->and(app(ShortlistReport::class)->text($this->job))->toContain('Taking the AI interview')->toContain('invite not sent yet');
 });
 
-it('keeps the second bar at or below the first', function (): void {
+it('keeps the second-priority bars at or below the first', function (): void {
     Sanctum::actingAs($this->recruiter);
 
     $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
-        'top_n' => 10, 'min_score' => 40, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'first_bar' => 60, 'second_bar' => 75,
-    ])->assertUnprocessable()->assertJsonValidationErrors('second_bar');
+        'top_n' => 10, 'min_score' => 40, 'sources' => ['browsejobs'], 'auto_on_publish' => true,
+        'first_cv_bar' => 60, 'second_cv_bar' => 75, 'first_interview_bar' => 65, 'second_interview_bar' => 70,
+    ])->assertUnprocessable()->assertJsonValidationErrors(['second_cv_bar', 'second_interview_bar']);
 });

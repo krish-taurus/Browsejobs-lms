@@ -55,10 +55,12 @@ export type ShortlistSettings = {
   auto_on_publish: boolean;
   /** Off: students without the AI Readiness Interview still surface (ranked lower). */
   students_need_readiness: boolean;
-  /** On: CV match and AI interview must both clear first_bar (picked first), then second_bar. */
+  /** On: first priority = CV ≥ first_cv_bar and interview ≥ first_interview_bar; second = the second pair. */
   require_interview: boolean;
-  first_bar: number;
-  second_bar: number;
+  first_cv_bar: number;
+  first_interview_bar: number;
+  second_cv_bar: number;
+  second_interview_bar: number;
   /** On: everyone shortlisted gets the WhatsApp interview invite straight away. */
   auto_invite: boolean;
   /** Time of day (India, "HH:MM") of every L1/L2 slot offered on WhatsApp. */
