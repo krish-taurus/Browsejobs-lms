@@ -109,6 +109,7 @@ use App\Http\Controllers\Employer\JdReviseController as EmployerJdReviseControll
 use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
 use App\Http\Controllers\Employer\MockDesignController as EmployerMockDesignController;
+use App\Http\Controllers\Employer\RecruiterFloorController as EmployerRecruiterFloorController;
 use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
 use App\Http\Controllers\Employer\ShortlistAgentController as EmployerShortlistAgentController;
 use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
@@ -611,6 +612,9 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::get('workspaces/{workspace}/whatsapp', [EmployerWhatsAppLinkController::class, 'show']);
     Route::post('workspaces/{workspace}/whatsapp/regenerate', [EmployerWhatsAppLinkController::class, 'regenerate'])->middleware('throttle:10,1');
     Route::delete('workspaces/{workspace}/whatsapp/links/{link}', [EmployerWhatsAppLinkController::class, 'unlink']);
+
+    // The live AI Recruiter floor: the hiring agents and the people in each step.
+    Route::get('workspaces/{workspace}/recruiter-floor', [EmployerRecruiterFloorController::class, 'show']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is

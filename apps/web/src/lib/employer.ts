@@ -140,6 +140,45 @@ export type WhatsAppPostingData = {
   messages: { id: number; phone: string; direction: "in" | "out"; body: string; status: string; at: string | null }[];
 };
 
+/** The live AI Recruiter floor: the hiring agents and the people in each step. */
+export type RecruiterFloorAgent = {
+  id: string;
+  name: string;
+  zone: string;
+  state: "idle" | "working" | "thinking" | "approval" | "error";
+  task: string;
+  progress: number;
+  metrics: { label: string; value: number | string | null }[];
+  /** False for an agent that is not built or connected yet (BGV, client report). */
+  live: boolean;
+};
+
+export type RecruiterFloorPerson = {
+  id: string;
+  name: string;
+  source: string;
+  zone: string;
+  stage: string;
+  match: number | null;
+  scores: { screen: number | null; l1: number | null; l2: number | null };
+  matched_skills: string[];
+  missing_skills: string[];
+  facts: string[];
+  timeline: { label: string; at: string | null }[];
+};
+
+export type RecruiterFloorData = {
+  company: string;
+  jobs: { id: number; title: string; status: string }[];
+  job: { id: number; title: string; status: string; where: string; openings: number; experience: string } | null;
+  zones: { id: string; label: string; count: number }[];
+  agents: RecruiterFloorAgent[];
+  people: RecruiterFloorPerson[];
+  activity: { id: string; at: string; agent: string; text: string }[];
+  kpis: { jobs_live: number; shortlisted: number; interviews: number; cleared: number };
+  generated_at: string;
+};
+
 export type TalentPoolCandidateCv = {
   summary: string | null;
   skills: string[];
@@ -625,6 +664,8 @@ export const employerApi = {
   clearCandidates: (ws: number, source: "client_db" | "naukri") =>
     apiJson<{ data: CandidateSourcesData }>(`${base}/workspaces/${ws}/candidate-sources/${source}`, { method: "DELETE" }),
 
+  recruiterFloor: (ws: number, job: number | null) =>
+    apiJson<{ data: RecruiterFloorData }>(`${base}/workspaces/${ws}/recruiter-floor${job ? `?job=${job}` : ""}`),
   whatsappPosting: (ws: number) => apiJson<{ data: WhatsAppPostingData }>(`${base}/workspaces/${ws}/whatsapp`),
   regenerateWhatsappCode: (ws: number) =>
     apiJson<{ data: WhatsAppPostingData }>(`${base}/workspaces/${ws}/whatsapp/regenerate`, { method: "POST" }),
