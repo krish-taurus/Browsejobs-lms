@@ -16,6 +16,7 @@ use App\Services\AI\FakeAiClient;
 use App\Support\WhatsApp\FakeWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
@@ -70,6 +71,38 @@ it('gives an owner or recruiter a QR that opens WhatsApp with their JOIN code', 
     $fresh = $this->postJson("/api/v1/employer/workspaces/{$this->workspace->id}/whatsapp/regenerate")->assertOk()->json('data.code');
     expect($fresh)->not->toBe($data['code'])
         ->and(EmployerWhatsappCode::query()->where('code', $data['code'])->exists())->toBeFalse();
+});
+
+it('uses the WhatsApp-made message QR so the in-app scanner accepts it, and cleans it up on a new code', function (): void {
+    config(['services.whatsapp.phone_number_id' => '1157196340818220', 'services.whatsapp.access_token' => 'test-token']);
+    Http::fake([
+        'graph.facebook.com/*/message_qrdls/*' => Http::response(['success' => true]),
+        'graph.facebook.com/*/message_qrdls' => Http::sequence()
+            ->push(['code' => 'QRFIRST', 'deep_link_url' => 'https://wa.me/message/QRFIRST'])
+            ->push(['code' => 'QRSECOND', 'deep_link_url' => 'https://wa.me/message/QRSECOND']),
+    ]);
+    Sanctum::actingAs($this->recruiter);
+
+    $data = $this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/whatsapp")->assertOk()->json('data');
+    expect($data['chat_url'])->toBe('https://wa.me/message/QRFIRST')
+        ->and($data['qr_svg'])->toContain('<svg');
+    Http::assertSent(fn ($r) => $r->method() === 'POST' && $r['prefilled_message'] === 'JOIN '.$data['code']);
+
+    // Reloading the page reuses the same Meta QR — no new one each visit.
+    $this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/whatsapp")->assertJsonPath('data.chat_url', 'https://wa.me/message/QRFIRST');
+
+    $fresh = $this->postJson("/api/v1/employer/workspaces/{$this->workspace->id}/whatsapp/regenerate")->assertOk()->json('data');
+    expect($fresh['chat_url'])->toBe('https://wa.me/message/QRSECOND');
+    Http::assertSent(fn ($r) => $r->method() === 'DELETE' && str_ends_with($r->url(), '/message_qrdls/QRFIRST'));
+});
+
+it('falls back to a plain wa.me link when Meta cannot make a QR', function (): void {
+    config(['services.whatsapp.phone_number_id' => '1157196340818220', 'services.whatsapp.access_token' => 'test-token']);
+    Http::fake(['graph.facebook.com/*' => Http::response(['error' => ['message' => 'nope']], 500)]);
+    Sanctum::actingAs($this->recruiter);
+
+    $data = $this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/whatsapp")->assertOk()->json('data');
+    expect($data['chat_url'])->toBe('https://wa.me/917975666665?text=JOIN%20'.$data['code']);
 });
 
 it('does not give a hiring manager a code', function (): void {

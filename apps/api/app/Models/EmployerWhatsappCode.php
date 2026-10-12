@@ -19,13 +19,15 @@ use Illuminate\Support\Carbon;
  * @property int $employer_workspace_id
  * @property int $user_id
  * @property string $code
+ * @property string|null $meta_qr_code
+ * @property string|null $meta_deep_link
  * @property Carbon $expires_at
  */
 final class EmployerWhatsappCode extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['tenant_id', 'employer_workspace_id', 'user_id', 'code', 'expires_at'];
+    protected $fillable = ['tenant_id', 'employer_workspace_id', 'user_id', 'code', 'meta_qr_code', 'meta_deep_link', 'expires_at'];
 
     /** @return array<string, string> */
     protected function casts(): array

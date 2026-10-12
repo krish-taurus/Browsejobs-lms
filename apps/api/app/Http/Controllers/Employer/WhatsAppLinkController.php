@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Employer;
 
 use App\Actions\Employers\IssueWhatsAppLinkCode;
 use App\Http\Controllers\Controller;
+use App\Models\EmployerWhatsappCode;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\EmployerWorkspace;
@@ -32,7 +33,7 @@ final class WhatsAppLinkController extends Controller
         $member = $this->membershipOrFail($workspace, $request->user());
 
         return response()->json(['data' => $this->payload($workspace, $member->role->managesPipeline()
-            ? $issue->handle($workspace, $request->user())->code
+            ? $issue->handle($workspace, $request->user())
             : null, $number)]);
     }
 
@@ -44,7 +45,7 @@ final class WhatsAppLinkController extends Controller
         $code = $issue->handle($workspace, $request->user(), fresh: true);
         $audit->log('employer.whatsapp_code_regenerated', $workspace, [], $request->user());
 
-        return response()->json(['data' => $this->payload($workspace, $code->code, $number)]);
+        return response()->json(['data' => $this->payload($workspace, $code, $number)]);
     }
 
     public function unlink(Request $request, EmployerWorkspace $workspace, EmployerWhatsappLink $link, AuditLogger $audit): JsonResponse
@@ -60,12 +61,17 @@ final class WhatsAppLinkController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function payload(EmployerWorkspace $workspace, ?string $code, WhatsAppBusinessNumber $number): array
+    private function payload(EmployerWorkspace $workspace, ?EmployerWhatsappCode $code, WhatsAppBusinessNumber $number): array
     {
         $business = $number->get();
-        $url = $code !== null && $business !== null
-            ? 'https://wa.me/'.$business.'?text='.rawurlencode("JOIN {$code}")
-            : null;
+        // WhatsApp's own message QR when Meta made one (opens from WhatsApp's
+        // in-app scanner too); otherwise a plain wa.me link (phone camera).
+        $url = match (true) {
+            $code === null => null,
+            $code->meta_deep_link !== null => $code->meta_deep_link,
+            $business !== null => 'https://wa.me/'.$business.'?text='.rawurlencode("JOIN {$code->code}"),
+            default => null,
+        };
 
         $links = EmployerWhatsappLink::query()
             ->where('employer_workspace_id', $workspace->id)
@@ -82,7 +88,7 @@ final class WhatsAppLinkController extends Controller
             ->values();
 
         return [
-            'code' => $code,
+            'code' => $code?->code,
             'business_number' => $business,
             'chat_url' => $url,
             'qr_svg' => $url !== null ? (new SvgWriter)->write(new QrCode($url))->getString() : null,
