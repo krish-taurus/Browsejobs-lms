@@ -30,7 +30,7 @@ export default function EmployerEnquirePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <EnquiryStage
+      <EnquiryStage current="employers"
         title="Enquire to hire."
         lede="Share the role and when you want to start. We call you back. Hiring still depends on the market."
       >

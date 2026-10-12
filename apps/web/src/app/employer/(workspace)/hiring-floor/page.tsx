@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import "@/components/ap/pages/taurus-ui.css";
+import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import { TaurusConsole } from "@/components/taurus/TaurusConsole";
 import { employerApi } from "@/lib/employer";
@@ -37,20 +39,18 @@ export default function HiringFloorPage() {
   const source = useMemo(() => employerFloorSource(workspace.id, jobId), [workspace.id, jobId]);
 
   return (
-    <div>
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+    <div className={`tx-ap tx-ap--card ${taurusDisplayFont.variable}`}>
+      <div className="tx-head">
         <div>
-          <h1 className="display text-2xl">Hiring floor</h1>
-          <p className="mt-1 text-sm opacity-70">Every stage of your hiring, live. Each robot is the bot working that stage. Ask Taurus anything about it.</p>
+          <p className="tx-eyebrow">Powered by Taurus AI</p>
+          <h1 className="tx-title">Hiring floor</h1>
+          <p className="tx-sub">Every stage of your hiring, live. Each robot is the bot working that stage. Ask Taurus anything about it.</p>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="opacity-70">Role</span>
-          <select
-            id="hiring-floor-job"
-            value={jobId ?? ""}
-            onChange={(e) => setJobId(e.target.value ? Number(e.target.value) : null)}
-            className="rounded-[10px] border border-line bg-white px-3 py-2 text-sm text-ink"
-          >
+        <div className="tx-tools">
+          <label className="tx-label" htmlFor="hiring-floor-job" style={{ margin: 0 }}>
+            Role
+          </label>
+          <select id="hiring-floor-job" value={jobId ?? ""} onChange={(e) => setJobId(e.target.value ? Number(e.target.value) : null)} className="tx-select">
             <option value="">All roles</option>
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>
@@ -58,12 +58,12 @@ export default function HiringFloorPage() {
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
-      <div className="h-[calc(100vh-12rem)] min-h-[600px] overflow-hidden rounded-[22px] border border-line">
+      <div className="tx-floor tx-floor--admin">
         <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Ask Taurus: where are we with this role?" subtitle={workspace.name} />
       </div>
-      <p className="mono mt-2 text-[11px] opacity-60">
+      <p className="tx-fine">
         Built from your jobs and applications. Scores appear once grading finishes. Moving a candidate or releasing an offer stays a decision for your team.
       </p>
     </div>

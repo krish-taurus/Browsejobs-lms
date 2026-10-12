@@ -1,0 +1,53 @@
+/* Enquiry pages (/courses/enquire, /employers/enquire). Scoped under .ap. */
+
+.ap .enq-page {
+  background: var(--paper);
+}
+.ap .enq-stage {
+  padding-block: clamp(72px, 9vw, 128px) clamp(72px, 9vw, 120px);
+}
+.ap .enq-stage .h-hero {
+  font-size: clamp(44px, 7vw, 80px);
+}
+.ap .enq-stage .lead {
+  max-width: 620px;
+  margin-inline: auto;
+}
+.ap .enq-form {
+  max-width: 760px;
+  margin: clamp(36px, 5vw, 56px) auto 0;
+}
+.ap .enq-page .argus-form-wrap {
+  width: 100%;
+  margin: 0;
+  padding: clamp(24px, 4vw, 44px);
+  border: 0;
+  border-radius: var(--r-tile);
+  background: var(--white);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.ap .enq-page .argus-form-wrap.is-done {
+  box-shadow: none;
+}
+.ap .enq-page .argus-input {
+  border-color: var(--line);
+  border-radius: var(--r-field);
+  font-family: var(--font-text);
+}
+.ap .enq-page .argus-input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+}
+.ap .enq-page .argus-btn-primary {
+  min-height: 52px;
+  border-radius: 980px;
+  background: var(--ink);
+  color: var(--white);
+}
+.ap .enq-page .argus-intent {
+  color: var(--fg-2);
+}
+.ap .enq-contact {
+  margin-top: 28px;
+}

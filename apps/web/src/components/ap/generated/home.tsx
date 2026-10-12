@@ -4,11 +4,12 @@ import type { CSSProperties } from "react";
 import { InterviewStartForm } from "@/components/auth/InterviewStartForm";
 import { ApCounselForm } from "@/components/ap/ApCounselForm";
 import { ApCourseTiles } from "@/components/ap/ApCourseTiles";
+import { ApLoop } from "@/components/ap/ApLoop";
 import { InViewVideo } from "@/components/argus/InViewVideo";
 
 export function STop() {
   return (
-    <section className="s-white hero" id="top">
+    <section className="s-black hero hero-dark" id="top">
   <div className="wrap center">
     <p className="eyebrow">BrowseJobs</p>
     <h1 className="h-hero"><span>Take a free</span> <span>AI interview.</span></h1>
@@ -22,6 +23,8 @@ export function STop() {
     <div className="hero-chip hero-chip--right" aria-hidden="true"><b>75% is a pass</b>HR sees your CV</div>
     <div className="phone">
       <div className="phone-screen">
+        <ApLoop className="phone-loop" src="/media/home/hero-phone.mp4" poster="/media/home/hero-phone-poster.jpg" />
+        <div className="phone-static">
         <p className="eyebrow-sm">Sample question</p>
         <p className="ui-q">Walk me through a pipeline you would ship this month.</p>
         <div className="ui-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -30,6 +33,7 @@ export function STop() {
           <div><p className="eyebrow-sm" style={{ color: "var(--ink)" } as CSSProperties}>75%</p><p className="eyebrow-sm">Pass mark</p></div>
         </div>
         <p className="ui-fine">A sample round. Not a promise of a job.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -61,7 +65,7 @@ export function SJourney() {
 
 export function SWhat75() {
   return (
-    <section className="s-paper scene" data-scene="score" data-len="300vh" id="what-75">
+    <section className="s-black s-graphite scene" data-scene="score" data-len="300vh" id="what-75">
   <div className="scene-pin chapter">
     <div className="wrap">
       <div className="center">
@@ -137,7 +141,7 @@ export function SCounselling() {
 
 export function SStories() {
   return (
-    <section className="s-white chapter" id="stories">
+    <section className="s-black s-graphite chapter" id="stories">
   <div className="wrap center">
     <h2 className="h-section">Success stories.</h2>
     <p className="lead">How people moved into the role. The path is the same: AI interview, counselling, a course, a retake, then hired.</p>
@@ -260,7 +264,8 @@ export function SFaq() {
 
 export function SSection11() {
   return (
-    <section className="s-white chapter closing">
+    <section className="s-black chapter closing">
+  <ApLoop className="closing-loop" src="/media/home/closing-rings.mp4" poster="/media/home/closing-rings-poster.jpg" />
   <div className="wrap center">
     <h2 className="h-hero"><span>Start with the</span> <span>free interview.</span></h2>
     <p className="lead">All it takes is your CV and about 15 questions.</p>

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@/components/ap/pages/taurus-ui.css";
+import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { listMyWorkspaces, type TaurusWorkspace } from "@/lib/taurus-floor/live";
 
@@ -21,14 +23,16 @@ const WS_KEY = "taurus-ws";
 /**
  * The Taurus client portal (/taurusai/app). A signed-in member only ever
  * sees the workspaces they belong to — the API enforces it; this shell just
- * picks which one is on screen.
+ * picks which one is on screen. Styles: components/ap/pages/taurus-ui.css.
  */
 export function PortalShell({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } }));
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
-        <Guarded>{children}</Guarded>
+        <div className={`tx-ap tx-portal ${taurusDisplayFont.variable}`}>
+          <Guarded>{children}</Guarded>
+        </div>
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -71,10 +75,12 @@ function Guarded({ children }: { children: ReactNode }) {
     }
   };
 
+  const signOut = () => logout().then(() => router.replace("/taurusai/login"));
+
   if (loading || !user || (!workspaces && !failed)) {
     return (
-      <div className="grid min-h-screen place-items-center bg-ink">
-        <div className="shimmer h-12 w-12 rounded-full" />
+      <div className="tx-center-state" aria-busy="true">
+        <div className="tx-spinner" role="status" aria-label="Loading your workspace" />
       </div>
     );
   }
@@ -82,11 +88,11 @@ function Guarded({ children }: { children: ReactNode }) {
   const ws = workspaces?.find((w) => w.id === wsId);
   if (failed || !workspaces || !ws) {
     return (
-      <div className="grid min-h-screen place-items-center bg-ink px-5 text-center text-white">
+      <div className="tx-center-state">
         <div>
-          <p className="display text-2xl">No Taurus workspace yet</p>
-          <p className="mt-2 text-sm text-white/60">Ask the person who invited you to send a fresh invite link.</p>
-          <button type="button" onClick={() => logout().then(() => router.replace("/taurusai/login"))} className="mt-6 rounded-full border border-white/20 px-5 py-2 text-sm font-semibold">
+          <h1 className="tx-title">No Taurus workspace yet</h1>
+          <p className="tx-sub">Ask the person who invited you to send a fresh invite link.</p>
+          <button type="button" onClick={signOut} className="tx-btn tx-btn-secondary" style={{ marginTop: 24 }}>
             Sign out
           </button>
         </div>
@@ -102,51 +108,44 @@ function Guarded({ children }: { children: ReactNode }) {
 
   return (
     <PortalContext.Provider value={{ workspaces, ws, setWs }}>
-      <div className="min-h-screen bg-paper">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-ink px-5 py-3 text-white">
-          <div className="flex items-center gap-3">
-            <Link href="/taurusai" className="display text-lg tracking-[0.2em]">
-              TAURUS
+      <header className="tx-bar">
+        <div className="tx-bar-inner">
+          <div className="tx-bar-left">
+            <Link href="/taurusai" className="tx-wordmark" aria-label="Taurus AI">
+              <b>Taurus</b>
             </Link>
             {workspaces.length > 1 ? (
-              <select
-                id="portal-ws"
-                value={ws.id}
-                onChange={(e) => setWs(Number(e.target.value))}
-                className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white"
-                aria-label="Workspace"
-              >
+              <select id="portal-ws" value={ws.id} onChange={(e) => setWs(Number(e.target.value))} className="tx-select tx-bar-ws" aria-label="Workspace">
                 {workspaces.map((w) => (
-                  <option key={w.id} value={w.id} className="text-ink">
+                  <option key={w.id} value={w.id}>
                     {w.name}
                   </option>
                 ))}
               </select>
             ) : (
-              <span className="rounded-full border border-white/15 px-3 py-1 text-sm text-white/80">{ws.name}</span>
+              <span className="tx-bar-pill">{ws.name}</span>
             )}
           </div>
-          <nav className="flex items-center gap-1">
+          <nav className="tx-bar-nav" aria-label="Taurus">
             {nav.map((n) => (
-              <Link
-                key={n.href}
-                href={n.href}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${pathname === n.href ? "bg-white/15 text-white" : "text-white/65 hover:text-white"}`}
-              >
+              <Link key={n.href} href={n.href} aria-current={pathname === n.href ? "page" : undefined}>
                 {n.label}
               </Link>
             ))}
-            <button type="button" onClick={() => logout().then(() => router.replace("/taurusai/login"))} className="ml-2 rounded-full px-3 py-1.5 text-sm text-white/65 hover:text-white">
+            <span className="tx-bar-sep" aria-hidden="true" />
+            <button type="button" onClick={signOut}>
               Sign out
             </button>
           </nav>
-        </header>
-        {ws.status === "suspended" ? (
-          <p className="m-5 rounded-[10px] bg-warn/10 px-3 py-2 text-sm text-warn">This workspace is paused. Contact BrowseJobs to turn it back on.</p>
-        ) : (
-          <main className="p-3 md:p-5">{children}</main>
-        )}
-      </div>
+        </div>
+      </header>
+      {ws.status === "suspended" ? (
+        <div className="tx-main">
+          <p className="tx-note tx-note--warn tx-narrow">This workspace is paused. Contact BrowseJobs to turn it back on.</p>
+        </div>
+      ) : (
+        <main className="tx-main">{children}</main>
+      )}
     </PortalContext.Provider>
   );
 }

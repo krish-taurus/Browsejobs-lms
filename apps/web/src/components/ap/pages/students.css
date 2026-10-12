@@ -1,0 +1,342 @@
+/* /students — page-only additions to the Apple-direction system (ap.css). Every selector is scoped under .ap. */
+
+/* Hero: the sample-result phone */
+.ap .st-hero-links {
+  margin-top: 14px;
+}
+.ap .st-dial {
+  position: relative;
+  width: 168px;
+  aspect-ratio: 1;
+  margin: 26px auto 0;
+}
+.ap .st-dial .ring {
+  width: 100%;
+  height: 100%;
+}
+/* Tailwind's `.ring` utility also matches the dial's class and draws a 1px box-shadow square; cancel it here. */
+.ap .st-dial .ring,
+.ap .st-score .ring {
+  box-shadow: none;
+}
+.ap .st-dial .ring circle {
+  stroke-width: 8;
+}
+.ap .st-dial .ring .ring-fill {
+  stroke: var(--ink);
+}
+.ap .st-dial .ring .ring-track {
+  stroke: var(--line);
+}
+.ap .st-dial-read {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.ap .st-dial-num {
+  font: 600 44px/1 var(--font-display);
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ap .st-dial-label {
+  margin-top: 6px;
+  font: 600 11px/1 var(--font-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.ap .st-ui-list {
+  display: grid;
+  gap: 8px;
+  margin: 26px 0 0;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--paper);
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.ap .st-ui-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ap .st-ui-list + .ui-fine {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.ap .st-ui-list li::before {
+  content: "";
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M5 9.4l2.6 2.6L13 6.6' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / 16px no-repeat,
+    var(--ink);
+}
+
+/* Numbered tiles (How it works, After you clear) */
+.ap .st-tiles {
+  margin: clamp(36px, 5vw, 60px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ap .st-tiles .h-tile {
+  margin-top: 12px;
+}
+.ap .st-tiles + .center .fine {
+  margin-top: clamp(24px, 3vw, 36px);
+}
+
+/* Courses + counselling */
+.ap .st-courses {
+  margin-top: clamp(36px, 5vw, 60px);
+}
+.ap .st-form-title {
+  font-size: clamp(36px, 4.6vw, 56px);
+}
+
+/* Stories */
+.ap .story.st-draft {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+.ap .story .body {
+  margin: 0;
+}
+.ap .st-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ap .st-chips li {
+  padding: 5px 12px;
+  border-radius: 980px;
+  box-shadow: inset 0 0 0 1px var(--hair);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.ap button.st-linkbtn {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  color: var(--fg);
+  cursor: pointer;
+}
+.ap button.st-linkbtn:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+/* Gallery (reviews, messages): full-bleed scroller aligned to the content column */
+.ap .st-gallery-wrap {
+  --edge: max(var(--gutter), calc((100% - var(--max)) / 2));
+  margin-top: clamp(36px, 5vw, 56px);
+}
+.ap .st-gallery {
+  position: relative; /* keeps absolutely positioned children (sr-only labels) inside the scroller */
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 4px var(--edge) 8px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--edge);
+  scrollbar-width: none;
+}
+.ap .st-gallery::-webkit-scrollbar {
+  display: none;
+}
+.ap .st-gallery > li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.ap .st-paddles {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 18px var(--edge) 0;
+}
+.ap .st-paddle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease),
+    opacity 0.25s var(--ease);
+}
+.ap .st-paddle:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fg) 16%, transparent);
+}
+.ap .st-paddle:disabled {
+  opacity: 0.36;
+  cursor: default;
+}
+.ap .st-paddle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Google review cards */
+.ap .st-review {
+  position: relative;
+  width: min(340px, 80vw);
+  min-height: 250px;
+}
+.ap .st-review p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: pre-line;
+}
+.ap .st-textbtn {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 14px/1.3 var(--font-text);
+  color: var(--fg);
+  cursor: pointer;
+}
+.ap .st-textbtn:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+/* WhatsApp screenshots */
+.ap .st-shot {
+  --shot-h: 356px;
+  display: grid;
+  width: min-content;
+  margin: 0;
+}
+.ap .st-shot-phone {
+  display: block;
+  padding: 8px;
+  border: 0;
+  border-radius: 34px;
+  background: var(--black-3);
+  box-shadow: inset 0 0 0 1px var(--on-black-line);
+  cursor: zoom-in;
+  transition: transform 0.4s var(--ease);
+}
+.ap .st-shot-phone:hover {
+  transform: translateY(-4px);
+}
+.ap .st-shot-phone img {
+  display: block;
+  width: auto;
+  max-width: none;
+  height: var(--shot-h);
+  border-radius: 26px;
+  background: #ffffff;
+}
+.ap .st-shot figcaption {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding-inline: 4px;
+  text-align: left;
+}
+.ap .st-shot figcaption b {
+  font: 600 15px/1.3 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.ap .st-shot figcaption small {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.ap .st-shots .st-paddles {
+  padding-bottom: 6px;
+}
+
+/* Lightbox */
+.ap .st-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.84);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: var(--on-black);
+}
+.ap .st-lightbox-dismiss {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-out;
+}
+.ap .st-lightbox-panel {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: min(92vw, 520px);
+}
+.ap .st-lightbox-close {
+  justify-self: end;
+  background: var(--on-black);
+  color: var(--black);
+}
+.ap .st-lightbox figure {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.ap .st-lightbox img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100svh - 150px);
+  border-radius: 18px;
+  background: #ffffff;
+}
+.ap .st-lightbox figcaption {
+  font-size: 15px;
+  color: var(--on-black);
+  text-align: center;
+}
+
+@media (max-width: 833px) {
+  .ap .st-paddles {
+    display: none;
+  }
+  .ap .st-shot {
+    --shot-h: 310px;
+  }
+}

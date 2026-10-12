@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { InViewVideo } from "@/components/argus/InViewVideo";
 
-/** The 41-second candidate-journey film (Higgsfield renders + HyperFrames), as a light chapter. */
-export function ApJourneyFilm() {
+/** The 41-second candidate-journey film (Higgsfield renders + HyperFrames). Light by default; the homepage shows it on black. */
+export function ApJourneyFilm({ tone = "paper" }: { tone?: "paper" | "black" }) {
   return (
-    <section className="s-paper chapter" id="journey-film">
+    <section className={`s-${tone} chapter`} id="journey-film">
       <div className="wrap center">
         <p className="eyebrow">Watch it</p>
         <h2 className="h-section">Your path to an interview call, in 41 seconds.</h2>

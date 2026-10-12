@@ -105,7 +105,7 @@ export default function DataEngineeringBangalorePage() {
         <p>
           The published class format is live online plus recordings, with one year of access. You do not have to sit
           in Whitefield for every session. The office is where counselling happens and where you can come in. The
-          address published on the site is Whitefield, Bengaluru, Karnataka 560066. The phone is +91 86185 19825.
+          address published on the site is Whitefield, Bengaluru, Karnataka 560066. The phone is +91 79755 54666.
           The hours are Monday to Saturday, 9:00 AM to 7:00 PM IST. Email is hello@browsejobs.ai.
         </p>
         <p>
@@ -146,7 +146,9 @@ export default function DataEngineeringBangalorePage() {
           module list as published. If a line is not in that list, it is not something we are claiming you will be
           taught.
         </p>
-        <CourseSyllabus slug="data-engineering" />
+        <div className="pg-syllabus">
+          <CourseSyllabus slug="data-engineering" />
+        </div>
       </MoneySection>
 
       <MoneySection id="projects" kicker="Proof you can talk about" heading="Three projects. No invented employment.">
@@ -243,9 +245,7 @@ export default function DataEngineeringBangalorePage() {
         </p>
       </MoneySection>
 
-      <div className="overflow-x-clip">
-        <PromiseCards />
-      </div>
+      <PromiseCards />
 
       <MoneyFaq faqs={faqs} />
       <RelatedLinks

@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: "Do I have to travel to Bengaluru to enrol?",
-    a: "You do not have to travel for classes. They are live and online. If you want the counselling conversation in person, the office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is +91 86185 19825.",
+    a: "You do not have to travel for classes. They are live and online. If you want the counselling conversation in person, the office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is +91 79755 54666.",
   },
   {
     q: "Is the fee different outside Bengaluru?",
@@ -139,7 +139,9 @@ export default function DataEngineeringIndiaPage() {
           watermarks — stay in the self-study note under the modules. A job description that leads with streaming
           is a reason to read that note with a mentor, not a reason for us to pretend it was week one.
         </p>
-        <CourseSyllabus slug="data-engineering" />
+        <div className="pg-syllabus">
+          <CourseSyllabus slug="data-engineering" />
+        </div>
         <p>
           The canonical syllabus URL is <TextLink href="/courses/data-engineering">/courses/data-engineering</TextLink>.
           If you specifically want the Whitefield framing, use{" "}

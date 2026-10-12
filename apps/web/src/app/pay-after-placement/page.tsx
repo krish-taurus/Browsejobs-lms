@@ -125,7 +125,7 @@ export default function PayAfterPlacementPage() {
         </p>
         <p>
           The guarantee on this fee is 30 days, any reason, full refund, in writing. The refund policy says to email
-          hello@browsejobs.ai or WhatsApp +91 86185 19825 with the subject “Refund”, from your registered contact.
+          hello@browsejobs.ai or WhatsApp +91 79755 54666 with the subject “Refund”, from your registered contact.
           After 30 days, registration is non-refundable. Read that sentence before you pay, not after. The
           processing window for the refund itself is still marked on the policy page as a placeholder pending the
           founder’s legal review. [Krish: the refund policy still shows “[refund processing window]”. Replace it
@@ -202,9 +202,7 @@ export default function PayAfterPlacementPage() {
         </p>
       </MoneySection>
 
-      <div className="overflow-x-clip">
-        <PromiseCards />
-      </div>
+      <PromiseCards />
       <MoneyFaq faqs={faqs} />
       <RelatedLinks
         links={[

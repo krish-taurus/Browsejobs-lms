@@ -41,7 +41,7 @@ The business model is trust-first: three free steps (counselling + written caree
 hour Python bootcamp) before a student pays anything. Then a registration fee, and a placement fee that is 
 only due after the student is actually placed.
 Company legal entity: IBrowseJobs Technologies Pvt Ltd Primary domain: browsejobs.ai (browsejobs.in 301-
-redirects to it) Contact: +91 86185 19825 · hello@browsejobs.ai Office: Fl 3, Channasandra Main Rd, Ambedkar
+redirects to it) Contact: +91 79755 54666 · hello@browsejobs.ai Office: Fl 3, Channasandra Main Rd, Ambedkar
 1. 
 2. 
 BrowseJobs.ai — Master Build Specification Page 3
@@ -521,7 +521,7 @@ price.
 Fees: ₹30,000 reg (3×₹10k EMI) · placement = first 3 months' CTC (6 EMIs, ₹30k adjusted) · 30-day
 money-back.
 Roles: student · instructor · placement · admin.
-Contact: +91 86185 19825 · hello@browsejobs.ai · Whitefield, Bengaluru · browsejobs.ai.
+Contact: +91 79755 54666 · hello@browsejobs.ai · Whitefield, Bengaluru · browsejobs.ai.
 • 
 1. 
 2. 

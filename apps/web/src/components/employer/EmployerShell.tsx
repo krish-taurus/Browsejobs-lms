@@ -335,9 +335,9 @@ function Guarded({ children }: { children: ReactNode }) {
             className="sticky top-0 z-30 flex items-center gap-4 border-b bg-white/90 px-5 py-3 backdrop-blur-xl md:px-8"
             style={{ borderColor: "var(--bj-dash-border)" }}
           >
-            <div className="min-w-0 shrink-0 text-sm">
-              <span style={{ color: "var(--bj-dash-muted)" }}>Workspace</span>
-              <span style={{ color: "var(--bj-dash-border)" }} className="mx-2">/</span>
+            <div className="min-w-0 shrink truncate text-sm md:shrink-0">
+              <span className="hidden sm:inline" style={{ color: "var(--bj-dash-muted)" }}>Workspace</span>
+              <span style={{ color: "var(--bj-dash-border)" }} className="mx-2 hidden sm:inline">/</span>
               <span className="font-semibold" style={{ color: "var(--bj-dash-ink)" }}>{sectionLabel}</span>
             </div>
 

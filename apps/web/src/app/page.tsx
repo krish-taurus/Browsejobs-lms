@@ -45,7 +45,7 @@ export default function Home() {
       <ApShell current="home">
         <STop />
         <SJourney />
-        <ApJourneyFilm />
+        <ApJourneyFilm tone="black" />
         <SWhat75 />
         <SBelow75 />
         <SCourses />

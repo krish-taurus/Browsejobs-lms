@@ -4,6 +4,7 @@ import { MarketingShell } from "@/components/landing/MarketingShell";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { buildJobPosting } from "@/lib/job-posting";
 import { canonical } from "@/lib/seo";
+import "@/components/ap/pages/marketing.css";
 
 export const metadata: Metadata = {
   title: "Open jobs — apply with an interview, not a CV",
@@ -141,39 +142,34 @@ export default async function PublicJobsPage() {
       {postings.length > 0 && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       )}
-      <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <ScrollReveal>
-          <p className="kicker text-trust">Job board</p>
-          <h1 className="display mt-3 max-w-3xl text-4xl text-ink md:text-5xl">
-            Two kinds of opening.
-          </h1>
-          <p className="mt-4 max-w-2xl text-muted">
-            Companies hiring <span className="text-ink">directly through BrowseJobs</span> let you
-            apply by taking that job&apos;s mock interview — they see a scored interview and a
-            transcript instead of a CV in a pile. Below those, fresh openings from the wider market,
-            which we prepare you for and hand off. We never auto-apply on your behalf.
+      <section className="s-white pg-hero">
+        <div className="wrap center">
+          <p className="eyebrow">Job board</p>
+          <h1 className="h-hero">Two kinds of opening.</h1>
+          <p className="lead">
+            Companies hiring <span className="jobs-em">directly through BrowseJobs</span> let you apply by taking that
+            job&apos;s mock interview — they see a scored interview and a transcript instead of a CV in a pile. Below
+            those, fresh openings from the wider market, which we prepare you for and hand off. We never auto-apply on
+            your behalf.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/register"
-              className="rounded-full bg-trust px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-deep"
-            >
+          <div className="cta-row">
+            <Link href="/register" className="btn btn-primary">
               Create a free account
             </Link>
-            <Link
-              href="/#free-steps"
-              className="rounded-full border border-line bg-white px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-trust"
-            >
-              Book free masterclass
+            <Link href="/#free-steps" className="more">
+              Book free masterclass <span className="chev" aria-hidden="true">›</span>
             </Link>
           </div>
-        </ScrollReveal>
+        </div>
+      </section>
 
+      <section className="s-paper chapter jobs-board">
+      <div className="wrap">
         {/* Hiring through BrowseJobs — the differentiator leads --------- */}
         <ScrollReveal delay={0.06}>
-          <div className="mt-14 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="display text-2xl text-ink">Hiring on BrowseJobs</h2>
-            <span className="mono text-[11px] uppercase tracking-widest text-verify">
+          <div className="jobs-head">
+            <h2 className="pg-sub">Hiring on BrowseJobs</h2>
+            <span className="eyebrow-sm jobs-direct">
               Apply with an interview
             </span>
           </div>
@@ -181,11 +177,11 @@ export default async function PublicJobsPage() {
 
         {board.internal.length === 0 ? (
           <ScrollReveal delay={0.08}>
-            <div className="mt-5 rounded-[22px] border border-line bg-white p-8 text-center">
-              <p className="text-muted">
+            <div className="jobs-empty">
+              <p>
                 No employers are hiring through BrowseJobs this week. The market roles below are
                 still live, and{" "}
-                <Link href="/register" className="text-trust hover:underline">
+                <Link href="/register" className="ap-link">
                   a free account
                 </Link>{" "}
                 gets you your match score and the likely questions for each.
@@ -193,10 +189,10 @@ export default async function PublicJobsPage() {
             </div>
           </ScrollReveal>
         ) : (
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="jobs-grid">
             {board.internal.map((job, i) => (
               <ScrollReveal key={job.id} delay={Math.min(i, 6) * 0.04}>
-                <div className="flex h-full flex-col rounded-[14px] border border-trust/25 bg-sky/40 p-5 shadow-soft">
+                <div className="jobs-card is-direct">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-ink">{job.title}</p>
@@ -246,7 +242,7 @@ export default async function PublicJobsPage() {
                   <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
                     <Link
                       href={`/jobs/${job.id}`}
-                      className="inline-block rounded-full bg-trust px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-deep"
+                      className="btn btn-primary btn-sm"
                     >
                       View role &amp; apply →
                     </Link>
@@ -262,9 +258,9 @@ export default async function PublicJobsPage() {
 
         {/* Wider market ------------------------------------------------ */}
         <ScrollReveal delay={0.06}>
-          <div className="mt-16 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="display text-2xl text-ink">From the wider market</h2>
-            <span className="mono text-[11px] uppercase tracking-widest text-muted">
+          <div className="jobs-head">
+            <h2 className="pg-sub">From the wider market</h2>
+            <span className="eyebrow-sm">
               You apply on their site
             </span>
           </div>
@@ -272,10 +268,10 @@ export default async function PublicJobsPage() {
 
         {board.external.length === 0 ? (
           <ScrollReveal delay={0.08}>
-            <div className="mt-5 rounded-[22px] border border-line bg-white p-8 text-center">
-              <p className="text-muted">
+            <div className="jobs-empty">
+              <p>
                 The board refreshes with tomorrow morning&apos;s sync. Check back then — or{" "}
-                <Link href="/register" className="text-trust hover:underline">
+                <Link href="/register" className="ap-link">
                   create a free account
                 </Link>{" "}
                 and we&apos;ll match roles to you as they land.
@@ -283,10 +279,10 @@ export default async function PublicJobsPage() {
             </div>
           </ScrollReveal>
         ) : (
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="jobs-grid">
             {board.external.map((job, i) => (
               <ScrollReveal key={job.id} delay={Math.min(i, 6) * 0.04}>
-                <div className="flex h-full flex-col rounded-[14px] border border-line bg-white p-5 shadow-soft">
+                <div className="jobs-card">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-ink">{job.title}</p>
@@ -315,7 +311,7 @@ export default async function PublicJobsPage() {
                   <div className="mt-auto flex items-center gap-3 pt-4">
                     <Link
                       href="/register"
-                      className="inline-block rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-trust transition-colors hover:border-trust"
+                      className="btn btn-secondary btn-sm"
                     >
                       See my match &amp; prepare →
                     </Link>
@@ -332,13 +328,14 @@ export default async function PublicJobsPage() {
         )}
 
         <ScrollReveal delay={0.1}>
-          <p className="mt-12 max-w-2xl text-xs text-muted">
+          <p className="fine jobs-fine">
             Market openings are aggregated from public postings and refreshed daily; those listings
             belong to the hiring companies. Nobody can guarantee employment — the market decides.
             What we put in writing is the process.
           </p>
         </ScrollReveal>
       </div>
+      </section>
     </MarketingShell>
   );
 }

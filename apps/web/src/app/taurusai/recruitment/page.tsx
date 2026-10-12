@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { ContactStrip, MoneyArticle, MoneyFaq, MoneyHero, MoneySection, TextLink } from "@/components/seo/MoneyArticle";
+import Link from "next/link";
+import { ApShell } from "@/components/ap/ApShell";
+import "@/components/ap/pages/taurus.css";
 import { HiringDemo } from "@/components/taurus/HiringDemo";
+import { contact } from "@/content/landing";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
 const page = SEO_PAGES.taurusRecruitment;
+const [titleName, titlePayoff] = page.title.split(": ");
 
 const crumbs = [
   { name: "Home", path: "/" },
@@ -62,81 +66,193 @@ const faqs = [
 
 export const metadata: Metadata = moneyMetadata(page);
 
+/** The Taurus hiring floor, in the Apple-direction design: the WhatsApp hiring story as the product shot. */
 export default function TaurusRecruitmentPage() {
   const jsonLd = jsonLdGraph([webPageNode(page), breadcrumbNode(crumbs), faqNode(faqs)]);
 
   return (
-    <MoneyArticle jsonLd={jsonLd}>
-      <MoneyHero
-        kicker="Taurus hiring floor"
-        title={page.title}
-        lede={
-          <>
-            <p>
-              Ask for the people you need on WhatsApp. Taurus sources, screens, calls and interviews candidates, and checks with you in the chat
-              before every step that matters. You watch it all happen on one live floor.
-            </p>
-            <p>It runs on the same Taurus brain as our business floor. Sign in and you see what each bot is doing, where candidates are waiting and what needs a decision from you, and you can ask Taurus about any role, out loud.</p>
-          </>
-        }
-        crumbs={crumbs}
-        primary={{ kind: "link", href: "/employer", label: "Open your hiring floor" }}
-        secondary={{ href: "/employers", label: "Talk to us about a role" }}
-      />
-
-      <section aria-label="Hiring floor demo" className="px-3 pb-6 md:px-6">
-        <div className="mx-auto h-[min(90vh,900px)] min-h-[620px] max-w-[1480px]">
-          <HiringDemo />
-        </div>
-        <p className="mono mx-auto mt-3 max-w-[1480px] px-2 text-[11px] text-muted">
-          An illustration with sample numbers, simulated in your browser. Tap the green replies in the chat, or let the story play on its own. The
-          glowing tokens travelling round the ring are candidates moving to the next stage.
-        </p>
-      </section>
-
-      <MoneySection id="story" kicker="How a hire happens" heading="From one WhatsApp message to an offer">
-        <ol className="space-y-4">
-          {storySteps.map(([title, body], i) => (
-            <li key={title} className="grid grid-cols-[2.25rem_1fr] gap-3">
-              <span className="mono grid h-9 w-9 place-items-center rounded-full bg-ink text-sm text-white">{i + 1}</span>
-              <div>
-                <h3 className="display text-lg text-ink">{title}</h3>
-                <p className="mt-1">{body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <p>Contacting candidates, running checks and releasing offers each wait for your yes. Nothing is sent on a bot&apos;s say-so.</p>
-      </MoneySection>
-
-      <MoneySection id="parameters" kicker="On the dashboard" heading="What each bot reports">
-        <dl className="divide-y divide-line border-y border-line">
-          {parameters.map(([term, def]) => (
-            <div key={term} className="grid gap-1 py-3 sm:grid-cols-[11rem_1fr]">
-              <dt className="font-semibold text-ink">{term}</dt>
-              <dd>{def}</dd>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ApShell current="employers" staticNav cta={{ label: "Talk to us", href: "/employers" }}>
+        <nav className="lnav lnav--dark" aria-label="Taurus hiring floor">
+          <div className="lnav-inner">
+            <span className="lnav-title">
+              Taurus hiring floor<small>Powered by Taurus AI</small>
+            </span>
+            <div className="lnav-right">
+              <ul className="lnav-links">
+                <li>
+                  <a href="#demo">Demo</a>
+                </li>
+                <li>
+                  <a href="#story">How a hire happens</a>
+                </li>
+                <li>
+                  <a href="#parameters">Dashboard</a>
+                </li>
+                <li>
+                  <a href="#faq">FAQ</a>
+                </li>
+              </ul>
+              <Link className="btn btn-primary" href="/employer">
+                Open your floor
+              </Link>
             </div>
-          ))}
-        </dl>
-        <p>
-          Scores stay empty until grading finishes, and nothing on the floor is a forecast. It shows where your pipeline stands now.
-        </p>
-      </MoneySection>
+          </div>
+        </nav>
 
-      <MoneySection id="employers" kicker="For employers" heading="Your real pipeline, once you sign in">
-        <p>
-          In the BrowseJobs employer workspace, Hiring floor builds this view from your own jobs, applications and AI interviews, and refreshes as
-          candidates move. Filter by role to watch one opening at a time, and ask Taurus questions like “how many finalists do we have for the
-          data engineer role?”. It answers from your pipeline, out loud if you like.
-        </p>
-        <p>
-          Not hiring with BrowseJobs yet? <TextLink href="/employers">Talk to us about a role</TextLink>, or read how{" "}
-          <TextLink href="/ai-hiring">AI hiring</TextLink> works.
-        </p>
-      </MoneySection>
+        {/* hero */}
+        <section className="s-black tx-hero" id="top">
+          <div className="wrap center">
+            <nav aria-label="Breadcrumb" className="tx-crumbs">
+              {crumbs.map((crumb, index) => (
+                <span key={crumb.path}>
+                  {index > 0 && <span aria-hidden="true">{" › "}</span>}
+                  {index < crumbs.length - 1 ? <Link href={crumb.path}>{crumb.name}</Link> : <span aria-current="page">{crumb.name}</span>}
+                </span>
+              ))}
+            </nav>
+            <p className="eyebrow">Taurus hiring floor</p>
+            <h1 className="h-hero tx-title">
+              <span>{titleName}:</span> <span className="tx-payoff">{titlePayoff}</span>
+            </h1>
+            <p className="lead">
+              Ask for the people you need on WhatsApp. Taurus sources, screens, calls and interviews candidates, and checks with you in the chat before
+              every step that matters. You watch it all happen on one live floor.
+            </p>
+            <p className="lead tx-lead-2">
+              It runs on the same Taurus brain as our business floor. Sign in and you see what each bot is doing, where candidates are waiting and what
+              needs a decision from you, and you can ask Taurus about any role, out loud.
+            </p>
+            <div className="cta-row">
+              <Link className="btn btn-primary" href="/employer">
+                Open your hiring floor
+              </Link>
+              <Link className="more" href="/employers">
+                Talk to us about a role <span className="chev" aria-hidden="true">›</span>
+              </Link>
+            </div>
+          </div>
+          <div className="wrap-wide" id="demo">
+            <section className="tx-shot tx-shot--hiring" aria-label="Hiring floor demo">
+              <HiringDemo />
+            </section>
+            <p className="fine tx-shot-note">
+              An illustration with sample numbers, simulated in your browser. Tap the green replies in the chat, or let the story play on its own. The
+              glowing tokens travelling round the ring are candidates moving to the next stage.
+            </p>
+            <div className="cta-row tx-shot-links">
+              <Link className="more" href="/taurusai/hiring-demo">
+                Watch it full screen <span className="chev" aria-hidden="true">›</span>
+              </Link>
+              <Link className="more" href="/employers/mission-control-demo">
+                See the AI Recruiter demo <span className="chev" aria-hidden="true">›</span>
+              </Link>
+            </div>
+          </div>
+        </section>
 
-      <MoneyFaq faqs={faqs} />
-      <ContactStrip />
-    </MoneyArticle>
+        {/* the story, stage by stage */}
+        <section className="s-white chapter" id="story">
+          <div className="wrap">
+            <div className="center tx-head">
+              <p className="eyebrow">How a hire happens</p>
+              <h2 className="h-section">From one WhatsApp message to an offer.</h2>
+            </div>
+            <ol className="tx-stages">
+              {storySteps.map(([title, body], i) => (
+                <li key={title}>
+                  <span className="tx-n num" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="h-card">{title}</h3>
+                    <p className="body">{body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="tx-callout">Contacting candidates, running checks and releasing offers each wait for your yes. Nothing is sent on a bot&apos;s say-so.</p>
+          </div>
+        </section>
+
+        {/* dashboard parameters */}
+        <section className="s-paper chapter" id="parameters">
+          <div className="wrap">
+            <div className="center tx-head">
+              <p className="eyebrow">On the dashboard</p>
+              <h2 className="h-section">What each bot reports.</h2>
+            </div>
+            <dl className="tx-rows">
+              {parameters.map(([term, def]) => (
+                <div key={term}>
+                  <dt>{term}</dt>
+                  <dd>{def}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="fine center">Scores stay empty until grading finishes, and nothing on the floor is a forecast. It shows where your pipeline stands now.</p>
+          </div>
+        </section>
+
+        {/* for employers */}
+        <section className="s-black chapter" id="employers">
+          <div className="wrap center">
+            <p className="eyebrow">For employers</p>
+            <h2 className="h-section">Your real pipeline, once you sign in.</h2>
+            <p className="lead">
+              In the BrowseJobs employer workspace, Hiring floor builds this view from your own jobs, applications and AI interviews, and refreshes as
+              candidates move. Filter by role to watch one opening at a time, and ask Taurus questions like “how many finalists do we have for the data
+              engineer role?”. It answers from your pipeline, out loud if you like.
+            </p>
+            <div className="cta-row">
+              <Link className="btn btn-primary" href="/employer">
+                Open your hiring floor
+              </Link>
+              <Link className="more" href="/employers">
+                Talk to us about a role <span className="chev" aria-hidden="true">›</span>
+              </Link>
+            </div>
+            <p className="fine">
+              Not hiring with BrowseJobs yet? <Link href="/employers">Talk to us about a role</Link>, or read how <Link href="/ai-hiring">AI hiring</Link>{" "}
+              works.
+            </p>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="s-paper chapter" id="faq">
+          <div className="wrap center">
+            <p className="eyebrow">Questions</p>
+            <h2 className="h-section">Asked before you book.</h2>
+            <div className="faq tx-faq">
+              {faqs.map((item) => (
+                <details key={item.q}>
+                  <summary>
+                    <h3 className="q">{item.q}</h3>
+                  </summary>
+                  <p className="answer">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* contact */}
+        <section className="s-white chapter" id="contact">
+          <div className="wrap center">
+            <p className="eyebrow">Talk to us</p>
+            <h2 className="h-section">Whitefield, Bengaluru.</h2>
+            <p className="lead">
+              {contact.entity}. {contact.address}. {contact.hours}.
+            </p>
+            <p className="tx-contact num">
+              {contact.phone} · {contact.email}
+            </p>
+            <p className="fine">Every promise in writing · Every call recorded &amp; AI-monitored.</p>
+          </div>
+        </section>
+      </ApShell>
+    </>
   );
 }

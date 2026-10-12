@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Kicker } from "@/components/brand/Kicker";
 import { MoneyArticle } from "@/components/seo/MoneyArticle";
+import "@/components/ap/pages/marketing.css";
 import { ANSWERS_UPDATED, answerPages, answerPath } from "@/content/answers";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -37,44 +37,49 @@ export default function AnswersHubPage() {
 
   return (
     <MoneyArticle jsonLd={jsonLd}>
-      <header className="mx-auto max-w-3xl px-5 pb-8 pt-16 md:pt-24">
-        <nav aria-label="Breadcrumb" className="mono text-[11px] text-muted">
-          <Link href="/" className="hover:text-ink">
-            Home
-          </Link>
-          <span aria-hidden>{" / "}</span>
-          <span className="text-ink2">Answers</span>
-        </nav>
-        <Kicker className="mt-6">Answers</Kicker>
-        <h1 className="display mt-3 text-4xl text-ink md:text-5xl">{page.title}</h1>
-        <p className="mono mt-4 text-xs text-muted">
-          Updated <time dateTime={ANSWERS_UPDATED}>6 Oct 2026</time>
-        </p>
-        <p className="mt-6 text-lg leading-relaxed text-ink2">
-          Each page starts with the answer. Take the free AI interview and read the score. A score of 75% or more
-          counts as clear and puts you in front of HR. A course comes only if you still need one. Hiring teams
-          have two pages of their own, further down.
-        </p>
-        <Link
-          href="/register"
-          className="mt-8 inline-flex items-center justify-center rounded-full bg-trust px-6 py-3 font-semibold text-white shadow-[0_6px_24px_rgba(27,109,240,0.35)] transition-colors hover:bg-deep"
-        >
-          Take the free AI interview
-        </Link>
-      </header>
-      <ul className="mx-auto grid max-w-3xl gap-4 px-5 pb-16">
-        {answerPages.map((item) => (
-          <li key={item.slug}>
-            <Link
-              href={answerPath(item.slug)}
-              className="block rounded-[14px] border border-line bg-white px-5 py-5 transition-colors hover:border-trust/40"
-            >
-              <h2 className="text-lg font-semibold text-ink">{item.title}</h2>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink2">{item.directAnswer}</p>
+      <header className="ap-hero s-white">
+        <div className="ap-narrow center">
+          <nav aria-label="Breadcrumb" className="ap-crumbs">
+            <Link href="/">Home</Link>
+            <span aria-hidden>{" › "}</span>
+            <span aria-current="page">Answers</span>
+          </nav>
+          <p className="eyebrow">Answers</p>
+          <h1 className="h-hero">{page.title}</h1>
+          <p className="fine">
+            Updated <time dateTime={ANSWERS_UPDATED}>6 Oct 2026</time>
+          </p>
+          <div className="ap-lede">
+            <p>
+              Each page starts with the answer. Take the free AI interview and read the score. A score of 75% or more
+              counts as clear and puts you in front of HR. A course comes only if you still need one. Hiring teams
+              have two pages of their own, further down.
+            </p>
+          </div>
+          <div className="cta-row">
+            <Link href="/register" className="btn btn-primary">
+              Take the free AI interview
             </Link>
-          </li>
-        ))}
-      </ul>
+          </div>
+        </div>
+      </header>
+      <section className="ap-sec ans-list">
+        <div className="wrap">
+          <ul className="pg-tiles is-2" data-reveal-kids="">
+            {answerPages.map((item) => (
+              <li key={item.slug}>
+                <Link href={answerPath(item.slug)} className="pg-tile">
+                  <h2 className="h-card">{item.title}</h2>
+                  <p className="body">{item.directAnswer}</p>
+                  <span className="more">
+                    Read the answer <span className="chev" aria-hidden="true">›</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
     </MoneyArticle>
   );
 }
