@@ -168,8 +168,19 @@ it('turns a message into a draft, applies a change, and posts only on YES', func
         ->and($job->openings)->toBe(2)
         ->and($job->employer_workspace_id)->toBe($this->workspace->id)
         ->and($job->created_by_id)->toBe($this->recruiter->id)
-        ->and(end($this->wa->sent)['body'])->toContain('is live')->toContain("/employer/jobs/{$job->id}?tab=shortlist")
+        ->and($job->whatsapp_link_id)->toBe($link->id)
         ->and($link->fresh()->state)->toBe('idle');
+
+    // The job went live, the shortlist agent ran, and its report came back to this chat.
+    $bodies = array_column($this->wa->sent, 'body');
+    $live = collect($bodies)->first(fn ($b) => str_contains($b, 'is live'));
+    $report = collect($bodies)->first(fn ($b) => str_contains($b, '📋 *Shortlist · Data Engineer*'));
+    expect($live)->toContain("/employer/jobs/{$job->id}?tab=shortlist")
+        ->and($report)->toContain('Nobody matched yet')->toContain('Naukri export');
+
+    // And again on request.
+    inbound('919845011111', 'SHORTLIST');
+    expect(end($this->wa->sent)['body'])->toContain('📋 *Shortlist · Data Engineer*');
 });
 
 it('posts a job from a voice note: downloads it, transcribes it, then drafts as usual', function (): void {

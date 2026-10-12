@@ -196,6 +196,21 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
             Run by itself when this JD is published
           </label>
 
+          <label className="mt-2 flex cursor-pointer items-start gap-3 text-[13px]">
+            <input
+              type="checkbox" disabled={!canManage}
+              checked={draft.students_need_readiness}
+              onChange={(e) => setDraft({ ...draft, students_need_readiness: e.target.checked })}
+              className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
+            />
+            <span>
+              Only BrowseJobs students who finished the AI Readiness Interview
+              <span className="block text-[12px] text-[var(--bj-dash-muted)]">
+                Off: students with a matching CV and course are included too, ranked lower and marked &ldquo;no AI interview yet&rdquo;.
+              </span>
+            </span>
+          </label>
+
           {canManage && (
             <div className="mt-5 flex items-center gap-3">
               <PrimaryButton
@@ -286,7 +301,7 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
         e.reasons.training ? `${e.reasons.training.course} · ${e.reasons.training.status}` : null,
         typeof e.reasons.readiness_index === "number" ? `Readiness ${e.reasons.readiness_index}` : null,
         e.reasons.mock_average ? `Mock avg ${e.reasons.mock_average}` : null,
-        e.reasons.ai_readiness != null ? `AI readiness ${e.reasons.ai_readiness}` : null,
+        e.reasons.ai_readiness != null ? `AI readiness ${e.reasons.ai_readiness}` : "No AI interview yet",
       ]
     : [e.reasons.experience, e.reasons.location, e.notice_period ? `Notice ${e.notice_period}` : null, e.expected_ctc ? `Expects ${e.expected_ctc}` : null];
 

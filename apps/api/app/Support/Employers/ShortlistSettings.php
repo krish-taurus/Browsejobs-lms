@@ -30,6 +30,7 @@ final readonly class ShortlistSettings
         public int $minScore,
         public array $sources,
         public bool $autoOnPublish,
+        public bool $studentsNeedReadiness = false,
     ) {}
 
     public static function forJob(EmployerJob $job): self
@@ -49,6 +50,7 @@ final readonly class ShortlistSettings
             minScore: max(0, min(100, (int) ($data['min_score'] ?? self::DEFAULT_MIN_SCORE))),
             sources: $sources,
             autoOnPublish: (bool) ($data['auto_on_publish'] ?? true),
+            studentsNeedReadiness: (bool) ($data['students_need_readiness'] ?? false),
         );
     }
 
@@ -57,7 +59,7 @@ final readonly class ShortlistSettings
         return in_array($source, $this->sources, true);
     }
 
-    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool} */
+    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool} */
     public function toArray(): array
     {
         return [
@@ -65,6 +67,7 @@ final readonly class ShortlistSettings
             'min_score' => $this->minScore,
             'sources' => $this->sources,
             'auto_on_publish' => $this->autoOnPublish,
+            'students_need_readiness' => $this->studentsNeedReadiness,
         ];
     }
 }

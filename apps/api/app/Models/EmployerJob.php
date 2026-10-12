@@ -38,6 +38,7 @@ use Illuminate\Support\Carbon;
  * @property EmployerJobStatus $status
  * @property Carbon|null $published_at
  * @property array<string, mixed>|null $shortlist_settings
+ * @property int|null $whatsapp_link_id the WhatsApp chat it was posted from, for the shortlist report
  */
 final class EmployerJob extends Model
 {
@@ -65,6 +66,7 @@ final class EmployerJob extends Model
         'knockout_questions',
         'mock_design',
         'shortlist_settings',
+        'whatsapp_link_id',
         'status',
         'published_at',
     ];

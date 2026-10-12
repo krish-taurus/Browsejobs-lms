@@ -44,6 +44,8 @@ final readonly class HiringChatAgent
 
     private const GREETING = ['hi', 'hello', 'hey', 'help', 'menu', 'start', 'namaste'];
 
+    private const REPORT = ['shortlist', 'report', 'status', 'candidates', 'shortlist report', 'show shortlist', 'list'];
+
     public function __construct(
         private WhatsAppClient $whatsapp,
         private ReadHiringIntent $intent,
@@ -53,6 +55,7 @@ final readonly class HiringChatAgent
         private PublishEmployerJob $publishJob,
         private AuditLogger $audit,
         private VoiceNoteTranscriber $voice,
+        private ShortlistReport $reports,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -112,6 +115,12 @@ final readonly class HiringChatAgent
 
         if ($link->state === EmployerWhatsappLink::STATE_CONFIRMING && in_array($word, self::YES, true)) {
             $this->post($in->phone, $link, $workspace, $user);
+
+            return;
+        }
+
+        if (in_array($word, self::REPORT, true)) {
+            $this->reply($in->phone, $link, $this->reports->latestFor($link));
 
             return;
         }
@@ -277,6 +286,8 @@ final readonly class HiringChatAgent
                 'remote' => (bool) ($d['remote'] ?? false),
                 'openings' => max(1, (int) ($d['openings'] ?? 1)),
             ]);
+            // Remember this chat before publishing, so the shortlist report comes back here.
+            $job->update(['whatsapp_link_id' => $link->id]);
             $job = $this->publishJob->handle($job, $user);
         } catch (ValidationException $e) {
             $this->reply($phone, $link, 'I could not post it: '.$this->firstError($e));
@@ -292,7 +303,7 @@ final readonly class HiringChatAgent
         $link->update(['state' => EmployerWhatsappLink::STATE_IDLE, 'draft' => null]);
 
         $url = rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}?tab=shortlist";
-        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is now searching BrowseJobs students and your own candidate lists for the best matches. See the shortlist here:\n{$url}\n\nSend another role any time.");
+        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is searching BrowseJobs students and your own candidate lists now. I will send you the shortlist in this chat in a minute.\n\nFull list and interview invites: {$url}\n\nSend another role any time, or *SHORTLIST* to see the latest shortlist again.");
     }
 
     /** @param  array<string, mixed>  $d */
@@ -321,7 +332,7 @@ final readonly class HiringChatAgent
             ? "\n\nYou have a draft waiting: reply *YES* to post it or *CANCEL* to discard it."
             : '';
 
-        return "Hi! This chat posts jobs for *{$workspace->name}* on BrowseJobs.\n\n".$this->example().$pending;
+        return "Hi! This chat posts jobs for *{$workspace->name}* on BrowseJobs.\n\n".$this->example()."\n\nSend *SHORTLIST* to see who the shortlist agent found for your latest job.".$pending;
     }
 
     private function example(): string

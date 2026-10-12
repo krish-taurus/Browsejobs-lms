@@ -53,6 +53,8 @@ export type ShortlistSettings = {
   min_score: number;
   sources: ShortlistSource[];
   auto_on_publish: boolean;
+  /** Off: students without the AI Readiness Interview still surface (ranked lower). */
+  students_need_readiness: boolean;
 };
 
 export type ShortlistEntry = {

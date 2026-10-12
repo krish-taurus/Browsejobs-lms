@@ -59,7 +59,13 @@ final readonly class LmsTalentMatcher
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function forJob(EmployerJob $job, int $limit = 25): Collection
+    /**
+     * @param  bool  $requireReadinessInterview  the Talent Pool keeps the August
+     *                                           gate; the shortlist agent can switch it off, so a student with a
+     *                                           real CV and the right course still surfaces (ranked without the
+     *                                           AI-readiness points) while few have taken that interview
+     */
+    public function forJob(EmployerJob $job, int $limit = 25, bool $requireReadinessInterview = true): Collection
     {
         $required = $this->normalize($job->skills ?? []);
 
@@ -94,7 +100,7 @@ final readonly class LmsTalentMatcher
         /** @var Collection<int, CvProfile> $profiles */
         $profiles = CvProfile::query()
             ->whereIn('user_id', $users->keys()->all())
-            ->whereNotNull('cv_mock_completed_at')
+            ->when($requireReadinessInterview, fn ($q) => $q->whereNotNull('cv_mock_completed_at'))
             ->get()
             // A CV row can exist with nothing actually in it — require real
             // content too, not just a completed interview with an empty CV.

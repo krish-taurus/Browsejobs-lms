@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Employers;
 
+use App\Jobs\SendShortlistReport;
 use App\Models\EmployerCandidate;
 use App\Models\EmployerJob;
 use App\Models\JobShortlistEntry;
@@ -46,7 +47,7 @@ final readonly class RunShortlistAgent
             $candidates = collect();
 
             if ($settings->uses(JobShortlistEntry::SOURCE_BROWSEJOBS)) {
-                $pool = $this->students->forJob($job, self::STUDENT_POOL_DEPTH);
+                $pool = $this->students->forJob($job, self::STUDENT_POOL_DEPTH, $settings->studentsNeedReadiness);
                 $considered[JobShortlistEntry::SOURCE_BROWSEJOBS] = ['considered' => $pool->count(), 'matched' => $pool->count()];
                 $candidates = $candidates->concat($pool->map(fn (array $m) => $this->fromStudent($m)));
             }
@@ -118,6 +119,11 @@ final readonly class RunShortlistAgent
                 'shortlisted' => $picked->count(),
                 'sources' => $settings->sources,
             ], $actor);
+
+            // Posted from WhatsApp: tell the client in the same chat who was found.
+            if ($job->whatsapp_link_id !== null) {
+                SendShortlistReport::dispatch($job->id);
+            }
 
             return $run;
         });

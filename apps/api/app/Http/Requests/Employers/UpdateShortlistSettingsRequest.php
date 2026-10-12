@@ -27,6 +27,7 @@ final class UpdateShortlistSettingsRequest extends FormRequest
             'sources' => ['present', 'array'],
             'sources.*' => ['string', Rule::in(JobShortlistEntry::SOURCES)],
             'auto_on_publish' => ['required', 'boolean'],
+            'students_need_readiness' => ['sometimes', 'boolean'],
         ];
     }
 }

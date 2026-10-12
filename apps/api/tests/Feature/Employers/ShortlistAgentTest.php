@@ -277,6 +277,24 @@ it('lets a hiring manager look but not import, change or run', function (): void
         ->assertForbidden();
 });
 
+it('pulls students who have not taken the AI Readiness Interview yet, unless told not to', function (): void {
+    $student = shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws'], 60);
+    CvProfile::query()->where('user_id', $student->id)->update(['cv_mock_completed_at' => null]);
+    Sanctum::actingAs($this->recruiter);
+
+    $run = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
+    $entry = collect($run->json('data.entries'))->firstWhere('candidate_user_id', $student->id);
+    expect($entry)->not->toBeNull()
+        ->and($entry['reasons']['ai_readiness'])->toBeNull()
+        ->and($run->json('data.settings.students_need_readiness'))->toBeFalse();
+
+    $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
+        'top_n' => 10, 'min_score' => 0, 'sources' => ['browsejobs'], 'auto_on_publish' => true, 'students_need_readiness' => true,
+    ])->assertOk();
+    $strict = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
+    expect($strict->json('data.entries'))->toBe([]);
+});
+
 it('validates the settings', function (): void {
     Sanctum::actingAs($this->recruiter);
 
