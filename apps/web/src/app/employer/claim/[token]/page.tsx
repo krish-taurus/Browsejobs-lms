@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { AuthAlert, AuthField, AuthScreen } from "@/components/auth/AuthScreen";
 
 /**
  * Where an admin-onboarded employer sets their own password (PRD-E F1).
@@ -13,9 +14,6 @@ import { Wordmark } from "@/components/brand/Wordmark";
  * expiring; on success the session is already established, so there is no
  * login form to bounce through afterwards.
  */
-
-const FIELD =
-  "mt-1 w-full rounded-input border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-shadow placeholder:text-white/30 focus:border-[#4d8ef7] focus:ring-4 focus:ring-[#4d8ef7]/25";
 
 const MIN_LENGTH = 12;
 
@@ -52,78 +50,48 @@ export default function ClaimInvitePage({ params }: { params: Promise<{ token: s
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[#05070d] px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex justify-center">
-          <Wordmark tone="dark" />
-        </div>
-
-        <form
-          onSubmit={submit}
-          className="rounded-panel border border-white/[0.10] bg-[#0a0f1c] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.5)]"
-        >
-          <p className="mono text-[11px] uppercase tracking-widest text-[#4d8ef7]">Employer portal</p>
-          <h1 className="display mt-2 text-xl text-white">Set your password</h1>
-          <p className="mt-2 text-sm leading-relaxed text-white/55">
-            Your workspace is ready. Choose a password — nobody at BrowseJobs sees it, and this link
-            works only once.
-          </p>
-
-          <label className="mt-6 block text-sm font-medium text-white/80" htmlFor="password">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={FIELD}
-            autoComplete="new-password"
-            placeholder={`At least ${MIN_LENGTH} characters`}
-          />
-          {/* Said up front rather than after a rejected submit: this account
-              can see every applicant's contact details. */}
-          <p className="mt-1.5 text-[12px] text-white/40">
-            At least {MIN_LENGTH} characters. This login can see every applicant to your roles.
-          </p>
-
-          <label className="mt-4 block text-sm font-medium text-white/80" htmlFor="confirm">
-            Confirm password
-          </label>
-          <input
-            id="confirm"
-            type="password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className={FIELD}
-            autoComplete="new-password"
-            placeholder="Type it again"
-          />
-
-          {tooShort && <p className="mt-2 text-[13px] text-[#e8bf63]">A bit longer, please.</p>}
-          {mismatch && <p className="mt-2 text-[13px] text-[#e8bf63]">These do not match yet.</p>}
-
-          {error && (
-            <p className="mt-3 rounded-xl bg-[#e05561]/15 px-3 py-2 text-sm text-[#fca5a5]">{error}</p>
-          )}
-
-          <button
-            disabled={busy || password.length < MIN_LENGTH || password !== confirm}
-            className="mt-6 w-full rounded-input bg-[#4d8ef7] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_36px_rgba(77,142,247,0.35)] transition-shadow hover:shadow-[0_16px_46px_rgba(77,142,247,0.5)] disabled:opacity-50 disabled:shadow-none"
-          >
-            {busy ? "Setting up…" : "Set password and continue"}
-          </button>
-
-          <p className="mt-4 text-center text-xs text-white/45">
-            Already set yours?{" "}
-            <a href="/employer" className="font-semibold text-[#4d8ef7] hover:underline">
-              Sign in
-            </a>
-          </p>
-        </form>
-      </div>
-    </div>
+    <AuthScreen
+      portal="employer"
+      eyebrow="Employers"
+      title="Set your password."
+      lede="Your workspace is ready. Choose a password — nobody at BrowseJobs sees it, and this link works only once."
+      below={
+        <>
+          Already set yours? <Link href="/employer">Sign in</Link>
+        </>
+      }
+    >
+      <form onSubmit={submit} className="bj-auth-form">
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          placeholder={`At least ${MIN_LENGTH} characters`}
+        />
+        {/* Said up front rather than after a rejected submit: this account
+            can see every applicant's contact details. */}
+        <p className="bj-auth-hint">At least {MIN_LENGTH} characters. This login can see every applicant to your roles.</p>
+        <AuthField
+          id="confirm"
+          label="Confirm password"
+          type="password"
+          required
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          autoComplete="new-password"
+          placeholder="Type it again"
+        />
+        {tooShort && <p className="bj-auth-hint bj-auth-hint--warn">A bit longer, please.</p>}
+        {mismatch && <p className="bj-auth-hint bj-auth-hint--warn">These do not match yet.</p>}
+        {error && <AuthAlert>{error}</AuthAlert>}
+        <button className="bj-auth-btn" disabled={busy || password.length < MIN_LENGTH || password !== confirm}>
+          {busy ? "Setting up…" : "Set password and continue"}
+        </button>
+      </form>
+    </AuthScreen>
   );
 }
