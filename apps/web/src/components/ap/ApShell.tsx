@@ -172,7 +172,7 @@ export function ApShell({
             </div>
           </div>
           <div className="footer-bottom">
-            <span>IBrowseJobs Technologies Pvt Ltd · Whitefield, Bengaluru, Karnataka 560066 · +91 86185 19825 · hello@browsejobs.ai · Mon–Sat, 9:00 AM – 7:00 PM IST</span>
+            <span>IBrowseJobs Technologies Pvt Ltd · Whitefield, Bengaluru, Karnataka 560066 · +91 79755 54666 · hello@browsejobs.ai · Mon–Sat, 9:00 AM – 7:00 PM IST</span>
             <span>Every promise in writing · Every call recorded &amp; AI-monitored.</span>
           </div>
           <div className="footer-word" aria-hidden="true">

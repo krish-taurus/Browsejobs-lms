@@ -304,7 +304,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "whitefield",
         heading: "What is actually taught from Whitefield",
         paragraphs: [
-          "Classes are instructor-led and online, with recordings for a year. The office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is +91 86185 19825. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.",
+          "Classes are instructor-led and online, with recordings for a year. The office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is +91 79755 54666. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.",
           "The city page is [Data Engineering in Bengaluru](/data-engineering-course-bangalore). The modules are on the [course page](/courses/data-engineering). Illustrative pay bands, which are not an offer, are on the Bengaluru salary page linked from there. For the same course framed for the rest of the country, read [Best data engineering course in India](/answers/best-data-engineering-course-in-india).",
         ],
       },

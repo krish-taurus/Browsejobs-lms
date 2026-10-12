@@ -64,5 +64,5 @@ export const GET_HIRED_FAQ = [
 
 /** Published contact number, already used as the WhatsApp line on forms. */
 export const WHATSAPP_SCREEN =
-  "https://wa.me/918618519825?text=" +
+  "https://wa.me/917975554666?text=" +
   encodeURIComponent("I'd like to start the free AI interview.");
