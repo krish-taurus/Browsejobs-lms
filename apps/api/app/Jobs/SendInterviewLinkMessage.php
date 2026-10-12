@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * "Your <round> interview is open now — start here: <link>". Sent when a
+ * "Your <round> interview is ready — reply OK for the link". Sent when a
  * round opens (the booked day for L1; straight away for L2 after L1 clears).
  * Uses the approved template, because the candidate's last message may be
  * more than 24 hours old.
@@ -54,8 +54,6 @@ final class SendInterviewLinkMessage implements ShouldQueue
                         $invite->firstName(),
                         strtoupper($invite->round),
                         (string) ($job?->title ?? 'open'),
-                        (string) ($job?->workspace?->name ?? 'the company'),
-                        $invite->link(),
                     ],
                 );
                 $invite->update(['wamid' => $wamid, 'error' => null]);

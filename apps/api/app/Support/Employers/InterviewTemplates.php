@@ -13,7 +13,11 @@ use Throwable;
  * not written to us, so free text is not allowed):
  *
  *  - INVITE: "<company> shortlisted you for <role> — which day suits you? 1/2/3"
- *  - LINK:   "your <round> interview is open now — start here: <link>"
+ *  - LINK:   "your <round> interview is ready — reply OK for the link"
+ *
+ * The link template carries no URL: Meta classed a URL variable as marketing
+ * (and marketing sends are frequency-capped per person). The candidate's
+ * reply opens the 24-hour window, and the link then goes as free text.
  *
  * Both have to be approved by Meta before anything can go out. This class
  * submits them (once, from the AI shortlist tab) and reports their status.
@@ -26,12 +30,12 @@ final class InterviewTemplates
 
     public const BODIES = [
         self::INVITE => "Hi {{1}}, {{2}} has shortlisted you for the {{3}} role.\n\nThe first round is a short AI interview you can take on your phone or laptop. Which day suits you?\n1) {{4}}\n2) {{5}}\n3) {{6}}\n\nReply 1, 2 or 3.",
-        self::LINK => "Hi {{1}}, your {{2}} interview for the {{3}} role at {{4}} is open now.\n\nStart here: {{5}}\n\nLog in with this WhatsApp number. It takes about 15 minutes, so find a quiet place.",
+        self::LINK => "Hi {{1}}, your {{2}} interview for the {{3}} role is ready.\n\nReply OK and we will send your interview link here.",
     ];
 
     private const EXAMPLES = [
         self::INVITE => ['Asha', 'Incture', 'Data Engineer', 'Tue 14 Oct', 'Wed 15 Oct', 'Thu 16 Oct'],
-        self::LINK => ['Asha', 'L1', 'Data Engineer', 'Incture', 'https://browsejobs.ai/hire-interview/AbC123'],
+        self::LINK => ['Asha', 'L1', 'Data Engineer'],
     ];
 
     /** @return array<string, string|null> template name => APPROVED / PENDING / REJECTED / null (never submitted) */
@@ -84,6 +88,11 @@ final class InterviewTemplates
 
         $result = [];
         foreach ($this->statuses(fresh: true) as $name => $status) {
+            if ($status === 'REJECTED') {
+                $result[$name] = $this->edit($name, $waba, $token);
+
+                continue;
+            }
             if ($status !== null) {
                 $result[$name] = strtolower($status);
 
@@ -115,5 +124,35 @@ final class InterviewTemplates
         Cache::forget('interview_template_statuses');
 
         return $result;
+    }
+
+    /** Rewrite a rejected template with the current body; it goes back to review. */
+    private function edit(string $name, string $waba, string $token): string
+    {
+        $base = rtrim((string) config('services.whatsapp.base_url'), '/');
+
+        try {
+            $id = collect(Http::withToken($token)->timeout(15)
+                ->get("{$base}/{$waba}/message_templates", ['name' => $name, 'fields' => 'id,name'])
+                ->json('data') ?? [])->firstWhere('name', $name)['id'] ?? null;
+            if (! is_string($id) || $id === '') {
+                return 'rejected (could not find it to edit)';
+            }
+
+            $response = Http::withToken($token)->timeout(20)->post("{$base}/{$id}", [
+                'category' => 'UTILITY',
+                'components' => [[
+                    'type' => 'BODY',
+                    'text' => self::BODIES[$name],
+                    'example' => ['body_text' => [self::EXAMPLES[$name]]],
+                ]],
+            ]);
+
+            return $response->successful()
+                ? 'resubmitted after rejection'
+                : 'rejected; edit refused: '.(string) ($response->json('error.error_user_msg') ?? $response->json('error.message') ?? 'HTTP '.$response->status());
+        } catch (Throwable $e) {
+            return 'rejected; could not reach WhatsApp: '.$e->getMessage();
+        }
     }
 }

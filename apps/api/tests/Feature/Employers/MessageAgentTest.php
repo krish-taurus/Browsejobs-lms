@@ -141,7 +141,11 @@ it('opens the booked interview on the day, sends the link, runs it in the voice 
     expect($invite->status)->toBe('open')
         ->and($interview->round)->toBe('l1')
         ->and(EmployerJobApplication::query()->find($interview->employer_job_application_id)->stage->value)->toBe('l1')
-        ->and($link['parameters'][4])->toBe("https://browsejobs.ai/hire-interview/{$invite->token}");
+        ->and($link['parameters'])->toBe(['Asha', 'L1', 'Data Engineer']);
+
+    // Their reply ("OK") opens the 24-hour window and gets the link as free text.
+    candidateSays('OK');
+    expect(end($this->wa->sent)['body'])->toContain("https://browsejobs.ai/hire-interview/{$invite->token}");
 
     // The public page says what it is, nothing personal.
     $public = $this->getJson("/api/v1/interview-invites/{$invite->token}")->assertOk()->json('data');
