@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, apiJson } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/GoogleButton";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { AuthAlert, AuthField, AuthScreen } from "@/components/auth/AuthScreen";
 import { safeNextPath } from "@/lib/safeNext";
 
 function afterLogin(): string {
@@ -60,86 +60,65 @@ export default function StudentLogin() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center px-5">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="flex justify-center" aria-label="BrowseJobs home">
-          <Wordmark />
-        </Link>
+    <AuthScreen
+      portal="student"
+      eyebrow="Job seekers"
+      title={step === "identifier" ? "Sign in." : "Enter your code."}
+      lede={step === "identifier" ? "We'll send a one-time code to your phone." : `We sent a 6-digit code to ${identifier}.`}
+      links={[
+        { href: "/employer", label: "Employers" },
+        { href: "/register", label: "Create account" },
+      ]}
+      below={
+        <>
+          New here? <Link href="/register">Create an account</Link>
+          <br />
+          Hiring? <Link href="/employer">Employer sign in</Link> · Staff? <Link href="/admin">Sign in here</Link>
+        </>
+      }
+    >
+      {error && <AuthAlert>{error}</AuthAlert>}
 
-        <div className="mt-8 rounded-2xl border border-line bg-white p-7 shadow-sm">
-          <p className="kicker text-trust">Student portal</p>
-          <h1 className="display mt-2 text-2xl text-ink">
-            {step === "identifier" ? "Sign in" : "Enter your code"}
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            {step === "identifier"
-              ? "We'll send a one-time code to your phone."
-              : `We sent a 6-digit code to ${identifier}.`}
-          </p>
-
-          {error && (
-            <p className="mt-4 rounded-lg bg-warn/10 px-3 py-2 text-sm text-warn">
-              {error}
-            </p>
-          )}
-
-          {step === "identifier" ? (
-            <>
-              <form onSubmit={requestOtp} className="mt-6 space-y-4">
-                <input
-                  autoFocus
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Phone number"
-                  className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-trust"
-                />
-                <button
-                  disabled={busy || !identifier}
-                  className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
-                >
-                  {busy ? "Sending…" : "Send code"}
-                </button>
-              </form>
-              <GoogleButton next={nextPath} />
-            </>
-          ) : (
-            <form onSubmit={verifyOtp} className="mt-6 space-y-4">
-              <input
-                autoFocus
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                inputMode="numeric"
-                placeholder="6-digit code"
-                className="mono w-full rounded-lg border border-line bg-paper px-4 py-3 text-center text-lg tracking-[0.4em] text-ink outline-none focus:border-trust"
-              />
-              <button
-                disabled={busy || code.length < 4}
-                className="w-full rounded-full bg-trust py-3 font-semibold text-white transition-colors hover:bg-deep disabled:opacity-50"
-              >
-                {busy ? "Verifying…" : "Verify & continue"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep("identifier")}
-                className="w-full text-sm text-muted hover:text-ink"
-              >
-                Use a different phone
-              </button>
-            </form>
-          )}
-        </div>
-
-        <p className="mt-6 text-center text-xs text-muted">
-          New here?{" "}
-          <Link href="/register" className="text-trust hover:underline">
-            Create an account
-          </Link>
-          {" · "}Staff?{" "}
-          <Link href="/admin" className="text-trust hover:underline">
-            Sign in here
-          </Link>
-        </p>
-      </div>
-    </div>
+      {step === "identifier" ? (
+        <>
+          <form onSubmit={requestOtp} className="bj-auth-form">
+            <AuthField
+              id="identifier"
+              label="Phone number"
+              autoFocus
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="Phone number"
+              inputMode="tel"
+              autoComplete="tel"
+            />
+            <button className="bj-auth-btn" disabled={busy || !identifier}>
+              {busy ? "Sending…" : "Send code"}
+            </button>
+          </form>
+          <GoogleButton next={nextPath} />
+        </>
+      ) : (
+        <form onSubmit={verifyOtp} className="bj-auth-form">
+          <AuthField
+            id="code"
+            label="6-digit code"
+            className="is-code"
+            autoFocus
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="6-digit code"
+          />
+          <button className="bj-auth-btn" disabled={busy || code.length < 4}>
+            {busy ? "Verifying…" : "Verify & continue"}
+          </button>
+          <button type="button" className="bj-auth-textbtn" onClick={() => setStep("identifier")}>
+            Use a different phone
+          </button>
+        </form>
+      )}
+    </AuthScreen>
   );
 }
