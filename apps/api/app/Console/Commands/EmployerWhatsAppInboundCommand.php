@@ -19,7 +19,8 @@ final class EmployerWhatsAppInboundCommand extends Command
         {from : Sender phone, digits with country code}
         {--text= : The message text}
         {--id= : WhatsApp message id (wamid), used to drop retries}
-        {--name= : WhatsApp profile name}';
+        {--name= : WhatsApp profile name}
+        {--media= : WhatsApp media id of a voice note}';
 
     protected $description = 'Route one inbound WhatsApp message to the employer hiring chat (called by the CRM).';
 
@@ -30,6 +31,7 @@ final class EmployerWhatsAppInboundCommand extends Command
             (string) $this->option('text'),
             $this->option('id') !== null ? (string) $this->option('id') : null,
             $this->option('name') !== null ? (string) $this->option('name') : null,
+            $this->option('media') !== null ? (string) $this->option('media') : null,
         );
 
         $this->line($result);

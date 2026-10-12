@@ -18,13 +18,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $direction
  * @property string $body
  * @property string|null $wamid
+ * @property string|null $media_id
  * @property string $status
  */
 final class EmployerWhatsappMessage extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['tenant_id', 'employer_whatsapp_link_id', 'phone', 'direction', 'body', 'wamid', 'status'];
+    protected $fillable = ['tenant_id', 'employer_whatsapp_link_id', 'phone', 'direction', 'body', 'wamid', 'media_id', 'status'];
 
     /** @return BelongsTo<EmployerWhatsappLink, $this> */
     public function link(): BelongsTo

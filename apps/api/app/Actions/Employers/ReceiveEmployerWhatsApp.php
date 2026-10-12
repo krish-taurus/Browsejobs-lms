@@ -28,7 +28,7 @@ final readonly class ReceiveEmployerWhatsApp
 
     public const CODE_PATTERN = '/\bBJ-[A-HJ-NP-Z2-9]{6}\b/i';
 
-    public function handle(string $from, string $text, ?string $wamid = null, ?string $profileName = null): string
+    public function handle(string $from, string $text, ?string $wamid = null, ?string $profileName = null, ?string $mediaId = null): string
     {
         $phone = preg_replace('/\D+/', '', $from) ?? '';
         if (strlen($phone) === 10) {
@@ -64,6 +64,7 @@ final readonly class ReceiveEmployerWhatsApp
             'direction' => 'in',
             'body' => mb_substr($text, 0, 4000),
             'wamid' => $wamid !== '' ? $wamid : null,
+            'media_id' => $mediaId !== null && $mediaId !== '' ? mb_substr($mediaId, 0, 64) : null,
             'status' => 'received',
         ]);
 

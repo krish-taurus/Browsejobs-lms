@@ -172,6 +172,44 @@ it('turns a message into a draft, applies a change, and posts only on YES', func
         ->and($link->fresh()->state)->toBe('idle');
 });
 
+it('posts a job from a voice note: downloads it, transcribes it, then drafts as usual', function (): void {
+    linkPhone($this);
+    config([
+        'services.whatsapp.access_token' => 'test-token',
+        'services.whatsapp.base_url' => 'https://graph.facebook.com/v21.0',
+        'services.elevenlabs.api_key' => 'test-eleven',
+    ]);
+    Http::fake([
+        'graph.facebook.com/v21.0/MEDIA123' => Http::response(['url' => 'https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=MEDIA123']),
+        'lookaside.fbsbx.com/*' => Http::response('OggS-voice-bytes'),
+        'api.elevenlabs.io/v1/speech-to-text' => Http::response(['text' => 'We need two data engineers in Bengaluru, three to five years.']),
+    ]);
+    $this->ai->replies = [
+        json_encode(['title' => 'Data Engineer', 'experience_min_years' => 3, 'experience_max_years' => 5, 'locations' => ['Bengaluru'], 'openings' => 2, 'remote' => false]),
+        json_encode(['description' => 'Build our pipelines.', 'skills' => ['python', 'sql']]),
+    ];
+
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919845011111', '--text' => '[audio message]', '--id' => 'wamid.voice1', '--media' => 'MEDIA123']);
+
+    $bodies = array_column($this->wa->sent, 'body');
+    expect($bodies)->toContain('🎤 I heard: "We need two data engineers in Bengaluru, three to five years."')
+        ->and(end($bodies))->toContain('*Role:* Data Engineer')
+        ->and(EmployerWhatsappMessage::query()->where('wamid', 'wamid.voice1')->value('body'))->toStartWith('🎤 We need two')
+        ->and(EmployerWhatsappLink::query()->value('state'))->toBe('confirming');
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'api.elevenlabs.io') && $r->hasHeader('xi-api-key', 'test-eleven'));
+});
+
+it('asks the client to type when a voice note cannot be transcribed', function (): void {
+    linkPhone($this);
+    config(['services.whatsapp.access_token' => 'test-token', 'services.elevenlabs.api_key' => 'test-eleven']);
+    Http::fake(['*' => Http::response(['error' => 'nope'], 500)]);
+
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919845011111', '--text' => '[audio message]', '--id' => 'wamid.voice2', '--media' => 'MEDIA999']);
+
+    expect(end($this->wa->sent)['body'])->toContain('could not hear that voice note')
+        ->and(EmployerWhatsappLink::query()->value('state'))->toBe('idle');
+});
+
 it('discards a draft on CANCEL', function (): void {
     $link = linkPhone($this);
     $link->update(['state' => 'confirming', 'draft' => ['title' => 'QA Engineer', 'description' => 'x', 'skills' => []]]);

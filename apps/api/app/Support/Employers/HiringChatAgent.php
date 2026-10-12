@@ -52,6 +52,7 @@ final readonly class HiringChatAgent
         private CreateEmployerJob $createJob,
         private PublishEmployerJob $publishJob,
         private AuditLogger $audit,
+        private VoiceNoteTranscriber $voice,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -81,10 +82,23 @@ final readonly class HiringChatAgent
             return;
         }
 
+        // A voice note: download it from WhatsApp and transcribe it, then carry on as if typed.
+        if ($in->media_id !== null && preg_match('/^\[(audio|voice) message\]$/i', $text) === 1) {
+            $heard = $this->voice->transcribe($in->media_id);
+            if ($heard === null) {
+                $this->reply($in->phone, $link, 'Sorry, I could not hear that voice note clearly. Please try again, or type the job details.');
+
+                return;
+            }
+            $in->update(['body' => "🎤 {$heard}"]);
+            $this->reply($in->phone, $link, "🎤 I heard: \"{$heard}\"");
+            $text = $heard;
+        }
+
         $word = $this->word($text);
 
         if (preg_match('/^\[[a-z]+ message\]$/i', $text) === 1) {
-            $this->reply($in->phone, $link, 'I can only read typed messages for now. Please type the job details: the role, experience, location and how many people you need.');
+            $this->reply($in->phone, $link, 'I can read typed messages and voice notes. Please type or say the job details: the role, experience, location and how many people you need.');
 
             return;
         }
