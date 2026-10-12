@@ -37,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property array<int, array<string, mixed>>|null $knockout_questions
  * @property EmployerJobStatus $status
  * @property Carbon|null $published_at
+ * @property array<string, mixed>|null $shortlist_settings
  */
 final class EmployerJob extends Model
 {
@@ -63,6 +64,7 @@ final class EmployerJob extends Model
         'openings',
         'knockout_questions',
         'mock_design',
+        'shortlist_settings',
         'status',
         'published_at',
     ];
@@ -74,6 +76,7 @@ final class EmployerJob extends Model
             'locations' => 'array',
             'knockout_questions' => 'array',
             'mock_design' => 'array',
+            'shortlist_settings' => 'array',
             'remote' => 'boolean',
             'ctc_visible' => 'boolean',
             'status' => EmployerJobStatus::class,

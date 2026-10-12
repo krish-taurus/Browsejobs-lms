@@ -96,6 +96,7 @@ use App\Http\Controllers\Cv\CvController;
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomationRuleController;
 use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
+use App\Http\Controllers\Employer\CandidateSourceController as EmployerCandidateSourceController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
 use App\Http\Controllers\Employer\HiringFloorController as EmployerHiringFloorController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
@@ -109,6 +110,7 @@ use App\Http\Controllers\Employer\JobController as EmployerJobController;
 use App\Http\Controllers\Employer\MemberController as EmployerMemberController;
 use App\Http\Controllers\Employer\MockDesignController as EmployerMockDesignController;
 use App\Http\Controllers\Employer\RoleTaxonomyController as EmployerRoleTaxonomyController;
+use App\Http\Controllers\Employer\ShortlistAgentController as EmployerShortlistAgentController;
 use App\Http\Controllers\Employer\SpeakController as EmployerSpeakController;
 use App\Http\Controllers\Employer\TalentPoolController as EmployerTalentPoolController;
 use App\Http\Controllers\Employer\TranscribeController as EmployerTranscribeController;
@@ -592,6 +594,17 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/jobs/{job}/automation-rules', [EmployerAutomationRuleController::class, 'store']);
     Route::post('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}/toggle', [EmployerAutomationRuleController::class, 'toggle']);
     Route::delete('workspaces/{workspace}/jobs/{job}/automation-rules/{rule}', [EmployerAutomationRuleController::class, 'destroy']);
+
+    // Shortlist agent (hiring step 2): ranks BrowseJobs students, the client's
+    // own candidate database and their Naukri export for a JD.
+    Route::get('workspaces/{workspace}/jobs/{job}/shortlist', [EmployerShortlistAgentController::class, 'show']);
+    Route::put('workspaces/{workspace}/jobs/{job}/shortlist/settings', [EmployerShortlistAgentController::class, 'updateSettings']);
+    Route::post('workspaces/{workspace}/jobs/{job}/shortlist/run', [EmployerShortlistAgentController::class, 'run'])->middleware('throttle:20,1');
+    Route::post('workspaces/{workspace}/jobs/{job}/shortlist/{entry}/remove', [EmployerShortlistAgentController::class, 'remove']);
+    Route::post('workspaces/{workspace}/jobs/{job}/shortlist/{entry}/restore', [EmployerShortlistAgentController::class, 'restore']);
+    Route::get('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'index']);
+    Route::post('workspaces/{workspace}/candidate-sources', [EmployerCandidateSourceController::class, 'import'])->middleware('throttle:20,1');
+    Route::delete('workspaces/{workspace}/candidate-sources/{source}', [EmployerCandidateSourceController::class, 'clear'])->whereIn('source', ['client_db', 'naukri']);
 });
 
 // Admin panel API. Tenant resolves from the authenticated user; every route is

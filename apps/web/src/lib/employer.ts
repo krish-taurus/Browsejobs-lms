@@ -45,6 +45,89 @@ export type TalentPoolCandidate = {
   cv_summary?: string;
 };
 
+/** Where the shortlist agent looks: BrowseJobs students, the client's own database, their Naukri export. */
+export type ShortlistSource = "browsejobs" | "client_db" | "naukri";
+
+export type ShortlistSettings = {
+  top_n: number;
+  min_score: number;
+  sources: ShortlistSource[];
+  auto_on_publish: boolean;
+};
+
+export type ShortlistEntry = {
+  id: number;
+  rank: number;
+  source: ShortlistSource;
+  match_score: number;
+  status: "shortlisted" | "removed";
+  reasons: {
+    skill_match_pct: number;
+    matched_skills: string[];
+    missing_skills: string[];
+    /** Students only. */
+    readiness_index?: number;
+    mock_average?: number;
+    ai_readiness?: number | null;
+    training?: { course: string; status: string } | null;
+    /** Client database / Naukri only. */
+    experience?: string;
+    location?: string;
+    role_fit?: boolean;
+  };
+  candidate_user_id: number | null;
+  employer_candidate_id: number | null;
+  name: string;
+  current_title: string | null;
+  current_company: string | null;
+  location: string | null;
+  experience_years: number | null;
+  notice_period: string | null;
+  expected_ctc: string | null;
+  /** Only for the client's own candidates — a student's contact stays withheld. */
+  email: string | null;
+  phone: string | null;
+  removed_at: string | null;
+};
+
+export type ShortlistRun = {
+  id: number;
+  trigger: "publish" | "manual";
+  by: string | null;
+  considered: Partial<Record<ShortlistSource, { considered: number; matched: number }>>;
+  shortlisted_count: number;
+  settings: ShortlistSettings;
+  created_at: string | null;
+};
+
+export type ShortlistData = {
+  settings: ShortlistSettings;
+  source_counts: { client_db: number; naukri: number };
+  last_run: ShortlistRun | null;
+  entries: ShortlistEntry[];
+  removed: ShortlistEntry[];
+};
+
+export type CandidateImport = {
+  id: number;
+  source: "client_db" | "naukri";
+  file_name: string;
+  rows_total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
+  imported_by: string | null;
+  created_at: string | null;
+};
+
+export type CandidateSourcesData = {
+  counts: { client_db: number; naukri: number };
+  imports: CandidateImport[];
+  /** Present on the response to an upload: what that one file did. */
+  import?: CandidateImport;
+};
+
 export type TalentPoolCandidateCv = {
   summary: string | null;
   skills: string[];
@@ -507,6 +590,28 @@ export const employerApi = {
     apiJson<{ data: TalentPoolCandidateCv }>(`${base}/workspaces/${ws}/jobs/${job}/talent-pool/${candidate}/cv`),
   talentPoolRecording: (ws: number, job: number, candidate: number) =>
     apiJson<{ data: { url: string } }>(`${base}/workspaces/${ws}/jobs/${job}/talent-pool/${candidate}/recording`),
+
+  shortlist: (ws: number, job: number) => apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist`),
+  saveShortlistSettings: (ws: number, job: number, body: ShortlistSettings) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/settings`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  runShortlist: (ws: number, job: number) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/run`, { method: "POST" }),
+  removeShortlistEntry: (ws: number, job: number, entry: number) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/${entry}/remove`, { method: "POST" }),
+  restoreShortlistEntry: (ws: number, job: number, entry: number) =>
+    apiJson<{ data: ShortlistData }>(`${base}/workspaces/${ws}/jobs/${job}/shortlist/${entry}/restore`, { method: "POST" }),
+  candidateSources: (ws: number) => apiJson<{ data: CandidateSourcesData }>(`${base}/workspaces/${ws}/candidate-sources`),
+  importCandidates: (ws: number, source: "client_db" | "naukri", file: File) => {
+    const form = new FormData();
+    form.append("source", source);
+    form.append("file", file);
+    return apiJson<{ data: CandidateSourcesData }>(`${base}/workspaces/${ws}/candidate-sources`, { method: "POST", body: form });
+  },
+  clearCandidates: (ws: number, source: "client_db" | "naukri") =>
+    apiJson<{ data: CandidateSourcesData }>(`${base}/workspaces/${ws}/candidate-sources/${source}`, { method: "DELETE" }),
 
   members: (ws: number) => apiJson<{ data: MemberRow[] }>(`${base}/workspaces/${ws}/members`),
   /** People invited but not yet joined — only visible to an owner. */
