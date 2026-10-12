@@ -124,17 +124,22 @@ final readonly class LmsTalentMatcher
         $training = $this->trainingByUser($userIds);
 
         $roleWords = $this->roleWords($job);
+        $titleWords = array_values(array_filter(
+            preg_split('/[^a-z0-9]+/', mb_strtolower($job->title)) ?: [],
+            fn (string $w) => mb_strlen($w) >= self::MIN_ROLE_WORD_LENGTH,
+        ));
+        $roleBest = $this->bestRoleInterview($userIds, $titleWords);
 
         return $profiles
-            ->map(function (CvProfile $profile) use ($required, $users, $scores, $mockAverages, $training, $roleWords): ?array {
+            ->map(function (CvProfile $profile) use ($required, $users, $scores, $mockAverages, $training, $roleWords, $roleBest): ?array {
                 $user = $users->get($profile->user_id);
                 if ($user === null) {
                     return null;
                 }
 
                 $studentSkills = $this->normalize((array) ($profile->data['skills'] ?? []));
-                $matched = array_values(array_intersect($required, $studentSkills));
-                $missing = array_values(array_diff($required, $studentSkills));
+                $matched = array_values(array_filter($required, fn (string $skill) => $this->hasSkill($skill, $studentSkills)));
+                $missing = array_values(array_diff($required, $matched));
 
                 if ($matched === []) {
                     return null;
@@ -151,7 +156,11 @@ final readonly class LmsTalentMatcher
                 $skillPct = (int) round(count($matched) / count($required) * 100);
                 $readiness = (int) ($scores->get($profile->user_id)?->pri ?? 0);
                 $mockRow = $mockAverages->get($profile->user_id);
-                $mockAvg = $mockRow !== null ? (int) round((float) $mockRow->avg_score) : 0;
+                // An interview for this very role (e.g. a "Data Engineer" voice
+                // interview for a Data Engineer JD) says more than the average of
+                // every practice round: use the best of those when there is one.
+                $mockAvg = $roleBest[$profile->user_id]
+                    ?? ($mockRow !== null ? (int) round((float) $mockRow->avg_score) : 0);
                 // 0 when they haven't taken it — surfaces on the other three
                 // components alone, just without this one's points.
                 $cvReadiness = (int) ($profile->cv_mock_score ?? 0);
@@ -190,6 +199,79 @@ final readonly class LmsTalentMatcher
      * @param  list<int>  $userIds
      * @return array<int, array{course: string, status: string}>
      */
+    /**
+     * Skills a CV names differently from a JD — "Data Validation" for "data
+     * quality". Deliberately short: only equivalences a recruiter would accept.
+     */
+    private const SKILL_EQUIVALENTS = [
+        'data quality' => ['data validation', 'data testing', 'data quality checks'],
+        'data modeling' => ['data modelling', 'dimensional modeling', 'dimensional modelling', 'data warehouse modeling'],
+        'etl' => ['elt', 'etl pipelines', 'data pipelines'],
+        'postgresql' => ['postgres'],
+        'kubernetes' => ['k8s'],
+        'aws' => ['amazon web services'],
+        'gcp' => ['google cloud', 'google cloud platform'],
+        'azure' => ['microsoft azure'],
+        'machine learning' => ['ml'],
+        'javascript' => ['js'],
+    ];
+
+    /**
+     * Does the CV have this JD skill? Exact, or the skill as a whole word in a
+     * longer one ("spark" in "Spark SQL", "airflow" in "Apache Airflow"), or a
+     * py- binding ("PySpark"), or a listed equivalent. Whole-word only, so
+     * "java" never matches "javascript".
+     *
+     * @param  list<string>  $studentSkills  normalised
+     */
+    private function hasSkill(string $skill, array $studentSkills): bool
+    {
+        $equivalents = self::SKILL_EQUIVALENTS[$skill] ?? [];
+
+        foreach ($studentSkills as $own) {
+            if ($own === $skill || $own === 'py'.$skill || in_array($own, $equivalents, true)) {
+                return true;
+            }
+            if (mb_strlen($skill) >= 2 && preg_match('/(?<![a-z0-9])'.preg_quote($skill, '/').'(?![a-z0-9])/u', $own) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Best completed interview score per student among interviews for this
+     * JD's role: the interview's role title contains every word of the JD title.
+     *
+     * @param  list<int>  $userIds
+     * @param  list<string>  $roleWords
+     * @return array<int, int>
+     */
+    private function bestRoleInterview(array $userIds, array $roleWords): array
+    {
+        if ($roleWords === [] || $userIds === []) {
+            return [];
+        }
+
+        $best = [];
+        MockInterview::query()
+            ->whereIn('user_id', $userIds)
+            ->whereNotNull('overall_score')
+            ->with('blueprint:id,role_title')
+            ->get(['id', 'user_id', 'mock_blueprint_id', 'overall_score'])
+            ->each(function (MockInterview $m) use ($roleWords, &$best): void {
+                $title = mb_strtolower((string) $m->blueprint?->role_title);
+                $matches = count(array_filter($roleWords, fn (string $w) => str_contains($title, $w)));
+                // Every role word must appear: "Data Engineer" ≠ "Data Analyst".
+                if ($matches === count($roleWords)) {
+                    $best[$m->user_id] = max($best[$m->user_id] ?? 0, (int) $m->overall_score);
+                }
+            });
+
+        return $best;
+    }
+
     private function roleWords(EmployerJob $job): array
     {
         $text = mb_strtolower(trim($job->title.' '.($job->role_family ?? '')));

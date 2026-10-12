@@ -13,6 +13,8 @@ use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
+use App\Models\MockBlueprint;
+use App\Models\MockInterview;
 use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
@@ -108,6 +110,35 @@ it('excludes students who already applied', function (): void {
     $this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/jobs/{$this->job->id}/talent-pool")
         ->assertOk()
         ->assertJsonCount(0, 'data');
+});
+
+it('reads skills the way a recruiter would and uses the best interview for the same role', function (): void {
+    $job = EmployerJob::factory()->for($this->tenant)->published()->create([
+        'employer_workspace_id' => $this->workspace->id,
+        'created_by_id' => $this->recruiter->id,
+        'title' => 'Data Engineer',
+        'skills' => ['spark', 'data quality', 'sql', 'java'],
+    ]);
+    $student = trainedStudent($this->tenant, ['PySpark', 'Spark SQL', 'Data Validation', 'SQL', 'JavaScript'], 50);
+
+    $blueprint = fn (string $role) => MockBlueprint::query()->create([
+        'tenant_id' => $this->tenant->id, 'role_title' => $role, 'competencies' => ['x'], 'opening_question' => 'Hi', 'is_active' => true,
+    ]);
+    $interview = fn (MockBlueprint $b, int $score) => MockInterview::query()->create([
+        'tenant_id' => $this->tenant->id, 'user_id' => $student->id, 'mock_blueprint_id' => $b->id,
+        'mode' => 'text', 'status' => 'completed', 'overall_score' => $score, 'started_at' => now(), 'completed_at' => now(),
+    ]);
+    $interview($blueprint('Data Engineer'), 68);
+    $interview($blueprint('Data Engineer'), 45);
+    $interview($blueprint('Data Analyst'), 20);
+
+    Sanctum::actingAs($this->recruiter);
+    $row = collect($this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/jobs/{$job->id}/talent-pool")->assertOk()->json('data'))
+        ->firstWhere('candidate_id', $student->id);
+
+    expect($row['matched_skills'])->toBe(['spark', 'data quality', 'sql']) // PySpark / Spark SQL / Data Validation
+        ->and($row['missing_skills'])->toBe(['java'])                       // "JavaScript" is not Java
+        ->and($row['mock_average'])->toBe(68);                              // best Data Engineer interview, not the average of all
 });
 
 it('never leaks students from another tenant', function (): void {
