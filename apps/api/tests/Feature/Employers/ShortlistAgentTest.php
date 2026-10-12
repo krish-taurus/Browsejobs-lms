@@ -14,9 +14,11 @@ use App\Models\EmployerJob;
 use App\Models\EmployerMember;
 use App\Models\EmployerWorkspace;
 use App\Models\JobShortlistEntry;
+use App\Models\JobShortlistRun;
 use App\Models\StudentScore;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Employers\ShortlistReport;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
@@ -293,6 +295,22 @@ it('pulls students who have not taken the AI Readiness Interview yet, unless tol
     ])->assertOk();
     $strict = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk();
     expect($strict->json('data.entries'))->toBe([]);
+});
+
+it('keeps the closest few when nobody clears the minimum match', function (): void {
+    $student = shortlistStudent($this->tenant, ['python'], 10);
+    Sanctum::actingAs($this->recruiter);
+    $this->putJson("{$this->base}/jobs/{$this->job->id}/shortlist/settings", [
+        'top_n' => 10, 'min_score' => 95, 'sources' => ['browsejobs'], 'auto_on_publish' => true,
+    ])->assertOk();
+
+    $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->assertJsonPath('data.entries', []);
+
+    $run = JobShortlistRun::query()->latest('id')->firstOrFail();
+    expect($run->near_misses[0]['name'])->toBe($student->name)
+        ->and($run->near_misses[0]['matched_skills'])->toBe(['python'])
+        ->and(app(ShortlistReport::class)->text($this->job))
+        ->toContain('Nobody reached your minimum match of 95%')->toContain($student->name);
 });
 
 it('validates the settings', function (): void {

@@ -54,6 +54,20 @@ final class ShortlistReport
             ->orderBy('rank')
             ->get();
 
+        $min = (int) ($run->settings['min_score'] ?? ShortlistSettings::DEFAULT_MIN_SCORE);
+        if ($entries->isEmpty() && ! empty($run->near_misses)) {
+            $lines = [];
+            foreach ($run->near_misses as $i => $n) {
+                $skills = (array) ($n['matched_skills'] ?? []);
+                $lines[] = ($i + 1).'. *'.Str::limit((string) $n['name'], 40).'* — '.(int) $n['match_score'].'% · '.(self::SOURCE[$n['source']] ?? $n['source'])
+                    .($skills !== [] ? "\n    ✓ ".implode(', ', $skills) : '');
+            }
+
+            return "{$head}\n\nLooked at {$total} ({$looked}). *Nobody reached your minimum match of {$min}%.*\n\n"
+                ."Closest so far:\n".implode("\n", $lines)
+                ."\n\nTo shortlist them, lower the minimum match on the AI shortlist page and press Run — or upload your own candidate Excel / Naukri export there.\n\n{$url}";
+        }
+
         if ($entries->isEmpty()) {
             return "{$head}\n\nLooked at {$total} ({$looked}). *Nobody matched yet.*\n\n"
                 ."To get matches:\n"

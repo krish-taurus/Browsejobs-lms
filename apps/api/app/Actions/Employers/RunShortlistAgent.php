@@ -78,7 +78,24 @@ final readonly class RunShortlistAgent
                 ->take($settings->topN)
                 ->values();
 
-            $run = DB::transaction(function () use ($job, $trigger, $actor, $settings, $considered, $picked): JobShortlistRun {
+            // Nobody cleared the bar: keep the closest few so the client sees who almost made it.
+            $nearMisses = $picked->isEmpty()
+                ? $candidates
+                    ->filter(fn (array $c) => ! $removed->has($c['candidate_key']))
+                    ->sortByDesc('match_score')
+                    ->unique('candidate_key')
+                    ->take(5)
+                    ->map(fn (array $c) => [
+                        'name' => $c['name'],
+                        'source' => $c['source'],
+                        'match_score' => $c['match_score'],
+                        'matched_skills' => array_slice((array) ($c['reasons']['matched_skills'] ?? []), 0, 4),
+                    ])
+                    ->values()
+                    ->all()
+                : null;
+
+            $run = DB::transaction(function () use ($job, $trigger, $actor, $settings, $considered, $picked, $nearMisses): JobShortlistRun {
                 $run = JobShortlistRun::create([
                     'tenant_id' => $job->tenant_id,
                     'employer_job_id' => $job->id,
@@ -87,6 +104,7 @@ final readonly class RunShortlistAgent
                     'settings' => $settings->toArray(),
                     'considered' => $considered,
                     'shortlisted_count' => $picked->count(),
+                    'near_misses' => $nearMisses ?: null,
                 ]);
 
                 JobShortlistEntry::query()
@@ -140,6 +158,7 @@ final readonly class RunShortlistAgent
             'candidate_user_id' => $m['user']->id,
             'employer_candidate_id' => null,
             'candidate_key' => 'u:'.$m['user']->id,
+            'name' => (string) $m['user']->name,
             'match_score' => (int) $m['match_score'],
             'reasons' => [
                 'skill_match_pct' => $m['skill_match_pct'],
@@ -167,6 +186,7 @@ final readonly class RunShortlistAgent
             'candidate_user_id' => null,
             'employer_candidate_id' => $candidate->id,
             'candidate_key' => 'c:'.$candidate->id,
+            'name' => $candidate->name,
             'match_score' => (int) $m['match_score'],
             'reasons' => [
                 'skill_match_pct' => $m['skill_match_pct'],
