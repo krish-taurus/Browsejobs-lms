@@ -117,6 +117,7 @@ export function LiveRecruiterFloor() {
     const root = rootRef.current;
     if (!canvas || !root) return;
     const lab = createHoloLab(canvas, {
+      live: true,
       reduced: () => reducedRef.current,
       onSelect: (agent) => {
         if (!agent) {

@@ -459,11 +459,6 @@ function placeStation(a,phi,rf){
   a.rt.station={phi:phi,du:du,dv:dv,tu:tu,tv:tv,hx:hx/l,hy:hy/l,rf:rf};
   a.rt.stand={u:su,v:sv};
 }
-function wanderPoint(r){
-  var base=r.station?r.station.phi:rand(0,P2);
-  var ang=base+rand(-1.1,1.1),rad=rand(5.1,6.9);
-  return {u:Math.cos(ang)*rad,v:Math.sin(ang)*rad*(1+(view.sV-1)*0.6)};
-}
 function planPath(r,goal){
   var path=[],ax=r.u,ay=r.v,bx=goal.u,by=goal.v,dx=bx-ax,dy=by-ay,L2=dx*dx+dy*dy;
   var t=L2?clamp(-(ax*dx+ay*dy)/L2,0,1):0,cx=ax+dx*t,cy=ay+dy*t;
@@ -482,19 +477,16 @@ function matches(a){var f=state.filters;return (!f.platform.size||f.platform.has
 function updateAgent(a,dt,t){
   var r=a.rt;if(!r.station)return;
   if(!r.placed){
-    if(a.status==='idle'){var p=wanderPoint(r);r.u=p.u;r.v=p.v;}else{r.u=r.stand.u;r.v=r.stand.v;r.goalKind='station';r.goal={u:r.u,v:r.v};}
+    // Every agent starts at its own desk (idle ones no longer wander the floor).
+    r.u=r.stand.u;r.v=r.stand.v;r.goalKind='station';r.goal={u:r.u,v:r.v};
     r.placed=true;r.prog=a.progress;
   }
   r.spawn=Math.min(1,r.spawn+dt*0.7);
-  if(a.status!=='idle'){
-    var g=r.stand;
-    if(r.goalKind!=='station'||!r.goal||Math.abs(r.goal.u-g.u)+Math.abs(r.goal.v-g.v)>0.01){r.goalKind='station';r.goal={u:g.u,v:g.v};r.path=planPath(r,g);}
-    r.speedT=a.status==='offline'?1.2:2.6;
-  }else{
-    if(r.goalKind!=='wander'){r.goalKind='wander';r.path=[];r.pause=rand(0.4,1.6);}
-    if(!r.path.length){r.pause-=dt;if(r.pause<=0){var w=wanderPoint(r);r.path=planPath(r,w);r.pause=rand(2.2,6);}}
-    r.speedT=0.95;
-  }
+  // Every agent keeps to its own desk, idle ones included: a steady floor
+  // whose name cards never drift into each other.
+  var g=r.stand;
+  if(r.goalKind!=='station'||!r.goal||Math.abs(r.goal.u-g.u)+Math.abs(r.goal.v-g.v)>0.01){r.goalKind='station';r.goal={u:g.u,v:g.v};r.path=planPath(r,g);}
+  r.speedT=a.status==='offline'?1.2:2.6;
   if(r.path.length){
     var tg=r.path[0],dx=tg.u-r.u,dy=tg.v-r.v,d=Math.hypot(dx,dy);
     r.speed=lerp(r.speed,r.speedT,Math.min(1,dt*3));var step=r.speed*dt;
@@ -654,7 +646,7 @@ function drawHubTower(t){
   // gold underline accents
   ctx.strokeStyle=rgba(GOLD,0.85);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(rx-tw/2-6,tyy+6);ctx.lineTo(rx+tw/2+6,tyy+6);ctx.stroke();
   var sfs=Math.max(8.5,fs*0.46);ctx.font='700 '+sfs.toFixed(1)+'px '+UI_FONT;setLS(ctx,(sfs*0.28).toFixed(1)+'px');
-  var sub='Sample data';
+  var sub=hooks&&hooks.live?'Live data':'Sample data';
   ctx.fillStyle=state.mode==='demo'?rgba(AMBER,0.95):rgba(GOLD,0.95);ctx.fillText(sub,rx+sfs*0.14,tyy+sfs*1.9);
   var sw=ctx.measureText(sub).width,half=Math.max(tw,sw)/2+12;
   ctx.strokeStyle=rgba(CYAN,0.65);ctx.lineWidth=1.2;

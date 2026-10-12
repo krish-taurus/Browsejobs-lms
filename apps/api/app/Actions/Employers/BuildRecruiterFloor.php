@@ -29,7 +29,7 @@ use Illuminate\Support\Str;
  * Every figure comes from real rows: WhatsApp chats, shortlist runs and
  * picks, applications, stage moves and interviews. An agent that is not
  * built yet says so (`live: false`) instead of pretending to work — BGV is
- * not connected, and the client report is the next step to build.
+ * not connected yet.
  *
  * Shown only to members of the workspace. A BrowseJobs student's contact
  * details are never part of this payload.
@@ -312,15 +312,14 @@ final class BuildRecruiterFloor
             );
         }
 
-        // 7 · Client report — next to build
+        // 7 · Client report — sent on WhatsApp when a candidate clears the last AI round (SendHiringResult)
         $done = $count('human_round') + $count('offer') + $count('hired');
-        $report = $this->agent('report', 'Report Agent', 'report', $done > 0 ? 'approval' : 'idle',
+        $report = $this->agent('report', 'Report Agent', 'report', 'idle',
             $done > 0
-                ? $this->plural($done, 'candidate').' finished the rounds — ready for the client report.'
-                : 'Sends the final candidate report to the client on WhatsApp once interviews finish.',
+                ? $this->plural($done, 'candidate').' cleared the AI rounds — sent to the client on WhatsApp.'
+                : 'Sends the client each candidate who clears L2, with scores and recordings, on WhatsApp.',
             $done > 0 ? 100 : 0,
-            [['label' => 'Ready for report', 'value' => $done]],
-            false,
+            [['label' => 'Sent to client', 'value' => $done]],
         );
 
         return [$intake, $shortlist, $bgv, $final, $invitesAgent, ...$rounds, $report];

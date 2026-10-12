@@ -29,5 +29,7 @@ export function createHoloLab(
     getInsets?: (w: number, h: number) => { l: number; r: number; t: number; b: number };
     onSelect?: (agent: { id: string } | null) => void;
     reduced?: () => boolean;
+    /** The workspace's real floor (labels say "Live data", not "Sample data"). */
+    live?: boolean;
   },
 ): HoloLab;
