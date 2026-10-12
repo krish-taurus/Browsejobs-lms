@@ -10,6 +10,7 @@ use App\Jobs\SendShortlistReport;
 use App\Models\EmployerCandidate;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
+use App\Models\EmployerWorkspace;
 use App\Models\JobShortlistEntry;
 use App\Models\JobShortlistRun;
 use App\Models\User;
@@ -37,6 +38,10 @@ use Illuminate\Validation\ValidationException;
  *    it the agent runs again and places them;
  *  - anyone else is not shortlisted. Nobody gets on the list on a CV alone.
  * With require_interview off, the single match score and min_score apply.
+ *
+ * Test mode (employer_workspaces.shortlist_test_user_ids): only those
+ * students are considered, and no client database or Naukri candidate, so
+ * nobody else is ever messaged while the flow is being tried.
  *
  * Each run replaces the previous list, except people the client removed by
  * hand: those stay removed and are never re-added. With auto_invite, the
@@ -66,15 +71,19 @@ final readonly class RunShortlistAgent
             $settings = ShortlistSettings::forJob($job);
             $considered = [];
             $candidates = collect();
+            $testOnly = self::testUserIds($job);
 
-            if ($settings->uses(JobShortlistEntry::SOURCE_BROWSEJOBS)) {
+            if ($settings->uses(JobShortlistEntry::SOURCE_BROWSEJOBS) || $testOnly !== null) {
                 // Students already on this JD's pipeline (screened, invited) are still read here.
                 $pool = $this->students->forJob($job, self::STUDENT_POOL_DEPTH, $settings->studentsNeedReadiness, includeApplicants: true);
+                if ($testOnly !== null) {
+                    $pool = $pool->filter(fn (array $m) => in_array($m['user']->id, $testOnly, true))->values();
+                }
                 $considered[JobShortlistEntry::SOURCE_BROWSEJOBS] = ['considered' => $pool->count(), 'matched' => $pool->count()];
                 $candidates = $candidates->concat($pool->map(fn (array $m) => $this->fromStudent($m)));
             }
 
-            $externalSources = array_values(array_intersect(EmployerCandidate::SOURCES, $settings->sources));
+            $externalSources = $testOnly !== null ? [] : array_values(array_intersect(EmployerCandidate::SOURCES, $settings->sources));
             if ($externalSources !== []) {
                 $result = $this->external->forJob($job, $externalSources);
                 foreach ($externalSources as $source) {
@@ -206,6 +215,19 @@ final readonly class RunShortlistAgent
 
             return $run;
         });
+    }
+
+    /**
+     * The workspace's shortlist test list, or null when test mode is off.
+     *
+     * @return list<int>|null
+     */
+    public static function testUserIds(EmployerJob $job): ?array
+    {
+        $ids = EmployerWorkspace::query()->whereKey($job->employer_workspace_id)->value('shortlist_test_user_ids');
+        $ids = is_string($ids) ? json_decode($ids, true) : $ids;
+
+        return is_array($ids) && $ids !== [] ? array_values(array_map('intval', $ids)) : null;
     }
 
     /**

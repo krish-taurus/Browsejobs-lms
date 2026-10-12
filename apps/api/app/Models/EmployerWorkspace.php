@@ -52,6 +52,7 @@ final class EmployerWorkspace extends Model
         'logo_path',
         'locations',
         'status',
+        'shortlist_test_user_ids',
     ];
 
     protected function casts(): array
@@ -59,6 +60,8 @@ final class EmployerWorkspace extends Model
         return [
             'locations' => 'array',
             'social_links' => 'array',
+            // Shortlist test mode: only these students are considered (see RunShortlistAgent).
+            'shortlist_test_user_ids' => 'array',
         ];
     }
 

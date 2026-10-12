@@ -143,6 +143,8 @@ export type ShortlistData = {
   removed: ShortlistEntry[];
   /** CV matches with no AI interview yet, and where their AI screening interview stands. */
   awaiting: ShortlistAwaiting[];
+  /** Test mode: only the workspace's test students are considered; nobody else is messaged. */
+  test_mode?: boolean;
 };
 
 export type ShortlistAwaiting = {

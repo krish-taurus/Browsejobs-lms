@@ -152,6 +152,13 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
         )}
       </InkPanel>
 
+      {data.test_mode && (
+        <p className="rounded-2xl border border-[var(--bj-dash-border)] bg-[var(--bj-dash-canvas)] px-4 py-3 text-[13px]">
+          <span className="font-semibold">Test mode.</span> Only your test students are considered for this workspace&apos;s jobs. Nobody else is
+          shortlisted or messaged. Ask BrowseJobs to switch it off when you are done testing.
+        </p>
+      )}
+
       {error && <p className="text-sm text-[var(--bj-dash-score-below)]">{error}</p>}
 
       <div className="grid gap-5 lg:grid-cols-2">

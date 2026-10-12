@@ -511,3 +511,34 @@ it('keeps the second-priority bars at or below the first', function (): void {
         'first_cv_bar' => 60, 'second_cv_bar' => 75, 'first_interview_bar' => 65, 'second_interview_bar' => 70,
     ])->assertUnprocessable()->assertJsonValidationErrors(['second_cv_bar', 'second_interview_bar']);
 });
+
+it('in test mode considers only the workspace test students and messages nobody else', function (): void {
+    $wa = screeningSetup($this);
+    $all = ['python', 'sql', 'airflow', 'aws'];
+    $tester = tap(shortlistStudent($this->tenant, $all))->update(['phone' => '9000000031']);
+    finishedInterview($tester, 'Data Engineer', 70);
+    $other = tap(shortlistStudent($this->tenant, $all))->update(['phone' => '9000000032']);
+    finishedInterview($other, 'Data Engineer', 90);
+    $cvOnly = tap(shortlistStudent($this->tenant, $all))->update(['phone' => '9000000033']); // would be screened normally
+    EmployerCandidate::create([
+        'tenant_id' => $this->tenant->id, 'employer_workspace_id' => $this->workspace->id, 'source' => 'naukri',
+        'dedupe_key' => 'p:9000000034', 'name' => 'Naukri Person', 'phone' => '9000000034', 'skills' => $all,
+    ]);
+    $this->workspace->update(['shortlist_test_user_ids' => [$tester->id]]);
+
+    Sanctum::actingAs($this->recruiter);
+    $data = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->json('data');
+
+    expect(collect($data['entries'])->pluck('candidate_user_id')->all())->toBe([$tester->id])
+        ->and($data['awaiting'])->toBe([])
+        ->and($data['test_mode'])->toBeTrue()
+        ->and(array_keys($data['last_run']['considered']))->toBe(['browsejobs'])
+        ->and(collect($wa->sent)->pluck('to')->unique()->values()->all())->toBe(['919000000031'])
+        ->and(InterviewInvite::query()->whereIn('candidate_user_id', [$other->id, $cvOnly->id])->exists())->toBeFalse();
+
+    // Test mode off: everyone is considered again.
+    $this->workspace->update(['shortlist_test_user_ids' => null]);
+    $again = $this->postJson("{$this->base}/jobs/{$this->job->id}/shortlist/run")->assertOk()->json('data');
+    expect(collect($again['entries'])->pluck('candidate_user_id')->all())->toContain($other->id)
+        ->and($again['test_mode'])->toBeFalse();
+});

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Employers;
 
+use App\Actions\Employers\RunShortlistAgent;
 use App\Enums\EmployerInterviewStatus;
 use App\Enums\EmployerJobStatus;
 use App\Models\EmployerCandidate;
@@ -56,7 +57,8 @@ final class ShortlistReport
 
         $looked = collect($run->considered ?? [])->map(fn ($c, $s) => (self::SOURCE[$s] ?? $s).' '.(int) ($c['considered'] ?? 0))->implode(' · ');
         $total = collect($run->considered ?? [])->sum(fn ($c) => (int) ($c['considered'] ?? 0));
-        $intro = $head.($rule !== null ? "\n{$rule}" : '');
+        $intro = $head.($rule !== null ? "\n{$rule}" : '')
+            .(RunShortlistAgent::testUserIds($job) !== null ? "\n🧪 *Test mode:* only your test students are considered; nobody else is messaged." : '');
 
         $entries = JobShortlistEntry::query()
             ->where('employer_job_id', $job->id)

@@ -232,6 +232,8 @@ final class ShortlistAgentController extends Controller
             ],
             'awaiting' => $this->awaiting($job, $run),
             'settings' => ShortlistSettings::forJob($job)->toArray(),
+            // Shortlist test mode: only the workspace's test students are considered.
+            'test_mode' => RunShortlistAgent::testUserIds($job) !== null,
             'source_counts' => [
                 EmployerCandidate::SOURCE_CLIENT_DB => (int) ($counts[EmployerCandidate::SOURCE_CLIENT_DB] ?? 0),
                 EmployerCandidate::SOURCE_NAUKRI => (int) ($counts[EmployerCandidate::SOURCE_NAUKRI] ?? 0),
