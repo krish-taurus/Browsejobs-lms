@@ -44,7 +44,7 @@ export default function HiringFloorPage() {
         <div>
           <p className="tx-eyebrow">Powered by Taurus AI</p>
           <h1 className="tx-title">Hiring floor</h1>
-          <p className="tx-sub">Every stage of your hiring, live. Each robot is the bot working that stage. Ask Taurus anything about it.</p>
+          <p className="tx-sub">Every stage of your hiring, live. Ask Taurus anything, or tell it what to do next: it sets it up and waits for your go-ahead.</p>
         </div>
         <div className="tx-tools tx-tools--filter">
           <label className="tx-label" htmlFor="hiring-floor-job" style={{ margin: 0 }}>
@@ -61,10 +61,10 @@ export default function HiringFloorPage() {
         </div>
       </div>
       <div className="tx-floor tx-floor--admin">
-        <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Ask Taurus: where are we with this role?" subtitle={workspace.name} />
+        <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Try: “send the L1 invites” or “where are we?”" subtitle={workspace.name} />
       </div>
       <p className="tx-fine">
-        Built from your jobs and applications. Scores appear once grading finishes. Moving a candidate or releasing an offer stays a decision for your team.
+        Built from your jobs and applications. Scores appear once grading finishes. Taurus never sends an invite, moves a candidate or makes an offer until an owner or recruiter says go ahead.
       </p>
     </div>
   );

@@ -61,13 +61,19 @@ export type ConsoleState = {
   chat?: ConsoleChat;
   caption?: ConsoleCaption;
   ended?: boolean;
+  /** Things Taurus wants to do, each waiting for the team's yes (agentic hiring). */
+  proposals?: Proposal[];
 };
+
+/** Something Taurus proposes to do in the pipeline ("Send L1 invites to 8…"), waiting for a yes. */
+export type Proposal = { id: number; summary: string };
 
 export type FloorEffect =
   | { type: "deliver" | "stream" | "focus"; id: string }
   | { type: "flow"; from: string; to: string; count: number };
 
-export type AskResult = { answer: string; audio?: Blob | null };
+/** `proposal`: the answer asks "Shall I go ahead?" — confirm by button or by saying yes. */
+export type AskResult = { answer: string; audio?: Blob | null; proposal?: Proposal | null };
 
 export interface ConsoleSource {
   /** Starts pushing state; returns a stop function. */
@@ -79,6 +85,8 @@ export interface ConsoleSource {
   /** Approve the pending action of an agent; resolves to a confirmation line. */
   approve?(agentId: string): Promise<string>;
   ask?(question: string): Promise<AskResult>;
+  /** Yes or not-now to a proposal; resolves to what happened, in a sentence. */
+  decide?(id: number, yes: boolean): Promise<string>;
   /** Choose a quick reply in the chat (story demos). */
   reply?(text: string): void;
   restart?(): void;

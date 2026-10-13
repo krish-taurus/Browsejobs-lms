@@ -32,6 +32,8 @@ final class StoreJobRequest extends FormRequest
             'ctc_max_paise' => ['nullable', 'integer', 'min:0', 'gte:ctc_min_paise'],
             'ctc_visible' => ['nullable', 'boolean'],
             'openings' => ['nullable', 'integer', 'min:1', 'max:500'],
+            // Posted through Taurus: ask the client before each interview round.
+            'confirm_rounds' => ['sometimes', 'boolean'],
             'knockout_questions' => ['nullable', 'array', 'max:10'],
             'knockout_questions.*.question' => ['required_with:knockout_questions', 'string', 'max:300'],
             'knockout_questions.*.disqualify_if' => ['nullable', 'string', 'max:120'],
