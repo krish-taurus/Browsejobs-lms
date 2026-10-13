@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ApShell } from "@/components/ap/ApShell";
 import "@/components/ap/pages/taurus.css";
 import { HiringDemo } from "@/components/taurus/HiringDemo";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { contact } from "@/content/landing";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -247,7 +249,7 @@ export default function TaurusRecruitmentPage() {
               {contact.entity}. {contact.address}. {contact.hours}.
             </p>
             <p className="tx-contact num">
-              {contact.phone} · {contact.email}
+              <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} /> · {contact.email}
             </p>
             <p className="fine">Every promise in writing · Every call recorded &amp; AI-monitored.</p>
           </div>

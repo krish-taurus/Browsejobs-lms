@@ -24,6 +24,7 @@ import {
   publishedHours,
 } from "@/content/entity";
 import { contact, fees } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 
 export const SITE_ORIGIN = "https://browsejobs.ai";
 
@@ -194,7 +195,7 @@ export function organizationNode(): EducationalOrganization {
     image: absoluteUrl(LOGO_PATH),
     description: organizationDescription,
     email: contact.email,
-    telephone: contact.phone,
+    telephone: OFFICE_PHONE.tel,
     address: {
       "@type": "PostalAddress" as const,
       ...publishedAddress,

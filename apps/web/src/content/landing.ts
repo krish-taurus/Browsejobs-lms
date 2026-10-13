@@ -1,3 +1,5 @@
+import { OFFICE_PHONE } from "@/content/phones";
+
 /**
  * Landing content — Platform Spec v1.0 (docs/BrowseJobs_Platform_Spec_v1.pdf).
  * Copy here is drawn from the spec; do NOT invent claims. Static for now;
@@ -22,7 +24,8 @@ export const FOOTER_LINE =
 export const MASTERCLASS_RECORDING_URL: string | null = null;
 
 export const contact = {
-  phone: "+91 79755 54666",
+  /** Office line. Hiring pages use EMPLOYER_PHONE instead. */
+  phone: OFFICE_PHONE.display,
   email: "hello@browsejobs.ai",
   address: "Whitefield, Bengaluru, Karnataka 560066",
   hours: "Mon–Sat, 9:00 AM – 7:00 PM IST",

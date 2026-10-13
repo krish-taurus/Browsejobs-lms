@@ -7,6 +7,8 @@ import { ApiError, apiJson } from "@/lib/api";
 import type { AuthUser } from "@/lib/auth";
 import { employerApi } from "@/lib/employer";
 import { AuthAlert, AuthField, AuthScreen } from "@/components/auth/AuthScreen";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
+import { EMPLOYER_PHONE } from "@/content/phones";
 
 type LoginResponse =
   | { status: "authenticated"; user: AuthUser }
@@ -72,6 +74,8 @@ export default function EmployerLoginPage() {
             Looking for work? <Link href="/student">Job seeker sign in</Link>
             <br />
             New to BrowseJobs? <Link href="/employers/enquire">Talk to us about hiring</Link>
+            <br />
+            Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
           </>
         )
       }
@@ -83,6 +87,9 @@ export default function EmployerLoginPage() {
             still here.
           </p>
           <p>Please connect with BrowseJobs admin to restore access.</p>
+          <p>
+            Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+          </p>
           <a href="mailto:support@browsejobs.ai?subject=Reactivate%20our%20workspace" className="bj-auth-btn">
             Contact BrowseJobs admin
           </a>

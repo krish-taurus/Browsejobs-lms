@@ -12,6 +12,7 @@ import {
 } from "@/components/seo/MoneyArticle";
 import { EMPLOYER_DISCLAIMER } from "@/content/employers";
 import { contact } from "@/content/landing";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -65,7 +66,7 @@ export default function AiInterviewPlatformPage() {
         "@type": "Organization",
         name: "BrowseJobs",
         email: contact.email,
-        telephone: contact.phone,
+        telephone: EMPLOYER_PHONE.tel,
         url: "https://browsejobs.ai",
       },
       areaServed: "IN",
@@ -207,7 +208,7 @@ export default function AiInterviewPlatformPage() {
           { href: "/employer", label: "Employer sign in", note: "For a workspace that is already open." },
         ]}
       />
-      <ContactStrip />
+      <ContactStrip phone={EMPLOYER_PHONE} />
     </MoneyArticle>
   );
 }

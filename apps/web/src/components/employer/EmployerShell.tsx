@@ -16,7 +16,9 @@ import { durations, ease } from "@/lib/motion";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { employerApi, type Workspace } from "@/lib/employer";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { EmployerMark } from "@/components/employer/EmployerMark";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { CommandPalette } from "@/components/employer/CommandPalette";
 import {
   BellIcon,
@@ -103,6 +105,9 @@ function CreateWorkspaceCard({ onCreated }: { onCreated: () => Promise<void> }) 
         <p className="mt-2 text-sm" style={{ color: "var(--bj-dash-muted)" }}>
           Name your company workspace. You can invite your team right after.
         </p>
+        <p className="mt-2 font-mono text-[12px]" style={{ color: "var(--bj-dash-muted)" }}>
+          Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+        </p>
         <label className="mt-6 block text-sm font-medium" style={{ color: "var(--bj-dash-ink)" }} htmlFor="ws-name">Company name</label>
         <input
           id="ws-name"
@@ -147,6 +152,7 @@ function SuspendedNotice({ name }: { name: string }) {
       </p>
       <p className="max-w-sm text-sm leading-relaxed text-[#65676b]">
         Please connect with BrowseJobs admin to restore access.
+        Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
       </p>
       <a
         href="mailto:support@browsejobs.ai?subject=Reactivate%20our%20workspace"
@@ -289,6 +295,9 @@ function Guarded({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="mt-auto space-y-0.5 px-3 pb-3">
+            <p className="px-3 pb-2 font-mono text-[11px] leading-relaxed [&_a]:underline-offset-2 [&_a]:hover:underline" style={{ color: "var(--bj-dash-muted)" }}>
+              Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+            </p>
             {UTILITY_NAV.map((item) => {
               const active = pathname.startsWith(item.href);
               const Icon = item.icon;
@@ -469,6 +478,9 @@ function Guarded({ children }: { children: ReactNode }) {
               >
                 ← Back to browsejobs.ai
               </Link>
+              <p className="mt-3 font-mono text-[11px] leading-relaxed [&_a]:underline-offset-2 [&_a]:hover:underline" style={{ color: "var(--bj-dash-muted)" }}>
+                Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+              </p>
               <button
                 onClick={() => logout().then(() => router.replace("/employer"))}
                 className="mt-4 text-sm font-medium"

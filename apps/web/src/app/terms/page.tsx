@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
+import { TelLink } from "@/components/contact/PhoneLinks";
 import { contact, legal } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -55,7 +57,7 @@ export default function Terms() {
       <h2>Company details</h2>
       <p>
         {contact.entity} · CIN: {legal.cin} · GST: {legal.gst} · {contact.address} ·{" "}
-        {contact.phone}
+        <TelLink phone={OFFICE_PHONE} />
       </p>
     </LegalPage>
   );

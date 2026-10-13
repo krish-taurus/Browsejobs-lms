@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ApShell } from "@/components/ap/ApShell";
+import { PhoneLine } from "@/components/contact/PhoneLinks";
 import { EMPLOYER_FAQ, EMPLOYER_WAYS } from "@/content/employer-landing";
 import { DISCLAIMER } from "@/content/landing";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import "./employers-sub.css";
 
 const MORE = [
@@ -109,6 +111,7 @@ export function EmployersFaqAp() {
               Get started
             </Link>
           </div>
+          <PhoneLine phone={EMPLOYER_PHONE} label="Hiring line" />
         </div>
       </section>
     </ApShell>

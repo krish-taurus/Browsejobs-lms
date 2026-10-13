@@ -9,6 +9,7 @@ import {
 } from "@/components/seo/MoneyArticle";
 import { RichText } from "@/components/seo/RichText";
 import { ANSWERS_UPDATED, answerPath, type AnswerPage } from "@/content/answers";
+import { EMPLOYER_PHONE, OFFICE_PHONE } from "@/content/phones";
 
 const UPDATED_LABEL = "6 Oct 2026";
 
@@ -89,7 +90,7 @@ export function AnswerView({
       ))}
       <MoneyFaq faqs={page.faqs} />
       <RelatedLinks links={page.related} />
-      <ContactStrip />
+      <ContactStrip phone={page.audience === "employer" ? EMPLOYER_PHONE : OFFICE_PHONE} />
     </MoneyArticle>
   );
 }

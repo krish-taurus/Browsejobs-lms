@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/LegalPage";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { contact, legal } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -21,7 +23,7 @@ export default function RefundPolicy() {
 
       <h2>How to claim</h2>
       <p>
-        Email {contact.email} or WhatsApp {contact.phone} from your registered
+        Email {contact.email} or WhatsApp <WhatsAppLink phone={OFFICE_PHONE}>{OFFICE_PHONE.display}</WhatsAppLink> from your registered
         contact with the subject “Refund”. We confirm receipt within 2 working
         days and process the refund to your original payment method within
         {" "}{legal.refundWindow}.
@@ -37,7 +39,7 @@ export default function RefundPolicy() {
       <h2>Company details</h2>
       <p>
         {contact.entity} · CIN: {legal.cin} · GST: {legal.gst} · {contact.address} ·{" "}
-        {contact.phone}
+        <TelLink phone={OFFICE_PHONE} />
       </p>
     </LegalPage>
   );

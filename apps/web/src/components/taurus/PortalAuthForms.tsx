@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from "react";
 import { AuthAlert, AuthField, AuthScreen } from "@/components/auth/AuthScreen";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { ApiError, apiJson } from "@/lib/api";
 
 function Frame({ title, lede, children }: { title: string; lede: string; children: ReactNode }) {
@@ -68,6 +70,9 @@ export function TaurusLoginForm() {
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
+      <p className="bj-auth-fine">
+        Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+      </p>
       <p className="bj-auth-fine">
         No account yet? Taurus workspaces are set up by invitation. <Link href="/taurusai">See what Taurus does</Link>.
       </p>
@@ -136,6 +141,9 @@ export function TaurusClaimForm({ token }: { token: string }) {
         </button>
       </form>
       <p className="bj-auth-fine">This invite link works once and expires. If it doesn&apos;t work, ask the person who invited you for a fresh one.</p>
+      <p className="bj-auth-fine">
+        Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+      </p>
     </Frame>
   );
 }

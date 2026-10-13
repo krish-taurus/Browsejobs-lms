@@ -1,4 +1,6 @@
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { PageHead, Tile, Label } from "@/components/employer/ui";
+import { EMPLOYER_PHONE } from "@/content/phones";
 
 const FAQS = [
   {
@@ -38,6 +40,11 @@ export default function EmployerHelpPage() {
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-[#65676b]">
           Write in and a real person from BrowseJobs will get back to you — usually within a
           business day.
+        </p>
+        <p className="mt-3 font-mono text-sm" style={{ color: "var(--bj-dash-ink)" }}>
+          <TelLink phone={EMPLOYER_PHONE} className="hover:underline" />
+          {" · "}
+          <WhatsAppLink phone={EMPLOYER_PHONE} className="hover:underline" />
         </p>
         <a
           href="mailto:support@browsejobs.ai?subject=Employer%20support"
