@@ -61,6 +61,20 @@ function speechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+/**
+ * Phones and tablets. Their browsers give the microphone to one reader at a
+ * time: the room already holds it for the call recording, so the browser's
+ * own speech recognition hears nothing there (on Android Chrome it simply
+ * never returns a word, and the room kept asking "are you still there?").
+ * On these devices the answer is recorded from the room's stream and
+ * transcribed on the server instead, which shares the mic without trouble.
+ */
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const touchMac = /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1; // iPadOS reports itself as a Mac
+  return touchMac || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 function pad(n: number): string {
   return n.toString().padStart(2, "0");
 }
@@ -185,10 +199,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // default, so SpeechRecognition silently doesn't exist there — checked
   // once on mount, never mid-interview, so the control bar doesn't swap
   // layouts under someone's hands while they're answering.
-  const [voiceSupported] = useState(() => speechRecognitionCtor() !== null);
-  // Browsers without SpeechRecognition (Firefox, Safari, Brave) still answer
-  // by voice: the answer is recorded from the room's own microphone and
-  // transcribed on the server (ElevenLabs, /transcribe). Typing stays available.
+  // Phones never use it either: see isMobileDevice().
+  const [voiceSupported] = useState(() => !isMobileDevice() && speechRecognitionCtor() !== null);
+  // Browsers without SpeechRecognition (Firefox, Safari, Brave) and every phone
+  // still answer by voice: the answer is recorded from the room's own
+  // microphone and transcribed on the server (ElevenLabs, /transcribe).
+  // Typing stays available.
   const [serverStt] = useState(() => !voiceSupported && typeof MediaRecorder !== "undefined");
   const [typeInstead, setTypeInstead] = useState(false);
   const answerRecorderRef = useRef<MediaRecorder | null>(null);
@@ -734,6 +750,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     const track = streamRef.current?.getAudioTracks()[0];
     const ctx = getAudioContext();
     if (!track || !ctx) { setMicCheck("failed"); return; }
+    // A context made before this click starts out suspended, and a suspended
+    // analyser reads pure silence however loudly someone speaks.
+    void ctx.resume();
 
     setMicListening(true);
     setMicCheck("pending");
@@ -749,9 +768,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       analyser.getByteTimeDomainData(data);
       let peak = 0;
       for (const v of data) peak = Math.max(peak, Math.abs(v - 128));
-      if (peak > 12) heard = true;
+      // ~3% of full scale: normal speech on a headset or a laptop's built-in
+      // mic, with the browser's noise suppression on, often stays below the
+      // old ~10% bar, which failed people who were talking quite clearly.
+      if (peak > 4) heard = true;
 
-      if (Date.now() - startedAt > 3500) {
+      if (Date.now() - startedAt > 5000) {
         source.disconnect();
         setMicListening(false);
         setMicCheck(heard ? "ok" : "failed");
