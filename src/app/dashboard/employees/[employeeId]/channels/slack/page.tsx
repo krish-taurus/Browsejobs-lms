@@ -8,6 +8,7 @@ import { isSlackConfigured } from "@/modules/channels/slack/oauth";
 import { CHANNEL_STATUS_LABELS } from "@/modules/channels/metadata";
 import { WebhookUrlPanel } from "@/components/channels/messaging/webhook-url-panel";
 import { buttonClasses, Badge, Card, Notice, PageHeader } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,7 @@ export default async function SlackSetupPage({
             </p>
             {canManage ? (
               <a
-                href={`/api/channels/slack/install?employeeId=${employee.id}`}
+                href={withBasePath(`/api/channels/slack/install?employeeId=${employee.id}`)}
                 className={`${buttonClasses("primary")} mt-4 inline-flex`}
               >
                 {channel ? "Reconnect to Slack" : "Add to Slack"}

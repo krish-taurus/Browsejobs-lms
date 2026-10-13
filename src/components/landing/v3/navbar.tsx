@@ -13,12 +13,13 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { withBasePath } from "@/lib/base-path";
 
 const NAV_LINKS: { label: string; href: string }[] = [
-  { label: "Platform", href: "#platform" },
-  { label: "AI Employees", href: "#use-cases" },
+  { label: "Use cases", href: "#use-cases" },
+  { label: "Implement", href: "#implement" },
   { label: "How it works", href: "#how-it-works" },
-  { label: "Security", href: "#security" },
+  { label: "Partners", href: "#partners" },
   { label: "Pricing", href: "#pricing" },
   { label: "Contact", href: "#contact" },
 ];
@@ -61,7 +62,7 @@ export function LandingNavbar() {
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={withBasePath(link.href)}
                 className="rounded-full px-3.5 py-2 text-[13px] font-medium text-neutral-500 transition-colors duration-200 hover:bg-neutral-950/[0.04] hover:text-neutral-950"
               >
                 {link.label}
@@ -120,7 +121,7 @@ export function LandingNavbar() {
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={withBasePath(link.href)}
                 onClick={() => setOpen(false)}
                 className="block rounded-xl px-4 py-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
               >

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { buttonClasses, Field, FieldError, Input, Notice } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 export function ForgotPasswordForm() {
   const [pending, setPending] = useState(false);
@@ -30,7 +31,7 @@ export function ForgotPasswordForm() {
     setPending(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const redirectTo = new URL("/auth/callback", window.location.origin);
+      const redirectTo = new URL(withBasePath("/auth/callback"), window.location.origin);
       redirectTo.searchParams.set("next", "/reset-password");
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectTo.toString(),

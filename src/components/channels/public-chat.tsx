@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { KnowledgeSourceType } from "@/lib/db/types";
+import { withBasePath } from "@/lib/base-path";
 
 interface PublicSource {
   name: string;
@@ -79,7 +80,7 @@ export function PublicChat({
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/public/channels/${encodeURIComponent(publicKey)}/messages`, {
+      const res = await fetch(withBasePath(`/api/public/channels/${encodeURIComponent(publicKey)}/messages`), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ sessionId: sessionRef.current, message }),

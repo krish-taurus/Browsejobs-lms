@@ -21,6 +21,7 @@ import {
   type Variants,
 } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { withBasePath } from "@/lib/base-path";
 
 export const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -403,7 +404,7 @@ export function PrimaryCta({
   return (
     <Magnetic>
       <a
-        href={href}
+        href={withBasePath(href)}
         className={`group inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-300 ${
           dark
             ? "bg-white text-neutral-950 hover:shadow-[0_0_0_6px_rgba(255,255,255,0.12)]"
@@ -434,7 +435,7 @@ export function SecondaryCta({
   return (
     <Magnetic strength={0.22}>
       <a
-        href={href}
+        href={withBasePath(href)}
         className={`inline-flex items-center gap-2 rounded-full border px-7 py-3.5 text-sm font-semibold transition-colors duration-300 ${
           dark
             ? "border-neutral-700 text-neutral-200 hover:border-neutral-500 hover:text-white"

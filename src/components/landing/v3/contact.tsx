@@ -12,7 +12,7 @@
 import { useState, type FormEvent } from "react";
 import { Reveal, SectionHeading } from "@/components/landing/v3/motion";
 
-const CONTACT_EMAIL = "krishbhargav@thetaurus.ai";
+export const CONTACT_EMAIL = "krishbhargav@thetaurus.ai";
 const CONTACT_PHONE_DISPLAY = "+91 63634 02404";
 const CONTACT_PHONE_TEL = "+916363402404";
 

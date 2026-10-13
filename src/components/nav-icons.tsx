@@ -8,6 +8,7 @@ import type { SVGProps } from "react";
 
 export type NavIconName =
   | "overview"
+  | "floor"
   | "employees"
   | "hire"
   | "marketplace"
@@ -46,6 +47,15 @@ const ICONS: Record<NavIconName, (props: SVGProps<SVGSVGElement>) => JSX.Element
       <rect x="14" y="3" width="7" height="5" rx="1.5" />
       <rect x="14" y="12" width="7" height="9" rx="1.5" />
       <rect x="3" y="16" width="7" height="5" rx="1.5" />
+    </Svg>
+  ),
+  floor: (p) => (
+    <Svg {...p}>
+      <ellipse cx="12" cy="15" rx="9" ry="4.5" />
+      <circle cx="12" cy="8" r="2.5" />
+      <path d="M12 10.5V14" />
+      <circle cx="6" cy="15" r="1" />
+      <circle cx="18" cy="15" r="1" />
     </Svg>
   ),
   employees: (p) => (

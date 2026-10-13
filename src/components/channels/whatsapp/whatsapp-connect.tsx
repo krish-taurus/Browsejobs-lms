@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses, FieldError } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 const GRAPH_VERSION = "v20.0";
 
@@ -91,7 +92,7 @@ export function WhatsAppConnect({
           return;
         }
         try {
-          const res = await fetch("/api/channels/whatsapp/exchange", {
+          const res = await fetch(withBasePath("/api/channels/whatsapp/exchange"), {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ employeeId, code, phoneNumberId: phoneNumberId.current }),

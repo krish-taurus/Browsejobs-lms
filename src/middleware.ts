@@ -16,6 +16,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/security/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { updateSupabaseSession } from "@/lib/supabase/middleware";
+import { withBasePath } from "@/lib/base-path";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"];
 const AUTH_PAGES = ["/login", "/signin", "/signup"];
@@ -40,13 +41,14 @@ export async function middleware(request: NextRequest) {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
   if (isProtected && !isAuthenticated) {
-    const loginUrl = new URL("/login", request.url);
+    // pathname arrives without the mount path; URLs built here need it back.
+    const loginUrl = new URL(withBasePath("/login"), request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthenticated && AUTH_PAGES.includes(pathname)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL(withBasePath("/dashboard"), request.url));
   }
 
   return response;

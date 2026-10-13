@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { buttonClasses, Field, FieldError, Input } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 export function ResetPasswordForm() {
   const [pending, setPending] = useState(false);
@@ -37,7 +38,7 @@ export function ResetPasswordForm() {
       const supabase = createSupabaseBrowserClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      window.location.assign("/dashboard");
+      window.location.assign(withBasePath("/dashboard"));
     } catch (err) {
       setError(
         err instanceof Error

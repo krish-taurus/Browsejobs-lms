@@ -46,7 +46,15 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Can multiple AI Employees work together?",
-    a: "Yes. Workflows chain employees together — one qualifies a lead, another prepares research, another books the meeting — passing context along, calling sub-workflows, and pausing for human approval where you decide it matters.",
+    a: "Yes. A crew of employees can share one job — one qualifies a lead, another prepares research, another books the meeting — with workflows passing the context along, calling sub-workflows, and pausing for human approval where you decide it matters.",
+  },
+  {
+    q: "How long does it take to put Taurus to work in our business?",
+    a: "A typical first rollout takes about three weeks: a day to pick the job and its crew template, a few days to add your documents, channels and approval rules, a week piloting with your team approving every step, then handing over. You start with one job and add the next once the first is trusted.",
+  },
+  {
+    q: "Can we offer Taurus to our own clients under our brand?",
+    a: "Yes, through the partner programme, now in early access. Agencies, consultancies and software companies run Taurus under their own name and domain, with a separate workspace for each client, user groups and roles, and one partner console to manage them all.",
   },
   {
     q: "How is the performance of an AI Employee measured?",

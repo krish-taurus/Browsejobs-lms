@@ -5,7 +5,13 @@
  * operating system → watch it built in five steps → the Control Centre → six
  * STAR use-case films → employees working together → the whole platform →
  * models, security, teams, performance → pricing, FAQ, contact → the closing
- * scene. Marketing surface only: pricing reads the code-authoritative plans
+ * scene. Sprint 058 turns the use cases into five AI crews that hand work to
+ * one another (social media, lead generation, support, recruitment,
+ * operations), adds the "implement it in your business" rollout plan after
+ * them, and the partner / white-label programme (early access) before
+ * pricing, and puts the 3D workforce floor (ported from BrowseJobs Taurus,
+ * with its Obsidian / Titanium / Noir looks) between the Control Centre and
+ * the use cases, running a sample business. Marketing surface only: pricing reads the code-authoritative plans
  * catalog, CTAs route to the real auth pages, structured data mirrors on-page
  * copy. Every scenario is labelled illustrative — no invented customers.
  */
@@ -19,6 +25,9 @@ import { Positioning } from "@/components/landing/v3/positioning";
 import { HowItWorks } from "@/components/landing/v3/how-it-works";
 import { ControlCenter } from "@/components/landing/v3/control-center";
 import { UseCases } from "@/components/landing/v3/use-cases";
+import { Implement } from "@/components/landing/v3/implement";
+import { WorkforceFloorSection } from "@/components/landing/v3/workforce-floor-section";
+import { Partners } from "@/components/landing/v3/partners";
 import { Collaboration } from "@/components/landing/v3/collaboration";
 import { Features } from "@/components/landing/v3/features";
 import { ModelHub } from "@/components/landing/v3/model-hub";
@@ -50,6 +59,13 @@ export const metadata: Metadata = {
     "AI operating system",
     "build AI employees",
     "hire AI employees",
+    "AI social media manager",
+    "AI lead generation employee",
+    "AI SDR",
+    "AI customer support employee",
+    "AI recruitment employee",
+    "AI employee crews",
+    "white-label AI employees",
   ],
   openGraph: {
     title: "Taurus AI | Build and Deploy Enterprise AI Employees",
@@ -155,13 +171,16 @@ export default function HomePage() {
         <Positioning />
         <HowItWorks />
         <ControlCenter />
+        <WorkforceFloorSection />
         <UseCases />
+        <Implement />
         <Collaboration />
         <Features />
         <ModelHub />
         <Security />
         <Teams />
         <Performance />
+        <Partners />
         <Pricing />
         <Faq />
         <Contact />

@@ -19,6 +19,7 @@ import {
   toSupabaseIdentity,
 } from "@/modules/auth/supabase-user";
 import { resolvePostAuthPath } from "@/modules/auth/post-auth";
+import { withBasePath } from "@/lib/base-path";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   const next = url.searchParams.get("next");
   const errorDescription = url.searchParams.get("error_description");
 
-  const signinUrl = new URL("/login", url.origin);
+  const signinUrl = new URL(withBasePath("/login"), url.origin);
 
   if (!isSupabaseConfigured()) {
     signinUrl.searchParams.set("error", "auth_unavailable");
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     const taurusUser = await resolveTaurusUserForSupabaseIdentity(getStore(), identity);
     const destination = await resolvePostAuthPath(taurusUser.id, next);
-    return NextResponse.redirect(new URL(destination, url.origin));
+    return NextResponse.redirect(new URL(withBasePath(destination), url.origin));
   } catch {
     signinUrl.searchParams.set("error", "auth_failed");
     return NextResponse.redirect(signinUrl);

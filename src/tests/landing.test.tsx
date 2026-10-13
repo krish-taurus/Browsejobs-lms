@@ -5,7 +5,9 @@ import { Hero } from "@/components/landing/v3/hero";
 import { Positioning } from "@/components/landing/v3/positioning";
 import { HowItWorks } from "@/components/landing/v3/how-it-works";
 import { ControlCenter } from "@/components/landing/v3/control-center";
-import { UseCases } from "@/components/landing/v3/use-cases";
+import { CREW_STORIES, UseCases } from "@/components/landing/v3/use-cases";
+import { Implement, PLAN } from "@/components/landing/v3/implement";
+import { PARTNER_FEATURES, Partners } from "@/components/landing/v3/partners";
 import { Collaboration } from "@/components/landing/v3/collaboration";
 import { Features } from "@/components/landing/v3/features";
 import { ModelHub } from "@/components/landing/v3/model-hub";
@@ -101,22 +103,50 @@ describe("Landing page (Sprint 055 — Landing v3)", () => {
     expect(container.textContent).toContain("Full audit trail");
   });
 
-  it("renders six STAR use-case stories with the illustrative disclosure", () => {
-    const { container } = render(<UseCases />);
-    for (const tag of [
-      "AI Sales Employee",
-      "AI Support Employee",
-      "AI Recruitment Employee",
-      "AI Data Analyst",
-      "AI Operations Employee",
-      "Executive AI Assistant",
-    ]) {
-      expect(container.textContent).toContain(tag);
+  it("renders five use cases as AI crews with hand-offs, approvals and the illustrative disclosure", () => {
+    const { container, getAllByRole } = render(<UseCases />);
+    expect(CREW_STORIES.map((s) => s.tag)).toEqual([
+      "Social media manager",
+      "Lead generator + SDR",
+      "Customer support desk",
+      "Recruitment pipeline",
+      "Operations & reporting",
+    ]);
+    for (const story of CREW_STORIES) {
+      expect(container.textContent).toContain(story.headline);
+      // A crew means more than one AI Employee, and every crew stops for a person somewhere.
+      expect(story.crew.length).toBeGreaterThan(1);
+      expect(story.steps.some((step) => step.approval && step.who === "You")).toBe(true);
+      // Every step is done by a crew member or by you.
+      for (const step of story.steps) {
+        expect([...story.crew.map((m) => m.name), "You"]).toContain(step.who);
+      }
     }
-    expect(container.textContent).toContain("Situation");
-    expect(container.textContent).toContain("Task");
-    expect(container.textContent).toContain("Result");
-    expect(container.textContent).toContain("Illustrative scenarios");
+    // The chips jump to each crew card.
+    const jumps = getAllByRole("link").filter((a) => a.getAttribute("href")?.startsWith("#"));
+    expect(jumps.map((a) => a.getAttribute("href"))).toEqual(CREW_STORIES.map((s) => `#${s.id}`));
+    expect(container.textContent).toContain("The crew");
+    expect(container.textContent).toContain("How the crew hands it on");
+    expect(container.textContent).toContain("Illustrative crews");
+  });
+
+  it("renders the implementation plan, what to bring and who does what", () => {
+    const { container } = render(<Implement />);
+    expect(container.querySelector("#implement")).toBeTruthy();
+    expect(PLAN).toHaveLength(5);
+    for (const stage of PLAN) expect(container.textContent).toContain(stage.title);
+    expect(container.textContent).toContain("What you bring");
+    expect(container.textContent).toContain("Taurus does");
+    expect(container.textContent).toContain("Your team does");
+    expect(container.textContent).toContain("A typical first rollout");
+  });
+
+  it("renders the partner programme as early access with a brand preview and an email CTA", () => {
+    const { container, getByText, getAllByRole } = render(<Partners />);
+    expect(container.textContent).toContain("early access");
+    for (const f of PARTNER_FEATURES) expect(container.textContent).toContain(f.title);
+    expect(getAllByRole("tab")).toHaveLength(3);
+    expect(getByText("Apply for early access").closest("a")?.getAttribute("href")).toContain("mailto:krishbhargav@thetaurus.ai");
   });
 
   it("renders the collaboration workflow with a human approval gate", () => {

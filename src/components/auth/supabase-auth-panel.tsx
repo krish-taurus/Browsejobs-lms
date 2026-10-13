@@ -17,6 +17,7 @@ import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { buttonClasses, Field, FieldError, Input, Notice } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 type Mode = "signin" | "signup";
 type EmailMethod = "password" | "otp";
@@ -39,7 +40,7 @@ export function SupabaseAuthPanel({ mode, next }: { mode: Mode; next?: string })
   const [notice, setNotice] = useState<string | null>(null);
 
   function callbackUrl(): string {
-    const url = new URL("/auth/callback", window.location.origin);
+    const url = new URL(withBasePath("/auth/callback"), window.location.origin);
     if (next) url.searchParams.set("next", next);
     return url.toString();
   }
@@ -88,13 +89,13 @@ export function SupabaseAuthPanel({ mode, next }: { mode: Mode; next?: string })
           setNotice("Check your email to confirm your account and finish signing up.");
           return;
         }
-        window.location.assign(next || "/dashboard");
+        window.location.assign(withBasePath(next || "/dashboard"));
         return;
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
-      window.location.assign(next || "/dashboard");
+      window.location.assign(withBasePath(next || "/dashboard"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {

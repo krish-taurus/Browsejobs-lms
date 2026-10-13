@@ -28,6 +28,7 @@ import { extractFileText } from "@/modules/knowledge/extraction";
 import { ALLOWED_EXTENSIONS, fileExtension } from "@/modules/knowledge/metadata";
 import { encryptApiKey, decryptApiKey } from "@/modules/model-gateway/credentials";
 import type { DocumentExtractionStatus } from "@/lib/db/types";
+import { withBasePath } from "@/lib/base-path";
 
 /** Cookie carrying the signed OAuth `state` (CSRF double-submit). */
 export const OAUTH_STATE_COOKIE = "taurus_gdrive_state";
@@ -93,7 +94,7 @@ function requireClientSecret(): string {
 export function resolveRedirectUri(requestUrl: string): string {
   const explicit = process.env.GOOGLE_DRIVE_REDIRECT_URI?.trim();
   if (explicit) return explicit;
-  return `${new URL(requestUrl).origin}/api/knowledge/connectors/google-drive/callback`;
+  return `${new URL(requestUrl).origin}${withBasePath("/api/knowledge/connectors/google-drive/callback")}`;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -13,6 +13,7 @@
  */
 
 import crypto from "node:crypto";
+import { withBasePath } from "@/lib/base-path";
 
 export class SlackConnectError extends Error {
   constructor(message: string) {
@@ -144,9 +145,10 @@ export function verifySlackSignature(input: {
 /* -------------------------------------------------------------------------- */
 
 export function resolveRedirectUri(requestUrl: string): string {
+  // NEXT_PUBLIC_APP_URL already carries the mount path (…/taurusai); a bare origin does not.
   const configured = process.env.NEXT_PUBLIC_APP_URL;
-  const origin = configured ? configured.replace(/\/$/, "") : new URL(requestUrl).origin;
-  return `${origin}/api/channels/slack/callback`;
+  if (configured) return `${configured.replace(/\/$/, "")}/api/channels/slack/callback`;
+  return `${new URL(requestUrl).origin}${withBasePath("/api/channels/slack/callback")}`;
 }
 
 export function buildInstallUrl(input: { state: string; redirectUri: string }): string {

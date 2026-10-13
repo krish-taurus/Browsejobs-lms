@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link";
+import { withBasePath } from "@/lib/base-path";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -87,7 +88,7 @@ export function LandingFooter() {
                         {link.label}
                       </Link>
                     ) : (
-                      <a href={link.href} className="text-[13px] text-neutral-600 transition-colors hover:text-neutral-950">
+                      <a href={withBasePath(link.href)} className="text-[13px] text-neutral-600 transition-colors hover:text-neutral-950">
                         {link.label}
                       </a>
                     )}

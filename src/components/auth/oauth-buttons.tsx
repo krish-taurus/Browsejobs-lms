@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { FieldError } from "@/components/ui";
+import { withBasePath } from "@/lib/base-path";
 
 type OAuthProvider = "google" | "linkedin_oidc";
 
@@ -47,7 +48,7 @@ export function OAuthButtons({ next, verb }: { next?: string; verb: "Continue" |
     setPending(provider);
     try {
       const supabase = createSupabaseBrowserClient();
-      const callback = new URL("/auth/callback", window.location.origin);
+      const callback = new URL(withBasePath("/auth/callback"), window.location.origin);
       if (next) callback.searchParams.set("next", next);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
