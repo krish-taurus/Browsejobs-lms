@@ -914,6 +914,73 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const sendRecordedAnswerRef = useRef(sendRecordedAnswer);
   useEffect(() => { sendRecordedAnswerRef.current = sendRecordedAnswer; }, [sendRecordedAnswer]);
 
+  /**
+   * Hands-free answers on the recorded path (phones, Firefox, Safari): watch
+   * the mic level while the answer records, and send it once the candidate
+   * has spoken and then paused for a moment — no "Done" tap needed (the
+   * button still works). Nobody speaking for 45 seconds puts the room back
+   * to idle, where the usual "are you still there?" check takes over.
+   */
+  const listenForPause = useCallback((recorder: MediaRecorder, tracks: MediaStreamTrack[]) => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    void ctx.resume();
+    const source = ctx.createMediaStreamSource(new MediaStream(tracks));
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    const PAUSE_MS = 2500;
+    const MIN_ANSWER_MS = 1500;
+    const NO_SPEECH_MS = 45_000;
+    const startedAt = Date.now();
+    let noise = 0;
+    let spokeAt = 0;
+    let lastVoice = 0;
+    let loud = 0;
+
+    const tick = () => {
+      // Sent by the Done button, skipped, or the room closed: stop watching.
+      if (answerRecorderRef.current !== recorder) {
+        source.disconnect();
+        return;
+      }
+      analyser.getByteTimeDomainData(data);
+      let peak = 0;
+      for (const v of data) peak = Math.max(peak, Math.abs(v - 128));
+      const now = Date.now();
+
+      // The first half second sets the room's own background level.
+      if (now - startedAt < 500) {
+        noise = Math.max(noise, peak);
+      } else {
+        const threshold = Math.max(6, noise * 1.8);
+        if (peak > threshold) {
+          loud += 1;
+          lastVoice = now;
+          if (spokeAt === 0 && loud >= 3) spokeAt = now;
+        } else {
+          loud = 0;
+        }
+
+        if (spokeAt > 0 && now - lastVoice > PAUSE_MS && now - spokeAt > MIN_ANSWER_MS) {
+          source.disconnect();
+          void sendRecordedAnswerRef.current();
+          return;
+        }
+        if (spokeAt === 0 && now - startedAt > NO_SPEECH_MS) {
+          source.disconnect();
+          void takeRecordedAnswer();
+          setPhase("idle");
+          return;
+        }
+      }
+      setTimeout(tick, 100);
+    };
+    setTimeout(tick, 100);
+  }, [takeRecordedAnswer]);
+
   /** Starts recording a spoken answer from the room's own microphone stream. */
   const startRecordingAnswer = useCallback(() => {
     const audioTracks = streamRef.current?.getAudioTracks() ?? [];
@@ -937,11 +1004,33 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       setPhase("listening");
       // A very long answer is sent as it stands after 3 minutes.
       answerTimerRef.current = setTimeout(() => { void sendRecordedAnswerRef.current(); }, 180_000);
+      listenForPause(recorder, audioTracks);
     } catch {
       setMicError("Recording didn't start in this browser — type your answer instead.");
       setTypeInstead(true);
     }
-  }, []);
+  }, [listenForPause]);
+
+  // Hands-free on the recorded path: once the question has been read out,
+  // start listening by itself (twice per question at most — after that the
+  // Answer button and the "are you still there?" check take over). Phones
+  // used to sit waiting for an Answer tap nobody knew about.
+  const autoListenRef = useRef<{ question: number | null; tries: number }>({ question: null, tries: 0 });
+  useEffect(() => {
+    if (!serverStt || typeInstead || step !== "live" || session === null || session.status !== "in_progress" || session.ready_to_finish) return;
+    if (speaking || phase !== "idle" || question === undefined) return;
+    const state = autoListenRef.current;
+    if (state.question !== question.id) {
+      state.question = question.id;
+      state.tries = 0;
+    }
+    if (state.tries >= 2) return;
+    const t = setTimeout(() => {
+      state.tries += 1;
+      startRecordingAnswer();
+    }, 900);
+    return () => clearTimeout(t);
+  }, [serverStt, typeInstead, step, session, speaking, phase, question, startRecordingAnswer]);
 
   // Never leave the answer recorder or its timer running after the room closes.
   useEffect(() => () => {
