@@ -515,6 +515,14 @@ export type InterviewRow = {
   answers: { question_id: number; answer: string }[] | null;
   submitted_at: string | null;
   graded_at: string | null;
+  /** What the interview room noticed, each with a still when the camera was on. Null: no room session. */
+  integrity?: {
+    flags: number;
+    possible: number;
+    events: { kind: string; label: string; severity: "flag" | "possible" | "info"; elapsed_seconds: number | null; occurred_at: string; image_url: string | null }[];
+  } | null;
+  /** Short-lived link to the PDF report sent to WhatsApp after this round. */
+  report_url?: string | null;
 };
 
 export type JdMockData = {

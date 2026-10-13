@@ -355,6 +355,8 @@ function ApplicationCard({
                       {iv.grading_summary}
                     </p>
                   )}
+
+                  <IntegrityBlock iv={iv} />
                 </li>
               ))}
             </ul>
@@ -362,6 +364,69 @@ function ApplicationCard({
         </motion.div>
       )}
     </motion.div>
+  );
+}
+
+/**
+ * What the interview room noticed in this round, with the still taken at
+ * each moment, and the PDF report that went to WhatsApp. "Possible" flags
+ * are camera estimates with known false positives — shown for a person to
+ * judge from the photo, never as a verdict.
+ */
+function IntegrityBlock({ iv }: { iv: InterviewRow }) {
+  const integrity = iv.integrity;
+  if (!integrity && !iv.report_url) return null;
+  const noted = (integrity?.events ?? []).filter((e) => e.severity !== "info");
+  const checkIns = (integrity?.events ?? []).filter((e) => e.severity === "info" && e.image_url);
+  const at = (e: { elapsed_seconds: number | null; occurred_at: string }) =>
+    e.elapsed_seconds !== null
+      ? `${Math.floor(e.elapsed_seconds / 60)}:${String(e.elapsed_seconds % 60).padStart(2, "0")} in`
+      : new Date(e.occurred_at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+
+  return (
+    <div className="mt-4 rounded-xl border border-[var(--bj-dash-border)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--bj-dash-muted)]">Integrity</p>
+        {iv.report_url && (
+          <a href={iv.report_url} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[var(--bj-dash-primary)] hover:underline">
+            Download report (PDF)
+          </a>
+        )}
+      </div>
+      {!integrity || integrity.events.length === 0 ? (
+        <p className="mt-1.5 text-[12px] text-[var(--bj-dash-muted)]">Not captured for this round — check the recording.</p>
+      ) : noted.length === 0 ? (
+        <p className="mt-1.5 text-[12px] text-[var(--bj-dash-muted)]">Nothing flagged: stayed in the window, no pasting, on camera throughout.</p>
+      ) : (
+        <ul className="mt-2 space-y-2">
+          {noted.map((e, i) => (
+            <li key={`${e.kind}-${i}`} className="flex items-center gap-3">
+              {e.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL, not a static asset
+                <img src={e.image_url} alt={`Candidate at ${at(e)}`} className="h-14 w-20 shrink-0 rounded-md object-cover" />
+              ) : (
+                <span className="grid h-14 w-20 shrink-0 place-items-center rounded-md bg-[var(--bj-dash-soft)] text-[10px] text-[var(--bj-dash-muted)]">No photo</span>
+              )}
+              <span className="text-[12.5px]">
+                <span className={e.severity === "flag" ? "font-semibold text-[#b4232a]" : "font-semibold text-[#9a5b00]"}>{e.label}</span>
+                <span className="block text-[11px] text-[var(--bj-dash-muted)]">
+                  {at(e)}
+                  {e.severity === "possible" ? " · camera estimate, check the photo" : ""}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {checkIns.length > 0 && (
+        <div className="mt-3 flex gap-2">
+          {checkIns.map((e, i) => (
+            // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL, not a static asset
+            <img key={i} src={e.image_url!} alt={`Check-in at ${at(e)}`} title={`Check-in · ${at(e)}`} className="h-12 w-16 rounded-md object-cover" />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

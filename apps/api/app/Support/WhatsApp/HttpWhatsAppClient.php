@@ -48,6 +48,32 @@ final class HttpWhatsAppClient implements WhatsAppClient
         return $id;
     }
 
+    public function sendDocument(string $to, string $url, string $filename, ?string $caption = null): string
+    {
+        $document = ['link' => $url, 'filename' => $filename];
+        if ($caption !== null && $caption !== '') {
+            $document['caption'] = mb_substr($caption, 0, 1024);
+        }
+
+        $response = Http::withToken($this->config['access_token'])
+            ->acceptJson()
+            ->post("{$this->config['base_url']}/{$this->config['phone_number_id']}/messages", [
+                'messaging_product' => 'whatsapp',
+                'to' => WhatsAppPhoneFormatter::toApiFormat($to),
+                'type' => 'document',
+                'document' => $document,
+            ])
+            ->throw()
+            ->json();
+
+        $id = $response['messages'][0]['id'] ?? null;
+        if (! is_string($id)) {
+            throw new RuntimeException('WhatsApp API did not return a message id.');
+        }
+
+        return $id;
+    }
+
     /**
      * @param  list<string>  $parameters
      * @return array<string, mixed>
