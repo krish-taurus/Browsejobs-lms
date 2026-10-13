@@ -21,10 +21,25 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 20m
-          envs: KIMI_API_KEY
+          envs: KIMI_API_KEY,TAURUS_ENV_FILE
           # Sync the web app's LLM env from the Actions secret before the build
           # (idempotent: rewrites the two lines each deploy), then run the update.
+          #
+          # Taurus AI (apps/taurus, served at /taurusai): TAURUS_ENV_FILE holds its
+          # whole env file as KEY=value lines (database, Supabase auth, secrets,
+          # model keys). Rewritten each deploy; the mount path and public URL are
+          # fixed here. Without the secret, deploy.sh leaves Taurus off.
           script: |
+            if [ -n "$TAURUS_ENV_FILE" ]; then
+              TAURUS_ENV=/var/www/browsejobs/apps/taurus/.env.production.local
+              sudo mkdir -p /var/www/browsejobs/apps/taurus
+              {
+                printf '%s\n' "$TAURUS_ENV_FILE" | grep -vE '^(NEXT_PUBLIC_BASE_PATH|NEXT_PUBLIC_APP_URL|TAURUS_ALLOW_DEV_AUTH)=' || true
+                printf 'NEXT_PUBLIC_BASE_PATH=/taurusai\nNEXT_PUBLIC_APP_URL=https://browsejobs.ai/taurusai\n'
+              } | sudo tee "$TAURUS_ENV" >/dev/null
+              sudo chown root:www-data "$TAURUS_ENV"
+              sudo chmod 640 "$TAURUS_ENV"
+            fi
             if [ -n "$KIMI_API_KEY" ]; then
               sudo touch /var/www/browsejobs/apps/web/.env.local
               sudo sed -i '/^KIMI_API_KEY=/d;/^KIMI_MODEL=/d' /var/www/browsejobs/apps/web/.env.local
@@ -33,6 +48,7 @@ jobs:
             sudo bash /var/www/browsejobs/deploy/deploy.sh update
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          TAURUS_ENV_FILE: ${{ secrets.TAURUS_ENV_FILE }}
 
   # Pings IndexNow with the live sitemap after production is updated.
   # Unreachable API must not fail the deploy. Pull requests never run this workflow.

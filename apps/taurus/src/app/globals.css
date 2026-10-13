@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Taurus design tokens (Sprint 005B) — premium monochrome enterprise palette.
+   Values are RGB channels so Tailwind opacity modifiers work (see
+   tailwind.config.ts). Black / charcoal / grey / silver / white only.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  /* Light premium palette — white / near-black / grey, matching the landing page.
+     Values are RGB channels so Tailwind opacity modifiers keep working. */
+  --taurus-app: 255 255 255; /* white app background      #FFFFFF */
+  --taurus-surface: 250 250 250; /* base surface          #FAFAFA */
+  --taurus-elevated: 255 255 255; /* elevated surface     #FFFFFF */
+  --taurus-muted: 245 245 245; /* muted surface           #F5F5F5 */
+  --taurus-line: 229 229 229; /* border                   #E5E5E5 */
+  --taurus-strong: 212 212 212; /* strong border          #D4D4D4 */
+  --taurus-text: 23 23 23; /* primary text (near-black)    #171717 */
+  --taurus-sub: 82 82 82; /* secondary text               #525252 */
+  --taurus-faint: 115 115 115; /* muted text              #737373 */
+  --taurus-disabled: 163 163 163; /* disabled text        #A3A3A3 */
+  --taurus-focus: 23 23 23; /* focus ring (near-black)     #171717 */
+  --taurus-primary: 23 23 23; /* primary button bg         #171717 */
+  --taurus-on-primary: 255 255 255; /* primary button text #FFFFFF */
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-taurus-app text-taurus-text antialiased;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif;
+    /* Subtle monochrome radial highlight so the app never feels flat/empty. */
+    background-image: radial-gradient(
+      1200px 600px at 50% -10%,
+      rgb(0 0 0 / 0.035),
+      transparent 70%
+    );
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgb(23 23 23 / 0.12);
+    color: rgb(var(--taurus-text));
+  }
+
+  /* Consistent, keyboard-visible focus. */
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--taurus-app)),
+      0 0 0 4px rgb(var(--taurus-focus) / 0.7);
+    border-radius: 4px;
+  }
+
+  /* Slim, monochrome scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--taurus-strong)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--taurus-strong));
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+/* ==========================================================================
+   Landing page motion (Premium Landing v2) — monochrome + CSS-driven so the
+   global reduced-motion rule below disables everything automatically.
+   ========================================================================== */
+@layer utilities {
+  /* Flowing dashes along SVG connection lines. */
+  @keyframes landing-dash {
+    to {
+      stroke-dashoffset: -24;
+    }
+  }
+  .landing-dash {
+    stroke-dasharray: 3 9;
+    animation: landing-dash 1.6s linear infinite;
+  }
+  .landing-dash-slow {
+    stroke-dasharray: 2 10;
+    animation: landing-dash 2.8s linear infinite;
+  }
+
+  /* Gentle vertical float for cards/nodes. */
+  @keyframes landing-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  .landing-float {
+    animation: landing-float 7s ease-in-out infinite;
+  }
+  .landing-float-delayed {
+    animation: landing-float 8.5s ease-in-out 1.2s infinite;
+  }
+
+  /* Soft node glow pulse. */
+  @keyframes landing-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.25);
+    }
+  }
+  .landing-pulse {
+    animation: landing-pulse 3.2s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  /* Slow conic sweep behind the hero visual. */
+  @keyframes landing-sweep {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .landing-sweep {
+    animation: landing-sweep 28s linear infinite;
+  }
+
+  /* Shimmer across silver accents. */
+  @keyframes landing-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  .landing-shimmer {
+    background-size: 200% 100%;
+    animation: landing-shimmer 6s linear infinite;
+  }
+
+  /* Landing v3 — endless capability marquee. */
+  @keyframes landing-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  .landing-marquee {
+    animation: landing-marquee 36s linear infinite;
+  }
+  .landing-marquee-reverse {
+    animation: landing-marquee 36s linear infinite reverse;
+  }
+
+  /* Landing v3 — slow orbital rotation for the hero workforce rings. */
+  @keyframes landing-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .landing-orbit {
+    animation: landing-orbit 60s linear infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .landing-orbit-reverse {
+    animation: landing-orbit 80s linear infinite reverse;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  /* Landing v3 — soft breathing ring behind the intelligence core. */
+  @keyframes landing-breathe {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(0.96);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.04);
+    }
+  }
+  .landing-breathe {
+    animation: landing-breathe 5s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  /* Landing v3 — a task dot travelling along a workflow path. */
+  @keyframes landing-travel {
+    from {
+      offset-distance: 0%;
+    }
+    to {
+      offset-distance: 100%;
+    }
+  }
+  .landing-travel {
+    animation: landing-travel 7s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+
+  /* Landing v3 — blinking live-status dot. */
+  @keyframes landing-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+  .landing-blink {
+    animation: landing-blink 2.2s ease-in-out infinite;
+  }
+}
+
+/* Respect users who prefer reduced motion: disable all transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,26 @@
+; Taurus AI (apps/taurus) — its own Next.js server on :3100, served at
+; browsejobs.ai/taurusai through Nginx (deploy/nginx/taurus.conf). Built with
+; basePath /taurusai; secrets live in apps/taurus/.env.production.local,
+; written by the Deploy workflow from GitHub Actions secrets.
+;
+; deploy.sh installs and restarts this unit — only once Taurus is configured.
+
+[Unit]
+Description=Taurus AI (Next.js) at /taurusai
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/browsejobs/apps/taurus
+Environment=NODE_ENV=production
+Environment=PORT=3100
+; Must match the build: next.config reads it for basePath at start too.
+Environment=NEXT_PUBLIC_BASE_PATH=/taurusai
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

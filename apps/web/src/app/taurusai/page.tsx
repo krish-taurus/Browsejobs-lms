@@ -443,7 +443,7 @@ export default function TaurusAiPage() {
               <a className="btn btn-primary" href={demoMail}>
                 Book a Taurus demo
               </a>
-              <Link className="more" href="/taurusai/login">
+              <Link className="more" href="/taurusai/portal-login">
                 Already a client? Sign in to your command centre <span className="chev" aria-hidden="true">›</span>
               </Link>
             </div>

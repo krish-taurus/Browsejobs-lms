@@ -29,6 +29,7 @@ WEB_DIR="${APP_DIR}/apps/web"
 say(){ printf "\n\033[1;34m▸ %s\033[0m\n" "$*"; }
 ok(){ printf "\033[1;32m✓ %s\033[0m\n" "$*"; }
 die(){ printf "\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
+warn(){ printf "\033[1;33m! %s\033[0m\n" "$*" >&2; }
 
 need_root(){ [ "$(id -u)" = "0" ] || die "Run with sudo: sudo ./deploy.sh $1"; }
 
@@ -71,6 +72,94 @@ prepare_npm_tree(){
     "${APP_DIR}/node_modules" \
     "${WEB_DIR}/node_modules" \
     "${WEB_DIR}/.next"
+}
+
+# ---- Taurus AI (apps/taurus) at https://browsejobs.ai/taurusai --------------
+# A separate Next.js app with its own lockfile (Next 14 / React 18, so it is
+# NOT an npm workspace of the root). Off until its env file exists: the Deploy
+# workflow writes apps/taurus/.env.production.local from the TAURUS_ENV_FILE
+# Actions secret. Runs after the LMS is updated and never fails the LMS deploy.
+TAURUS_DIR="${APP_DIR}/apps/taurus"
+TAURUS_ENV="${TAURUS_DIR}/.env.production.local"
+TAURUS_UPLOADS="/var/lib/browsejobs-taurus/uploads"
+NGINX_WEB_SITE="/etc/nginx/sites-available/browsejobs-web"
+TAURUS_SNIPPET="/etc/nginx/snippets/browsejobs-taurus.conf"
+
+# Export KEY=value lines from an env file without executing it as shell (a
+# Postgres URL with `&` in its query string would background half a command).
+export_env_file(){
+  local line key value
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue ;; esac
+    key="${line%%=*}"; value="${line#*=}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    case "$value" in
+      \"*\") value="${value:1:${#value}-2}" ;;
+      \'*\') value="${value:1:${#value}-2}" ;;
+    esac
+    export "${key}=${value}"
+  done < "$1"
+}
+
+taurus_nginx(){
+  if [ ! -f "${NGINX_WEB_SITE}" ]; then
+    warn "Taurus AI: ${NGINX_WEB_SITE} not found — add 'include ${TAURUS_SNIPPET};' to the browsejobs.ai server block by hand."
+    return 0
+  fi
+  mkdir -p /etc/nginx/snippets
+  if [ -f "${TAURUS_SNIPPET}" ]; then cp "${TAURUS_SNIPPET}" "${TAURUS_SNIPPET}.prev"; fi
+  cp "${NGINX_WEB_SITE}" "${NGINX_WEB_SITE}.prev-taurus"
+  cp "${APP_DIR}/deploy/nginx/taurus.conf" "${TAURUS_SNIPPET}"
+  # certbot has edited the live site file, so add one include line rather than
+  # overwriting it — into every server block that serves the domain.
+  if ! grep -q "browsejobs-taurus.conf" "${NGINX_WEB_SITE}"; then
+    local domain_re="${DOMAIN//./\\.}"
+    sed -i "/server_name .*${domain_re}/a\\    include ${TAURUS_SNIPPET};" "${NGINX_WEB_SITE}"
+  fi
+  if nginx -t >/dev/null 2>&1; then
+    systemctl reload nginx
+    ok "Nginx serves /taurusai from Taurus AI."
+  else
+    warn "Nginx rejected the Taurus routes — restoring the previous config. The LMS is unaffected."
+    cp "${NGINX_WEB_SITE}.prev-taurus" "${NGINX_WEB_SITE}"
+    if [ -f "${TAURUS_SNIPPET}.prev" ]; then cp "${TAURUS_SNIPPET}.prev" "${TAURUS_SNIPPET}"; else rm -f "${TAURUS_SNIPPET}"; fi
+    if nginx -t >/dev/null 2>&1; then systemctl reload nginx; fi
+    return 1
+  fi
+}
+
+taurus_deploy(){
+  [ -d "${TAURUS_DIR}" ] || return 0
+  if [ ! -f "${TAURUS_ENV}" ]; then
+    warn "Taurus AI is not configured yet (${TAURUS_ENV} missing) — skipping. Add the TAURUS_ENV_FILE Actions secret to turn it on."
+    return 0
+  fi
+  say "Taurus AI: install, migrate, build (served at /taurusai)…"
+  mkdir -p "${TAURUS_UPLOADS}"
+  give_to www-data www-data "${TAURUS_UPLOADS}"
+  give_to "$(id -un)" "$(id -gn)" "${TAURUS_DIR}/node_modules" "${TAURUS_DIR}/.next"
+  if ! (
+    set -e
+    cd "${TAURUS_DIR}"
+    export_env_file "${TAURUS_ENV}"
+    export NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/taurusai
+    export TAURUS_UPLOAD_DIR="${TAURUS_UPLOAD_DIR:-${TAURUS_UPLOADS}}"
+    npm ci --no-audit --no-fund
+    # Applies db/migrations; logs and carries on if the database is unreachable.
+    node scripts/predeploy-migrate.mjs
+    # A 4 GB box also runs MySQL, PHP and the LMS web app: cap the build's heap.
+    NODE_OPTIONS="--max-old-space-size=1536" npm run build
+  ); then
+    warn "Taurus AI build failed — the previous Taurus build keeps running; the LMS is unaffected."
+    return 1
+  fi
+  give_to www-data www-data "${TAURUS_DIR}/.next"
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-taurus.service" >/etc/systemd/system/browsejobs-taurus.service
+  systemctl daemon-reload
+  systemctl enable browsejobs-taurus >/dev/null 2>&1 || true
+  systemctl restart browsejobs-taurus
+  taurus_nginx || return 1
+  ok "Taurus AI is live at https://${DOMAIN}/taurusai"
 }
 
 cmd_setup(){
@@ -199,6 +288,8 @@ cmd_install(){
   nginx -t && systemctl reload nginx
   ok "Nginx configured."
 
+  taurus_deploy || true
+
   say "Getting TLS certificates (make sure DNS points here first)…"
   certbot --nginx --non-interactive --agree-tos -m "hello@${DOMAIN}" \
     -d "${DOMAIN}" -d "www.${DOMAIN}" -d "${API_HOST}" || \
@@ -244,6 +335,8 @@ cmd_update(){
   say "Restarting services (worker MUST restart to run new code)…"
   systemctl restart browsejobs-worker browsejobs-web
   systemctl reload php8.3-fpm || true
+  # Last, and isolated: a Taurus problem must never undo the LMS update above.
+  taurus_deploy || true
   ok "Update complete."
 }
 

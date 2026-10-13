@@ -1,0 +1,140 @@
+"use server";
+
+/**
+ * AI Employee server actions (Prompt 003).
+ *
+ * SECURITY: the organization is ALWAYS resolved server-side via
+ * requireCurrentOrganization() (which validates active membership). No action
+ * trusts an organizationId from the client. Each action also checks the caller's
+ * role permission before mutating, and every mutation is organization-scoped.
+ */
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { getStore } from "@/lib/db/store";
+import { requireCurrentOrganization } from "@/lib/security/guards";
+import { hasPermission, type Permission } from "@/modules/organizations/roles";
+import {
+  archiveEmployee,
+  activateEmployee,
+  pauseEmployee,
+  updateEmployeeProfile,
+  updateEmployeeSchema,
+} from "@/modules/employees/service";
+
+export interface EmployeeActionState {
+  error?: string;
+}
+
+/** Resolve the current org + user and assert the given permission. */
+async function requirePermission(permission: Permission) {
+  const { user, organization, membership } = await requireCurrentOrganization();
+  if (!hasPermission(membership.role, permission)) {
+    return { denied: true as const, user, organization };
+  }
+  return { denied: false as const, user, organization };
+}
+
+export async function updateEmployeeAction(
+  _prevState: EmployeeActionState,
+  formData: FormData,
+): Promise<EmployeeActionState> {
+  const employeeId = String(formData.get("employeeId") ?? "");
+  const ctx = await requirePermission("employee.manage");
+  if (ctx.denied) {
+    return { error: "You do not have permission to edit AI Employees in this organization." };
+  }
+
+  const parsed = updateEmployeeSchema.safeParse({
+    name: formData.get("name"),
+    roleTitle: formData.get("roleTitle"),
+    department: formData.get("department") ?? undefined,
+    description: formData.get("description") ?? undefined,
+    status: formData.get("status"),
+    visibility: formData.get("visibility"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Please check the form and try again." };
+  }
+
+  try {
+    await updateEmployeeProfile(
+      getStore(),
+      { organizationId: ctx.organization.id, userId: ctx.user.id },
+      employeeId,
+      parsed.data,
+    );
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not update the AI Employee." };
+  }
+
+  revalidatePath("/dashboard/employees");
+  revalidatePath(`/dashboard/employees/${employeeId}`);
+  redirect(`/dashboard/employees/${employeeId}`);
+}
+
+const LIFECYCLE_DENIED = "You do not have permission to change this AI Employee.";
+
+/**
+ * Quick lifecycle actions (buttons on the detail page). These use the
+ * useFormState signature so a permission denial or a failed transition surfaces
+ * a clear message instead of a silent no-op. On success the action redirects.
+ */
+async function runLifecycle(
+  formData: FormData,
+  run: (
+    store: ReturnType<typeof getStore>,
+    actor: { organizationId: string; userId: string },
+    employeeId: string,
+  ) => Promise<unknown>,
+): Promise<EmployeeActionState> {
+  const employeeId = String(formData.get("employeeId") ?? "");
+  const ctx = await requirePermission("employee.manage");
+  if (ctx.denied) return { error: LIFECYCLE_DENIED };
+
+  try {
+    await run(getStore(), { organizationId: ctx.organization.id, userId: ctx.user.id }, employeeId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not update the AI Employee." };
+  }
+
+  revalidatePath("/dashboard/employees");
+  revalidatePath(`/dashboard/employees/${employeeId}`);
+  redirect(`/dashboard/employees/${employeeId}`);
+}
+
+export async function pauseEmployeeAction(
+  _prevState: EmployeeActionState,
+  formData: FormData,
+): Promise<EmployeeActionState> {
+  return runLifecycle(formData, pauseEmployee);
+}
+
+export async function activateEmployeeAction(
+  _prevState: EmployeeActionState,
+  formData: FormData,
+): Promise<EmployeeActionState> {
+  return runLifecycle(formData, activateEmployee);
+}
+
+export async function archiveEmployeeAction(
+  _prevState: EmployeeActionState,
+  formData: FormData,
+): Promise<EmployeeActionState> {
+  const employeeId = String(formData.get("employeeId") ?? "");
+  const ctx = await requirePermission("employee.manage");
+  if (ctx.denied) return { error: LIFECYCLE_DENIED };
+
+  try {
+    await archiveEmployee(
+      getStore(),
+      { organizationId: ctx.organization.id, userId: ctx.user.id },
+      employeeId,
+    );
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not archive the AI Employee." };
+  }
+
+  revalidatePath("/dashboard/employees");
+  redirect("/dashboard/employees");
+}
