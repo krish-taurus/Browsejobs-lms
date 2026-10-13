@@ -8,6 +8,7 @@ use App\Actions\Employers\MoveApplicationStage;
 use App\Actions\Employers\SendInterviewInvites;
 use App\Enums\EmployerApplicationStage;
 use App\Events\EmployerInterviewGraded;
+use App\Jobs\SendClientUpdate;
 use App\Jobs\SendHiringResult;
 use App\Jobs\SendInterviewInviteMessage;
 use App\Models\InterviewInvite;
@@ -60,10 +61,13 @@ final class BookNextInterviewRound implements ShouldQueue
             }
 
             $passMark = ShortlistSettings::forJob($job)->roundPassMark;
+            $name = (string) ($application->candidate()->withoutGlobalScopes()->value('name') ?? 'A candidate');
+            $round = strtoupper((string) $interview->round);
             if ((int) $interview->overall_score < $passMark) {
                 $this->audit->log('employer.interview_round_not_cleared', $application, [
                     'round' => $interview->round, 'score' => $interview->overall_score, 'pass_mark' => $passMark,
                 ]);
+                SendClientUpdate::dispatch($job->id, "❌ {$name} scored {$interview->overall_score}/100 in the {$round} AI interview, below your pass mark of {$passMark}.");
 
                 return;
             }
@@ -90,6 +94,8 @@ final class BookNextInterviewRound implements ShouldQueue
                     'date_options' => SendInterviewInvites::dateOptions(now('Asia/Kolkata')),
                     'token' => Str::random(40),
                 ]);
+
+                SendClientUpdate::dispatch($job->id, "✅ {$name} scored {$interview->overall_score}/100 in the {$round} AI interview and passed. Asked to book the ".strtoupper($next->key).' interview.');
 
                 if ($this->templates->approved(InterviewTemplates::NEXT_ROUND)) {
                     SendInterviewInviteMessage::dispatch($nextInvite->id);

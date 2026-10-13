@@ -7,6 +7,7 @@ namespace App\Support\Employers;
 use App\Actions\Employers\SendInterviewInvites;
 use App\Jobs\BookInterviewMeeting;
 use App\Jobs\CancelInterviewMeeting;
+use App\Jobs\SendClientUpdate;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\InterviewInvite;
 use App\Support\Audit\AuditLogger;
@@ -67,6 +68,7 @@ final readonly class CandidateChatAgent
             if ($invite->onZoom() || $invite->bot_id !== null) {
                 CancelInterviewMeeting::dispatch($invite->id);
             }
+            SendClientUpdate::dispatch($invite->employer_job_id, "🙅 {$this->candidateName($invite)} declined the {$invite->roundLabel()} interview.");
             $this->reply($invite, 'Thanks for letting us know. We have told the company. All the best!');
 
             return;
@@ -91,6 +93,7 @@ final readonly class CandidateChatAgent
                 : SendInterviewInvites::slotStart($pick, $time),
         ]);
         $label = $invite->fresh()->slotLabel();
+        SendClientUpdate::dispatch($invite->employer_job_id, "📅 {$this->candidateName($invite)} booked the {$invite->roundLabel()} AI interview for {$label}.");
 
         if ($this->bots->enabled()) {
             // The Zoom meeting and the AI interviewer are booked now; the link follows in a moment.
@@ -101,6 +104,11 @@ final readonly class CandidateChatAgent
         }
 
         $this->reply($invite, "Booked for *{$label}*. That morning you will get a WhatsApp link to start your AI interview. It takes about 15 minutes on your phone or laptop.\n\nNeed a different day? Just reply 1, 2 or 3:\n".$this->menu($invite, $options));
+    }
+
+    private function candidateName(InterviewInvite $invite): string
+    {
+        return (string) ($invite->candidate?->name ?? 'A candidate');
     }
 
     /** The Zoom link message, sent when the meeting is booked and whenever they ask again. */

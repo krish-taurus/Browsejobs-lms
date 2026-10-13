@@ -275,3 +275,70 @@ it('offers slots at the JD interview time and uses its pass mark', function (): 
 
     expect(InterviewInvite::query()->where('round', 'l2')->exists())->toBeFalse(); // 78 is below this JD's 80
 });
+
+/** Did the client's chat get a line containing this (as a message, or inside the update template)? */
+function clientSaw(FakeWhatsAppClient $wa, string $needle): bool
+{
+    return collect($wa->sent)->where('to', '919800000001')->contains(
+        fn (array $m) => str_contains((string) $m['body'], $needle) || str_contains(implode(' ', (array) $m['parameters']), $needle)
+    );
+}
+
+it('tells the client when a candidate books, passes or falls short', function (): void {
+    zoomCandidate($this, 'Asha Rao', '9845011111');
+    zoomSays('9845011111', '2');
+    expect(clientSaw($this->wa, 'Asha Rao booked the L1 AI interview for Wed 14 Oct, 11:00 AM'))->toBeTrue();
+
+    $invite = InterviewInvite::query()->firstOrFail();
+    $this->travelTo($invite->scheduled_at);
+    finishRound(MockInterview::query()->findOrFail($this->postJson("/api/v1/interview-bot/{$invite->bot_code}/start")->json('data.mock_id')), 74);
+    expect(clientSaw($this->wa, 'Asha Rao scored 74/100 in the L1 AI interview and passed'))->toBeTrue();
+
+    // Outside the 24-hour window the client gets the approved update template instead of a message.
+    $ravi = zoomCandidate($this, 'Ravi K', '9845022222');
+    $this->link->update(['last_inbound_at' => now()->subDays(2)]);
+    zoomSays('9845022222', '1');
+    $second = InterviewInvite::query()->where('candidate_user_id', $ravi->user_id)->firstOrFail();
+    $this->travelTo($second->scheduled_at);
+    finishRound(MockInterview::query()->findOrFail($this->postJson("/api/v1/interview-bot/{$second->bot_code}/start")->json('data.mock_id')), 40);
+    $update = collect($this->wa->sent)->where('template', InterviewTemplates::UPDATE)->last();
+    expect($update['to'])->toBe('919800000001')
+        ->and($update['parameters'][0])->toBe('Ravi')
+        ->and($update['parameters'][2])->toContain('Ravi K scored 40/100 in the L1 AI interview, below your pass mark of 60');
+});
+
+it('reminds the candidate an hour before, nudges once if not started, and tells the client', function (): void {
+    $this->bots->on = false; // the BrowseJobs room: the link comes when the round opens that morning
+    zoomCandidate($this, 'Asha Rao', '9845011111');
+    zoomSays('9845011111', '1'); // Tue 13 Oct, 11:00 AM
+    $invite = InterviewInvite::query()->firstOrFail();
+
+    // 9:10 that morning the round opens; she replies OK and gets the link.
+    $this->travelTo(Carbon::parse('2026-10-13 09:10', 'Asia/Kolkata'));
+    Artisan::call('interviews:open-due');
+    zoomSays('9845011111', 'ok');
+    expect($invite->fresh()->status)->toBe('open');
+
+    // 10:05: the reminder, with the link (she wrote to us within the day).
+    $this->travelTo(Carbon::parse('2026-10-13 10:05', 'Asia/Kolkata'));
+    Artisan::call('interviews:remind');
+    $reminder = collect($this->wa->sent)->where('to', '919845011111')->last();
+    expect($reminder['body'])->toContain('Reminder, Asha')->toContain('11:00 AM')->toContain("/hire-interview/{$invite->token}");
+
+    // Running again sends nothing new.
+    $count = count($this->wa->sent);
+    Artisan::call('interviews:remind');
+    expect($this->wa->sent)->toHaveCount($count);
+
+    // 11:35, not started: one nudge to her, and a line to the client.
+    $this->travelTo(Carbon::parse('2026-10-13 11:35', 'Asia/Kolkata'));
+    Artisan::call('interviews:remind');
+    $nudge = collect($this->wa->sent)->where('to', '919845011111')->last();
+    expect($nudge['body'])->toContain('has not been started yet')
+        ->and(clientSaw($this->wa, 'Asha Rao has not started the L1 interview booked for Tue 13 Oct, 11:00 AM yet'))->toBeTrue()
+        ->and($invite->fresh()->nudged_at)->not->toBeNull();
+
+    $count = count($this->wa->sent);
+    Artisan::call('interviews:remind');
+    expect($this->wa->sent)->toHaveCount($count);
+});

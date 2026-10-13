@@ -113,3 +113,9 @@ Schedule::command('interviews:open-due')
     ->between('9:00', '20:00')
     ->timezone('Asia/Kolkata')
     ->withoutOverlapping(30);
+
+// A reminder about an hour before each booked L1/L2 slot, and one nudge (with a
+// note to the client) to anyone who has not started half an hour after it.
+Schedule::command('interviews:remind')
+    ->everyFiveMinutes()
+    ->withoutOverlapping(10);
