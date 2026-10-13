@@ -812,14 +812,26 @@ export function createTaurusFloor(container, options = {}) {
   }
 
   /* ---------------------------------------------------------- loop */
+  // Resizing a canvas wipes its drawing buffer, so a resize that waits for the
+  // next animation frame shows one blank (black) frame: the blink you see when
+  // a phone's toolbar slides or a scrollbar appears. Skip no-op resizes and
+  // repaint straight away for real ones.
+  let sizeW = 0;
+  let sizeH = 0;
+  let lost = false;
   function resize() {
     const w = Math.max(1, container.clientWidth);
     const h = Math.max(1, container.clientHeight);
+    if (w === sizeW && h === sizeH) return;
+    const first = sizeW === 0;
+    sizeW = w;
+    sizeH = h;
     renderer.setSize(w, h, false);
     composer.setSize(w, h);
     bloom.resolution.set(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    if (!first && !lost) composer.render();
   }
   const ro = new ResizeObserver(resize);
   ro.observe(container);
@@ -845,7 +857,6 @@ export function createTaurusFloor(container, options = {}) {
   let last = performance.now();
   let scrI = 0;
   let elapsed = 0;
-  let lost = false;
   canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
     lost = true;

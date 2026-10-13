@@ -222,6 +222,27 @@ export type HiringFloor = {
   events: { occurred_at: string; message: string; stage: string | null; actor: string }[];
 };
 
+/**
+ * Feed rows keyed by what they say, not where they sit: an index key shifts
+ * every row when a new event lands, so the whole feed re-mounted and replayed
+ * its entrance animation on each poll.
+ */
+function feedFrom(f: HiringFloor): FeedItem[] {
+  const seen = new Map<string, number>();
+  return f.events.slice(0, 8).map((e) => {
+    const base = `${e.occurred_at}|${e.stage ?? ""}|${e.message}`;
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return {
+      id: n ? `${base}#${n}` : base,
+      at: e.occurred_at,
+      agent: f.bots.find((b) => b.stage === e.stage)?.name ?? "Pipeline",
+      status: "working",
+      text: e.message,
+    };
+  });
+}
+
 export function employerFloorSource(workspaceId: number, jobId?: number | null, intervalMs = 15000): ConsoleSource {
   let prev: HiringFloor | null = null;
   const order = HIRING_STAGES.map((s) => s.key);
@@ -238,13 +259,7 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
         { key: "offers", label: "Offers open", value: String(f.kpis.offers), hot: f.kpis.offers > 0 },
         { key: "hired", label: "Hired", value: String(f.kpis.hired) },
       ],
-      feed: f.events.slice(0, 8).map((e, i) => ({
-        id: `${e.occurred_at}-${i}`,
-        at: e.occurred_at,
-        agent: f.bots.find((b) => b.stage === e.stage)?.name ?? "Pipeline",
-        status: "working",
-        text: e.message,
-      })),
+      feed: feedFrom(f),
       sideTitle: "Hiring bots",
       side: f.bots.map((b) => ({
         id: b.key,
@@ -272,7 +287,14 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
       const i = order.indexOf(s.key);
       if (gained > 0 && i > 0) fx.push({ type: "flow", from: order[i - 1], to: s.key, count: Math.min(gained, 6) });
     });
-    f.bots.filter((b) => b.status === "working").forEach((b) => fx.push({ type: "stream", id: b.key }));
+    // Only a bot whose work actually changed since the last poll streams to the core.
+    f.bots
+      .filter((b) => b.status === "working")
+      .filter((b) => {
+        const was = prev!.bots.find((p) => p.key === b.key);
+        return !was || was.status !== "working" || was.task !== b.task;
+      })
+      .forEach((b) => fx.push({ type: "stream", id: b.key }));
     return fx;
   };
 
@@ -280,6 +302,7 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
     start({ state, effects, error }) {
       let stopped = false;
       let timer = 0;
+      let failures = 0;
       const poll = async () => {
         try {
           const q = jobId ? `?job_id=${jobId}` : "";
@@ -289,9 +312,11 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
           const fx = effectsFor(res.data);
           prev = res.data;
           if (fx.length) effects(fx);
+          failures = 0;
           error(null);
         } catch {
-          if (!stopped) error("Can't load your hiring floor right now. Retrying…");
+          // One dropped poll isn't worth a banner: it would flash on and off.
+          if (!stopped && ++failures >= 2) error("Can't load your hiring floor right now. Retrying…");
         }
         if (!stopped) timer = window.setTimeout(poll, intervalMs);
       };

@@ -63,6 +63,30 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const prevStages = useRef<Record<string, number>>({});
   const [bumped, setBumped] = useState<Set<string>>(new Set());
   const stateRef = useRef<ConsoleState | null>(null);
+  // The floor mounts asynchronously, so it reads the look from a ref: a look
+  // restored from storage before the import resolves would otherwise be lost
+  // (a light HUD over a dark floor).
+  const lookRef = useRef(look);
+  lookRef.current = look;
+  // Height of the top bar, measured on resize rather than read every frame.
+  const topH = useRef(90);
+
+  useEffect(() => {
+    const el = topRef.current;
+    if (!el) return;
+    const measure = () => (topH.current = el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // a stage bump plays once, then clears so the next change can play it again
+  useEffect(() => {
+    if (!bumped.size) return;
+    const t = window.setTimeout(() => setBumped(new Set()), 900);
+    return () => window.clearTimeout(t);
+  }, [bumped]);
 
   // remembered look
   useEffect(() => {
@@ -103,11 +127,11 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         if (cancelled || !floorHostRef.current) return;
         try {
           floorRef.current = createTaurusFloor(floorHostRef.current, {
-            look,
+            look: lookRef.current,
             reducedMotion: reduce,
             wheelZoom: variant === "full",
             numberZones: mode === "recruitment",
-            topSafe: () => (topRef.current?.offsetHeight ?? 90) + 130,
+            topSafe: () => topH.current + 130,
             onApprove: source.approve ? (id) => void approveRef.current(id) : undefined,
             onError: () => setNoGl(true),
           });
