@@ -1,0 +1,823 @@
+/**
+ * Data store abstraction (Prompt 002).
+ *
+ * The application talks to a `DataStore`, never directly to a database driver.
+ * Two implementations exist:
+ *   - InMemoryStore   — used when DATABASE_URL is unset (local dev + tests).
+ *   - PostgresStore   — used when DATABASE_URL is set (real PostgreSQL).
+ *
+ * This keeps tenant-isolation logic testable without a live database while still
+ * shipping a real PostgreSQL foundation.
+ */
+
+import type {
+  Scorecard,
+  Criterion,
+  ReviewCase,
+  ReviewRun,
+  ReviewResult,
+  ScorecardDetail,
+  PerformancePoint,
+  CreateScorecardInput,
+  CreateCriterionInput,
+  CreateReviewCaseInput,
+  CreateReviewRunInput,
+  CreateReviewResultInput,
+  UpdateReviewRunInput,
+  ReviewRunFilter,
+} from "@/modules/performance/types";
+import type {
+  AiEmployee,
+  ArchiveDnaVersionInput,
+  AssignKnowledgeInput,
+  AuditEvent,
+  AuditEventInput,
+  OrganizationOnboardingProgress,
+  BillingSubscription,
+  BillingCustomer,
+  BillingEvent,
+  BillingOverageItem,
+  CreateBillingOverageItemInput,
+  OverageItemStatus,
+  OverageAggregateRow,
+  CreateBillingSubscriptionInput,
+  UpdateBillingSubscriptionInput,
+  UpsertBillingCustomerInput,
+  CreateBillingEventInput,
+  CreateEmployeeInput,
+  ChannelOverview,
+  ChannelProviderCredentialMetadata,
+  ChannelProviderType,
+  ChannelWebhookEvent,
+  CreateChannelProviderCredentialInput,
+  CreateChannelWebhookEventInput,
+  CreateEmployeeChannelInput,
+  CreateEmployeeChatMessageInput,
+  CreateEmployeeChatRetrievalEventInput,
+  CreateEmployeeChatThreadInput,
+  CreateMessagingTemplateInput,
+  CreatePublicChannelEventInput,
+  CreatePublicChatSessionInput,
+  EmployeeChannel,
+  GetOrCreatePublicChatSessionInput,
+  MessagingChannelOverview,
+  MessagingContactPreference,
+  MessagingTemplate,
+  MessagingTemplateStatus,
+  PublicChannelEvent,
+  PublicChatSession,
+  UpdateChannelWebhookEventStatusInput,
+  UpdateEmployeeChannelInput,
+  UpsertMessagingContactPreferenceInput,
+  CreateVoicePhoneNumberInput,
+  CreateVoiceCallSessionInput,
+  CreateVoiceTranscriptMessageInput,
+  CreateVoiceStreamEventInput,
+  UpdateVoicePhoneNumberInput,
+  UpdateVoiceCallSessionStatusInput,
+  VoicePhoneNumber,
+  VoiceCallSession,
+  VoiceTranscriptMessage,
+  VoiceStreamEvent,
+  VoiceChannelOverview,
+  CreateKnowledgeDocumentInput,
+  CreateKnowledgeRetrievalSegmentInput,
+  CreateKnowledgeSourceInput,
+  CreateLlmUsageEventInput,
+  CreateOrganizationInput,
+  CreateUserInput,
+  EmployeeChatMessage,
+  EmployeeChatRetrievalEvent,
+  EmployeeChatThread,
+  EmployeeDnaOverview,
+  EmployeeDnaVersion,
+  EmployeeKnowledgeAssignment,
+  EmployeeModelSettings,
+  KnowledgeDocument,
+  KnowledgeRetrievalSegment,
+  KnowledgeSource,
+  KnowledgeVault,
+  CreateKnowledgeVaultInput,
+  UpdateKnowledgeVaultInput,
+  KnowledgeVaultSummary,
+  KnowledgeVaultOverview,
+  EmployeeVaultAssignment,
+  AssignVaultInput,
+  MarketplaceListing,
+  CreateMarketplaceListingInput,
+  UpdateMarketplaceListingInput,
+  MarketplaceHire,
+  CreateMarketplaceHireInput,
+  UpdateMarketplaceHireInput,
+  MarketplaceReview,
+  UpsertMarketplaceReviewInput,
+  MarketplacePayment,
+  CreateMarketplacePaymentInput,
+  UpdateMarketplacePaymentInput,
+  MarketplacePaymentProviderId,
+  MarketplacePayoutAccount,
+  UpsertMarketplacePayoutAccountInput,
+  UpdateMarketplacePayoutAccountInput,
+  MarketplacePayout,
+  CreateMarketplacePayoutInput,
+  UpdateMarketplacePayoutInput,
+  Workflow,
+  CreateWorkflowInput,
+  UpdateWorkflowInput,
+  WorkflowRun,
+  CreateWorkflowRunInput,
+  UpdateWorkflowRunInput,
+  WorkflowRunStep,
+  CreateWorkflowRunStepInput,
+  LlmUsageEvent,
+  ModelAccessMode,
+  ModelHubOverview,
+  Organization,
+  OrganizationMember,
+  UsageCostAggregateRow,
+  OrganizationMembershipView,
+  OrganizationModelSettings,
+  ProviderCredentialMetadata,
+  ProviderSlug,
+  PublishDnaInput,
+  RankedRetrievalSegment,
+  SemanticRetrievalSegment,
+  KnowledgeIndexingState,
+  SaveDnaDraftInput,
+  SaveProviderCredentialInput,
+  UpdateEmployeeInput,
+  UpdateEmployeeModelSettingsInput,
+  UpdateKnowledgeSourceInput,
+  UpdateOrganizationModelSettingsInput,
+  User,
+} from "@/lib/db/types";
+import type { AiModel, ModelProvider } from "@/modules/model-gateway/types";
+import type { Role } from "@/modules/organizations/roles";
+import { InMemoryStore } from "@/lib/db/in-memory-store";
+import { PostgresStore } from "@/lib/db/postgres-store";
+
+export interface DataStore {
+  // Users
+  getUserById(id: string): Promise<User | null>;
+  getUserByEmail(email: string): Promise<User | null>;
+  getUserBySupabaseAuthId(supabaseAuthUserId: string): Promise<User | null>;
+  createUser(input: CreateUserInput): Promise<User>;
+  /** Link an existing Taurus user to a Supabase Auth identity. */
+  linkUserToSupabaseAuth(userId: string, supabaseAuthUserId: string): Promise<User>;
+
+  // Organizations + memberships
+  getOrganizationById(id: string): Promise<Organization | null>;
+  getOrganizationBySlug(slug: string): Promise<Organization | null>;
+  listOrganizationsForUser(userId: string): Promise<OrganizationMembershipView[]>;
+  getMembership(organizationId: string, userId: string): Promise<OrganizationMember | null>;
+
+  /**
+   * Atomically create an organization and its owner membership. Returns both.
+   * Implementations must ensure the owner membership is created for the org.
+   */
+  createOrganizationWithOwner(input: {
+    organization: CreateOrganizationInput;
+    ownerUserId: string;
+    ownerRole?: Role;
+  }): Promise<OrganizationMembershipView>;
+
+  /** Change an organization's model access mode (managed | byok). Owner/admin only (enforced above the store). */
+  updateOrganizationModelAccessMode(
+    organizationId: string,
+    mode: ModelAccessMode,
+  ): Promise<Organization>;
+
+  // AI Employees (Prompt 003) — all reads/writes are organization-scoped.
+  createEmployee(input: CreateEmployeeInput): Promise<AiEmployee>;
+  listEmployees(organizationId: string): Promise<AiEmployee[]>;
+  getEmployee(organizationId: string, employeeId: string): Promise<AiEmployee | null>;
+  updateEmployee(
+    organizationId: string,
+    employeeId: string,
+    patch: UpdateEmployeeInput,
+  ): Promise<AiEmployee | null>;
+
+  /** Tenant-isolation seam: which organization owns this employee (or null). */
+  getEmployeeOrganizationId(employeeId: string): Promise<string | null>;
+
+  // Employee DNA (Prompt 005) — all reads/writes are organization-scoped.
+  getEmployeeDnaOverview(organizationId: string, employeeId: string): Promise<EmployeeDnaOverview>;
+  getDraftEmployeeDna(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeDnaVersion | null>;
+  getPublishedEmployeeDna(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeDnaVersion | null>;
+  listEmployeeDnaVersions(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeDnaVersion[]>;
+  /** Upsert the single draft: updates it if present, else creates the next version. */
+  saveEmployeeDnaDraft(input: SaveDnaDraftInput): Promise<EmployeeDnaVersion>;
+  /** Promote the current draft to published, archiving any previously published. */
+  publishEmployeeDna(input: PublishDnaInput): Promise<EmployeeDnaVersion>;
+  archiveEmployeeDnaVersion(input: ArchiveDnaVersionInput): Promise<EmployeeDnaVersion | null>;
+
+  // Knowledge Vaults (Sprint 028) — collections of sources, organization-scoped.
+  createKnowledgeVault(input: CreateKnowledgeVaultInput): Promise<KnowledgeVault>;
+  listKnowledgeVaults(organizationId: string): Promise<KnowledgeVault[]>;
+  getKnowledgeVault(organizationId: string, vaultId: string): Promise<KnowledgeVault | null>;
+  getDefaultKnowledgeVault(organizationId: string): Promise<KnowledgeVault | null>;
+  updateKnowledgeVault(
+    organizationId: string,
+    vaultId: string,
+    patch: UpdateKnowledgeVaultInput,
+  ): Promise<KnowledgeVault | null>;
+  deleteKnowledgeVault(organizationId: string, vaultId: string): Promise<boolean>;
+  listKnowledgeVaultSummaries(organizationId: string): Promise<KnowledgeVaultSummary[]>;
+
+  // Vault → employee assignment (Sprint 029).
+  assignVaultToEmployee(input: AssignVaultInput): Promise<EmployeeVaultAssignment>;
+  unassignVaultFromEmployee(
+    organizationId: string,
+    employeeId: string,
+    vaultId: string,
+  ): Promise<boolean>;
+  listVaultsForEmployee(organizationId: string, employeeId: string): Promise<KnowledgeVault[]>;
+  listEmployeesForVault(organizationId: string, vaultId: string): Promise<AiEmployee[]>;
+
+  // Knowledge Vault (Prompt 006) — all reads/writes are organization-scoped.
+  createKnowledgeSource(input: CreateKnowledgeSourceInput): Promise<KnowledgeSource>;
+  listKnowledgeSources(organizationId: string): Promise<KnowledgeSource[]>;
+  getKnowledgeSource(organizationId: string, sourceId: string): Promise<KnowledgeSource | null>;
+  updateKnowledgeSource(
+    organizationId: string,
+    sourceId: string,
+    patch: UpdateKnowledgeSourceInput,
+  ): Promise<KnowledgeSource | null>;
+  archiveKnowledgeSource(organizationId: string, sourceId: string): Promise<KnowledgeSource | null>;
+
+  createKnowledgeDocument(input: CreateKnowledgeDocumentInput): Promise<KnowledgeDocument>;
+  listKnowledgeDocumentsForSource(
+    organizationId: string,
+    sourceId: string,
+  ): Promise<KnowledgeDocument[]>;
+  getKnowledgeDocument(
+    organizationId: string,
+    documentId: string,
+  ): Promise<KnowledgeDocument | null>;
+  /** Remove all documents for a source (used when re-syncing a connector). */
+  deleteKnowledgeDocumentsForSource(organizationId: string, sourceId: string): Promise<number>;
+
+  assignKnowledgeSourceToEmployee(
+    input: AssignKnowledgeInput,
+  ): Promise<EmployeeKnowledgeAssignment>;
+  unassignKnowledgeSourceFromEmployee(
+    organizationId: string,
+    employeeId: string,
+    knowledgeSourceId: string,
+  ): Promise<boolean>;
+  listKnowledgeSourcesForEmployee(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<KnowledgeSource[]>;
+  listEmployeesForKnowledgeSource(
+    organizationId: string,
+    knowledgeSourceId: string,
+  ): Promise<AiEmployee[]>;
+  countAssignedKnowledgeForEmployee(organizationId: string, employeeId: string): Promise<number>;
+
+  getKnowledgeVaultOverview(organizationId: string): Promise<KnowledgeVaultOverview>;
+
+  // Inter-company marketplace (Sprint 030). Listings are self-contained
+  // snapshots; the "published" reads are intentionally cross-organization.
+  createMarketplaceListing(input: CreateMarketplaceListingInput): Promise<MarketplaceListing>;
+  getMarketplaceListing(listingId: string): Promise<MarketplaceListing | null>;
+  getMarketplaceListingByPublicKey(publicKey: string): Promise<MarketplaceListing | null>;
+  getMarketplaceListingForEmployee(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<MarketplaceListing | null>;
+  updateMarketplaceListing(
+    listingId: string,
+    patch: UpdateMarketplaceListingInput,
+  ): Promise<MarketplaceListing | null>;
+  /** All published listings across every organization (the public directory). */
+  listPublishedMarketplaceListings(): Promise<MarketplaceListing[]>;
+  listMarketplaceListingsForOrg(organizationId: string): Promise<MarketplaceListing[]>;
+
+  createMarketplaceHire(input: CreateMarketplaceHireInput): Promise<MarketplaceHire>;
+  getMarketplaceHire(hireId: string): Promise<MarketplaceHire | null>;
+  /** Incoming hire requests for listings this org owns (seller inbox). */
+  listMarketplaceHiresForListingOrg(organizationId: string): Promise<MarketplaceHire[]>;
+  /** Hire requests this org has made (buyer view). */
+  listMarketplaceHiresForHirerOrg(organizationId: string): Promise<MarketplaceHire[]>;
+  updateMarketplaceHire(
+    hireId: string,
+    patch: UpdateMarketplaceHireInput,
+  ): Promise<MarketplaceHire | null>;
+
+  // Marketplace reviews (Sprint 032).
+  upsertMarketplaceReview(input: UpsertMarketplaceReviewInput): Promise<MarketplaceReview>;
+  getMarketplaceReviewForReviewer(
+    listingId: string,
+    reviewerOrganizationId: string,
+  ): Promise<MarketplaceReview | null>;
+  listMarketplaceReviews(listingId: string): Promise<MarketplaceReview[]>;
+  /** True if the org has an approved hire for the listing (gates reviewing). */
+  hasApprovedMarketplaceHire(listingId: string, hirerOrganizationId: string): Promise<boolean>;
+
+  // Marketplace paid lease / revenue-share (Sprint 034).
+  createMarketplacePayment(input: CreateMarketplacePaymentInput): Promise<MarketplacePayment>;
+  getMarketplacePayment(paymentId: string): Promise<MarketplacePayment | null>;
+  getMarketplacePaymentByReference(reference: string): Promise<MarketplacePayment | null>;
+  getMarketplacePaymentByExternalId(
+    provider: MarketplacePaymentProviderId,
+    externalPaymentId: string,
+  ): Promise<MarketplacePayment | null>;
+  updateMarketplacePayment(
+    paymentId: string,
+    patch: UpdateMarketplacePaymentInput,
+  ): Promise<MarketplacePayment | null>;
+  /** Payments made BY this org (buyer purchases). */
+  listMarketplacePaymentsForBuyer(organizationId: string): Promise<MarketplacePayment[]>;
+  /** Payments received for this org's listings (seller earnings). */
+  listMarketplacePaymentsForSeller(organizationId: string): Promise<MarketplacePayment[]>;
+
+  // Marketplace seller payouts (Sprint 035).
+  getMarketplacePayoutAccount(organizationId: string): Promise<MarketplacePayoutAccount | null>;
+  getMarketplacePayoutAccountByExternalId(
+    externalAccountId: string,
+  ): Promise<MarketplacePayoutAccount | null>;
+  upsertMarketplacePayoutAccount(
+    input: UpsertMarketplacePayoutAccountInput,
+  ): Promise<MarketplacePayoutAccount>;
+  updateMarketplacePayoutAccount(
+    organizationId: string,
+    patch: UpdateMarketplacePayoutAccountInput,
+  ): Promise<MarketplacePayoutAccount | null>;
+
+  createMarketplacePayout(input: CreateMarketplacePayoutInput): Promise<MarketplacePayout>;
+  getMarketplacePayout(payoutId: string): Promise<MarketplacePayout | null>;
+  getMarketplacePayoutByReference(reference: string): Promise<MarketplacePayout | null>;
+  getMarketplacePayoutByExternalTransferId(
+    provider: MarketplacePaymentProviderId,
+    externalTransferId: string,
+  ): Promise<MarketplacePayout | null>;
+  updateMarketplacePayout(
+    payoutId: string,
+    patch: UpdateMarketplacePayoutInput,
+  ): Promise<MarketplacePayout | null>;
+  listMarketplacePayoutsForOrg(organizationId: string): Promise<MarketplacePayout[]>;
+
+  // Workflows (Sprint 048).
+  createWorkflow(input: CreateWorkflowInput): Promise<Workflow>;
+  getWorkflow(organizationId: string, workflowId: string): Promise<Workflow | null>;
+  listWorkflows(organizationId: string): Promise<Workflow[]>;
+  updateWorkflow(
+    organizationId: string,
+    workflowId: string,
+    patch: UpdateWorkflowInput,
+  ): Promise<Workflow | null>;
+  deleteWorkflow(organizationId: string, workflowId: string): Promise<boolean>;
+  /** Look up a workflow by its webhook trigger token (not org-scoped — the token is the secret). */
+  getWorkflowByWebhookToken(token: string): Promise<Workflow | null>;
+  /** Active schedule-triggered workflows whose next run is due (cross-org; for the tick). */
+  listDueScheduledWorkflows(nowIso: string): Promise<Workflow[]>;
+  /** The active workflow bound to a channel's inbound messages, if any. */
+  getActiveChannelWorkflow(organizationId: string, channelId: string): Promise<Workflow | null>;
+
+  createWorkflowRun(input: CreateWorkflowRunInput): Promise<WorkflowRun>;
+  getWorkflowRun(organizationId: string, runId: string): Promise<WorkflowRun | null>;
+  listWorkflowRunsForWorkflow(
+    organizationId: string,
+    workflowId: string,
+    limit?: number,
+  ): Promise<WorkflowRun[]>;
+  updateWorkflowRun(runId: string, patch: UpdateWorkflowRunInput): Promise<WorkflowRun | null>;
+
+  createWorkflowRunStep(input: CreateWorkflowRunStepInput): Promise<WorkflowRunStep>;
+  listWorkflowRunSteps(organizationId: string, runId: string): Promise<WorkflowRunStep[]>;
+
+  // Model Hub + LLM Gateway (Prompt 006B).
+  // Catalog (code-authoritative; not organization-scoped).
+  listModelProviders(): Promise<ModelProvider[]>;
+  listAiModels(): Promise<AiModel[]>;
+  getAiModel(modelId: string): Promise<AiModel | null>;
+  getModelsByProvider(providerSlug: ProviderSlug): Promise<AiModel[]>;
+
+  // Organization + employee model settings — organization-scoped.
+  getOrganizationModelSettings(organizationId: string): Promise<OrganizationModelSettings>;
+  updateOrganizationModelSettings(
+    organizationId: string,
+    patch: UpdateOrganizationModelSettingsInput,
+  ): Promise<OrganizationModelSettings>;
+  getEmployeeModelSettings(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeModelSettings | null>;
+  updateEmployeeModelSettings(
+    organizationId: string,
+    employeeId: string,
+    patch: UpdateEmployeeModelSettingsInput,
+  ): Promise<EmployeeModelSettings>;
+
+  // Provider credentials — metadata never includes the encrypted/plaintext key.
+  getProviderCredentialMetadata(
+    organizationId: string,
+    providerSlug: ProviderSlug,
+  ): Promise<ProviderCredentialMetadata | null>;
+  listProviderCredentialMetadata(organizationId: string): Promise<ProviderCredentialMetadata[]>;
+  /** Server-only: the encrypted key for the gateway to decrypt. Never client-facing. */
+  getProviderEncryptedKey(
+    organizationId: string,
+    providerSlug: ProviderSlug,
+  ): Promise<string | null>;
+  saveProviderCredential(input: SaveProviderCredentialInput): Promise<ProviderCredentialMetadata>;
+  disableProviderCredential(
+    organizationId: string,
+    providerSlug: ProviderSlug,
+    userId?: string | null,
+  ): Promise<ProviderCredentialMetadata | null>;
+
+  // Usage events — metadata only (never message contents).
+  listLlmUsageEvents(organizationId: string, limit?: number): Promise<LlmUsageEvent[]>;
+  createLlmUsageEvent(input: CreateLlmUsageEventInput): Promise<LlmUsageEvent>;
+  /** Billable AI Employee interactions handled by one employee (all-time). */
+  countInteractionsForEmployee(organizationId: string, employeeId: string): Promise<number>;
+
+  // Usage & cost aggregates (Sprint 016).
+  /** Billable usage events for an organization since a timestamp (tenant-scoped). */
+  listBillableUsageEventsSince(
+    organizationId: string,
+    sinceIso: string,
+  ): Promise<LlmUsageEvent[]>;
+  /**
+   * Cross-tenant per-organization usage-cost aggregate since a timestamp.
+   * OPERATOR-ONLY: not organization-scoped — only ever called behind the
+   * platform-operator gate, never from a customer route.
+   */
+  aggregateUsageCostsSince(sinceIso: string): Promise<UsageCostAggregateRow[]>;
+  /** Every organization's subscription (OPERATOR-ONLY, cross-tenant) — for margin revenue. */
+  listAllBillingSubscriptions(): Promise<BillingSubscription[]>;
+
+  getModelHubOverview(organizationId: string): Promise<ModelHubOverview>;
+
+  // Employee Chat Runtime (Prompt 007) — all reads/writes organization-scoped.
+  createEmployeeChatThread(input: CreateEmployeeChatThreadInput): Promise<EmployeeChatThread>;
+  listEmployeeChatThreads(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeChatThread[]>;
+  getEmployeeChatThread(
+    organizationId: string,
+    threadId: string,
+  ): Promise<EmployeeChatThread | null>;
+  getLatestEmployeeChatThreadForEmployee(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeChatThread | null>;
+  archiveEmployeeChatThread(
+    organizationId: string,
+    threadId: string,
+  ): Promise<EmployeeChatThread | null>;
+
+  createEmployeeChatMessage(input: CreateEmployeeChatMessageInput): Promise<EmployeeChatMessage>;
+  listEmployeeChatMessages(
+    organizationId: string,
+    threadId: string,
+  ): Promise<EmployeeChatMessage[]>;
+
+  // Knowledge retrieval segments (internal excerpt store — never "chunks" in UI).
+  createKnowledgeRetrievalSegments(
+    inputs: CreateKnowledgeRetrievalSegmentInput[],
+  ): Promise<KnowledgeRetrievalSegment[]>;
+  listKnowledgeRetrievalSegmentsForSource(
+    organizationId: string,
+    knowledgeSourceId: string,
+  ): Promise<KnowledgeRetrievalSegment[]>;
+  listKnowledgeRetrievalSegmentsForEmployee(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<KnowledgeRetrievalSegment[]>;
+  searchKnowledgeRetrievalSegments(
+    organizationId: string,
+    employeeId: string,
+    query: string,
+    limit?: number,
+  ): Promise<RankedRetrievalSegment[]>;
+  /** Semantic (vector) search over an employee's assigned segments (Sprint 019). */
+  semanticSearchKnowledgeRetrievalSegments(
+    organizationId: string,
+    employeeId: string,
+    queryVector: number[],
+    limit?: number,
+  ): Promise<SemanticRetrievalSegment[]>;
+  deleteKnowledgeRetrievalSegmentsForSource(
+    organizationId: string,
+    knowledgeSourceId: string,
+  ): Promise<number>;
+  /** Set a source's indexing state (Sprint 019). */
+  updateKnowledgeSourceIndexingState(
+    organizationId: string,
+    sourceId: string,
+    state: KnowledgeIndexingState,
+  ): Promise<void>;
+
+  createEmployeeChatRetrievalEvent(
+    input: CreateEmployeeChatRetrievalEventInput,
+  ): Promise<EmployeeChatRetrievalEvent>;
+
+  // Channels (Prompt 008). Dashboard reads/writes are organization-scoped; public
+  // reads resolve the organization from the channel public key (never the client).
+  createEmployeeChannel(input: CreateEmployeeChannelInput): Promise<EmployeeChannel>;
+  listEmployeeChannelsForEmployee(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<EmployeeChannel[]>;
+  /** All channels across every employee in the organization (Connections page). */
+  listEmployeeChannelsForOrganization(organizationId: string): Promise<EmployeeChannel[]>;
+  getEmployeeChannel(organizationId: string, channelId: string): Promise<EmployeeChannel | null>;
+  /** Public resolver — not organization-scoped; returns the owning organization. */
+  getEmployeeChannelByPublicKey(publicKey: string): Promise<EmployeeChannel | null>;
+  /** Resolve a Slack channel by its workspace team id (inbound event routing). */
+  getEmployeeChannelBySlackTeam(teamId: string): Promise<EmployeeChannel | null>;
+  /** Resolve a Teams channel by its workspace tenant id (inbound event routing). */
+  getEmployeeChannelByTeamsTenant(tenantId: string): Promise<EmployeeChannel | null>;
+  updateEmployeeChannel(
+    organizationId: string,
+    channelId: string,
+    patch: UpdateEmployeeChannelInput,
+  ): Promise<EmployeeChannel | null>;
+  activateEmployeeChannel(
+    organizationId: string,
+    channelId: string,
+  ): Promise<EmployeeChannel | null>;
+  pauseEmployeeChannel(organizationId: string, channelId: string): Promise<EmployeeChannel | null>;
+  archiveEmployeeChannel(
+    organizationId: string,
+    channelId: string,
+  ): Promise<EmployeeChannel | null>;
+
+  createPublicChatSession(input: CreatePublicChatSessionInput): Promise<PublicChatSession>;
+  /** Public: resolve a session within a channel (no organization from client). */
+  getPublicChatSession(channelId: string, sessionId: string): Promise<PublicChatSession | null>;
+  getOrCreatePublicChatSession(
+    input: GetOrCreatePublicChatSessionInput,
+  ): Promise<PublicChatSession>;
+
+  createPublicChannelEvent(input: CreatePublicChannelEventInput): Promise<PublicChannelEvent>;
+  listPublicChannelEventsForEmployee(
+    organizationId: string,
+    employeeId: string,
+    limit?: number,
+  ): Promise<PublicChannelEvent[]>;
+
+  getChannelOverview(organizationId: string, employeeId: string): Promise<ChannelOverview>;
+
+  // Messaging Channels (Prompt 009). Organization-scoped; credentials store only
+  // encrypted blobs and metadata never includes the encrypted/plaintext secret.
+  createChannelProviderCredential(
+    input: CreateChannelProviderCredentialInput,
+  ): Promise<ChannelProviderCredentialMetadata>;
+  getChannelProviderCredentialMetadata(
+    organizationId: string,
+    providerType: ChannelProviderType,
+  ): Promise<ChannelProviderCredentialMetadata | null>;
+  listChannelProviderCredentials(
+    organizationId: string,
+  ): Promise<ChannelProviderCredentialMetadata[]>;
+  /** Server-only: the encrypted blob for adapters to decrypt. Never client-facing. */
+  getChannelProviderEncryptedCredentials(
+    organizationId: string,
+    providerType: ChannelProviderType,
+  ): Promise<string | null>;
+  disableChannelProviderCredential(
+    organizationId: string,
+    providerType: ChannelProviderType,
+    userId?: string | null,
+  ): Promise<ChannelProviderCredentialMetadata | null>;
+
+  createChannelWebhookEvent(input: CreateChannelWebhookEventInput): Promise<ChannelWebhookEvent>;
+  updateChannelWebhookEventStatus(
+    id: string,
+    input: UpdateChannelWebhookEventStatusInput,
+  ): Promise<ChannelWebhookEvent | null>;
+  listChannelWebhookEventsForChannel(
+    organizationId: string,
+    channelId: string,
+    limit?: number,
+  ): Promise<ChannelWebhookEvent[]>;
+
+  createMessagingTemplate(input: CreateMessagingTemplateInput): Promise<MessagingTemplate>;
+  listMessagingTemplates(
+    organizationId: string,
+    channelId?: string | null,
+  ): Promise<MessagingTemplate[]>;
+  updateMessagingTemplateStatus(
+    organizationId: string,
+    templateId: string,
+    status: MessagingTemplateStatus,
+  ): Promise<MessagingTemplate | null>;
+
+  getMessagingContactPreference(
+    organizationId: string,
+    channelId: string,
+    normalizedContactHash: string,
+  ): Promise<MessagingContactPreference | null>;
+  upsertMessagingContactPreference(
+    input: UpsertMessagingContactPreferenceInput,
+  ): Promise<MessagingContactPreference>;
+  blockMessagingContact(
+    organizationId: string,
+    channelId: string,
+    normalizedContactHash: string,
+    userId?: string | null,
+  ): Promise<MessagingContactPreference | null>;
+
+  getMessagingChannelOverview(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<MessagingChannelOverview>;
+
+  // Voice Call Channel (Prompt 010). Organization-scoped; public webhooks resolve
+  // via the channel public key. Caller numbers are hashed; no raw audio is stored.
+  createVoicePhoneNumber(input: CreateVoicePhoneNumberInput): Promise<VoicePhoneNumber>;
+  listVoicePhoneNumbersForChannel(
+    organizationId: string,
+    channelId: string,
+  ): Promise<VoicePhoneNumber[]>;
+  getVoicePhoneNumber(
+    organizationId: string,
+    phoneNumberId: string,
+  ): Promise<VoicePhoneNumber | null>;
+  updateVoicePhoneNumber(
+    organizationId: string,
+    phoneNumberId: string,
+    patch: UpdateVoicePhoneNumberInput,
+  ): Promise<VoicePhoneNumber | null>;
+  archiveVoicePhoneNumber(
+    organizationId: string,
+    phoneNumberId: string,
+  ): Promise<VoicePhoneNumber | null>;
+
+  createVoiceCallSession(input: CreateVoiceCallSessionInput): Promise<VoiceCallSession>;
+  getVoiceCallSession(
+    organizationId: string,
+    callSessionId: string,
+  ): Promise<VoiceCallSession | null>;
+  /** Public resolver by provider + external id (never client-supplied org). */
+  getVoiceCallSessionByExternalId(
+    providerType: ChannelProviderType,
+    externalCallId: string,
+  ): Promise<VoiceCallSession | null>;
+  updateVoiceCallSessionStatus(
+    organizationId: string,
+    callSessionId: string,
+    patch: UpdateVoiceCallSessionStatusInput,
+  ): Promise<VoiceCallSession | null>;
+  endVoiceCallSession(
+    organizationId: string,
+    callSessionId: string,
+    endReason: string,
+  ): Promise<VoiceCallSession | null>;
+
+  createVoiceTranscriptMessage(
+    input: CreateVoiceTranscriptMessageInput,
+  ): Promise<VoiceTranscriptMessage>;
+  listVoiceTranscriptMessages(
+    organizationId: string,
+    callSessionId: string,
+  ): Promise<VoiceTranscriptMessage[]>;
+
+  createVoiceStreamEvent(input: CreateVoiceStreamEventInput): Promise<VoiceStreamEvent>;
+  listVoiceStreamEventsForCall(
+    organizationId: string,
+    callSessionId: string,
+    limit?: number,
+  ): Promise<VoiceStreamEvent[]>;
+
+  getVoiceChannelOverview(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<VoiceChannelOverview>;
+
+  // Billing, Plans & Subscriptions (Sprint 015) — organization-scoped. Exactly
+  // one active subscription per organization; a Starter subscription is created
+  // implicitly when the organization is created.
+  getBillingSubscription(organizationId: string): Promise<BillingSubscription | null>;
+  createBillingSubscription(input: CreateBillingSubscriptionInput): Promise<BillingSubscription>;
+  updateBillingSubscription(
+    organizationId: string,
+    patch: UpdateBillingSubscriptionInput,
+  ): Promise<BillingSubscription | null>;
+
+  getBillingCustomer(organizationId: string): Promise<BillingCustomer | null>;
+  /** Resolve the organization from a stored external customer id (webhook path). */
+  getBillingCustomerByExternalId(externalCustomerId: string): Promise<BillingCustomer | null>;
+  /** Resolve the organization from a stored external subscription id (webhook path). */
+  getBillingSubscriptionByExternalId(
+    externalSubscriptionId: string,
+  ): Promise<BillingSubscription | null>;
+  upsertBillingCustomer(input: UpsertBillingCustomerInput): Promise<BillingCustomer>;
+
+  createBillingEvent(input: CreateBillingEventInput): Promise<BillingEvent>;
+  listBillingEvents(organizationId: string, limit?: number): Promise<BillingEvent[]>;
+
+  // Metered overage (Sprint 017) — organization-scoped ledger.
+  createBillingOverageItem(input: CreateBillingOverageItemInput): Promise<BillingOverageItem>;
+  /** Overage lines for an organization in a subscription period. */
+  listBillingOverageItems(
+    organizationId: string,
+    periodStart: string,
+  ): Promise<BillingOverageItem[]>;
+  /** Advance the status of an org's overage lines in a period (report / charge reconcile). */
+  markBillingOverageItemsStatus(
+    organizationId: string,
+    periodStart: string,
+    fromStatus: OverageItemStatus,
+    toStatus: OverageItemStatus,
+    externalUsageRecordId: string | null,
+  ): Promise<number>;
+  /** Cross-tenant per-org overage aggregate since a timestamp. OPERATOR-ONLY. */
+  aggregateOverageSince(sinceIso: string): Promise<OverageAggregateRow[]>;
+
+  /** Count billable AI Employee interactions since a timestamp (derived quota). */
+  countBillableInteractionsSince(organizationId: string, sinceIso: string): Promise<number>;
+
+  // Audit — organization-scoped. Events are written at mutation sites; this is
+  // the read path for the Audit dashboard (metadata only, most recent first).
+  createAuditEvent(input: AuditEventInput): Promise<AuditEvent>;
+  listAuditEvents(organizationId: string, limit?: number): Promise<AuditEvent[]>;
+  /** Recent audit events involving one employee (as target or via metadata.employeeId). */
+  listAuditEventsForEmployee(
+    organizationId: string,
+    employeeId: string,
+    limit?: number,
+  ): Promise<AuditEvent[]>;
+
+  // Onboarding (Sprint 020) — organization-scoped first-run activation state.
+  // Step completion is DERIVED from real data; this only persists dismissal and
+  // the one-time completion milestone.
+  getOnboardingProgress(organizationId: string): Promise<OrganizationOnboardingProgress | null>;
+  /** Dismiss (or resume) the activation checklist for an organization. */
+  setOnboardingDismissed(
+    organizationId: string,
+    dismissed: boolean,
+    userId: string,
+  ): Promise<OrganizationOnboardingProgress>;
+  /** Record the completion milestone once (idempotent — keeps the first timestamp). */
+  markOnboardingCompleted(
+    organizationId: string,
+    userId: string,
+  ): Promise<OrganizationOnboardingProgress>;
+
+  // Performance Review (Sprint 018) — organization-scoped. A child (criterion /
+  // case / run / result) can never reference another org's parent.
+  createScorecard(input: CreateScorecardInput): Promise<Scorecard>;
+  getScorecard(organizationId: string, scorecardId: string): Promise<Scorecard | null>;
+  listScorecards(organizationId: string): Promise<Scorecard[]>;
+  /** A scorecard with its criteria + cases, or null if not in this org. */
+  getScorecardDetail(organizationId: string, scorecardId: string): Promise<ScorecardDetail | null>;
+  createCriterion(input: CreateCriterionInput): Promise<Criterion>;
+  createReviewCase(input: CreateReviewCaseInput): Promise<ReviewCase>;
+  createReviewRun(input: CreateReviewRunInput): Promise<ReviewRun>;
+  updateReviewRun(
+    organizationId: string,
+    runId: string,
+    patch: UpdateReviewRunInput,
+  ): Promise<ReviewRun | null>;
+  getReviewRun(organizationId: string, runId: string): Promise<ReviewRun | null>;
+  listReviewRuns(organizationId: string, filter: ReviewRunFilter): Promise<ReviewRun[]>;
+  createReviewResult(input: CreateReviewResultInput): Promise<ReviewResult>;
+  listReviewResults(organizationId: string, runId: string): Promise<ReviewResult[]>;
+  /** Completed-run trend for one employee (oldest→newest), for the score-over-time chart. */
+  getPerformanceTrend(organizationId: string, employeeId: string): Promise<PerformancePoint[]>;
+}
+
+/**
+ * The store is pinned on globalThis (not a module-level `let`) so it survives
+ * module re-evaluation. In Next.js dev, on-demand route compilation and HMR can
+ * create fresh module instances; a plain module singleton would then hand
+ * different requests different in-memory stores, losing data written by a prior
+ * request (e.g. a user created during sign-up). globalThis guarantees a single
+ * instance across the whole server process.
+ */
+const globalForStore = globalThis as unknown as { __taurusStore?: DataStore };
+
+/**
+ * Returns the process-wide data store, selecting the backend from the
+ * environment. This module is imported only by server code (guards, server
+ * actions), never by client or edge/middleware code, so the pg driver never
+ * reaches the browser or the edge runtime.
+ */
+export function getStore(): DataStore {
+  if (!globalForStore.__taurusStore) {
+    globalForStore.__taurusStore = process.env.DATABASE_URL
+      ? new PostgresStore()
+      : new InMemoryStore();
+  }
+  return globalForStore.__taurusStore;
+}
+
+/** Test helper: reset the cached store between tests. */
+export function __resetStoreForTests(store?: DataStore): void {
+  globalForStore.__taurusStore = store;
+}

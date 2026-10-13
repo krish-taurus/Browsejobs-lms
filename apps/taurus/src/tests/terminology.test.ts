@@ -1,0 +1,89 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync, readdirSync } from "fs";
+import { join, extname } from "path";
+
+/**
+ * Acceptance criterion (Prompt 001): user-facing UI must not use the words
+ * "agent", "prompt", or "knowledge base".
+ *
+ * This test scans the UI source (src/app + src/components), strips comments so
+ * developer notes don't trip it, and fails if any forbidden term survives in
+ * code or visible copy.
+ */
+
+const uiRoot = join(process.cwd(), "src");
+const UI_DIRS = [join(uiRoot, "app"), join(uiRoot, "components")];
+
+const FORBIDDEN: { label: string; pattern: RegExp }[] = [
+  { label: "agent", pattern: /\bagents?\b/i },
+  // Prompt 008: public channels must never call an AI Employee a "bot".
+  { label: "bot", pattern: /\bbots?\b/i },
+  { label: "prompt", pattern: /\bprompts?\b/i },
+  { label: "knowledge base", pattern: /knowledge\s+base/i },
+  // Prompt 006: Knowledge Vault must not leak technical retrieval terms.
+  { label: "embedding", pattern: /\bembeddings?\b/i },
+  { label: "vector", pattern: /\bvectors?\b/i },
+  { label: "chunk", pattern: /\bchunks?\b/i },
+  { label: "RAG", pattern: /\bRAG\b/ },
+  { label: "retriever", pattern: /\bretrievers?\b/i },
+  // Prompt 007: Employee Chat must not leak raw model terminology.
+  { label: "LLM", pattern: /\bLLMs?\b/ },
+  // Prompt 010: Voice Channel must not leak telephony/streaming jargon.
+  { label: "websocket", pattern: /\bweb\s?sockets?\b/i },
+  { label: "TwiML", pattern: /\bTwiML\b/i },
+  { label: "SIP", pattern: /\bSIP\b/ },
+];
+
+function collectFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      // Public API route handlers return JSON, not rendered UI text, and may use
+      // standard technical tokens (e.g. the "user-agent" HTTP header). They are
+      // not user-facing copy, so they are outside the scope of this scan.
+      if (entry.name === "api") continue;
+      out.push(...collectFiles(full));
+    } else if ([".ts", ".tsx"].includes(extname(entry.name))) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+/**
+ * Explicitly approved marketing phrases. Each is removed verbatim (exact match,
+ * case-sensitive) before scanning, so ONLY these exact usages are permitted.
+ * Landing v2: the single allowed "prompt" comparison hook.
+ */
+const ALLOWED_PHRASES = ["Replace prompt engineering with Employee DNA."];
+
+/** Remove block comments and full-line // comments so notes are ignored. */
+function stripComments(source: string): string {
+  const withoutBlocks = source.replace(/\/\*[\s\S]*?\*\//g, " ");
+  return withoutBlocks
+    .split("\n")
+    .filter((line) => !/^\s*\/\//.test(line))
+    .join("\n");
+}
+
+function stripAllowedPhrases(source: string): string {
+  return ALLOWED_PHRASES.reduce((text, phrase) => text.split(phrase).join(" "), source);
+}
+
+describe("Taurus terminology in the user-facing UI", () => {
+  const files = UI_DIRS.flatMap(collectFiles);
+
+  it("finds UI source files to scan", () => {
+    expect(files.length).toBeGreaterThan(0);
+  });
+
+  for (const { label, pattern } of FORBIDDEN) {
+    it(`does not use the word "${label}"`, () => {
+      const offenders = files.filter((file) =>
+        pattern.test(stripAllowedPhrases(stripComments(readFileSync(file, "utf8")))),
+      );
+      expect(offenders, `Forbidden term "${label}" found in: ${offenders.join(", ")}`).toEqual([]);
+    });
+  }
+});
