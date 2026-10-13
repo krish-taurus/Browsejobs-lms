@@ -124,7 +124,9 @@ final class ShortlistReport
             $out .= "\n\n".$awaiting;
         }
 
-        if ($entries->isNotEmpty() && $settings->autoInvite) {
+        if ($entries->isNotEmpty() && $settings->confirmRounds) {
+            $out .= "\n\n📩 Nobody is invited to L1 until you say so — I will ask you next.";
+        } elseif ($entries->isNotEmpty() && $settings->autoInvite) {
             $out .= "\n\n📩 Everyone shortlisted is sent a WhatsApp to pick a slot for their L1 AI interview — automatically.";
         }
 

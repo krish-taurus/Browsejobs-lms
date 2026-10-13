@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { useWorkspace } from "@/components/employer/EmployerShell";
-import { employerApi, type JdDraft, type MemberRow } from "@/lib/employer";
+import { employerApi, type AgentAction, type JdDraft, type MemberRow } from "@/lib/employer";
+import { plainText } from "@/lib/taurus-floor/live";
 import { digitsFromWords, readJdIntent, type JdIntent } from "@/lib/jd-intent";
 import { JobDescription } from "@/components/jobs/JobDescription";
 import { DocumentIcon, MicIcon, PipelineIcon, RobotIcon, SendIcon, UsersIcon } from "@/components/employer/icons";
@@ -19,15 +20,25 @@ import type { TaurusRobotState } from "@/lib/taurus/mount-taurus";
  * per the kit's nav placement. The conversation logic below (understand →
  * draft → revise → post) is carried over from that component largely
  * unchanged — it already talked to the real endpoints; only the presentation
- * and the robot changed. "Find candidates" and "Review my pipeline" are real
- * links to the actual Jobs/Pipeline pages rather than chat answers, because
- * no chat-backed candidate-search or pipeline-summary endpoint exists yet —
- * see the honesty note in IMPLEMENT-TAURUS-AI.md §"Real chat and hiring
- * integration". Drafting a JD is the one capability this page can actually
- * deliver end-to-end, so that's what the composer and quick prompt do.
+ * and the robot changed.
+ *
+ * Agentic hiring: once roles are live, the same composer (typed or spoken)
+ * runs them. An instruction ("send the L1 invites for the Java role") or a
+ * question about the pipeline goes to the hiring agent (/agent/command); an
+ * instruction comes back as a proposal with Go ahead / Not now, and a typed
+ * or spoken "yes" confirms it too. Proposals Taurus makes by itself at
+ * milestones ("send L2 to the 3 who cleared L1?") wait at the top. Jobs
+ * posted here are set to ask before each round.
  */
 
-type Turn = { who: "you" | "ops"; text: string };
+type Turn = { who: "you" | "ops"; text: string; proposal?: AgentAction };
+
+/** Worth sending to the hiring agent rather than reading as a new role. */
+const PIPELINE_TALK =
+  /\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who)\b/i;
+/** A short yes or no while Taurus is waiting for one. */
+const YES_OR_NO =
+  /^\s*(yes|yeah|yep|yup|sure|ok(ay)?|go( ahead)?|proceed|confirm(ed)?|do it|send( it| them)?|haan( ji)?|ji|no|nope|nah|not now|hold( it)?|wait|cancel|stop|later|not yet|skip)\b[\s,.!]*(please|go ahead|taurus)?[\s.!]*$/i;
 type Question = "title" | "experience" | "location" | "openings";
 
 /**
@@ -146,7 +157,7 @@ function isSmallTalk(text: string): boolean {
   const wordCount = candidate.split(/\s+/).filter(Boolean).length;
   return wordCount <= 6 && GREETING_OPENER.test(candidate) && !ROLE_WORDS.test(candidate);
 }
-const CHITCHAT = "I am well, thank you. I do exactly one thing: write a job description and post it. What role are we hiring for?";
+const CHITCHAT = "I am well, thank you. I write and post job descriptions, and once a role is live I run it for you: say \"send the L1 invites\" or \"make an offer to Priya\" and I will set it up for your go-ahead. What role are we hiring for?";
 const ROLE_WORDS =
   /\b(engineer|developer|dev|programmer|coder|designer|analyst|manager|architect|scientist|tester|qa|sdet|intern|trainee|apprentice|lead|head|chief|director|officer|executive|associate|consultant|specialist|administrator|admin|recruiter|accountant|auditor|marketer|marketing|sales|bd[em]|support|agent|writer|editor|content|teacher|trainer|tutor|faculty|professor|nurse|doctor|surgeon|pharmacist|therapist|counsell?or|chef|cook|barista|waiter|driver|technician|mechanic|electrician|plumber|operator|coordinator|strategist|researcher|planner|clerk|receptionist|cashier|guard|security|devops|sre|mlops|fullstack|full ?stack|frontend|front ?end|backend|back ?end|android|ios|intern(ship)?|hr|pm|po|cto|ceo|cfo|coo|vp|president|partner|principal|staff|senior|junior|sr|jr)\b/i;
 const A_QUESTION = /^(how|what|why|who|when|where|which|can|do|does|is|are|will|would|should)\b/i;
@@ -215,6 +226,10 @@ export default function TaurusAiPage() {
   const [posting, setPosting] = useState(false);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Agentic hiring: the proposal the last answer asked about, and milestone proposals waiting.
+  const [agentPending, setAgentPending] = useState<AgentAction | null>(null);
+  const [waiting, setWaiting] = useState<AgentAction[]>([]);
+  const [deciding, setDeciding] = useState<number | null>(null);
 
   const logRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -348,6 +363,67 @@ export default function TaurusAiPage() {
     say("ops", `Hi ${firstName}! Tell me what you're hiring for, and we'll take the next step together.`, true);
     return true;
   }, [greeted, firstName, say]);
+
+  // Milestone proposals waiting for this team's go-ahead (owners and recruiters only).
+  useEffect(() => {
+    let cancelled = false;
+    employerApi
+      .agentActions(workspace.id)
+      .then((res) => {
+        if (!cancelled) setWaiting(res.data.can_act ? res.data.open.filter((a) => a.channel === "milestone") : []);
+      })
+      .catch(() => {
+        /* the page works without them */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [workspace.id]);
+
+  /**
+   * Hand a turn to the hiring agent. False when it is a new role (or could
+   * not be read), so the JD flow below takes it as it always has.
+   */
+  const askAgent = useCallback(
+    async (text: string): Promise<boolean> => {
+      setBusy(true);
+      setRobotState("thinking");
+      try {
+        const { data } = await employerApi.agentCommand(workspace.id, text);
+        if (data.intent === "post_job" || data.intent === "unknown") return false;
+        const proposal = data.intent === "proposed" && data.action ? data.action : undefined;
+        setAgentPending(proposal ?? null);
+        if (data.action && data.intent !== "proposed") setWaiting((w) => w.filter((a) => a.id !== data.action!.id));
+        setTurns((t) => [...t, { who: "ops", text: plainText(data.reply), proposal }]);
+        void speak(plainText(data.reply));
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setBusy(false);
+        setRobotState("idle");
+      }
+    },
+    [workspace.id, speak],
+  );
+
+  const decideAgent = useCallback(
+    async (action: AgentAction, yes: boolean) => {
+      if (deciding !== null) return;
+      setDeciding(action.id);
+      try {
+        const { data } = yes ? await employerApi.confirmAgentAction(workspace.id, action.id) : await employerApi.cancelAgentAction(workspace.id, action.id);
+        say("ops", plainText(data.reply), yes);
+      } catch {
+        say("ops", "That did not go through. Try again in a moment.");
+      } finally {
+        setDeciding(null);
+        setAgentPending((p) => (p?.id === action.id ? null : p));
+        setWaiting((w) => w.filter((a) => a.id !== action.id));
+      }
+    },
+    [workspace.id, deciding, say],
+  );
 
   const understand = useCallback(
     async (text: string): Promise<JdIntent> => {
@@ -760,6 +836,11 @@ export default function TaurusAiPage() {
       say("you", text);
       ensureGreeting();
 
+      // Taurus asked "Shall I go ahead?": a yes or no answers it, whatever else is on screen.
+      if ((agentPending || waiting.length > 0) && YES_OR_NO.test(text)) {
+        if (await askAgent(text)) return;
+      }
+
       if (isSmallTalk(text)) {
         say("ops", asking ? `${CHITCHAT.split(" What role")[0]} ${PROMPTS[asking]}` : CHITCHAT, true);
         return;
@@ -782,6 +863,9 @@ export default function TaurusAiPage() {
         await reviseDraft(text);
         return;
       }
+
+      // An instruction or a question about live roles; a new role falls through to the JD flow.
+      if (asking === null && PIPELINE_TALK.test(text) && (await askAgent(text))) return;
 
       let merged: JdIntent;
       if (asking === null) {
@@ -817,7 +901,7 @@ export default function TaurusAiPage() {
       setAsking(null);
       await draftJd(merged);
     },
-    [busy, posting, asking, intent, doubt, draft, roundSetup, advance, understand, reviseDraft, say, draftJd, ensureGreeting, handleRoundAnswer],
+    [busy, posting, asking, intent, doubt, draft, roundSetup, advance, understand, reviseDraft, say, draftJd, ensureGreeting, handleRoundAnswer, agentPending, waiting.length, askAgent],
   );
 
   const abortRecording = useCallback(() => {
@@ -932,6 +1016,8 @@ export default function TaurusAiPage() {
           locations: intent.locations,
           remote: intent.remote,
           openings: intent.openings ?? 1,
+          // Posted through Taurus: it asks before each interview round goes out.
+          confirm_rounds: true,
         });
         if (publish) {
           // Deliberately not published yet: "Post it live" now means "set
@@ -1069,6 +1155,16 @@ export default function TaurusAiPage() {
           </p>
 
           <div ref={logRef} className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto" aria-live="polite">
+            {waiting.map((action) => (
+              <div key={action.id} className="rounded-2xl border px-4 py-3" style={{ borderColor: "var(--bj-dash-primary)", background: "white" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--bj-dash-primary)" }}>
+                  Waiting for your go-ahead
+                </p>
+                <p className="mt-1 text-sm" style={{ color: "var(--bj-dash-ink)" }}>{plainText(action.summary)}</p>
+                <AgentDecision action={action} busy={deciding === action.id} onDecide={decideAgent} />
+              </div>
+            ))}
+
             {!started && (
               <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: "var(--bj-dash-soft)", color: "var(--bj-dash-ink)" }}>
                 Hi {firstName}! Tell me what you&rsquo;re hiring for, and we&rsquo;ll take the next step together.
@@ -1088,6 +1184,9 @@ export default function TaurusAiPage() {
                 >
                   {turn.text}
                 </p>
+                {turn.proposal && agentPending?.id === turn.proposal.id && (
+                  <AgentDecision action={turn.proposal} busy={deciding === turn.proposal.id} onDecide={decideAgent} />
+                )}
               </div>
             ))}
 
@@ -1162,9 +1261,9 @@ export default function TaurusAiPage() {
                 />
                 <QuickPrompt
                   icon={<PipelineIcon className="size-4" />}
-                  title="Review my pipeline"
-                  description="See where each application stands"
-                  href="/employer/pipeline"
+                  title="Where are we with hiring?"
+                  description="Taurus sums up every role and what needs you"
+                  onClick={() => void run("Where are we with hiring?")}
                 />
                 <QuickPrompt
                   icon={<DocumentIcon className="size-4" />}
@@ -1217,6 +1316,32 @@ export default function TaurusAiPage() {
           <p className="mt-2 text-center text-xs" style={{ color: "var(--bj-dash-muted)" }}>Voice and text, in one conversation.</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Go ahead / Not now under something Taurus proposes. A typed or spoken "yes" does the same. */
+function AgentDecision({ action, busy, onDecide }: { action: AgentAction; busy: boolean; onDecide: (a: AgentAction, yes: boolean) => void }) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => onDecide(action, true)}
+        className="min-h-[40px] rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
+        style={{ background: "var(--bj-dash-primary)" }}
+      >
+        {busy ? "Working…" : "Go ahead"}
+      </button>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => onDecide(action, false)}
+        className="min-h-[40px] rounded-full border px-4 text-sm font-semibold disabled:opacity-50"
+        style={{ borderColor: "var(--bj-dash-border)", color: "var(--bj-dash-ink)" }}
+      >
+        Not now
+      </button>
     </div>
   );
 }

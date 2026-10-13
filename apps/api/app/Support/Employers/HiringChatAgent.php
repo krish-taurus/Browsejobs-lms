@@ -10,12 +10,15 @@ use App\Actions\Employers\PublishEmployerJob;
 use App\Actions\Employers\ReadHiringIntent;
 use App\Actions\Employers\ReceiveEmployerWhatsApp;
 use App\Actions\Employers\ReviseJobDescription;
+use App\Models\EmployerAgentAction;
 use App\Models\EmployerWhatsappCode;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\EmployerWorkspace;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
+use App\Support\Employers\Agent\AgentWords;
+use App\Support\Employers\Agent\HiringAgent;
 use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Str;
@@ -31,6 +34,13 @@ use Throwable;
  *   any change          → revise the draft and send the summary again
  *   YES                 → create + publish the JD (the shortlist agent starts)
  *   CANCEL              → throw the draft away
+ *
+ * And once jobs are live, the same chat runs them (agentic hiring, via
+ * HiringAgent): "send L1 for the Java role", "invite the ones who cleared
+ * L1 to L2", "make an offer to Priya" each become a proposal; YES carries it
+ * out, NO holds it. Taurus also asks first at milestones (ProposeHiringStep)
+ * for jobs posted here, which approve each round. Questions ("how many
+ * cleared L1?") are answered from the hiring floor.
  *
  * Nothing goes live without the client's YES — the agent drafts, the client
  * decides. All replies are free text inside the 24-hour window the client's
@@ -56,6 +66,7 @@ final readonly class HiringChatAgent
         private AuditLogger $audit,
         private VoiceNoteTranscriber $voice,
         private ShortlistReport $reports,
+        private HiringAgent $agent,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -119,6 +130,17 @@ final readonly class HiringChatAgent
             return;
         }
 
+        // Taurus asked something (a milestone, or an instruction from this chat): YES runs it, NO holds it.
+        if ($link->state !== EmployerWhatsappLink::STATE_CONFIRMING) {
+            $pending = $this->agent->pending($workspace, $user, $link);
+            if ($pending !== null && (AgentWords::isYes($text) || AgentWords::isNo($text))) {
+                $answer = AgentWords::isYes($text) ? $this->agent->confirm($pending, $user) : $this->agent->hold($pending, $user);
+                $this->reply($in->phone, $link, $answer->text);
+
+                return;
+            }
+        }
+
         if (in_array($word, self::REPORT, true)) {
             $this->reply($in->phone, $link, $this->reports->latestFor($link));
 
@@ -135,6 +157,16 @@ final readonly class HiringChatAgent
             $this->revise($in->phone, $link, $workspace, $user, $text);
 
             return;
+        }
+
+        // An instruction or a question about the pipeline; a new role falls through to the draft.
+        if (self::looksLikePipelineTalk($text)) {
+            $answer = $this->agent->respond($workspace, $user, $text, EmployerAgentAction::CHANNEL_WHATSAPP, null, $link);
+            if (! in_array($answer->intent, ['post_job', 'unknown'], true)) {
+                $this->reply($in->phone, $link, $answer->text);
+
+                return;
+            }
         }
 
         $this->draft($in->phone, $link, $workspace, $user, $text);
@@ -286,8 +318,12 @@ final readonly class HiringChatAgent
                 'remote' => (bool) ($d['remote'] ?? false),
                 'openings' => max(1, (int) ($d['openings'] ?? 1)),
             ]);
-            // Remember this chat before publishing, so the shortlist report comes back here.
-            $job->update(['whatsapp_link_id' => $link->id]);
+            // Remember this chat before publishing, so the shortlist report comes back here,
+            // and have Taurus ask here before each interview round goes out.
+            $job->update([
+                'whatsapp_link_id' => $link->id,
+                'shortlist_settings' => ['confirm_rounds' => true] + ShortlistSettings::forJob($job)->toArray(),
+            ]);
             $job = $this->publishJob->handle($job, $user);
         } catch (ValidationException $e) {
             $this->reply($phone, $link, 'I could not post it: '.$this->firstError($e));
@@ -303,7 +339,7 @@ final readonly class HiringChatAgent
         $link->update(['state' => EmployerWhatsappLink::STATE_IDLE, 'draft' => null]);
 
         $url = rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}?tab=shortlist";
-        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is searching BrowseJobs students and your own candidate lists now. I will send you the shortlist in this chat in a minute.\n\nFull list and interview invites: {$url}\n\nSend another role any time, or *SHORTLIST* to see the latest shortlist again.");
+        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is searching BrowseJobs students and your own candidate lists now. I will send you the shortlist in this chat in a minute, and ask you before anyone is invited to L1.\n\nFull list: {$url}\n\nSend another role any time, *SHORTLIST* to see the latest shortlist, or just tell me what to do next.");
     }
 
     /** @param  array<string, mixed>  $d */
@@ -328,11 +364,26 @@ final readonly class HiringChatAgent
 
     private function help(EmployerWorkspace $workspace, EmployerWhatsappLink $link): string
     {
-        $pending = $link->state === EmployerWhatsappLink::STATE_CONFIRMING
-            ? "\n\nYou have a draft waiting: reply *YES* to post it or *CANCEL* to discard it."
-            : '';
+        $waiting = $link->user !== null ? $this->agent->pending($workspace, $link->user, $link) : null;
+        $pending = match (true) {
+            $link->state === EmployerWhatsappLink::STATE_CONFIRMING => "\n\nYou have a draft waiting: reply *YES* to post it or *CANCEL* to discard it.",
+            $waiting !== null => "\n\nWaiting for your answer: {$waiting->summary}\nReply *YES* to go ahead or *NO* to hold.",
+            default => '',
+        };
 
-        return "Hi! This chat posts jobs for *{$workspace->name}* on BrowseJobs.\n\n".$this->example()."\n\nSend *SHORTLIST* to see who the shortlist agent found for your latest job.".$pending;
+        return "Hi! This chat runs hiring for *{$workspace->name}* on BrowseJobs.\n\n".$this->example()
+            ."\n\nOnce a job is live, just tell me what to do: _\"send the L1 invites\"_, _\"invite everyone who cleared L1 to L2\"_, _\"make an offer to Priya\"_. I always ask before anything goes out."
+            ."\n\nSend *SHORTLIST* to see who the shortlist agent found for your latest job.".$pending;
+    }
+
+    /**
+     * Worth reading as an instruction or a question rather than a new role.
+     * Anything else goes straight to the JD draft, as it always has; a new
+     * role that trips this still gets there, one model call later.
+     */
+    public static function looksLikePipelineTalk(string $text): bool
+    {
+        return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who)\b/iu', $text) === 1;
     }
 
     private function example(): string

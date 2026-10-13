@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { FloorLook, TaurusFloor } from "@/lib/taurus-floor/floor";
-import { STATUS_LABEL, istTime, type ConsoleChat, type ConsoleSource, type ConsoleState, type FloorEffect } from "@/lib/taurus-floor/types";
+import { STATUS_LABEL, istTime, type ConsoleChat, type ConsoleSource, type ConsoleState, type FloorEffect, type Proposal } from "@/lib/taurus-floor/types";
 import "./taurus-console.css";
 
 export const LOOKS: { key: FloorLook; letter: string; name: string; line: string }[] = [
@@ -56,6 +56,10 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [noGl, setNoGl] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
+  // The answer is a question back ("…Shall I go ahead?"): it stays until answered.
+  const [answerProposal, setAnswerProposal] = useState<Proposal | null>(null);
+  const [deciding, setDeciding] = useState<number | null>(null);
+  const [heldIds, setHeldIds] = useState<Set<number>>(new Set());
   const [voice, setVoice] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
   const [question, setQuestion] = useState("");
   const [clock, setClock] = useState("");
@@ -257,9 +261,11 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       if (!source.ask || !q.trim()) return;
       setVoice("thinking");
       setAnswer(null);
+      setAnswerProposal(null);
       try {
         const res = await source.ask(q.trim());
         setAnswer(res.answer);
+        setAnswerProposal(res.proposal ?? null);
         setVoice("idle");
         void speak(res.answer, res.audio);
       } catch {
@@ -308,10 +314,32 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   };
 
   useEffect(() => {
-    if (!answer) return;
+    if (!answer || answerProposal) return;
     const t = window.setTimeout(() => setAnswer(null), 14000);
     return () => window.clearTimeout(t);
-  }, [answer]);
+  }, [answer, answerProposal]);
+
+  // Yes or not now, by button. A spoken or typed "yes" goes through Ask and lands the same way.
+  const decide = useCallback(
+    async (p: Proposal, yes: boolean) => {
+      if (!source.decide || deciding !== null) return;
+      setDeciding(p.id);
+      try {
+        const result = await source.decide(p.id, yes);
+        setHeldIds((ids) => new Set(ids).add(p.id));
+        if (answerProposal?.id === p.id) {
+          setAnswerProposal(null);
+          setAnswer(result);
+        } else flash(result);
+        if (yes) void speak(result);
+      } catch {
+        flash("That didn't go through. Try again.");
+      } finally {
+        setDeciding(null);
+      }
+    },
+    [source, deciding, answerProposal, flash, speak],
+  );
 
   const feed = useMemo(() => state?.feed ?? [], [state]);
   const freshIds = useMemo(() => {
@@ -326,6 +354,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   }, [feed]);
 
   const lookMeta = LOOKS.find((l) => l.key === look)!;
+  // Milestone proposals, minus the one already on screen as the answer and any just decided.
+  const asks = (state?.proposals ?? []).filter((p) => p.id !== answerProposal?.id && !heldIds.has(p.id));
   const showAsk = ask && !!source.ask && !state?.chat;
 
   return (
@@ -488,7 +518,20 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         <div className="tc-answer tc-panel" role="status">
           <small>TAURUS · {istTime()} IST</small>
           {answer}
+          {answerProposal && source.decide && (
+            <ProposalButtons proposal={answerProposal} busy={deciding === answerProposal.id} onDecide={decide} />
+          )}
         </div>
+      )}
+
+      {asks.length > 0 && source.decide && !answerProposal && (
+        <aside className="tc-propose tc-panel" aria-label="Taurus is asking">
+          <small>
+            TAURUS ASKS{asks.length > 1 ? ` · 1 of ${asks.length}` : ""}
+          </small>
+          <p>{asks[0].summary}</p>
+          <ProposalButtons proposal={asks[0]} busy={deciding === asks[0].id} onDecide={decide} />
+        </aside>
       )}
 
       <nav className="tc-looks tc-panel" aria-label="Visual style">
@@ -515,6 +558,20 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         </div>
       )}
       {error && <div className="tc-error" role="alert">{error}</div>}
+    </div>
+  );
+}
+
+/** Go ahead / Not now under something Taurus proposes. Saying "yes" to Ask Taurus does the same. */
+function ProposalButtons({ proposal, busy, onDecide }: { proposal: Proposal; busy: boolean; onDecide: (p: Proposal, yes: boolean) => void }) {
+  return (
+    <div className="tc-decide">
+      <button type="button" className="tc-btn primary" disabled={busy} onClick={() => onDecide(proposal, true)}>
+        {busy ? "Working…" : "Go ahead"}
+      </button>
+      <button type="button" className="tc-btn" disabled={busy} onClick={() => onDecide(proposal, false)}>
+        Not now
+      </button>
     </div>
   );
 }

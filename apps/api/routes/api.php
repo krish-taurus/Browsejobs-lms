@@ -98,6 +98,7 @@ use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomation
 use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
 use App\Http\Controllers\Employer\CandidateSourceController as EmployerCandidateSourceController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
+use App\Http\Controllers\Employer\HiringAgentController as EmployerHiringAgentController;
 use App\Http\Controllers\Employer\HiringFloorController as EmployerHiringFloorController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
@@ -545,6 +546,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     // The pipeline drawn as the Taurus recruitment floor (ADR 0052).
     Route::get('workspaces/{workspace}/hiring-floor', [EmployerHiringFloorController::class, 'show']);
     Route::post('workspaces/{workspace}/hiring-floor/ask', [EmployerHiringFloorController::class, 'ask'])->middleware('throttle:ai');
+    // Agentic hiring: say what to do, Taurus proposes it, a YES carries it out.
+    Route::post('workspaces/{workspace}/agent/command', [EmployerHiringAgentController::class, 'command'])->middleware('throttle:ai');
+    Route::get('workspaces/{workspace}/agent/actions', [EmployerHiringAgentController::class, 'index']);
+    Route::post('workspaces/{workspace}/agent/actions/{agentAction}/confirm', [EmployerHiringAgentController::class, 'confirm'])->middleware('throttle:30,1');
+    Route::post('workspaces/{workspace}/agent/actions/{agentAction}/cancel', [EmployerHiringAgentController::class, 'cancel'])->middleware('throttle:30,1');
     Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
     Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
     Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);

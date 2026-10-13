@@ -245,14 +245,31 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
           <label className="mt-4 flex cursor-pointer items-start gap-3 text-[13px]">
             <input
               type="checkbox" disabled={!canManage}
-              checked={draft.auto_invite}
+              checked={!!draft.confirm_rounds}
+              onChange={(e) => setDraft({ ...draft, confirm_rounds: e.target.checked })}
+              className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
+            />
+            <span>
+              Ask me before each interview round
+              <span className="block text-[12px] text-[var(--bj-dash-muted)]">
+                Taurus asks on WhatsApp and on the hiring floor (&ldquo;Send L1 invites to these 8?&rdquo;) and sends them when you say yes.
+              </span>
+            </span>
+          </label>
+
+          <label className={`mt-3 flex items-start gap-3 text-[13px] ${draft.confirm_rounds ? "opacity-50" : "cursor-pointer"}`}>
+            <input
+              type="checkbox" disabled={!canManage || !!draft.confirm_rounds}
+              checked={draft.auto_invite && !draft.confirm_rounds}
               onChange={(e) => setDraft({ ...draft, auto_invite: e.target.checked })}
               className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
             />
             <span>
               Send the interview invite automatically
               <span className="block text-[12px] text-[var(--bj-dash-muted)]">
-                Everyone shortlisted gets the WhatsApp to pick a day for L1 straight away.
+                {draft.confirm_rounds
+                  ? "Off while Taurus asks you first."
+                  : "Everyone shortlisted gets the WhatsApp to pick a day for L1 straight away."}
               </span>
             </span>
           </label>
@@ -671,7 +688,11 @@ function MessageAgentCard({
           <Label>Message agent · WhatsApp interview invites</Label>
           <p className="mt-2 text-[13px] leading-relaxed text-[var(--bj-dash-muted)]">
             Everyone on the shortlist gets a WhatsApp offering three slots at {data.settings.interview_time}
-            {data.settings.auto_invite ? " — sent automatically the moment they are shortlisted" : ""}. Their reply books L1
+            {data.settings.confirm_rounds
+              ? " — Taurus asks you first, on WhatsApp and the hiring floor"
+              : data.settings.auto_invite
+                ? " — sent automatically the moment they are shortlisted"
+                : ""}. Their reply books L1
             {agent.zoom
               ? " and creates the Zoom meeting at once; the AI interviewer joins the call at that time, asks its questions out loud, records and scores it."
               : "; that morning they get a link and take a spoken AI interview that is recorded and scored."}{" "}

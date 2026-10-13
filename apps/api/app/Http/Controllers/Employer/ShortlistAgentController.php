@@ -52,7 +52,11 @@ final class ShortlistAgentController extends Controller
         abort_unless($member->role->managesPipeline(), 403);
         abort_unless($job->employer_workspace_id === $workspace->id, 404);
 
-        $settings = ShortlistSettings::fromArray($request->validated());
+        // A form that predates confirm_rounds must not switch it off by omission.
+        $settings = ShortlistSettings::fromArray([
+            'confirm_rounds' => ShortlistSettings::forJob($job)->confirmRounds,
+            ...$request->validated(),
+        ]);
         $job->update(['shortlist_settings' => $settings->toArray()]);
 
         $audit->log('employer.shortlist_settings_updated', $job, $settings->toArray(), $request->user());
