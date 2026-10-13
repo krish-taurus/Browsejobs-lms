@@ -49,7 +49,7 @@ function Guarded({ children }: { children: ReactNode }) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/taurusai/login");
+    if (!loading && !user) router.replace("/taurusai/portal-login");
   }, [loading, user, router]);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ function Guarded({ children }: { children: ReactNode }) {
     }
   };
 
-  const signOut = () => logout().then(() => router.replace("/taurusai/login"));
+  const signOut = () => logout().then(() => router.replace("/taurusai/portal-login"));
 
   if (loading || !user || (!workspaces && !failed)) {
     return (

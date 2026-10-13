@@ -57,6 +57,45 @@ jobs:
         run: composer test
 
   # ---------------------------------------------------------------------------
+  # Taurus AI (apps/taurus, served at /taurusai) — its own lockfile, not a
+  # workspace. Typecheck, lint, unit tests, and a build under the real mount
+  # path (basePath /taurusai), exactly as deploy.sh builds it.
+  # ---------------------------------------------------------------------------
+  taurus:
+    name: Taurus AI (Next.js 14 · Node 20)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/taurus
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/taurus/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build under /taurusai
+        run: npm run build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /taurusai
+          NEXT_PUBLIC_APP_URL: https://browsejobs.ai/taurusai
+
+  # ---------------------------------------------------------------------------
   # Next.js web — typecheck + build + Playwright e2e
   # ---------------------------------------------------------------------------
   web:
