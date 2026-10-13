@@ -7,7 +7,7 @@
  */
 import { apiJson, apiPostBlob, ApiError } from "@/lib/api";
 import type { FloorAgent, FloorStatus, FloorZone } from "./floor";
-import type { ConsoleSource, ConsoleState, FeedItem, FeedStatus, FloorEffect } from "./types";
+import type { ConsoleSource, ConsoleState, FeedItem, FeedStatus, FloorEffect, Proposal } from "./types";
 import { HIRING_STAGES } from "./demo";
 
 /* ------------------------------------------------------------------ workspace agent floor */
@@ -243,9 +243,24 @@ function feedFrom(f: HiringFloor): FeedItem[] {
   });
 }
 
+/** WhatsApp bold (*Data Engineer*) is for the chat; on screen and out loud it is just the words. */
+export const plainText = (text: string) => text.replace(/\*([^*\n]+)\*/g, "$1").replace(/_([^_\n]+)_/g, "$1");
+
+type AgentActionRow = { id: number; summary: string };
+type AgentReplyRow = { intent: string; reply: string; action: AgentActionRow | null };
+
+/**
+ * The employer's hiring floor, live. Ask Taurus goes to the hiring agent
+ * (/agent/command): a question is answered, an instruction ("send the L1
+ * invites") comes back as a proposal to confirm with a button or a spoken
+ * yes. Proposals Taurus makes by itself at milestones arrive with each poll.
+ */
 export function employerFloorSource(workspaceId: number, jobId?: number | null, intervalMs = 15000): ConsoleSource {
   let prev: HiringFloor | null = null;
+  let proposals: Proposal[] = [];
+  let kick: (() => void) | null = null;
   const order = HIRING_STAGES.map((s) => s.key);
+  const base = `/api/v1/employer/workspaces/${workspaceId}`;
 
   const toState = (f: HiringFloor): ConsoleState => {
     const label = (key: string) => f.stages.find((s) => s.key === key)?.label ?? HIRING_STAGES.find((s) => s.key === key)?.label ?? key;
@@ -275,6 +290,7 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
         sub: s.avg_score !== null ? `avg ${Math.round(s.avg_score)}` : s.moved_today ? `+${s.moved_today} today` : undefined,
       })),
       sample: false,
+      proposals,
     };
   };
 
@@ -303,11 +319,25 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
       let stopped = false;
       let timer = 0;
       let failures = 0;
+      // A kick during a poll runs one more right after it, never two side by side.
+      let busy = false;
+      let again = false;
       const poll = async () => {
+        if (busy) {
+          again = true;
+          return;
+        }
+        busy = true;
+        window.clearTimeout(timer);
         try {
           const q = jobId ? `?job_id=${jobId}` : "";
-          const res = await apiJson<{ data: HiringFloor }>(`/api/v1/employer/workspaces/${workspaceId}/hiring-floor${q}`);
+          const [res, open] = await Promise.all([
+            apiJson<{ data: HiringFloor }>(`${base}/hiring-floor${q}`),
+            // Proposals are extra: the floor still draws if this fails.
+            apiJson<{ data: { can_act: boolean; open: AgentActionRow[] } }>(`${base}/agent/actions${q}`).catch(() => null),
+          ]);
           if (stopped) return;
+          if (open) proposals = open.data.can_act ? open.data.open.map((a) => ({ id: a.id, summary: plainText(a.summary) })) : [];
           state(toState(res.data));
           const fx = effectsFor(res.data);
           prev = res.data;
@@ -318,31 +348,51 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
           // One dropped poll isn't worth a banner: it would flash on and off.
           if (!stopped && ++failures >= 2) error("Can't load your hiring floor right now. Retrying…");
         }
-        if (!stopped) timer = window.setTimeout(poll, intervalMs);
+        busy = false;
+        if (stopped) return;
+        if (again) {
+          again = false;
+          void poll();
+          return;
+        }
+        timer = window.setTimeout(poll, intervalMs);
       };
       void poll();
+      // Something was just confirmed or held: show the result now, not at the next tick.
+      kick = () => void poll();
       return () => {
         stopped = true;
+        kick = null;
         window.clearTimeout(timer);
       };
     },
     async ask(question) {
+      const res = await apiJson<{ data: AgentReplyRow }>(`${base}/agent/command`, {
+        method: "POST",
+        body: JSON.stringify(jobId ? { text: question, job_id: jobId } : { text: question }),
+      });
+      const answer = plainText(res.data.reply);
+      if (res.data.intent !== "proposed") kick?.();
+      let audio: Blob | null = null;
       try {
-        const res = await apiJson<{ data: { answer: string } }>(`/api/v1/employer/workspaces/${workspaceId}/hiring-floor/ask`, {
-          method: "POST",
-          body: JSON.stringify(jobId ? { question, job_id: jobId } : { question }),
-        });
-        let audio: Blob | null = null;
-        try {
-          audio = await apiPostBlob(`/api/v1/employer/workspaces/${workspaceId}/speak`, { text: res.data.answer });
-        } catch {
-          audio = null;
-        }
-        return { answer: res.data.answer, audio };
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 503) return { answer: "Taurus isn't connected yet. Please try again later." };
-        throw e;
+        audio = await apiPostBlob(`${base}/speak`, { text: answer });
+      } catch {
+        audio = null;
       }
+      return {
+        answer,
+        audio,
+        proposal: res.data.intent === "proposed" && res.data.action ? { id: res.data.action.id, summary: plainText(res.data.action.summary) } : null,
+      };
+    },
+    async decide(id, yes) {
+      const res = await apiJson<{ data: AgentReplyRow }>(`${base}/agent/actions/${id}/${yes ? "confirm" : "cancel"}`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      proposals = proposals.filter((p) => p.id !== id);
+      kick?.();
+      return plainText(res.data.reply);
     },
   };
 }

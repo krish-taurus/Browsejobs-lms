@@ -15,6 +15,11 @@ import { AiAvatar, type AiAvatarPhase } from "@/components/portal/AiAvatar";
 // once the false-positive rate is understood. Face-presence ("can't see your
 // face") and every non-camera check (tab switch, window blur, paste) are
 // untouched and still fully active.
+//
+// Paused here means "never warns, never closes". In an employer interview
+// (kind "job") these still run as report-only signals: each one is noted
+// with a still for the employer's report as a "possible" flag, so a person
+// judges the photo instead of the model ending someone's interview.
 const PAUSED_PROCTORING_CHECKS = {
   multiFace: true,
   gazeDown: true,
@@ -22,6 +27,13 @@ const PAUSED_PROCTORING_CHECKS = {
 };
 
 type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
+
+/** What the room reports for an employer interview (RecordMockIntegrityEvent). */
+type IntegrityKind = "tab_hidden" | "window_blur" | "paste" | "face_missing" | "multi_face" | "gaze_down" | "gaze_side" | "check_in";
+
+/** Stills kept per interview (the server caps it too), and the gap between two notes of the same kind. */
+const MAX_STILLS = 24;
+const SAME_KIND_GAP_MS = 8000;
 
 type MockSession = {
   id: number;
@@ -249,6 +261,14 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // as the first warning.
   const graceUntilRef = useRef(0);
 
+  // Employer interviews (kind "job") note integrity signals for the employer's
+  // report instead of closing: refs, so the proctoring effects below never
+  // re-subscribe when the session reloads.
+  const hiringRef = useRef(false);
+  const liveSinceRef = useRef(0);
+  const stillsRef = useRef(0);
+  const lastNoteRef = useRef<Partial<Record<IntegrityKind, number>>>({});
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -257,6 +277,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
+  hiringRef.current = session?.kind === "job";
   const question = session ? [...session.turns].reverse().find((t) => t.role === "interviewer") : undefined;
   const answered = session?.turns.filter((t) => t.role === "candidate").length ?? 0;
   const canFinish = session?.status === "in_progress" && answered >= (session?.min_answers ?? 2);
@@ -483,6 +504,47 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     }
   }, [step, question, speak]);
 
+  // A downscaled still from the candidate's own camera tile (the self-view is
+  // mirrored only by CSS, so this is the camera's true orientation).
+  const captureStill = useCallback(async (): Promise<Blob | null> => {
+    const video = videoRef.current;
+    if (video === null || video.readyState < 2 || video.videoWidth === 0) return null;
+    const width = 480;
+    const height = Math.round(video.videoHeight * (width / video.videoWidth));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) return null;
+    ctx.drawImage(video, 0, 0, width, height);
+    return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.7));
+  }, []);
+
+  /**
+   * Note an integrity signal for the employer's report, with a still when
+   * the camera is on. Employer interviews only; fire-and-forget, so a slow
+   * upload never stalls the interview. One note per kind per few seconds.
+   */
+  const noteIntegrity = useCallback((kind: IntegrityKind) => {
+    if (!hiringRef.current) return;
+    const now = Date.now();
+    if (now - (lastNoteRef.current[kind] ?? 0) < SAME_KIND_GAP_MS) return;
+    lastNoteRef.current[kind] = now;
+    void (async () => {
+      const form = new FormData();
+      form.append("kind", kind);
+      if (liveSinceRef.current > 0) form.append("elapsed", String(Math.max(0, Math.round((now - liveSinceRef.current) / 1000))));
+      if (stillsRef.current < MAX_STILLS) {
+        const still = await captureStill();
+        if (still !== null) {
+          stillsRef.current += 1;
+          form.append("image", still, "still.jpg");
+        }
+      }
+      await apiJson(`/api/v1/me/mocks/${id}/integrity`, { method: "POST", body: form }).catch(() => {});
+    })();
+  }, [id, captureStill]);
+
   // Proctoring: hiding the tab, looking away from the camera, or a second
   // person stepping into frame are all the same kind of violation — one
   // warning, then the interview closes. Shared so the tab check below and
@@ -490,9 +552,17 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // skips the one-warning grace period entirely — for a signal serious
   // enough (a suspected always-on-top cheating overlay) that a first-offence
   // warning isn't appropriate.
-  const raiseViolation = useCallback((message: string, opts?: { immediate?: boolean }) => {
+  //
+  // In an employer interview nothing closes: the moment is noted with a still
+  // for the employer's report and the candidate is told it was noted.
+  const raiseViolation = useCallback((kind: IntegrityKind, message: string, opts?: { immediate?: boolean }) => {
     if (closingRef.current) return;
     if (Date.now() < graceUntilRef.current) return;
+    if (hiringRef.current) {
+      noteIntegrity(kind);
+      setWarningText(`${message.split(/\s*[—-]?\s*one more time/i)[0].trim()} This has been noted for the employer.`);
+      return;
+    }
     violationsRef.current += 1;
     if (!opts?.immediate && violationsRef.current === 1) {
       setWarningText(message);
@@ -515,7 +585,24 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     // wait on this. A dropped connection or a slow server response is not a
     // reason to hold the candidate on this screen.
     void apiJson(`/api/v1/me/mocks/${id}/abandon`, { method: "POST" }).catch(() => {});
-  }, [id]);
+  }, [id, noteIntegrity]);
+
+  // A noted moment in an employer interview is a passing notice, not a standing warning.
+  useEffect(() => {
+    if (warningText === null || !hiringRef.current) return;
+    const t = setTimeout(() => setWarningText(null), 6000);
+    return () => clearTimeout(t);
+  }, [warningText]);
+
+  // A few check-in stills at random moments, so the employer can see it was
+  // the same person throughout. Logged even without a camera, which is also
+  // how a report knows the room was watching at all.
+  useEffect(() => {
+    if (step !== "live" || session?.status !== "in_progress" || !hiringRef.current) return;
+    const windows: [number, number][] = [[20, 60], [120, 240], [300, 480]];
+    const timers = windows.map(([from, to]) => setTimeout(() => noteIntegrity("check_in"), (from + Math.random() * (to - from)) * 1000));
+    return () => timers.forEach(clearTimeout);
+  }, [step, session?.status, noteIntegrity]);
 
   // Proctoring: hiding the tab (switching tabs/apps, minimising) is a
   // violation. First offence warns; the second closes the interview — the
@@ -525,7 +612,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     const onVisibility = () => {
       if (!document.hidden || closingRef.current) return;
-      raiseViolation("⚠️ You left the interview tab. One more time and this interview closes — unscored, session spent.");
+      raiseViolation("tab_hidden", "⚠️ You left the interview tab. One more time and this interview closes — unscored, session spent.");
     };
 
     document.addEventListener("visibilitychange", onVisibility);
@@ -554,7 +641,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     const onBlur = () => {
       if (document.hidden || closingRef.current) return;
-      raiseViolation("⚠️ The interview window lost focus. Keep this window active — one more time and this interview closes.");
+      raiseViolation("window_blur", "⚠️ The interview window lost focus. Keep this window active — one more time and this interview closes.");
     };
 
     window.addEventListener("blur", onBlur);
@@ -635,16 +722,17 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               // of what a sustained side-turn looks like to the camera.
               if (missStreak >= 3) {
                 missStreak = 0;
-                raiseViolation("⚠️ We couldn't see your face on camera. Stay facing the screen — one more time and this interview closes.");
+                raiseViolation("face_missing", "⚠️ We couldn't see your face on camera. Stay facing the screen — one more time and this interview closes.");
               }
               return;
             }
 
             missStreak = 0;
-            if (faces > 1 && !PAUSED_PROCTORING_CHECKS.multiFace) {
+            if (faces > 1) {
               gazeDownStreak = 0;
               gazeSideStreak = 0;
-              raiseViolation("⚠️ More than one face is visible. Take this interview alone — one more time and this interview closes.");
+              if (PAUSED_PROCTORING_CHECKS.multiFace) noteIntegrity("multi_face");
+              else raiseViolation("multi_face", "⚠️ More than one face is visible. Take this interview alone — one more time and this interview closes.");
               return;
             }
 
@@ -656,11 +744,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             const categories = result.faceBlendshapes?.[0]?.categories ?? [];
             const score = (name: string) => categories.find((c) => c.categoryName === name)?.score ?? 0;
             const lookingDown = (score("eyeLookDownLeft") + score("eyeLookDownRight")) / 2 > 0.55;
-            if (lookingDown && !PAUSED_PROCTORING_CHECKS.gazeDown) {
+            if (lookingDown) {
               gazeDownStreak += 1;
               if (gazeDownStreak >= 3) {
                 gazeDownStreak = 0;
-                raiseViolation("⚠️ Keep your eyes on the screen — no phones during the interview. One more time and this interview closes.");
+                if (PAUSED_PROCTORING_CHECKS.gazeDown) noteIntegrity("gaze_down");
+                else raiseViolation("gaze_down", "⚠️ Keep your eyes on the screen — no phones during the interview. One more time and this interview closes.");
               }
             } else {
               gazeDownStreak = 0;
@@ -674,11 +763,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             const gazeRight = (score("eyeLookOutLeft") + score("eyeLookInRight")) / 2;
             const gazeLeft = (score("eyeLookOutRight") + score("eyeLookInLeft")) / 2;
             const lookingSide = Math.max(gazeRight, gazeLeft) > 0.5;
-            if (lookingSide && !PAUSED_PROCTORING_CHECKS.gazeSide) {
+            if (lookingSide) {
               gazeSideStreak += 1;
               if (gazeSideStreak >= 3) {
                 gazeSideStreak = 0;
-                raiseViolation("⚠️ Keep your eyes on the screen — no notes or second screens during the interview. One more time and this interview closes.");
+                if (PAUSED_PROCTORING_CHECKS.gazeSide) noteIntegrity("gaze_side");
+                else raiseViolation("gaze_side", "⚠️ Keep your eyes on the screen — no notes or second screens during the interview. One more time and this interview closes.");
               }
             } else {
               gazeSideStreak = 0;
@@ -698,7 +788,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       if (timer !== null) clearInterval(timer);
       detector?.close?.();
     };
-  }, [step, camOn, session?.status, raiseViolation]);
+  }, [step, camOn, session?.status, raiseViolation, noteIntegrity]);
 
   // Leaving the room must release the mic, camera, and speaker — and the
   // shared recording mix, which is module-scoped like currentAudio (same
@@ -728,6 +818,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         if (c <= 1) {
           clearInterval(tick);
           graceUntilRef.current = Date.now() + 8000;
+          liveSinceRef.current = Date.now();
           setStep("live");
           return 0;
         }
@@ -1329,8 +1420,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-warn/10 text-2xl">🛡️</div>
           <h1 className="display mt-4 text-center text-xl text-ink">Recording &amp; conduct rules</h1>
           <p className="mt-2 text-center text-sm text-muted">
-            This interview is recorded from here on. One warning is given for a first slip — a repeat
-            ends the interview immediately, unscored.
+            {session?.kind === "job"
+              ? "This interview is recorded from here on. If anything below happens, it is noted for the employer and the interview carries on."
+              : "This interview is recorded from here on. One warning is given for a first slip — a repeat ends the interview immediately, unscored."}
           </p>
 
           <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-warn">Don&apos;t</p>
@@ -1346,6 +1438,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           <div className="mt-5 rounded-[10px] bg-paper px-4 py-3 text-xs text-muted">
             🎥 Camera on, speak your answers out loud — treat it like the real room.
           </div>
+          {session?.kind === "job" && (
+            <div className="mt-2 rounded-[10px] bg-paper px-4 py-3 text-xs text-muted">
+              📸 A few still photos are taken during the interview — at random, and whenever something above is noted. They are
+              shared with the employer in your interview report, with your answers, scores and CV. By starting, you agree to this.
+            </div>
+          )}
 
           <button
             onClick={() => { unlockAudio(); setStep("countdown"); }}
@@ -1516,7 +1614,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               // against the same proctoring strike as leaving the tab.
               onPaste={(e) => {
                 e.preventDefault();
-                raiseViolation("⚠️ Pasting isn't allowed — type your own answer. One more time and this interview closes.");
+                raiseViolation("paste", "⚠️ Pasting isn't allowed — type your own answer. One more time and this interview closes.");
               }}
               disabled={phase === "thinking" || phase === "grading"}
               placeholder={serverStt ? "Type your answer…" : "Voice input isn't available in this browser — type your answer…"}

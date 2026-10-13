@@ -98,6 +98,7 @@ use App\Http\Controllers\Employer\AutomationRuleController as EmployerAutomation
 use App\Http\Controllers\Employer\CandidateProfileController as EmployerCandidateProfileController;
 use App\Http\Controllers\Employer\CandidateSourceController as EmployerCandidateSourceController;
 use App\Http\Controllers\Employer\DashboardController as EmployerDashboardController;
+use App\Http\Controllers\Employer\HiringAgentController as EmployerHiringAgentController;
 use App\Http\Controllers\Employer\HiringFloorController as EmployerHiringFloorController;
 use App\Http\Controllers\Employer\InterviewController as EmployerInterviewController;
 use App\Http\Controllers\Employer\InterviewProcessController as EmployerInterviewProcessController;
@@ -155,6 +156,7 @@ use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
+use App\Http\Controllers\Mocks\RecordMockIntegrityEvent;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\Mocks\TranscribeMockAnswer;
 use App\Http\Controllers\MyVoucherController;
@@ -485,6 +487,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::delete('me/mocks/{mock}/recording', [MockController::class, 'deleteRecording']);
     // Proctoring close from the interview room — no refund, like walking out.
     Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
+    // What the room noticed (tab switch, paste, face gone…) with a still, for the employer's report.
+    Route::post('me/mocks/{mock}/integrity', RecordMockIntegrityEvent::class)->middleware('throttle:60,1');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     // Employer JD board for candidates: browse, free apply, track (PRD-E F3).
@@ -545,6 +549,11 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     // The pipeline drawn as the Taurus recruitment floor (ADR 0052).
     Route::get('workspaces/{workspace}/hiring-floor', [EmployerHiringFloorController::class, 'show']);
     Route::post('workspaces/{workspace}/hiring-floor/ask', [EmployerHiringFloorController::class, 'ask'])->middleware('throttle:ai');
+    // Agentic hiring: say what to do, Taurus proposes it, a YES carries it out.
+    Route::post('workspaces/{workspace}/agent/command', [EmployerHiringAgentController::class, 'command'])->middleware('throttle:ai');
+    Route::get('workspaces/{workspace}/agent/actions', [EmployerHiringAgentController::class, 'index']);
+    Route::post('workspaces/{workspace}/agent/actions/{agentAction}/confirm', [EmployerHiringAgentController::class, 'confirm'])->middleware('throttle:30,1');
+    Route::post('workspaces/{workspace}/agent/actions/{agentAction}/cancel', [EmployerHiringAgentController::class, 'cancel'])->middleware('throttle:30,1');
     Route::post('workspaces', [EmployerWorkspaceController::class, 'store'])->middleware('throttle:10,1');
     Route::get('workspaces/{workspace}', [EmployerWorkspaceController::class, 'show']);
     Route::patch('workspaces/{workspace}', [EmployerWorkspaceController::class, 'update']);

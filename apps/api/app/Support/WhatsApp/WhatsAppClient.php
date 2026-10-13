@@ -28,4 +28,13 @@ interface WhatsAppClient
         array $parameters = [],
         bool $authTemplate = false,
     ): string;
+
+    /**
+     * Send a file (a PDF report, a CV) as a WhatsApp document. Only inside
+     * the 24-hour window the recipient's own message opened. `$url` must be
+     * fetchable by Meta — a short-lived signed storage URL.
+     *
+     * @return string the provider message id (wamid)
+     */
+    public function sendDocument(string $to, string $url, string $filename, ?string $caption = null): string;
 }

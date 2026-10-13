@@ -16,6 +16,7 @@ use App\Http\Resources\EmployerJobResource;
 use App\Models\EmployerJob;
 use App\Models\EmployerWorkspace;
 use App\Support\Employers\ResolvesMembership;
+use App\Support\Employers\ShortlistSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -64,7 +65,13 @@ final class JobController extends Controller
         $member = $this->membershipOrFail($workspace, $request->user());
         abort_unless($member->role->managesPipeline(), 403, 'Hiring managers cannot create JDs.');
 
-        $job = $create->handle($workspace, $request->user(), $request->validated());
+        $attributes = $request->validated();
+        if ((bool) ($attributes['confirm_rounds'] ?? false)) {
+            $attributes['shortlist_settings'] = ShortlistSettings::fromArray(['confirm_rounds' => true])->toArray();
+        }
+        unset($attributes['confirm_rounds']);
+
+        $job = $create->handle($workspace, $request->user(), $attributes);
 
         return (new EmployerJobResource($job))->response()->setStatusCode(201);
     }

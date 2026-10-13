@@ -22,6 +22,12 @@ use App\Models\JobShortlistEntry;
  * the interview invite (pick a day for L1) straight away. With
  * require_interview off, the older single match score and min_score apply.
  *
+ * confirm_rounds hands each step to the client instead: nobody is invited to
+ * L1, and nobody who clears a round is invited to the next, until the client
+ * says YES to Taurus's proposal (WhatsApp, voice or the Confirm button). It
+ * wins over auto_invite. Jobs posted through a Taurus conversation start
+ * with it on.
+ *
  * interview_time is the time of day (India) of every L1/L2 slot offered on
  * WhatsApp; round_pass_mark is the score that clears L1 (→ the L2 invite)
  * and L2 (→ the client's report).
@@ -65,7 +71,14 @@ final readonly class ShortlistSettings
         public bool $autoInvite = true,
         public string $interviewTime = self::DEFAULT_INTERVIEW_TIME,
         public int $roundPassMark = self::DEFAULT_ROUND_PASS_MARK,
+        public bool $confirmRounds = false,
     ) {}
+
+    /** L1 invites go out by themselves only when the client has not asked to approve each round. */
+    public function invitesAutomatically(): bool
+    {
+        return $this->autoInvite && ! $this->confirmRounds;
+    }
 
     public static function forJob(EmployerJob $job): self
     {
@@ -96,6 +109,7 @@ final readonly class ShortlistSettings
                 ? $data['interview_time']
                 : self::DEFAULT_INTERVIEW_TIME,
             roundPassMark: max(0, min(100, (int) ($data['round_pass_mark'] ?? self::DEFAULT_ROUND_PASS_MARK))),
+            confirmRounds: (bool) ($data['confirm_rounds'] ?? false),
         );
     }
 
@@ -109,7 +123,7 @@ final readonly class ShortlistSettings
         return in_array($source, $this->sources, true);
     }
 
-    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_cv_bar: int, first_interview_bar: int, second_cv_bar: int, second_interview_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int} */
+    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_cv_bar: int, first_interview_bar: int, second_cv_bar: int, second_interview_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int, confirm_rounds: bool} */
     public function toArray(): array
     {
         return [
@@ -126,6 +140,7 @@ final readonly class ShortlistSettings
             'auto_invite' => $this->autoInvite,
             'interview_time' => $this->interviewTime,
             'round_pass_mark' => $this->roundPassMark,
+            'confirm_rounds' => $this->confirmRounds,
         ];
     }
 }

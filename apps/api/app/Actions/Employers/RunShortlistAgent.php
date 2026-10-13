@@ -188,7 +188,7 @@ final readonly class RunShortlistAgent
             if ($job->status === EmployerJobStatus::Published) {
                 $screened = $this->screening->handle($job, $awaitingRows);
 
-                if ($settings->autoInvite && $picked->isNotEmpty()) {
+                if ($settings->invitesAutomatically() && $picked->isNotEmpty()) {
                     try {
                         $invited = $this->invites->handle($job, null);
                     } catch (ValidationException) {
@@ -211,6 +211,11 @@ final readonly class RunShortlistAgent
             // Posted from WhatsApp: tell the client in the same chat who was found.
             if ($job->whatsapp_link_id !== null) {
                 SendShortlistReport::dispatch($job->id);
+            }
+
+            // The client approves each round: ask them about L1 rather than sending it.
+            if ($settings->confirmRounds && $picked->isNotEmpty() && $job->status === EmployerJobStatus::Published) {
+                app(ProposeHiringStep::class)->firstRound($job);
             }
 
             return $run;

@@ -67,6 +67,28 @@ export type ShortlistSettings = {
   interview_time: string;
   /** Score that clears L1 (→ L2 invite) and L2 (→ result to the client). */
   round_pass_mark: number;
+  /** On: nobody is invited to a round until the client says YES to Taurus (wins over auto_invite). */
+  confirm_rounds?: boolean;
+};
+
+/** Something Taurus proposes to do in the pipeline, waiting for a YES (agentic hiring). */
+export type AgentAction = {
+  id: number;
+  kind: "start_round" | "move_stage" | "reject" | "job_status";
+  job_id: number | null;
+  summary: string;
+  status: "proposed" | "running" | "done" | "failed" | "cancelled" | "expired";
+  result: string | null;
+  channel: "whatsapp" | "web" | "milestone";
+  expires_at: string;
+  created_at: string;
+};
+
+/** Taurus's answer to one thing said: proposed / done / failed / held / answered / post_job / chat / unknown. */
+export type AgentReply = {
+  intent: "proposed" | "done" | "failed" | "held" | "answered" | "post_job" | "chat" | "unknown";
+  reply: string;
+  action: AgentAction | null;
 };
 
 export type ShortlistEntry = {
@@ -493,6 +515,14 @@ export type InterviewRow = {
   answers: { question_id: number; answer: string }[] | null;
   submitted_at: string | null;
   graded_at: string | null;
+  /** What the interview room noticed, each with a still when the camera was on. Null: no room session. */
+  integrity?: {
+    flags: number;
+    possible: number;
+    events: { kind: string; label: string; severity: "flag" | "possible" | "info"; elapsed_seconds: number | null; occurred_at: string; image_url: string | null }[];
+  } | null;
+  /** Short-lived link to the PDF report sent to WhatsApp after this round. */
+  report_url?: string | null;
 };
 
 export type JdMockData = {
@@ -622,6 +652,17 @@ export const employerApi = {
       body: JSON.stringify(body),
     }),
   /** The hiring console's own voice. Null when TTS is not configured. */
+  agentCommand: (ws: number, text: string, jobId?: number | null) =>
+    apiJson<{ data: AgentReply }>(`${base}/workspaces/${ws}/agent/command`, {
+      method: "POST",
+      body: JSON.stringify(jobId ? { text, job_id: jobId } : { text }),
+    }),
+  agentActions: (ws: number, jobId?: number | null) =>
+    apiJson<{ data: { can_act: boolean; open: AgentAction[] } }>(`${base}/workspaces/${ws}/agent/actions${jobId ? `?job_id=${jobId}` : ""}`),
+  confirmAgentAction: (ws: number, id: number) =>
+    apiJson<{ data: AgentReply }>(`${base}/workspaces/${ws}/agent/actions/${id}/confirm`, { method: "POST", body: JSON.stringify({}) }),
+  cancelAgentAction: (ws: number, id: number) =>
+    apiJson<{ data: AgentReply }>(`${base}/workspaces/${ws}/agent/actions/${id}/cancel`, { method: "POST", body: JSON.stringify({}) }),
   speak: (ws: number, text: string) => apiPostBlob(`${base}/workspaces/${ws}/speak`, { text }),
   /**
    * Turns a recorded clip into text. MediaRecorder (which every real

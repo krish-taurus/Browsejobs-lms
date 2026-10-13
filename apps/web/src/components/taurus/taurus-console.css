@@ -720,6 +720,44 @@
   color: var(--tc-ink2);
 }
 
+/* agentic hiring: Taurus proposes, the team says go ahead (or yes, out loud) */
+.tc-decide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.tc-decide .tc-btn {
+  min-height: 36px;
+  padding: 0 16px;
+}
+.tc-decide .tc-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.tc-propose {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 112px;
+  translate: -50% 0;
+  width: min(460px, calc(100% - 32px));
+  padding: 14px 16px;
+  animation: tc-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tc-propose small {
+  display: block;
+  font: 600 11px/1 var(--tc-body);
+  letter-spacing: 0.04em;
+  color: var(--tc-accent);
+}
+.tc-propose p {
+  margin: 7px 0 0;
+  font: 500 14px/1.45 var(--tc-body);
+  color: var(--tc-ink);
+  text-wrap: pretty;
+}
+
 /* hiring floors stack the ask bar above the stage strip */
 .tc[data-mode="recruitment"] .tc-askbar { bottom: 168px; width: min(460px, calc(100% - 32px)); }
 .tc[data-mode="recruitment"] .tc-answer { bottom: 228px; }
@@ -1112,6 +1150,7 @@
 .tc[data-look="noir"] .tc-feed .t { color: var(--tc-ink); }
 .tc[data-look="noir"] .tc-feed .tc-chip { display: none; }
 .tc[data-look="noir"] .tc-askbar,
+.tc[data-look="noir"] .tc-propose,
 .tc[data-look="noir"] .tc-looks,
 .tc[data-look="noir"] .tc-stages,
 .tc[data-look="noir"] .tc-answer,
@@ -1201,6 +1240,10 @@
   .tc-askbar .tc-btn { min-height: 40px; padding: 0 18px; }
   .tc-looks { bottom: 14px; }
   .tc-looks button { min-height: 40px; padding: 0 14px; }
+  .tc-propose,
+  .tc-toast,
+  .tc-error { top: 138px; }
+  .tc-decide .tc-btn { min-height: 44px; flex: 1 1 auto; }
   .tc-looks button span { display: none; }
   .tc .tf-tag:not(.focus):not(.needs):not(.waiting),
   .tc .tf-zone { display: none; }
@@ -1255,6 +1298,7 @@
   .tc-feed li.tc-new,
   .tc-stage.bump .v,
   .tc-answer,
+  .tc-propose,
   .tc-caption,
   .tc-bubble,
   .tc-typing i,
