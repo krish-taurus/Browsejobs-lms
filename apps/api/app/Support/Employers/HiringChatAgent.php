@@ -46,6 +46,9 @@ final readonly class HiringChatAgent
 
     private const REPORT = ['shortlist', 'report', 'status', 'candidates', 'shortlist report', 'show shortlist', 'list'];
 
+    /** A reply that only asks for the interview reports waiting outside the 24-hour window. */
+    private const FETCH_REPORTS = ['ok', 'okay', 'send', 'send it', 'send report', 'send reports', 'reports', 'get report', 'hi', 'hello', 'thanks', 'thank you', '👍'];
+
     public function __construct(
         private WhatsAppClient $whatsapp,
         private ReadHiringIntent $intent,
@@ -56,6 +59,7 @@ final readonly class HiringChatAgent
         private AuditLogger $audit,
         private VoiceNoteTranscriber $voice,
         private ShortlistReport $reports,
+        private InterviewReportDelivery $interviewReports,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -82,6 +86,13 @@ final readonly class HiringChatAgent
         if ($workspace === null || $user === null || ! $this->canPost($workspace, $user)) {
             $this->reply($in->phone, $link, 'This number can no longer post jobs for '.($workspace->name ?? 'this company').'. Ask your workspace owner to give you recruiter access, then scan the QR code again.');
 
+            return;
+        }
+
+        // Interview reports that waited for WhatsApp's 24-hour window go now. A
+        // bare "ok" / "send" was only asking for them: nothing more to say. Any
+        // other message (a YES to a draft, a new role) carries on as usual.
+        if ($this->interviewReports->deliverPending($link) > 0 && in_array($this->word($text), self::FETCH_REPORTS, true)) {
             return;
         }
 

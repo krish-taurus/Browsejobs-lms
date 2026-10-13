@@ -13,6 +13,9 @@ final class FakeWhatsAppClient implements WhatsAppClient
     /** @var list<array{to: string, body: string, template: string|null, parameters: list<string>, auth: bool}> */
     public array $sent = [];
 
+    /** @var list<array{to: string, url: string, filename: string, caption: string|null}> */
+    public array $documents = [];
+
     private int $sequence = 0;
 
     public function sendMessage(
@@ -30,6 +33,14 @@ final class FakeWhatsAppClient implements WhatsAppClient
             'parameters' => $parameters,
             'auth' => $authTemplate,
         ];
+
+        return 'wamid.TEST'.str_pad((string) $this->sequence, 8, '0', STR_PAD_LEFT);
+    }
+
+    public function sendDocument(string $to, string $url, string $filename, ?string $caption = null): string
+    {
+        $this->sequence++;
+        $this->documents[] = ['to' => $to, 'url' => $url, 'filename' => $filename, 'caption' => $caption];
 
         return 'wamid.TEST'.str_pad((string) $this->sequence, 8, '0', STR_PAD_LEFT);
     }

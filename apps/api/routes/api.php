@@ -155,6 +155,7 @@ use App\Http\Controllers\Mentoring\MentorBookingController;
 use App\Http\Controllers\Mentoring\MentorHubController;
 use App\Http\Controllers\MessagePreferenceController;
 use App\Http\Controllers\Mocks\MockController;
+use App\Http\Controllers\Mocks\RecordMockIntegrityEvent;
 use App\Http\Controllers\Mocks\SpeakMockQuestion;
 use App\Http\Controllers\Mocks\TranscribeMockAnswer;
 use App\Http\Controllers\MyVoucherController;
@@ -485,6 +486,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::delete('me/mocks/{mock}/recording', [MockController::class, 'deleteRecording']);
     // Proctoring close from the interview room — no refund, like walking out.
     Route::post('me/mocks/{mock}/abandon', [MockController::class, 'abandon'])->middleware('throttle:10,1');
+    // What the room noticed (tab switch, paste, face gone…) with a still, for the employer's report.
+    Route::post('me/mocks/{mock}/integrity', RecordMockIntegrityEvent::class)->middleware('throttle:60,1');
     Route::get('me/tutor', [TutorController::class, 'index']);
     Route::get('me/tutor/{conversation}', [TutorController::class, 'show']);
     // Employer JD board for candidates: browse, free apply, track (PRD-E F3).

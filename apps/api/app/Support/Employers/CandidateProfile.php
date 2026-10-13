@@ -10,6 +10,7 @@ use App\Enums\VerificationStatus;
 use App\Models\CandidateVerificationCheck;
 use App\Models\CvProfile;
 use App\Models\EmployerJobApplication;
+use App\Models\MockIntegrityEvent;
 use App\Models\MockInterview;
 
 /**
@@ -140,9 +141,11 @@ final readonly class CandidateProfile
      * The graded interview: overall, per-competency scores, and the moments
      * the grader called out.
      *
-     * `session` reports only what is actually recorded. Camera and
-     * window-switch signals are not captured yet, and saying so is better
-     * than implying a clean session we never observed.
+     * `session` reports only what is actually recorded. A room that keeps
+     * integrity signals (tab switches, pastes, face off camera…) always logs
+     * check-in photos too, so an interview with no events at all predates it
+     * and says "not captured" rather than implying a clean session nobody
+     * observed.
      *
      * @return array<string, mixed>|null
      */
@@ -176,7 +179,9 @@ final readonly class CandidateProfile
                 'status' => $interview->status,
                 'completed_at' => $interview->completed_at?->toIso8601String(),
                 // Stated so nobody reads silence as a clean proctoring report.
-                'proctoring_captured' => false,
+                'proctoring_captured' => $captured = MockIntegrityEvent::query()->where('mock_interview_id', $interview->id)->exists(),
+                'integrity_flags' => $captured ? MockIntegrityEvent::query()->where('mock_interview_id', $interview->id)->where('severity', MockIntegrityEvent::FLAG)->count() : null,
+                'integrity_possible' => $captured ? MockIntegrityEvent::query()->where('mock_interview_id', $interview->id)->where('severity', MockIntegrityEvent::POSSIBLE)->count() : null,
             ],
         ];
     }
