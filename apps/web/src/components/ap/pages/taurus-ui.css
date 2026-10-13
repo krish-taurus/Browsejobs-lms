@@ -784,6 +784,23 @@
   .tx-ap .tx-sub {
     font-size: 15px;
   }
+  /* filters above the floor go full width with a 44px, zoom-safe select */
+  .tx-ap .tx-head {
+    margin-bottom: 16px;
+  }
+  .tx-ap .tx-tools--filter {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  .tx-ap .tx-tools--filter .tx-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .tx-ap .tx-floor {
+    border-radius: 16px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .tx-ap .tx-spinner {

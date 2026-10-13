@@ -46,7 +46,7 @@ export default function HiringFloorPage() {
           <h1 className="tx-title">Hiring floor</h1>
           <p className="tx-sub">Every stage of your hiring, live. Each robot is the bot working that stage. Ask Taurus anything about it.</p>
         </div>
-        <div className="tx-tools">
+        <div className="tx-tools tx-tools--filter">
           <label className="tx-label" htmlFor="hiring-floor-job" style={{ margin: 0 }}>
             Role
           </label>
