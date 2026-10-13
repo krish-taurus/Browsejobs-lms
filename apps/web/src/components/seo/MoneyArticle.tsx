@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BookCta } from "@/components/landing/BookCta";
 import { MarketingShell } from "@/components/landing/MarketingShell";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { contact } from "@/content/landing";
+import { OFFICE_PHONE, type PublishedPhone } from "@/content/phones";
 import type { FaqItem } from "@/lib/seo";
 
 /*
@@ -137,7 +139,7 @@ export function RelatedLinks({ links }: { links: readonly { href: string; label:
   );
 }
 
-export function ContactStrip() {
+export function ContactStrip({ phone = OFFICE_PHONE }: { phone?: PublishedPhone }) {
   return (
     <section className="ap-sec">
       <div className="ap-narrow center">
@@ -147,7 +149,11 @@ export function ContactStrip() {
           {contact.entity}. {contact.address}. {contact.hours}.
         </p>
         <p className="ap-contact">
-          {contact.phone} · {contact.email}
+          <TelLink phone={phone} />
+          {" · "}
+          <WhatsAppLink phone={phone} />
+          {" · "}
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>
         </p>
         <p className="fine">Every promise in writing · Every call recorded &amp; AI-monitored.</p>
       </div>

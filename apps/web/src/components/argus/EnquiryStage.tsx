@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { ApShell, type ApCurrent } from "@/components/ap/ApShell";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { contact } from "@/content/landing";
+import { OFFICE_PHONE, type PublishedPhone } from "@/content/phones";
 import "./argus.css";
 import "@/components/ap/pages/marketing.css";
 import "@/components/ap/pages/enquire.css";
-
-const phoneHref = `tel:${contact.phone.replace(/[^\d+]/g, "")}`;
 
 /**
  * A clean Apple-direction form page for an enquiry (courses, employers):
@@ -18,11 +18,14 @@ export function EnquiryStage({
   title,
   lede,
   current,
+  phone = OFFICE_PHONE,
   children,
 }: {
   title: string;
   lede: string;
   current?: ApCurrent;
+  /** Office line by default. Employer enquire passes the hiring line. */
+  phone?: PublishedPhone;
   children: ReactNode;
 }) {
   return (
@@ -35,7 +38,10 @@ export function EnquiryStage({
             <div className="enq-form">{children}</div>
             <ul className="pg-chips is-center enq-contact">
               <li>
-                <a href={phoneHref}>{contact.phone}</a>
+                <TelLink phone={phone} />
+              </li>
+              <li>
+                <WhatsAppLink phone={phone} />
               </li>
               <li>
                 <a href={`mailto:${contact.email}`}>{contact.email}</a>

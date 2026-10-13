@@ -1,6 +1,8 @@
 /* Generated from the Apple-direction demo (scratchpad/port/gen.py), then wired by hand where marked. */
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { PhoneLine } from "@/components/contact/PhoneLinks";
+import { EMPLOYER_PHONE } from "@/content/phones";
 
 export function STop() {
   return (
@@ -93,6 +95,7 @@ export function SGetStarted() {
       <Link className="choice" href="/employers/enquire?path=partner"><h3 className="h-card">We hire for you</h3><p className="body">Make BrowseJobs your hiring partner. You share the role on WhatsApp. Our bots screen, interview and check candidates, and keep each one updated. You meet people who already passed.</p><span className="more">Choose this <span className="chev" aria-hidden="true">›</span></span></Link>
       <Link className="choice" href="/employers/enquire?path=tool"><h3 className="h-card">You use our tool</h3><p className="body">Your own team runs the same bots on the roles you hire for. You stay in charge. The interview, the report and the WhatsApp updates still happen.</p><span className="more">Choose this <span className="chev" aria-hidden="true">›</span></span></Link>
     </div>
+    <PhoneLine phone={EMPLOYER_PHONE} label="Hiring line" />
   </div>
 </section>
   );

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { TelLink } from "@/components/contact/PhoneLinks";
+import { contact } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { Inter_Tight } from "next/font/google";
 import { useEffect, useRef, type ReactNode } from "react";
 import "./ap.css";
@@ -172,7 +175,7 @@ export function ApShell({
             </div>
           </div>
           <div className="footer-bottom">
-            <span>IBrowseJobs Technologies Pvt Ltd · Whitefield, Bengaluru, Karnataka 560066 · +91 79755 54666 · hello@browsejobs.ai · Mon–Sat, 9:00 AM – 7:00 PM IST</span>
+            <span>{contact.entity} · {contact.address} · <TelLink phone={OFFICE_PHONE} /> · {contact.email} · {contact.hours}</span>
             <span>Every promise in writing · Every call recorded &amp; AI-monitored.</span>
           </div>
           <div className="footer-word" aria-hidden="true">

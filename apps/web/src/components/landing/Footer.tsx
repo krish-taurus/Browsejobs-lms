@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { founderSameAs, organizationSameAs } from "@/content/entity";
 import { seoMoneyLinks } from "@/content/seo-nav";
+import { TelLink } from "@/components/contact/PhoneLinks";
 import { FOOTER_LINE, contact, courses } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 
 export function Footer() {
   return (
@@ -16,7 +18,9 @@ export function Footer() {
         <div className="mt-10 grid gap-8 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="kicker text-sky/60">Talk to us</p>
-            <p className="mono mt-3 text-sm">{contact.phone}</p>
+            <p className="mono mt-3 text-sm">
+              <TelLink phone={OFFICE_PHONE} className="text-inherit hover:underline" />
+            </p>
             <p className="mono mt-1 text-sm">{contact.email}</p>
             <p className="mt-2 text-sm text-sky/60">{contact.hours}</p>
             <ul className="mt-4 space-y-1.5 text-sm">

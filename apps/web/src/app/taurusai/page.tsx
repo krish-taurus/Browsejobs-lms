@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ApShell } from "@/components/ap/ApShell";
 import "@/components/ap/pages/taurus.css";
 import { TaurusDemo } from "@/components/taurus/TaurusDemo";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
 import { contact } from "@/content/landing";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -435,7 +437,7 @@ export default function TaurusAiPage() {
               <a className="tx-link" href={demoMail}>
                 Email {contact.email}
               </a>{" "}
-              or call <span className="num">{contact.phone}</span>.
+              or call <TelLink phone={EMPLOYER_PHONE} className="num" />, or <WhatsAppLink phone={EMPLOYER_PHONE} className="num" />.
             </p>
             <div className="cta-row">
               <a className="btn btn-primary" href={demoMail}>

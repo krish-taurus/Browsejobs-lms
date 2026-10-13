@@ -704,6 +704,32 @@
   inset: 0;
   background: #000000;
 }
+.tx-ap .tx-demo-phone {
+  position: absolute;
+  z-index: 10;
+  left: 16px;
+  top: 74px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: 980px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(30, 30, 32, 0.55);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  color: rgba(245, 245, 247, 0.86);
+  font: 500 12px/1 var(--tx-text);
+  letter-spacing: -0.005em;
+}
+.tx-ap .tx-demo-phone a {
+  color: inherit;
+  text-decoration: none;
+}
+.tx-ap .tx-demo-phone a:hover {
+  color: #ffffff;
+}
 .tx-ap .tx-demo-chip {
   position: absolute;
   z-index: 10;
@@ -738,6 +764,11 @@
 
 /* ------------------------------------------------ narrower */
 @media (max-width: 860px) {
+  .tx-ap .tx-demo-phone {
+    top: 16px;
+    left: 12px;
+    right: auto;
+  }
   .tx-ap .tx-demo-chip-short {
     display: inline;
   }

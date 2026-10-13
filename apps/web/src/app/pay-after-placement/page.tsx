@@ -11,7 +11,9 @@ import {
   RelatedLinks,
   TextLink,
 } from "@/components/seo/MoneyArticle";
-import { verifyChecks } from "@/content/landing";
+import { WhatsAppLink } from "@/components/contact/PhoneLinks";
+import { contact, verifyChecks } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -125,7 +127,7 @@ export default function PayAfterPlacementPage() {
         </p>
         <p>
           The guarantee on this fee is 30 days, any reason, full refund, in writing. The refund policy says to email
-          hello@browsejobs.ai or WhatsApp +91 79755 54666 with the subject “Refund”, from your registered contact.
+          {contact.email} or WhatsApp <WhatsAppLink phone={OFFICE_PHONE} className="ap-link">{OFFICE_PHONE.display}</WhatsAppLink> with the subject “Refund”, from your registered contact.
           After 30 days, registration is non-refundable. Read that sentence before you pay, not after. The
           processing window for the refund itself is still marked on the policy page as a placeholder pending the
           founder’s legal review. [Krish: the refund policy still shows “[refund processing window]”. Replace it

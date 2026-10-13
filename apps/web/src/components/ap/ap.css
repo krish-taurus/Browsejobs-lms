@@ -3168,6 +3168,22 @@
   font: 600 19px/1.4 var(--font-display);
   color: var(--fg);
 }
+.ap .phone-line {
+  margin-top: 18px;
+}
+.ap .phone-line a,
+.ap .ap-contact a,
+.ap .footer-bottom a,
+.ap .tx-contact a {
+  color: inherit;
+  text-decoration: none;
+}
+.ap .phone-line a:hover,
+.ap .ap-contact a:hover,
+.ap .footer-bottom a:hover,
+.ap .tx-contact a:hover {
+  text-decoration: underline;
+}
 .ap .ap-contents {
   padding-bottom: 12px;
 }

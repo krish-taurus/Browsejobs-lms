@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
+import { TelLink } from "@/components/contact/PhoneLinks";
 import { contact } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { recommendedCourses } from "@/content/home";
 
 const COLUMNS = [
@@ -71,7 +73,7 @@ export function AppleFooter() {
       </div>
       <div className="mx-auto max-w-[1100px] space-y-3 border-t border-black/10 px-5 py-6">
         <p>
-          {contact.entity} · {contact.address} · {contact.phone} · {contact.email} · {contact.hours}
+          {contact.entity} · {contact.address} · <TelLink phone={OFFICE_PHONE} className="text-inherit hover:underline" /> · {contact.email} · {contact.hours}
         </p>
         <div className="apple-note mx-0 max-w-none text-left">
           <sup>1</sup> <Disclaimer className="inline" />

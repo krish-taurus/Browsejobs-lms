@@ -1,3 +1,5 @@
+import { OFFICE_PHONE, whatsappHref } from "@/content/phones";
+
 /**
  * /get-hired — for people who want a job and resist "another course".
  * Language matches the homepage funnel: short sentences, everyday words.
@@ -62,7 +64,5 @@ export const GET_HIRED_FAQ = [
   },
 ] as const;
 
-/** Published contact number, already used as the WhatsApp line on forms. */
-export const WHATSAPP_SCREEN =
-  "https://wa.me/917975554666?text=" +
-  encodeURIComponent("I'd like to start the free AI interview.");
+/** Office WhatsApp line for the student interview page. */
+export const WHATSAPP_SCREEN = whatsappHref(OFFICE_PHONE, "I'd like to start the free AI interview.");

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { EmployerEnquiry } from "@/components/apple/EnquiryForm";
 import { EnquiryStage } from "@/components/argus/EnquiryStage";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { breadcrumbNode, canonical, jsonLdGraph, webPageNode } from "@/lib/seo";
 
 const TITLE = "Enquire to hire";
@@ -31,6 +32,7 @@ export default function EmployerEnquirePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <EnquiryStage current="employers"
+        phone={EMPLOYER_PHONE}
         title="Enquire to hire."
         lede="Share the role and when you want to start. We call you back. Hiring still depends on the market."
       >

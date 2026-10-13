@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ApShell } from "@/components/ap/ApShell";
+import { PhoneLine } from "@/components/contact/PhoneLinks";
 import { ApTaurusFilm } from "@/components/ap/ApFilm";
 import { EMPLOYER_BOTS, EMPLOYER_WAYS, HIRING_JOURNEY, SAMPLE_REPORT } from "@/content/employer-landing";
 import { hiringStages } from "@/content/home";
 import { DISCLAIMER } from "@/content/landing";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import "./employers-sub.css";
 
 type BotId = (typeof EMPLOYER_BOTS)[number]["id"];
@@ -184,6 +186,7 @@ export function EmployersHowItWorksAp() {
               Read employer questions <span className="chev" aria-hidden="true">›</span>
             </Link>
           </div>
+          <PhoneLine phone={EMPLOYER_PHONE} label="Hiring line" />
         </div>
       </section>
     </ApShell>

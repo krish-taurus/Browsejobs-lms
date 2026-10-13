@@ -5,7 +5,9 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import gsap from "gsap";
 import { LoginMenu } from "@/components/landing/LoginMenu";
 import { Disclaimer } from "@/components/brand/Disclaimer";
+import { TelLink } from "@/components/contact/PhoneLinks";
 import { contact, FOOTER_LINE } from "@/content/landing";
+import { OFFICE_PHONE } from "@/content/phones";
 import { recommendedCourses, recruiterFaqs } from "@/content/home";
 import { CALL_TIMES } from "@/content/enquiries";
 import { prefersReducedMotion } from "@/lib/motion";
@@ -284,7 +286,7 @@ export function ArgusFooter() {
       </div>
       <div style={{ maxWidth: 1100, margin: "2rem auto 0" }}>
         <p className="argus-body">
-          {contact.entity} · {contact.address} · {contact.phone} · {contact.email} · {contact.hours}
+          {contact.entity} · {contact.address} · <TelLink phone={OFFICE_PHONE} /> · {contact.email} · {contact.hours}
         </p>
         <p className="argus-body" style={{ marginTop: "0.8rem" }}>
           The hiring floor on these pages is sample data. A person always releases the offer.

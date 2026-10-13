@@ -13,7 +13,9 @@ import {
   RelatedLinks,
   TextLink,
 } from "@/components/seo/MoneyArticle";
+import { TelLink } from "@/components/contact/PhoneLinks";
 import { placementChannels } from "@/content/courses";
+import { OFFICE_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
 import { breadcrumbNode, dataEngineeringCourseNode, faqNode, jsonLdGraph, moneyMetadata, webPageNode } from "@/lib/seo";
 
@@ -105,7 +107,7 @@ export default function DataEngineeringBangalorePage() {
         <p>
           The published class format is live online plus recordings, with one year of access. You do not have to sit
           in Whitefield for every session. The office is where counselling happens and where you can come in. The
-          address published on the site is Whitefield, Bengaluru, Karnataka 560066. The phone is +91 79755 54666.
+          address published on the site is Whitefield, Bengaluru, Karnataka 560066. The phone is <TelLink phone={OFFICE_PHONE} className="ap-link" />.
           The hours are Monday to Saturday, 9:00 AM to 7:00 PM IST. Email is hello@browsejobs.ai.
         </p>
         <p>

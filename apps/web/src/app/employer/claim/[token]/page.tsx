@@ -5,6 +5,8 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiJson } from "@/lib/api";
 import { AuthAlert, AuthField, AuthScreen } from "@/components/auth/AuthScreen";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
+import { EMPLOYER_PHONE } from "@/content/phones";
 
 /**
  * Where an admin-onboarded employer sets their own password (PRD-E F1).
@@ -58,6 +60,8 @@ export default function ClaimInvitePage({ params }: { params: Promise<{ token: s
       below={
         <>
           Already set yours? <Link href="/employer">Sign in</Link>
+          <br />
+          Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
         </>
       }
     >

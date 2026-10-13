@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/components/ap/pages/taurus-ui.css";
 import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { TelLink, WhatsAppLink } from "@/components/contact/PhoneLinks";
+import { EMPLOYER_PHONE } from "@/content/phones";
 import { listMyWorkspaces, type TaurusWorkspace } from "@/lib/taurus-floor/live";
 
 type PortalState = { workspaces: TaurusWorkspace[]; ws: TaurusWorkspace; setWs: (id: number) => void };
@@ -92,6 +94,9 @@ function Guarded({ children }: { children: ReactNode }) {
         <div>
           <h1 className="tx-title">No Taurus workspace yet</h1>
           <p className="tx-sub">Ask the person who invited you to send a fresh invite link.</p>
+          <p className="tx-sub">
+            Hiring line · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+          </p>
           <button type="button" onClick={signOut} className="tx-btn tx-btn-secondary" style={{ marginTop: 24 }}>
             Sign out
           </button>
@@ -133,6 +138,8 @@ function Guarded({ children }: { children: ReactNode }) {
               </Link>
             ))}
             <span className="tx-bar-sep" aria-hidden="true" />
+            <TelLink phone={EMPLOYER_PHONE} />
+            <WhatsAppLink phone={EMPLOYER_PHONE} />
             <button type="button" onClick={signOut}>
               Sign out
             </button>
@@ -141,7 +148,9 @@ function Guarded({ children }: { children: ReactNode }) {
       </header>
       {ws.status === "suspended" ? (
         <div className="tx-main">
-          <p className="tx-note tx-note--warn tx-narrow">This workspace is paused. Contact BrowseJobs to turn it back on.</p>
+          <p className="tx-note tx-note--warn tx-narrow">
+            This workspace is paused. Contact BrowseJobs to turn it back on · <TelLink phone={EMPLOYER_PHONE} /> · <WhatsAppLink phone={EMPLOYER_PHONE} />
+          </p>
         </div>
       ) : (
         <main className="tx-main">{children}</main>
