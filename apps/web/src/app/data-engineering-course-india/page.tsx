@@ -283,7 +283,7 @@ export default function DataEngineeringIndiaPage() {
           {
             href: "/free-python-bootcamp",
             label: "Free 5-day Python bootcamp",
-            note: "One hour each evening. Start date not set yet.",
+            note: "19–23 Oct 2026. One hour each evening, online.",
           },
         ]}
       />

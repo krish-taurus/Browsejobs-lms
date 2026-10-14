@@ -216,7 +216,7 @@ function relatedAi(twin: LandingLink, answer: LandingLink): readonly LandingLink
     { href: "/skills/python", label: "Python", note: "The language the AI course starts with." },
     { href: "/founder", label: "Dr Krish Bharggav", note: "Founder." },
     { href: "/get-hired", label: "Free AI interview", note: "The step before a course." },
-    { href: "/free-python-bootcamp", label: "Free 5-day Python bootcamp", note: "One hour each evening. Start date not set yet." },
+    { href: "/free-python-bootcamp", label: "Free 5-day Python bootcamp", note: "19–23 Oct 2026. One hour each evening, online." },
   ];
 }
 
