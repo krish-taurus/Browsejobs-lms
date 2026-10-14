@@ -62,7 +62,7 @@ const faqs = [
   },
   {
     q: "How do we get it for our roles?",
-    a: "Post your roles in the BrowseJobs employer workspace and open Hiring floor from the menu. If you're not on BrowseJobs yet, talk to us about a role.",
+    a: "Post your roles in the BrowseJobs employer workspace and open AI Recruiter from the menu. If you're not on BrowseJobs yet, talk to us about a role.",
   },
 ] as const;
 
@@ -203,7 +203,7 @@ export default function TaurusRecruitmentPage() {
             <p className="eyebrow">For employers</p>
             <h2 className="h-section">Your real pipeline, once you sign in.</h2>
             <p className="lead">
-              In the BrowseJobs employer workspace, Hiring floor builds this view from your own jobs, applications and AI interviews, and refreshes as
+              In the BrowseJobs employer workspace, AI Recruiter builds this view from your own jobs, applications and AI interviews, and refreshes as
               candidates move. Filter by role to watch one opening at a time, and ask Taurus questions like “how many finalists do we have for the data
               engineer role?”. It answers from your pipeline, out loud if you like.
             </p>

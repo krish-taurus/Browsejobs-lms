@@ -551,6 +551,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/hiring-floor/ask', [EmployerHiringFloorController::class, 'ask'])->middleware('throttle:ai');
     // Agentic hiring: say what to do, Taurus proposes it, a YES carries it out.
     Route::post('workspaces/{workspace}/agent/command', [EmployerHiringAgentController::class, 'command'])->middleware('throttle:ai');
+    Route::post('workspaces/{workspace}/agent/transcribe', [EmployerHiringAgentController::class, 'transcribe'])->middleware('throttle:30,1');
     Route::get('workspaces/{workspace}/agent/actions', [EmployerHiringAgentController::class, 'index']);
     Route::post('workspaces/{workspace}/agent/actions/{agentAction}/confirm', [EmployerHiringAgentController::class, 'confirm'])->middleware('throttle:30,1');
     Route::post('workspaces/{workspace}/agent/actions/{agentAction}/cancel', [EmployerHiringAgentController::class, 'cancel'])->middleware('throttle:30,1');
