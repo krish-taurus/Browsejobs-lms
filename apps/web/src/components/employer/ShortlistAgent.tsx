@@ -125,7 +125,7 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
               Searches BrowseJobs students, your own candidate database and your Naukri export, and you see why each
               person was picked.{" "}
               {data.settings.require_interview
-                ? `Nobody is picked on a CV alone. First priority: CV ${data.settings.first_cv_bar}%+ and AI interview ${data.settings.first_interview_bar}%+. Second: CV ${data.settings.second_cv_bar}%+ and AI interview ${data.settings.second_interview_bar}%+. A matching CV with no AI interview yet is sent one on WhatsApp.`
+                ? `Nobody is picked on a CV alone. First priority: CV ${data.settings.first_cv_bar}%+ and AI interview ${data.settings.first_interview_bar}%+. Second: CV ${data.settings.second_cv_bar}%+ and AI interview ${data.settings.second_interview_bar}%+. ${data.settings.include_cv_only === false ? "A matching CV with no AI interview yet is sent one on WhatsApp." : `A matching CV with no AI interview yet still counts, as third priority (CV ${data.settings.second_cv_bar}%+).`}`
                 : "Everyone is scored on skills, experience and location."}{" "}
               It runs by itself when you publish.
             </p>
@@ -197,11 +197,29 @@ export function ShortlistAgent({ jobId, jobStatus }: { jobId: number; jobStatus:
             <span>
               Shortlist only after an AI interview
               <span className="block text-[12px] text-[var(--bj-dash-muted)]">
-                The CV match and the AI interview score must both clear the bar. A matching CV with no AI interview yet
-                is sent one on WhatsApp, and shortlisted when they pass. Off: one match score from the CV.
+                A student with a CV and an AI interview is always shortlisted first: the CV match and the AI interview
+                score must both clear the bar. Off: one match score from the CV.
               </span>
             </span>
           </label>
+
+          {draft.require_interview && (
+            <label className="mt-2 flex cursor-pointer items-start gap-3 text-[13px]">
+              <input
+                type="checkbox" disabled={!canManage}
+                checked={draft.include_cv_only !== false}
+                onChange={(e) => setDraft({ ...draft, include_cv_only: e.target.checked })}
+                className="mt-0.5 h-4 w-4 accent-[var(--bj-dash-primary)]"
+              />
+              <span>
+                Also shortlist a matching CV with no AI interview yet
+                <span className="block text-[12px] text-[var(--bj-dash-muted)]">
+                  They come after everyone who has an AI interview (third priority) and take L1 as their first AI interview.
+                  Off: they are sent an AI screening interview first and shortlisted when they pass.
+                </span>
+              </span>
+            </label>
+          )}
 
           {draft.require_interview && (
             <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl border border-[var(--bj-dash-border)] p-3">
@@ -432,7 +450,7 @@ function EntryRow({ entry: e, canManage, busy, onToggle }: { entry: ShortlistEnt
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-display text-base font-bold tracking-tight">{e.name}</p>
             <Pill tone={e.source === "browsejobs" ? "trust" : e.source === "naukri" ? "amber" : "dark"}>{SOURCE_SHORT[e.source]}</Pill>
-            {e.reasons.tier ? <Pill tone={e.reasons.tier === 1 ? "verify" : "trust"}>{e.reasons.tier === 1 ? "Picked first" : "Second group"}</Pill> : null}
+            {e.reasons.tier ? <Pill tone={e.reasons.tier === 1 ? "verify" : "trust"}>{e.reasons.tier === 1 ? "Picked first" : e.reasons.tier === 2 ? "Second group" : "Third group"}</Pill> : null}
             {e.invite ? <InvitePill invite={e.invite} /> : null}
           </div>
           {sub && <p className="mt-0.5 text-[12px] text-[var(--bj-dash-muted)]">{sub}</p>}

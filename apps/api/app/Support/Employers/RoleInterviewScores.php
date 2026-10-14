@@ -36,14 +36,17 @@ final class RoleInterviewScores
         MockInterview::query()
             ->whereIn('user_id', $userIds)
             ->whereNotNull('overall_score')
-            ->with('blueprint:id,role_title,employer_job_id')
+            ->with('blueprint:id,role_title,employer_job_id,user_id')
             ->get(['id', 'user_id', 'mock_blueprint_id', 'overall_score'])
             ->each(function (MockInterview $m) use ($job, $words, &$best): void {
                 $title = mb_strtolower((string) $m->blueprint?->role_title);
                 $sameJob = $m->blueprint?->employer_job_id === $job->id;
                 $sameRole = $words !== [] && count(array_filter($words, fn (string $w) => str_contains($title, $w))) === count($words);
+                // The AI Readiness Interview (built from the student's own CV) is an AI
+                // interview for whatever role their CV matches: it counts for every JD.
+                $fromCv = $m->blueprint?->user_id !== null;
 
-                if ($sameJob || $sameRole) {
+                if ($sameJob || $sameRole || $fromCv) {
                     $best[$m->user_id] = max($best[$m->user_id] ?? 0, (int) $m->overall_score);
                 }
             });

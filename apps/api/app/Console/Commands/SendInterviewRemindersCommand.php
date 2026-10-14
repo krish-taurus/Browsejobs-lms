@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\EmployerInterviewStatus;
+use App\Actions\Employers\SendInterviewInvites;
 use App\Jobs\SendClientUpdate;
+use App\Jobs\SendInterviewInviteMessage;
 use App\Models\EmployerInterview;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\InterviewInvite;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\Employers\InterviewTemplates;
 use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\WhatsAppClient;
@@ -23,7 +26,11 @@ use Throwable;
  *  - Half an hour after the slot, if they have not started: one nudge with the
  *    link and until when it stays open — and the client is told.
  *
- * Each goes once per invite (reminded_at / nudged_at). Inside WhatsApp's
+ * Also keeps the invites themselves moving: one stuck mid-send (the queue lost
+ * it) is sent again, and one nobody answered for a day is offered again once
+ * with fresh slots (chased_at), the client being told.
+ *
+ * Each goes once per invite (reminded_at / nudged_at / chased_at). Inside WhatsApp's
  * 24-hour window (the candidate wrote to us recently) the message carries the
  * link; outside it, the approved "your interview is ready — reply OK"
  * template, and their reply gets the link.
@@ -36,7 +43,7 @@ final class SendInterviewRemindersCommand extends Command
 
     public function handle(WhatsAppClient $whatsapp, InterviewTemplates $templates): int
     {
-        $sent = 0;
+        $sent = $this->recoverStuck() + $this->chaseUnanswered();
 
         $invites = InterviewInvite::withoutGlobalScopes()
             ->whereIn('status', [InterviewInvite::SCHEDULED, InterviewInvite::OPEN])
@@ -58,6 +65,50 @@ final class SendInterviewRemindersCommand extends Command
         $this->line("Sent {$sent} interview reminders.");
 
         return self::SUCCESS;
+    }
+
+    /** An invite claimed for sending but never finished, or never picked up at all: send it again. */
+    private function recoverStuck(): int
+    {
+        $stuck = InterviewInvite::withoutGlobalScopes()
+            ->where(function ($q): void {
+                $q->where(fn ($s) => $s->where('status', 'sending')->where('updated_at', '<', now()->subMinutes(15)))
+                    ->orWhere(fn ($s) => $s->where('status', InterviewInvite::PENDING)->whereNull('error')
+                        ->where('created_at', '<', now()->subMinutes(10))->where('updated_at', '<', now()->subMinutes(10)));
+            })
+            ->get();
+
+        foreach ($stuck as $i => $invite) {
+            $invite->update(['status' => InterviewInvite::PENDING]);
+            SendInterviewInviteMessage::dispatch($invite->id)->delay(now()->addSeconds($i * 3));
+        }
+
+        return $stuck->count();
+    }
+
+    /** Asked a day ago, no reply: ask once more with fresh slots, and tell the client. */
+    private function chaseUnanswered(): int
+    {
+        $due = InterviewInvite::withoutGlobalScopes()
+            ->where('status', InterviewInvite::SENT)
+            ->where('round', '!=', InterviewInvite::ROUND_SCREEN)
+            ->whereNull('chased_at')
+            ->where('sent_at', '<', now()->subHours(24))
+            ->get();
+
+        foreach ($due as $i => $invite) {
+            $invite->update([
+                'status' => InterviewInvite::PENDING,
+                'date_options' => SendInterviewInvites::dateOptions(now('Asia/Kolkata')),
+                'chased_at' => now(),
+            ]);
+            SendInterviewInviteMessage::dispatch($invite->id)->delay(now()->addSeconds($i * 3));
+
+            $name = (string) (User::withoutGlobalScopes()->whereKey($invite->candidate_user_id)->value('name') ?? 'A candidate');
+            SendClientUpdate::dispatch($invite->employer_job_id, "⏳ {$name} has not replied to the {$invite->roundLabel()} invite for a day. I have asked again with fresh slots.");
+        }
+
+        return $due->count();
     }
 
     private function handleInvite(InterviewInvite $invite, WhatsAppClient $whatsapp, InterviewTemplates $templates): int

@@ -98,6 +98,7 @@ final class BuildRecruiterFloor
                 ->latest('occurred_at')->limit(40)->get();
 
         $people = $this->people($entries, $applications, $interviews, $invites);
+        $alerts = $this->alerts($workspace, $links, $invites, $interviews, $applications);
         $zoneCounts = collect(self::ZONES)->mapWithKeys(fn (array $z) => [$z['id'] => $people->where('zone', $z['id'])->count()]);
 
         return [
@@ -116,9 +117,9 @@ final class BuildRecruiterFloor
                 'experience' => $job->experience_min_years.($job->experience_max_years !== null ? '–'.$job->experience_max_years : '+').' yrs',
             ],
             'zones' => collect(self::ZONES)->map(fn (array $z) => [...$z, 'count' => $zoneCounts[$z['id']]])->values(),
-            'agents' => $this->agents($job, $links, $messages, $run, $entries, $applications, $interviews, $invites),
+            'agents' => $this->monitored($this->agents($job, $links, $messages, $run, $entries, $applications, $interviews, $invites), $alerts, $messages, $run, $invites, $interviews),
             'people' => $people->take(self::MAX_PEOPLE)->values(),
-            'activity' => $this->activity($jobs, $messages, $job, $run, $transitions, $interviews, $applications),
+            'activity' => $this->activity($jobs, $messages, $job, $run, $transitions, $interviews, $applications, $alerts),
             'kpis' => [
                 'jobs_live' => $jobs->where('status', EmployerJobStatus::Published)->count(),
                 'shortlisted' => $entries->count(),
@@ -258,7 +259,7 @@ final class BuildRecruiterFloor
         $considered = collect($run?->considered ?? [])->sum(fn ($c) => (int) ($c['considered'] ?? 0));
         $topN = (int) ($run?->settings['top_n'] ?? 10);
         $shortlist = $this->agent('shortlist', 'Shortlist Agent', 'shortlist',
-            $job === null ? 'idle' : ($run === null ? ($job->status === EmployerJobStatus::Published ? 'thinking' : 'idle') : ($recent($run->created_at, 3) ? 'working' : 'idle')),
+            $job === null ? 'idle' : ($run === null ? ($job->status === EmployerJobStatus::Published ? 'thinking' : 'idle') : ($recent($run->created_at, 10) ? 'working' : 'idle')),
             $job === null
                 ? 'Waiting for a job to be posted.'
                 : ($run === null
@@ -287,9 +288,9 @@ final class BuildRecruiterFloor
         $open = $by(InterviewInvite::OPEN);
         $lastSent = $invites->max('sent_at');
         $invitesAgent = $this->agent('invites', 'Message Agent', 'invites',
-            $invites->isEmpty() ? 'idle' : ($recent($lastSent, 10) ? 'working' : ($waitingReply > 0 ? 'thinking' : 'idle')),
+            $invites->isEmpty() ? 'idle' : ($recent($lastSent, 30) || $recent($invites->max('replied_at'), 30) ? 'working' : ($waitingReply > 0 ? 'thinking' : 'idle')),
             $invites->isEmpty()
-                ? 'No invites yet. Press "Send interview invites" on the AI shortlist tab.'
+                ? 'No invites yet. They go out by themselves as soon as someone is shortlisted.'
                 : $this->plural($invites->count(), 'invite')." on WhatsApp · {$waitingReply} waiting for a reply · {$booked} booked · {$open} interview links out"
                     .($by(InterviewInvite::DECLINED) > 0 ? ' · '.$by(InterviewInvite::DECLINED).' declined' : '').'.',
             $invites->isEmpty() ? 0 : (int) round(($booked + $open + $by(InterviewInvite::DONE)) / max(1, $invites->count()) * 100),
@@ -328,9 +329,13 @@ final class BuildRecruiterFloor
     /**
      * @return list<array<string, mixed>>
      */
-    private function activity(Collection $jobs, Collection $messages, ?EmployerJob $job, ?JobShortlistRun $run, Collection $transitions, Collection $interviews, Collection $applications): array
+    private function activity(Collection $jobs, Collection $messages, ?EmployerJob $job, ?JobShortlistRun $run, Collection $transitions, Collection $interviews, Collection $applications, array $alerts = []): array
     {
         $rows = collect();
+
+        foreach ($alerts as $alert) {
+            $rows->push(['at' => $alert['at'] ?? $this->now, 'agent' => 'Monitor', 'text' => ($alert['level'] === 'warn' ? '⚠️ ' : 'ℹ️ ').$alert['text']]);
+        }
 
         foreach ($messages as $m) {
             $rows->push([
@@ -363,6 +368,99 @@ final class BuildRecruiterFloor
             ->sortByDesc('at')->take(40)->values()
             ->map(fn (array $r, int $i) => ['id' => 'ev'.$i, 'at' => $r['at']->toIso8601String(), 'agent' => $r['agent'], 'text' => $r['text']])
             ->all();
+    }
+
+    /**
+     * The monitor's findings: what has failed, stalled or is waiting on a person.
+     * Each is one line the client can act on; the agent it belongs to is flagged
+     * "Needs attention" on the floor, and the line goes in the mission log.
+     *
+     * @return list<array{agent_id: string, level: string, text: string, at: CarbonInterface|null}>
+     */
+    private function alerts(EmployerWorkspace $workspace, Collection $links, Collection $invites, Collection $interviews, Collection $applications): array
+    {
+        $alerts = [];
+        $who = fn (int $userId): string => (string) ($applications->firstWhere('candidate_id', $userId)?->candidate?->name ?? 'A candidate');
+
+        if ($links->isEmpty()) {
+            $alerts[] = ['agent_id' => 'intake', 'level' => 'info', 'text' => 'No WhatsApp phone is connected, so roles cannot be posted by chat. Scan the QR code on the WhatsApp page.', 'at' => null];
+        }
+
+        $testIds = $workspace->shortlist_test_user_ids;
+        if (is_array($testIds) && $testIds !== []) {
+            $alerts[] = ['agent_id' => 'shortlist', 'level' => 'info', 'text' => 'Test mode is on: only '.$this->plural(count($testIds), 'test student').' are considered and messaged.', 'at' => null];
+        }
+
+        foreach ($invites as $invite) {
+            $name = $who($invite->candidate_user_id);
+            $round = $invite->roundLabel();
+            $agent = $invite->round === 'l2' ? 'l2' : ($invite->round === 'l1' ? 'l1' : 'invites');
+
+            if ($invite->status === InterviewInvite::FAILED) {
+                $alerts[] = ['agent_id' => 'invites', 'level' => 'warn', 'text' => "The {$round} invite for {$name} failed: ".($invite->error ?? 'unknown reason').'.', 'at' => $invite->updated_at];
+
+                continue;
+            }
+            if ($invite->error !== null && $invite->error !== '' && $invite->status !== InterviewInvite::OPEN) {
+                $alerts[] = ['agent_id' => 'invites', 'level' => 'warn', 'text' => "{$name}'s {$round} invite is held: {$invite->error}", 'at' => $invite->updated_at];
+            }
+            if ($invite->status === InterviewInvite::SENT && $invite->sent_at !== null && $invite->sent_at->lt($this->now->copy()->subHours(24))) {
+                $alerts[] = ['agent_id' => 'invites', 'level' => 'warn', 'text' => "{$name} has not replied to the {$round} invite for over a day.", 'at' => $invite->sent_at];
+            }
+            if (in_array($invite->status, [InterviewInvite::SCHEDULED, InterviewInvite::OPEN], true)
+                && $invite->scheduled_at !== null && $invite->scheduled_at->lt($this->now->copy()->subMinutes(30))) {
+                $interview = $invite->employer_interview_id !== null ? $interviews->firstWhere('id', $invite->employer_interview_id) : null;
+                $started = $interview !== null && ($interview->mock_interview_id !== null || $interview->overall_score !== null);
+                if (! $started) {
+                    $alerts[] = ['agent_id' => $agent, 'level' => 'warn', 'text' => "{$name} has not started the {$round} interview booked for {$invite->slotLabel()}.", 'at' => $invite->scheduled_at];
+                }
+            }
+        }
+
+        $failed = $invites->isEmpty() ? 0 : EmployerWhatsappMessage::query()
+            ->whereIn('interview_invite_id', $invites->pluck('id'))
+            ->where('status', 'failed')
+            ->where('created_at', '>', $this->now->copy()->subDay())
+            ->count();
+        if ($failed > 0) {
+            $alerts[] = ['agent_id' => 'invites', 'level' => 'warn', 'text' => $this->plural($failed, 'WhatsApp message').' to candidates could not be delivered in the last day.', 'at' => null];
+        }
+
+        return $alerts;
+    }
+
+    /**
+     * Flag every agent that has something stuck ("Needs attention", with the
+     * reason first in its task) and say when each last did anything.
+     *
+     * @param  list<array<string, mixed>>  $agents
+     * @param  list<array{agent_id: string, level: string, text: string, at: CarbonInterface|null}>  $alerts
+     * @return list<array<string, mixed>>
+     */
+    private function monitored(array $agents, array $alerts, Collection $messages, ?JobShortlistRun $run, Collection $invites, Collection $interviews): array
+    {
+        $latest = fn (iterable $times): ?CarbonInterface => collect($times)->filter()->max();
+        $touch = fn (string $round): ?CarbonInterface => $latest($interviews->where('round', $round)->map(fn ($i) => $latest([$i->graded_at, $i->submitted_at, $i->invited_at])));
+        $last = [
+            'intake' => $messages->first()?->created_at,
+            'shortlist' => $run?->created_at,
+            'invites' => $latest([$invites->max('sent_at'), $invites->max('replied_at'), $invites->max('opened_at')]),
+            'l1' => $touch('l1'),
+            'l2' => $touch('l2'),
+        ];
+
+        return array_map(function (array $agent) use ($alerts, $last): array {
+            $issues = array_values(array_filter($alerts, fn (array $a) => $a['agent_id'] === $agent['id'] && $a['level'] === 'warn'));
+            if ($issues !== [] && $agent['live']) {
+                $agent['state'] = 'approval';
+                $agent['task'] = '⚠ '.$issues[0]['text'].(count($issues) > 1 ? ' (+'.(count($issues) - 1).' more)' : '');
+            }
+            if (isset($last[$agent['id']])) {
+                $agent['metrics'][] = ['label' => 'Last activity', 'value' => $last[$agent['id']]->diffForHumans()];
+            }
+
+            return $agent;
+        }, $agents);
     }
 
     /**

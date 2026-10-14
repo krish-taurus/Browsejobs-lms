@@ -52,7 +52,8 @@ final class ShortlistReport
 
         $settings = ShortlistSettings::fromArray((array) $run->settings);
         $rule = $settings->requireInterview
-            ? "Rule: first priority CV {$settings->firstCvBar}%+ and AI interview {$settings->firstInterviewBar}%+; second priority CV {$settings->secondCvBar}%+ and AI interview {$settings->secondInterviewBar}%+."
+            ? "Rule: first priority CV {$settings->firstCvBar}%+ and AI interview {$settings->firstInterviewBar}%+; second priority CV {$settings->secondCvBar}%+ and AI interview {$settings->secondInterviewBar}%+"
+                .($settings->includeCvOnly ? "; third priority CV {$settings->secondCvBar}%+ with no AI interview yet." : '.')
             : null;
 
         $looked = collect($run->considered ?? [])->map(fn ($c, $s) => (self::SOURCE[$s] ?? $s).' '.(int) ($c['considered'] ?? 0))->implode(' · ');
@@ -103,6 +104,7 @@ final class ShortlistReport
                 $title = match ($tier) {
                     1 => "\n\n⭐ *First priority* (CV {$settings->firstCvBar}%+ · AI interview {$settings->firstInterviewBar}%+)",
                     2 => "\n\n✅ *Second priority* (CV {$settings->secondCvBar}%+ · AI interview {$settings->secondInterviewBar}%+)",
+                    3 => "\n\n🔹 *Third priority* (CV {$settings->secondCvBar}%+, no AI interview yet — L1 is their first)",
                     default => '',
                 };
                 $out .= $title === '' ? "\n" : $title;

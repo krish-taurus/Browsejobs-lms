@@ -6,15 +6,21 @@ namespace App\Support\Employers;
 
 use App\Actions\Employers\CreateEmployerJob;
 use App\Actions\Employers\DraftJobDescription;
+use App\Actions\Employers\OpenInterviewNow;
 use App\Actions\Employers\PublishEmployerJob;
 use App\Actions\Employers\ReadHiringIntent;
 use App\Actions\Employers\ReceiveEmployerWhatsApp;
 use App\Actions\Employers\ReviseJobDescription;
+use App\Enums\EmployerJobStatus;
+use App\Jobs\BookInterviewMeeting;
+use App\Jobs\SendInterviewLinkMessage;
 use App\Models\EmployerAgentAction;
+use App\Models\EmployerJob;
 use App\Models\EmployerWhatsappCode;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\EmployerWorkspace;
+use App\Models\InterviewInvite;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Employers\Agent\AgentWords;
@@ -71,6 +77,7 @@ final readonly class HiringChatAgent
         private ShortlistReport $reports,
         private HiringAgent $agent,
         private InterviewReportDelivery $interviewReports,
+        private OpenInterviewNow $openNow,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -160,6 +167,13 @@ final readonly class HiringChatAgent
 
         if (in_array($word, self::GREETING, true) || in_array($word, self::CANCEL, true)) {
             $this->reply($in->phone, $link, $this->help($workspace, $link));
+
+            return;
+        }
+
+        // "Can we do the interview now": open the interviews the candidates have booked, today.
+        if (self::wantsInterviewNow($text) && $this->canPost($workspace, $user)) {
+            $this->reply($in->phone, $link, $this->startInterviewsNow($workspace, $link));
 
             return;
         }
@@ -329,12 +343,10 @@ final readonly class HiringChatAgent
                 'remote' => (bool) ($d['remote'] ?? false),
                 'openings' => max(1, (int) ($d['openings'] ?? 1)),
             ]);
-            // Remember this chat before publishing, so the shortlist report comes back here,
-            // and have Taurus ask here before each interview round goes out.
-            $job->update([
-                'whatsapp_link_id' => $link->id,
-                'shortlist_settings' => ['confirm_rounds' => true] + ShortlistSettings::forJob($job)->toArray(),
-            ]);
+            // Remember this chat before publishing, so the shortlist report, and an update at
+            // every later stage, come back here. The agents then run each step on their own;
+            // a client who wants to approve each round switches that on in the AI shortlist tab.
+            $job->update(['whatsapp_link_id' => $link->id]);
             $job = $this->publishJob->handle($job, $user);
         } catch (ValidationException $e) {
             $this->reply($phone, $link, 'I could not post it: '.$this->firstError($e));
@@ -350,7 +362,7 @@ final readonly class HiringChatAgent
         $link->update(['state' => EmployerWhatsappLink::STATE_IDLE, 'draft' => null]);
 
         $url = rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}?tab=shortlist";
-        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is searching BrowseJobs students and your own candidate lists now. I will send you the shortlist in this chat in a minute, and ask you before anyone is invited to L1.\n\nFull list: {$url}\n\nSend another role any time, *SHORTLIST* to see the latest shortlist, or just tell me what to do next.");
+        $this->reply($phone, $link, "✅ *{$job->title}* is live.\n\nThe shortlist agent is searching BrowseJobs students and your own candidate lists now. I will send you the shortlist in this chat in a minute, invite them to L1 on WhatsApp by myself, and tell you at every stage: booked, scored, cleared.\n\nFull list: {$url}\n\nSend another role any time, *SHORTLIST* to see the latest shortlist, or just tell me what to change.");
     }
 
     /** @param  array<string, mixed>  $d */
@@ -385,6 +397,61 @@ final readonly class HiringChatAgent
         return "Hi! This chat runs hiring for *{$workspace->name}* on BrowseJobs.\n\n".$this->example()
             ."\n\nOnce a job is live, just tell me what to do: _\"send the L1 invites\"_, _\"invite everyone who cleared L1 to L2\"_, _\"make an offer to Priya\"_. I always ask before anything goes out."
             ."\n\nSend *SHORTLIST* to see who the shortlist agent found for your latest job.".$pending;
+    }
+
+    /** "Can we do the interview now?" — asking for the booked interviews to start today, not a question about them. */
+    public static function wantsInterviewNow(string $text): bool
+    {
+        return mb_strlen($text) <= 160
+            && preg_match('/\b(interview|interviews|l\s?[12]|round)\b/iu', $text) === 1
+            && preg_match('/\b(now|right now|right away|immediately|asap|abhi|aaj|today)\b/iu', $text) === 1
+            && preg_match('/\b(how many|what|who|which|where|when|status|kitne|kaun|kab|kya)\b/iu', $text) !== 1;
+    }
+
+    /**
+     * Open the interviews people have booked for the client's latest live role,
+     * now instead of at their slot, and send each their link. People who were
+     * invited but have not picked a slot are left to reply NOW themselves.
+     */
+    private function startInterviewsNow(EmployerWorkspace $workspace, EmployerWhatsappLink $link): string
+    {
+        $job = EmployerJob::query()->where('employer_workspace_id', $workspace->id)
+            ->where('status', EmployerJobStatus::Published->value)
+            ->orderByRaw('CASE WHEN whatsapp_link_id = ? THEN 0 ELSE 1 END', [$link->id])
+            ->latest('id')
+            ->first();
+        if ($job === null) {
+            return 'You have no live role yet. Tell me about a role and I will post it.';
+        }
+
+        $invites = InterviewInvite::query()->where('employer_job_id', $job->id)
+            ->where('round', '!=', InterviewInvite::ROUND_SCREEN)
+            ->whereIn('status', [InterviewInvite::SENT, InterviewInvite::SCHEDULED])
+            ->with('candidate:id,name')
+            ->get();
+        $booked = $invites->where('status', InterviewInvite::SCHEDULED);
+        $unbooked = $invites->where('status', InterviewInvite::SENT)->count();
+        $tail = $unbooked > 0 ? "\n\n{$unbooked} more ".($unbooked === 1 ? 'is invited but has not' : 'are invited but have not').' picked a slot yet. They can reply *NOW* to start straight away.' : '';
+
+        if ($booked->isEmpty()) {
+            return "Nobody has booked an interview for *{$job->title}* yet.".($unbooked > 0 ? $tail : ' Interviews are offered to the shortlist automatically.');
+        }
+
+        $done = [];
+        foreach ($booked as $invite) {
+            $result = $this->openNow->handle($invite);
+            if ($result['mode'] === 'room') {
+                SendInterviewLinkMessage::dispatch($invite->id);
+                $done[] = (string) ($invite->candidate?->name ?? 'A candidate');
+            } elseif ($result['mode'] === 'zoom' && $result['at'] !== null) {
+                BookInterviewMeeting::dispatch($invite->id);
+                $done[] = ($invite->candidate?->name ?? 'A candidate').' (Zoom at '.$result['at']->copy()->setTimezone('Asia/Kolkata')->format('g:i A').')';
+            }
+        }
+
+        return $done === []
+            ? "I could not open the interviews just now for *{$job->title}*. They stay booked for their slots.{$tail}"
+            : '⚡ Opened the '.strtoupper((string) $booked->first()->round).' interview now for '.implode(', ', $done)." (*{$job->title}*). They have been sent their link. I will tell you as each one finishes.{$tail}";
     }
 
     /**

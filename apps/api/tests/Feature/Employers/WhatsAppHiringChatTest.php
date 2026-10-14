@@ -13,6 +13,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiClient;
 use App\Services\AI\FakeAiClient;
+use App\Support\Employers\ShortlistSettings;
 use App\Support\WhatsApp\FakeWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Facades\Artisan;
@@ -169,6 +170,9 @@ it('turns a message into a draft, applies a change, and posts only on YES', func
         ->and($job->employer_workspace_id)->toBe($this->workspace->id)
         ->and($job->created_by_id)->toBe($this->recruiter->id)
         ->and($job->whatsapp_link_id)->toBe($link->id)
+        // The agents run every step by themselves; the client can switch on "ask me before each round".
+        ->and(ShortlistSettings::forJob($job)->confirmRounds)->toBeFalse()
+        ->and(ShortlistSettings::forJob($job)->invitesAutomatically())->toBeTrue()
         ->and($link->fresh()->state)->toBe('idle');
 
     // The job went live, the shortlist agent ran, and its report came back to this chat.

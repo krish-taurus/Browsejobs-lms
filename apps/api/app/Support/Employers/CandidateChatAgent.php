@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Employers;
 
+use App\Actions\Employers\OpenInterviewNow;
 use App\Actions\Employers\SendInterviewInvites;
 use App\Jobs\BookInterviewMeeting;
 use App\Jobs\CancelInterviewMeeting;
@@ -20,6 +21,8 @@ use Throwable;
  * The message agent's side of a candidate's WhatsApp chat (hiring step 5).
  *
  *   "1" / "2" / "3" / "Tuesday" / "15"  → book that slot (day + the JD's interview time)
+ *   "tomorrow" / "kal"                   → book tomorrow's slot, when it is one of the three
+ *   "now" / "today" / "abhi"             → take the interview straight away (OpenInterviewNow)
  *   "not interested" / "no"              → decline, politely
  *   anything once the round is open      → the link again
  *
@@ -36,16 +39,28 @@ final readonly class CandidateChatAgent
 {
     private const DECLINE = '/^\s*(no|nope|not interested|nahi|not now|can\'?t|cannot|stop|cancel)\b/i';
 
+    /** Wanting it now: "I want now", "can we do it today", "reschedule this for today", "abhi", "aaj". */
+    private const NOW = '/\b(now|right now|right away|immediately|asap|abhi|aaj|today)\b/i';
+
     public function __construct(
         private WhatsAppClient $whatsapp,
         private AuditLogger $audit,
         private MeetingBotClient $bots,
+        private OpenInterviewNow $openNow,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in, InterviewInvite $invite): void
     {
         $text = trim($in->body);
         $invite->update(['replied_at' => now()]);
+
+        // They want to do it now, not on the booked day.
+        if (mb_strlen($text) <= 160 && preg_match(self::DECLINE, $text) !== 1 && preg_match(self::NOW, $text) === 1
+            && in_array($invite->status, [InterviewInvite::SENT, InterviewInvite::SCHEDULED], true)) {
+            $this->startNow($invite);
+
+            return;
+        }
 
         // On Zoom: the link again, unless they are picking another slot or declining.
         $repick = $invite->status === InterviewInvite::SCHEDULED
@@ -78,7 +93,7 @@ final readonly class CandidateChatAgent
         $pick = $this->pick($text, $options);
 
         if ($pick === null) {
-            $this->reply($invite, "Please reply with the number of the slot that suits you:\n".$this->menu($invite, $options));
+            $this->reply($invite, "Please reply with the number of the slot that suits you, or *NOW* to start straight away:\n".$this->menu($invite, $options));
 
             return;
         }
@@ -97,13 +112,39 @@ final readonly class CandidateChatAgent
 
         if ($this->bots->enabled()) {
             // The Zoom meeting and the AI interviewer are booked now; the link follows in a moment.
-            $this->reply($invite, "Booked for *{$label}*. I am setting up your Zoom interview now. The link will come here in a moment.\n\nNeed a different slot? Just reply 1, 2 or 3:\n".$this->menu($invite, $options));
+            $this->reply($invite, "Booked for *{$label}*. I am setting up your Zoom interview now. The link will come here in a moment.\n\nNeed a different slot? Just reply 1, 2 or 3, or *NOW* to start straight away:\n".$this->menu($invite, $options));
             BookInterviewMeeting::dispatch($invite->id);
 
             return;
         }
 
-        $this->reply($invite, "Booked for *{$label}*. That morning you will get a WhatsApp link to start your AI interview. It takes about 15 minutes on your phone or laptop.\n\nNeed a different day? Just reply 1, 2 or 3:\n".$this->menu($invite, $options));
+        $this->reply($invite, "Booked for *{$label}*. That morning you will get a WhatsApp link to start your AI interview. It takes about 15 minutes on your phone or laptop.\n\nNeed a different day? Just reply 1, 2 or 3, or *NOW* to start straight away:\n".$this->menu($invite, $options));
+    }
+
+    /** "Now": open the interview at once (or move the Zoom call to the next free half-hour) and say so. */
+    private function startNow(InterviewInvite $invite): void
+    {
+        $result = $this->openNow->handle($invite);
+        $name = $this->candidateName($invite);
+
+        if ($result['mode'] === 'room') {
+            SendClientUpdate::dispatch($invite->employer_job_id, "⚡ {$name} chose to take the {$invite->roundLabel()} AI interview now. Their link has been sent.");
+            $this->reply($invite, "⚡ Starting your {$invite->roundLabel()} interview now. Open it here: {$result['link']}\n\nLog in with this WhatsApp number. It takes about 15 minutes on your phone or laptop.");
+
+            return;
+        }
+
+        if ($result['mode'] === 'zoom' && $result['at'] !== null) {
+            $at = $result['at']->copy()->setTimezone('Asia/Kolkata')->format('g:i A');
+            SendClientUpdate::dispatch($invite->employer_job_id, "⚡ {$name} asked to take the {$invite->roundLabel()} AI interview now. It starts at {$at}.");
+            $this->reply($invite, "Okay, I am setting up your Zoom interview to start at *{$at}*, in about 10 minutes. The link will come here in a moment.");
+            BookInterviewMeeting::dispatch($invite->id);
+
+            return;
+        }
+
+        $options = array_values((array) $invite->date_options);
+        $this->reply($invite, "I could not start it right now. Please reply with the number of the slot that suits you, and I will send your link then:\n".$this->menu($invite, $options));
     }
 
     private function candidateName(InterviewInvite $invite): string
@@ -123,6 +164,12 @@ final readonly class CandidateChatAgent
     private function pick(string $text, array $options): ?string
     {
         $t = mb_strtolower($text);
+
+        // "tomorrow" / "kal": only when tomorrow really is one of the three slots (not a Sunday).
+        $tomorrow = now('Asia/Kolkata')->addDay()->toDateString();
+        if (preg_match('/\b(tomorrow|kal)\b/', $t) === 1 && in_array($tomorrow, $options, true)) {
+            return $tomorrow;
+        }
 
         if (preg_match('/^\D*([1-3])\D*$/', $t, $m) === 1 && isset($options[(int) $m[1] - 1])) {
             return $options[(int) $m[1] - 1];

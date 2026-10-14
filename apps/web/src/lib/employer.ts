@@ -69,6 +69,8 @@ export type ShortlistSettings = {
   round_pass_mark: number;
   /** On: nobody is invited to a round until the client says YES to Taurus (wins over auto_invite). */
   confirm_rounds?: boolean;
+  /** On: a CV match with no AI interview yet is still shortlisted (third priority). */
+  include_cv_only?: boolean;
 };
 
 /** Something Taurus proposes to do in the pipeline, waiting for a YES (agentic hiring). */
@@ -103,7 +105,7 @@ export type ShortlistEntry = {
     /** Best AI interview for this JD or its role; null = none yet. */
     interview_score?: number | null;
     /** 1 = cleared the first bar, 2 = the second. */
-    tier?: 1 | 2;
+    tier?: 1 | 2 | 3;
     skill_match_pct: number;
     matched_skills: string[];
     missing_skills: string[];

@@ -182,14 +182,20 @@ final readonly class SendInterviewInvites
      * interview runs under the same Zoom host, which can hold only one live
      * meeting at once, so two candidates are never booked at the same time.
      */
-    public static function freeZoomSlot(string $date, string $time, ?int $exceptInviteId = null): Carbon
+    public static function freeZoomSlot(string $date, string $time, ?int $exceptInviteId = null, ?Carbon $notBefore = null): Carbon
     {
         $start = self::slotStart($date, $time);
+        if ($notBefore !== null && $notBefore->gt($start)) {
+            $start = $notBefore->copy();
+        }
         $taken = InterviewInvite::withoutGlobalScopes()
             ->whereIn('status', [InterviewInvite::SCHEDULED, InterviewInvite::OPEN])
             ->whereNotNull('zoom_join_url')
             ->when($exceptInviteId !== null, fn ($q) => $q->whereKeyNot($exceptInviteId))
-            ->whereBetween('scheduled_at', [$start->copy()->startOfDay()->utc(), $start->copy()->endOfDay()->utc()])
+            ->whereBetween('scheduled_at', [
+                $start->copy()->startOfDay()->setTimezone((string) config('app.timezone')),
+                $start->copy()->endOfDay()->setTimezone((string) config('app.timezone')),
+            ])
             ->pluck('scheduled_at')
             ->map(fn ($at) => Carbon::parse($at)->getTimestamp())
             ->all();

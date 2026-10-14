@@ -117,6 +117,12 @@ final readonly class HiringAgent
         }
 
         $job = $this->job($workspace, $read['job_id']) ?? $scope ?? $this->onlyLiveJob($workspace);
+        // Starting or moving people goes to the role posted last (from this chat, if it posted one):
+        // two roles with the same title are not a reason to stop and ask. Changing a role's own status
+        // (close, pause, publish) is never guessed.
+        if ($job === null && ! in_array($read['action'], ['publish_job', 'pause_job', 'close_job'], true)) {
+            $job = $this->latestLiveJob($workspace, $link);
+        }
         if ($job === null) {
             return new AgentReply('chat', $this->whichRole($workspace));
         }
@@ -178,18 +184,30 @@ final readonly class HiringAgent
         return $live->count() === 1 ? $live->first() : null;
     }
 
+    /** The live role posted from this chat last, else the most recently posted live role. */
+    private function latestLiveJob(EmployerWorkspace $workspace, ?EmployerWhatsappLink $link): ?EmployerJob
+    {
+        return EmployerJob::query()
+            ->where('employer_workspace_id', $workspace->id)
+            ->where('status', EmployerJobStatus::Published->value)
+            ->orderByRaw('CASE WHEN whatsapp_link_id = ? THEN 0 ELSE 1 END', [$link?->id ?? 0])
+            ->latest('id')
+            ->first();
+    }
+
     private function whichRole(EmployerWorkspace $workspace): string
     {
-        $titles = EmployerJob::query()
+        $jobs = EmployerJob::query()
             ->where('employer_workspace_id', $workspace->id)
             ->where('status', '!=', EmployerJobStatus::Closed->value)
             ->latest('id')
             ->limit(6)
-            ->pluck('title');
+            ->get(['id', 'title', 'created_at']);
 
-        return $titles->isEmpty()
+        // The date and number tell two roles with the same title apart.
+        return $jobs->isEmpty()
             ? 'You have no roles yet. Tell me about one and I will post it.'
-            : 'Which role? '.$titles->map(fn ($t) => "*{$t}*")->implode(', ').'.';
+            : 'Which role? '.$jobs->map(fn (EmployerJob $j) => "*{$j->title}* (#{$j->id}, posted {$j->created_at?->format('j M')})")->implode(', ').'.';
     }
 
     private function help(): string

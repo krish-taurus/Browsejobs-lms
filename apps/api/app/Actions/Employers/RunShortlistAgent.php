@@ -33,7 +33,9 @@ use Illuminate\Validation\ValidationException;
  * How it decides (ShortlistSettings, default require_interview):
  *  - CV match ≥ 60 and AI interview ≥ 65 (first_cv_bar / first_interview_bar) → first priority;
  *  - CV ≥ 45 and interview ≥ 45 (second_cv_bar / second_interview_bar) → second priority;
- *  - CV ≥ second_cv_bar but no AI interview for the role yet → sent the AI
+ *  - CV ≥ second_cv_bar and no AI interview at all → third priority (when
+ *    include_cv_only, the default): shortlisted, and L1 is their first AI interview;
+ *  - otherwise (include_cv_only off), CV ≥ second_cv_bar but no AI interview yet → sent the AI
  *    screening interview on WhatsApp (SendScreeningInvites); when they finish
  *    it the agent runs again and places them;
  *  - anyone else is not shortlisted. Nobody gets on the list on a CV alone.
@@ -237,8 +239,10 @@ final readonly class RunShortlistAgent
 
     /**
      * CV and AI interview each have to clear their bar: the first-priority
-     * pair, else the second-priority pair. A good CV with no interview yet
-     * goes to screening instead.
+     * pair, else the second-priority pair. A good CV with no AI interview at
+     * all comes after both, as third priority (or, with include_cv_only off,
+     * goes to screening instead). Someone whose AI interview scored below the
+     * second-priority bar stays out, whatever their CV.
      *
      * @param  Collection<int, array<string, mixed>>  $eligible
      * @return array{0: Collection<int, array<string, mixed>>, 1: Collection<int, array<string, mixed>>}
@@ -250,13 +254,13 @@ final readonly class RunShortlistAgent
             $interview = $c['reasons']['interview_score'];
 
             $c['tier'] = match (true) {
-                $interview === null => null,
+                $interview === null => $settings->includeCvOnly && $cv >= $settings->secondCvBar ? 3 : null,
                 $cv >= $settings->firstCvBar && $interview >= $settings->firstInterviewBar => 1,
                 $cv >= $settings->secondCvBar && $interview >= $settings->secondInterviewBar => 2,
                 default => null,
             };
             if ($c['tier'] !== null) {
-                $c['match_score'] = (int) round(($cv + $interview) / 2);
+                $c['match_score'] = $interview === null ? $cv : (int) round(($cv + $interview) / 2);
                 $c['reasons']['tier'] = $c['tier'];
             }
 
@@ -270,7 +274,7 @@ final readonly class RunShortlistAgent
             ->values();
 
         $awaiting = $graded
-            ->filter(fn (array $c) => $c['reasons']['interview_score'] === null && $c['reasons']['cv_match'] >= $settings->secondCvBar)
+            ->filter(fn (array $c) => ! $settings->includeCvOnly && $c['reasons']['interview_score'] === null && $c['reasons']['cv_match'] >= $settings->secondCvBar)
             ->sortByDesc(fn (array $c) => $c['reasons']['cv_match'])
             ->take(min(self::MAX_SCREENING, $settings->topN * 2))
             ->values();

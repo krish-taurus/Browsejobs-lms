@@ -15,18 +15,25 @@ use App\Models\JobShortlistEntry;
  * By default (require_interview) a CV match alone never gets anyone on the
  * list. First priority: CV match ≥ first_cv_bar (60) AND AI interview ≥
  * first_interview_bar (65). Second priority: CV ≥ second_cv_bar (45) AND
- * interview ≥ second_interview_bar (45). Anyone below is not shortlisted.
- * Someone whose CV clears second_cv_bar but who
- * has no AI interview for the role is invited on WhatsApp to take one, and
- * shortlisted when they pass. With auto_invite, everyone shortlisted is sent
- * the interview invite (pick a day for L1) straight away. With
- * require_interview off, the older single match score and min_score apply.
+ * interview ≥ second_interview_bar (45). Anyone with an AI interview below
+ * that is not shortlisted. Students with a CV and an AI interview always come
+ * first.
+ *
+ * include_cv_only (default on): someone whose CV clears second_cv_bar but who
+ * has no AI interview at all is still shortlisted, as third priority, and
+ * their first AI interview is L1. Off: they are sent the AI screening
+ * interview instead and shortlisted when they pass it.
+ *
+ * With auto_invite, everyone shortlisted is sent the interview invite (pick
+ * a day for L1) straight away. With require_interview off, the older single
+ * match score and min_score apply.
  *
  * confirm_rounds hands each step to the client instead: nobody is invited to
  * L1, and nobody who clears a round is invited to the next, until the client
  * says YES to Taurus's proposal (WhatsApp, voice or the Confirm button). It
- * wins over auto_invite. Jobs posted through a Taurus conversation start
- * with it on.
+ * wins over auto_invite. It is off by default: the agents run every step on
+ * their own and tell the client as they go; a client who wants to approve each
+ * round switches it on.
  *
  * interview_time is the time of day (India) of every L1/L2 slot offered on
  * WhatsApp; round_pass_mark is the score that clears L1 (→ the L2 invite)
@@ -72,6 +79,7 @@ final readonly class ShortlistSettings
         public string $interviewTime = self::DEFAULT_INTERVIEW_TIME,
         public int $roundPassMark = self::DEFAULT_ROUND_PASS_MARK,
         public bool $confirmRounds = false,
+        public bool $includeCvOnly = true,
     ) {}
 
     /** L1 invites go out by themselves only when the client has not asked to approve each round. */
@@ -110,6 +118,7 @@ final readonly class ShortlistSettings
                 : self::DEFAULT_INTERVIEW_TIME,
             roundPassMark: max(0, min(100, (int) ($data['round_pass_mark'] ?? self::DEFAULT_ROUND_PASS_MARK))),
             confirmRounds: (bool) ($data['confirm_rounds'] ?? false),
+            includeCvOnly: (bool) ($data['include_cv_only'] ?? true),
         );
     }
 
@@ -123,7 +132,7 @@ final readonly class ShortlistSettings
         return in_array($source, $this->sources, true);
     }
 
-    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_cv_bar: int, first_interview_bar: int, second_cv_bar: int, second_interview_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int, confirm_rounds: bool} */
+    /** @return array{top_n: int, min_score: int, sources: list<string>, auto_on_publish: bool, students_need_readiness: bool, require_interview: bool, first_cv_bar: int, first_interview_bar: int, second_cv_bar: int, second_interview_bar: int, auto_invite: bool, interview_time: string, round_pass_mark: int, confirm_rounds: bool, include_cv_only: bool} */
     public function toArray(): array
     {
         return [
@@ -141,6 +150,7 @@ final readonly class ShortlistSettings
             'interview_time' => $this->interviewTime,
             'round_pass_mark' => $this->roundPassMark,
             'confirm_rounds' => $this->confirmRounds,
+            'include_cv_only' => $this->includeCvOnly,
         ];
     }
 }

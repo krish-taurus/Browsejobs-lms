@@ -43,6 +43,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $opened_at
  * @property Carbon|null $reminded_at reminder sent about an hour before the slot
  * @property Carbon|null $nudged_at nudge sent when not started half an hour after it
+ * @property Carbon|null $chased_at asked again, with fresh slots, after a day without a reply
  */
 final class InterviewInvite extends Model
 {
@@ -71,7 +72,7 @@ final class InterviewInvite extends Model
         'tenant_id', 'employer_job_id', 'employer_job_application_id', 'candidate_user_id', 'employer_interview_id',
         'round', 'phone', 'status', 'date_options', 'chosen_date', 'scheduled_at', 'token', 'wamid', 'error',
         'zoom_meeting_id', 'zoom_join_url', 'bot_code', 'bot_id', 'bot_status',
-        'sent_at', 'replied_at', 'opened_at', 'reminded_at', 'nudged_at', 'sent_by_user_id',
+        'sent_at', 'replied_at', 'opened_at', 'reminded_at', 'nudged_at', 'chased_at', 'sent_by_user_id',
     ];
 
     /** @return array<string, string> */
@@ -86,6 +87,7 @@ final class InterviewInvite extends Model
             'opened_at' => 'datetime',
             'reminded_at' => 'datetime',
             'nudged_at' => 'datetime',
+            'chased_at' => 'datetime',
         ];
     }
 

@@ -35,6 +35,7 @@ final class UpdateShortlistSettingsRequest extends FormRequest
             'second_interview_bar' => ['sometimes', 'integer', 'min:0', 'max:100', Rule::when($this->has('first_interview_bar'), 'lte:first_interview_bar')],
             'auto_invite' => ['sometimes', 'boolean'],
             'confirm_rounds' => ['sometimes', 'boolean'],
+            'include_cv_only' => ['sometimes', 'boolean'],
             'interview_time' => ['sometimes', 'string', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
             'round_pass_mark' => ['sometimes', 'integer', 'min:0', 'max:100'],
         ];

@@ -400,8 +400,9 @@ function screeningSetup($test): FakeWhatsAppClient
     return $wa;
 }
 
-it('shortlists on CV and AI interview together: CV 60 + interview 65 first, CV 45 + interview 45 next, and screens a good CV with no interview', function (): void {
+it('with include_cv_only off: CV 60 + interview 65 first, CV 45 + interview 45 next, and a good CV with no interview is screened', function (): void {
     $wa = screeningSetup($this);
+    $this->job->update(['shortlist_settings' => ['include_cv_only' => false]]);
     $all = ['python', 'sql', 'airflow', 'aws'];
     $phone = fn (User $u, string $p) => tap($u)->update(['phone' => $p]);
 
@@ -454,8 +455,9 @@ it('shortlists on CV and AI interview together: CV 60 + interview 65 first, CV 4
     expect($wa->sent)->toHaveCount($count);
 });
 
-it('shortlists someone once they pass the AI screening interview, then invites them to L1', function (): void {
+it('with include_cv_only off, shortlists someone once they pass the AI screening interview, then invites them to L1', function (): void {
     $wa = screeningSetup($this);
+    $this->job->update(['shortlist_settings' => ['include_cv_only' => false]]);
     $student = tap(shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws']))->update(['phone' => '9000000021']);
 
     Sanctum::actingAs($this->recruiter);
@@ -490,7 +492,8 @@ it('shortlists someone once they pass the AI screening interview, then invites t
     $this->postJson("/api/v1/me/interview-invites/{$invite->token}/start")->assertUnprocessable();
 });
 
-it('waits for Meta before sending the AI screening interview, and never shortlists on the CV alone', function (): void {
+it('with include_cv_only off, waits for Meta before sending the AI screening interview and does not shortlist on the CV alone', function (): void {
+    $this->job->update(['shortlist_settings' => ['include_cv_only' => false]]);
     Cache::put('interview_template_statuses', [InterviewTemplates::INVITE => null, InterviewTemplates::LINK => null], 600);
     shortlistStudent($this->tenant, ['python', 'sql', 'airflow', 'aws']);
 

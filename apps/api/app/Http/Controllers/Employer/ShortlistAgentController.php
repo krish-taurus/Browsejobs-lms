@@ -52,9 +52,11 @@ final class ShortlistAgentController extends Controller
         abort_unless($member->role->managesPipeline(), 403);
         abort_unless($job->employer_workspace_id === $workspace->id, 404);
 
-        // A form that predates confirm_rounds must not switch it off by omission.
+        // A form that predates confirm_rounds or include_cv_only must not change them by omission.
+        $current = ShortlistSettings::forJob($job);
         $settings = ShortlistSettings::fromArray([
-            'confirm_rounds' => ShortlistSettings::forJob($job)->confirmRounds,
+            'confirm_rounds' => $current->confirmRounds,
+            'include_cv_only' => $current->includeCvOnly,
             ...$request->validated(),
         ]);
         $job->update(['shortlist_settings' => $settings->toArray()]);

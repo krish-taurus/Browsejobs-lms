@@ -1016,8 +1016,8 @@ export default function TaurusAiPage() {
           locations: intent.locations,
           remote: intent.remote,
           openings: intent.openings ?? 1,
-          // Posted through Taurus: it asks before each interview round goes out.
-          confirm_rounds: true,
+          // Posted through Taurus: the agents run each round on their own and report back;
+          // "Ask me before each round" in the AI shortlist tab switches approvals on.
         });
         if (publish) {
           // Deliberately not published yet: "Post it live" now means "set
