@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 type EnquiryRow = {
   id: number;
-  type: "employer" | "course" | "counselling" | "bootcamp";
+  type: "employer" | "course" | "counselling";
   status: "new" | "contacted" | "qualified" | "closed";
   name: string;
   email: string;
@@ -16,6 +16,8 @@ type EnquiryRow = {
   city: string | null;
   course_slug: string | null;
   message: string | null;
+  utm_source: string | null;
+  landing_page: string | null;
   notified_at: string | null;
   notify_error: string | null;
   created_at: string | null;
@@ -98,7 +100,6 @@ export default function AdminEnquiriesPage() {
           <option value="employer">Employer</option>
           <option value="course">Course</option>
           <option value="counselling">Counselling</option>
-          <option value="bootcamp">Python bootcamp</option>
         </select>
         <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })} className={inputCls}>
           <option value="">All statuses</option>
@@ -148,15 +149,13 @@ export default function AdminEnquiriesPage() {
                     <p className="text-muted">{row.email}</p>
                   </td>
                   <td className="px-4 py-3 text-ink">
-                    {row.type === "bootcamp" ? (
-                      <>
-                        <p>{row.company}</p>
-                        <p className="text-muted">{row.message}</p>
-                      </>
-                    ) : row.type === "employer" ? (
+                    {row.type === "employer" ? (
                       row.company
                     ) : (
-                      row.course_slug
+                      <>
+                        <p>{row.course_slug || row.landing_page}</p>
+                        {row.utm_source ? <p className="text-muted">{row.utm_source}</p> : null}
+                      </>
                     )}
                   </td>
                   <td className="px-4 py-3">

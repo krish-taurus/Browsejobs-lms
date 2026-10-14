@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Disclaimer } from "@/components/brand/Disclaimer";
-import { BootcampForm } from "@/components/seo/BootcampForm";
+import { ApCounselForm } from "@/components/ap/ApCounselForm";
+import "@/components/ap/pages/marketing.css";
 import {
   ContactStrip,
   MoneyArticle,
@@ -159,8 +160,11 @@ export default function FreePythonBootcampPage() {
       </MoneySection>
 
       <MoneySection id="sign-up" kicker="Seat" heading="Request a seat">
-        <p>Name, email, phone, college or company, and experience. Fresher is a complete answer for experience. We call you when the date is set.</p>
-        <BootcampForm />
+        <p>
+          This is the same callback form as the homepage. Leave your name, email, phone, city, and a time to call. We
+          phone you when Dr Krish Bharggav sets the start date.
+        </p>
+        <ApCounselForm source="free-python-bootcamp" />
       </MoneySection>
 
       <MoneySection id="courses" kicker="After the bootcamp" heading="The six-month courses">

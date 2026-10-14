@@ -330,45 +330,6 @@ it('lists, filters, updates, and exports enquiries for staff in the tenant', fun
         ->and($csv->getContent())->not->toContain('Learner One');
 });
 
-it('captures a python bootcamp lead and hides it from another tenant', function () {
-    Mail::fake();
-
-    postEnquiry([
-        'type' => 'bootcamp',
-        'name' => 'Meera Rao',
-        'email' => 'meera@college.test',
-        'phone' => '+91 98400 22222',
-        'company' => 'RV College',
-        'company_size' => null,
-        'roles' => null,
-        'timeline' => null,
-        'city' => null,
-        'course_slug' => 'free-python-bootcamp',
-        'learner_status' => null,
-        'preferred_time' => null,
-        'message' => 'Fresher',
-    ])->assertCreated();
-
-    $enquiry = Enquiry::withoutGlobalScopes()->first();
-
-    expect($enquiry->type)->toBe('bootcamp')
-        ->and($enquiry->tenant_id)->toBe($this->tenant->id)
-        ->and($enquiry->company)->toBe('RV College')
-        ->and($enquiry->message)->toBe('Fresher')
-        ->and($enquiry->course_slug)->toBe('free-python-bootcamp')
-        ->and($enquiry->city)->toBeNull();
-
-    Mail::assertSent(MessageMail::class, function (MessageMail $mail) {
-        return str_contains($mail->subjectLine, 'Python bootcamp')
-            && str_contains($mail->subjectLine, 'Meera Rao');
-    });
-
-    $other = Tenant::factory()->domain('bootcamp-other.test')->create();
-    withinTenant($other, function () {
-        expect(Enquiry::query()->count())->toBe(0);
-    });
-});
-
 it('refuses the enquiry inbox to guests and to students', function () {
     $this->seed(RolePermissionSeeder::class);
 
