@@ -343,7 +343,7 @@ it('flags the agents that have something stuck, in the mission log and on the ca
         ->and($agents->firstWhere('id', 'l1')['task'])->toContain('Late Lata has not started the L1 interview')
         ->and($log)->toContain('The L1 invite for Failed Fiona failed: No mobile number')
         ->and($log)->toContain('Silent Sam has not replied to the L1 invite for over a day')
-        ->and($log)->toContain('Test mode is on: only 1 test student are considered')
+        ->and($log)->toContain('Test mode is on: only 1 test student is considered')
         ->and(collect($agents->firstWhere('id', 'invites')['metrics'])->pluck('label')->all())->toContain('Last activity');
 });
 

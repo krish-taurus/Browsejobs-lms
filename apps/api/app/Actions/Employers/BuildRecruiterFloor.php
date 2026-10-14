@@ -388,7 +388,7 @@ final class BuildRecruiterFloor
 
         $testIds = $workspace->shortlist_test_user_ids;
         if (is_array($testIds) && $testIds !== []) {
-            $alerts[] = ['agent_id' => 'shortlist', 'level' => 'info', 'text' => 'Test mode is on: only '.$this->plural(count($testIds), 'test student').' are considered and messaged.', 'at' => null];
+            $alerts[] = ['agent_id' => 'shortlist', 'level' => 'info', 'text' => 'Test mode is on: only '.$this->plural(count($testIds), 'test student').(count($testIds) === 1 ? ' is' : ' are').' considered and messaged.', 'at' => null];
         }
 
         foreach ($invites as $invite) {
