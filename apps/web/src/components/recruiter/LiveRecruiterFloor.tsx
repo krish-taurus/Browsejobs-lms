@@ -74,7 +74,7 @@ function useMaxWidth(px: number): boolean {
 
 type Sheet = "filters" | "log" | "metrics" | "dossier" | null;
 
-export function LiveRecruiterFloor() {
+export function LiveRecruiterFloor({ embedded = false }: { embedded?: boolean } = {}) {
   const { workspace } = useWorkspace();
   const reduced = useReducedMotion() ?? false;
   const reducedRef = useRef(reduced);
@@ -224,7 +224,7 @@ export function LiveRecruiterFloor() {
   const rightOpen = !narrow || sheet === "log";
 
   return (
-    <div ref={rootRef} className="bj-lab is-console">
+    <div ref={rootRef} className={`bj-lab ${embedded ? "is-embed" : "is-console"}`}>
       <canvas id="lab" ref={canvasRef} className="lab" aria-label="AI Recruiter floor" />
       <div className="fx" id="fx-scan" />
       <div className="fx" id="fx-vig" />

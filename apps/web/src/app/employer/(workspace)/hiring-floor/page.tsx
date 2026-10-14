@@ -5,10 +5,12 @@ import "@/components/ap/pages/taurus-ui.css";
 import { taurusDisplayFont } from "@/components/ap/pages/taurus-font";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import { TaurusConsole } from "@/components/taurus/TaurusConsole";
+import { LiveRecruiterFloor } from "@/components/recruiter/LiveRecruiterFloor";
 import { employerApi } from "@/lib/employer";
 import { employerFloorSource } from "@/lib/taurus-floor/live";
 
 type JobOption = { id: number; title: string };
+type View = "console" | "agents";
 
 /**
  * Hiring floor — the employer's real pipeline on the Taurus 3D floor:
@@ -20,6 +22,20 @@ export default function HiringFloorPage() {
   const { workspace } = useWorkspace();
   const [jobId, setJobId] = useState<number | null>(null);
   const [jobs, setJobs] = useState<JobOption[]>([]);
+  const [view, setView] = useState<View>("console");
+
+  // /employer/hiring-floor?view=agents opens the live agents view directly.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("view") === "agents") setView("agents");
+  }, []);
+
+  function pickView(next: View) {
+    setView(next);
+    const url = new URL(window.location.href);
+    if (next === "agents") url.searchParams.set("view", "agents");
+    else url.searchParams.delete("view");
+    window.history.replaceState(null, "", url.toString());
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -47,24 +63,40 @@ export default function HiringFloorPage() {
           <p className="tx-sub">Every stage of your hiring, live. Ask Taurus anything, or tell it what to do next: it sets it up and waits for your go-ahead.</p>
         </div>
         <div className="tx-tools tx-tools--filter">
-          <label className="tx-label" htmlFor="hiring-floor-job" style={{ margin: 0 }}>
-            Role
-          </label>
-          <select id="hiring-floor-job" value={jobId ?? ""} onChange={(e) => setJobId(e.target.value ? Number(e.target.value) : null)} className="tx-select">
-            <option value="">All roles</option>
-            {jobs.map((j) => (
-              <option key={j.id} value={j.id}>
-                {j.title}
-              </option>
-            ))}
-          </select>
+          <div className="tx-seg" role="group" aria-label="Hiring floor view">
+            <button type="button" aria-pressed={view === "console"} onClick={() => pickView("console")}>
+              Taurus console
+            </button>
+            <button type="button" aria-pressed={view === "agents"} onClick={() => pickView("agents")}>
+              Live agents
+            </button>
+          </div>
+          {view === "console" && (
+            <>
+              <label className="tx-label" htmlFor="hiring-floor-job" style={{ margin: 0 }}>
+                Role
+              </label>
+              <select id="hiring-floor-job" value={jobId ?? ""} onChange={(e) => setJobId(e.target.value ? Number(e.target.value) : null)} className="tx-select">
+                <option value="">All roles</option>
+                {jobs.map((j) => (
+                  <option key={j.id} value={j.id}>
+                    {j.title}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
-      <div className="tx-floor tx-floor--admin">
-        <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Try: “send the L1 invites” or “where are we?”" subtitle={workspace.name} />
-      </div>
+      {view === "console" ? (
+        <div className="tx-floor tx-floor--admin">
+          <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Try: “send the L1 invites” or “where are we?”" subtitle={workspace.name} />
+        </div>
+      ) : (
+        <LiveRecruiterFloor key={workspace.id} embedded />
+      )}
       <p className="tx-fine">
-        Built from your jobs and applications. Scores appear once grading finishes. Taurus never sends an invite, moves a candidate or makes an offer until an owner or recruiter says go ahead.
+        Built from your jobs and applications. Live agents shows the eight hiring agents, what each is doing now and anything that needs attention. Scores appear once grading finishes. Taurus never sends an invite, moves a candidate or makes an offer until an owner or recruiter says go ahead.
       </p>
     </div>
   );
