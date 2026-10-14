@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "Do I have to travel to Bengaluru to enrol?",
-    a: `You do not have to travel for classes. They are live online, and there is a classroom in Whitefield if you want the room. The address is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is ${OFFICE_PHONE.display}.`,
+    a: `You do not have to travel for classes. They are live online, and there is a classroom in Whitefield if you want the room. The address is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is ${OFFICE_PHONE.display}.`,
   },
   {
     q: "Is the fee different outside Bengaluru?",
@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     q: "Is there a Whitefield classroom?",
-    a: "Yes. One classroom, in Whitefield: Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Bengaluru 560067. There is no published classroom in every other city.",
+    a: "Yes. One classroom, in Whitefield: Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Bengaluru 560066. There is no published classroom in every other city.",
   },
   {
     q: "Online or offline?",
@@ -109,7 +109,7 @@ export default function DataEngineeringIndiaPage() {
         </p>
         <p>
           The company is IBrowseJobs Technologies Pvt Ltd. The published address is Aashvi, 3rd Floor, Whitefield
-          Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067. Use it when you want a person in the room: the free counselling that produces a written Career
+          Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. Use it when you want a person in the room: the free counselling that produces a written Career
           Analysis Report. You can also do that conversation remotely. The report is yours whether you join or not,
           including when the recommendation is a track we do not teach, or no course at all.
         </p>

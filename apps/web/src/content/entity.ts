@@ -75,13 +75,13 @@ export const publishedAddress = {
   streetAddress: "Aashvi, 3rd Floor, Whitefield Channasandra Main Road",
   addressLocality: "Bengaluru",
   addressRegion: "Karnataka",
-  postalCode: "560067",
+  postalCode: "560066",
   addressCountry: "IN",
 } as const;
 
-/** One line for visible address copy. Postal code is the confirmed office, 560067. */
+/** One line for visible address copy. Postal code is the confirmed office, 560066. */
 export const publishedAddressLine =
-  "Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067";
+  "Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066";
 
 export const publishedHours = {
   dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],

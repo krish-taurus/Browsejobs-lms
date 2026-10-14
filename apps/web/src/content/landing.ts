@@ -27,7 +27,7 @@ export const contact = {
   /** Office line. Hiring pages use EMPLOYER_PHONE instead. */
   phone: OFFICE_PHONE.display,
   email: "hello@browsejobs.ai",
-  address: "Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067",
+  address: "Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066",
   hours: "Mon–Sat, 9:00 AM – 7:00 PM IST",
   entity: "IBrowseJobs Technologies Pvt Ltd",
 } as const;

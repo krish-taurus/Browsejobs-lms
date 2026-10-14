@@ -309,7 +309,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "whitefield",
         heading: "What is actually taught from Whitefield",
         paragraphs: [
-          `Classes are instructor-led and online, with recordings for a year. The office is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is ${OFFICE_PHONE.display}. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.`,
+          `Classes are instructor-led and online, with recordings for a year. The office is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is ${OFFICE_PHONE.display}. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.`,
           "The city page is [Data Engineering in Bengaluru](/data-engineering-course-bangalore). The modules are on the [course page](/courses/data-engineering). Illustrative pay bands, which are not an offer, are on the Bengaluru salary page linked from there. For the same course framed for the rest of the country, read [Best data engineering course in India](/answers/best-data-engineering-course-in-india).",
         ],
       },
@@ -554,7 +554,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "published",
         heading: "What is published",
         paragraphs: [
-          "Six months. Live online, and a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067. The phone is " +
+          "Six months. Live online, and a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. The phone is " +
             OFFICE_PHONE.display +
             ". Founder: Dr Krish Bharggav. The long page is [Agentic AI in India](/agentic-ai-course-india). The course page is [Agentic AI](/courses/agentic-ai-course).",
           "Registration is ₹30,000 and covers the course. Pay after placement is three months of the CTC on the offer you accept, charged in EMIs only after you accept. Read [pay after placement](/pay-after-placement).",
@@ -609,7 +609,7 @@ export const answerPages: readonly AnswerPage[] = [
         heading: "How to choose in Bangalore",
         paragraphs: [
           "Ask whether the class is live, whether you can attend in Whitefield or online, and whether the fee is in writing. Do not take a rank that a page invented.",
-          "The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560067. The city page is [Gen AI in Bangalore](/gen-ai-course-bangalore). Its canonical tag points at [Agentic AI in Bangalore](/agentic-ai-course-bangalore), because they are one course.",
+          "The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. The city page is [Gen AI in Bangalore](/gen-ai-course-bangalore). Its canonical tag points at [Agentic AI in Bangalore](/agentic-ai-course-bangalore), because they are one course.",
         ],
       },
       {
@@ -676,7 +676,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "published",
         heading: "What BrowseJobs publishes",
         paragraphs: [
-          "Six months. Excel, SQL, Python, statistics and Power BI. Live online and at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560067. Phone " +
+          "Six months. Excel, SQL, Python, statistics and Power BI. Live online and at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. Phone " +
             OFFICE_PHONE.display +
             ". Founder Dr Krish Bharggav.",
           "₹30,000 covers the course. Pay after placement is three months of CTC, charged in EMIs only after you accept an offer. Details are on [pay after placement](/pay-after-placement).",
@@ -739,7 +739,7 @@ export const answerPages: readonly AnswerPage[] = [
         heading: "Length, fee, and tools",
         paragraphs: [
           "Six months, not a shorter programme. Excel, SQL, Python, statistics and Power BI. ₹30,000 covers the course. Pay after placement is three months of the CTC on an offer you accept, charged in EMIs afterwards. See [pay after placement](/pay-after-placement).",
-          "The office is in Whitefield, Bengaluru, 560067. You can study online from any city. The phone is " +
+          "The office is in Whitefield, Bengaluru, 560066. You can study online from any city. The phone is " +
             OFFICE_PHONE.display +
             ". Founder: Dr Krish Bharggav.",
         ],

@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "Is the Data Engineering course taught in Whitefield, or online?",
-    a: "Both. Classes are live online, and there is a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067. You do not need to commute for every session. Recordings cover a miss. Hours are Monday to Saturday, 9:00 AM to 7:00 PM IST.",
+    a: "Both. Classes are live online, and there is a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. You do not need to commute for every session. Recordings cover a miss. Hours are Monday to Saturday, 9:00 AM to 7:00 PM IST.",
   },
   {
     q: "How long is the data engineering course, and what does it cover?",
@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: "Is there a Whitefield classroom?",
-    a: "Yes. The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560067. The same six-month course is taught there and live online.",
+    a: "Yes. The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. The same six-month course is taught there and live online.",
   },
   {
     q: "Online or offline?",
@@ -115,7 +115,7 @@ export default function DataEngineeringBangalorePage() {
           The published class format is live online plus recordings, with one year of access. You do not have to sit
           in Whitefield for every session. The office is where counselling happens and where you can come in. The
           address published on the site is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru,
-          Karnataka 560067. The phone is <TelLink phone={OFFICE_PHONE} className="ap-link" />.
+          Karnataka 560066. The phone is <TelLink phone={OFFICE_PHONE} className="ap-link" />.
           The hours are Monday to Saturday, 9:00 AM to 7:00 PM IST. Email is hello@browsejobs.ai.
         </p>
         <p>
