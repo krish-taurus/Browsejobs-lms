@@ -252,6 +252,7 @@ export function ArgusFooter() {
             <li><Link href="/get-hired">Get hired</Link></li>
             <li><Link href="/courses">Courses</Link></li>
             <li><Link href="/courses/enquire">Ask about a course</Link></li>
+            <li><Link href="/free-python-bootcamp">Free 5-day Python bootcamp</Link></li>
           </ul>
         </div>
         <div>
@@ -281,6 +282,9 @@ export function ArgusFooter() {
                 <Link href={course.href}>{course.name}</Link>
               </li>
             ))}
+            <li><Link href="/courses/agentic-ai-course">Agentic AI</Link></li>
+            <li><Link href="/data-analytics-course-bangalore">data analytics course in Bangalore</Link></li>
+            <li><Link href="/agentic-ai-course-bangalore">Agentic AI course in Bangalore</Link></li>
           </ul>
         </div>
       </div>

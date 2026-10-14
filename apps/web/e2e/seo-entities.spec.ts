@@ -88,7 +88,7 @@ for (const slug of ["data-engineering", "devops-cloud", "python-backend", "data-
     const html = await page.content();
     expect(html).toContain('"courseMode":"Online"');
     expect(html).toContain('"priceCurrency":"INR"');
-    expect(html).not.toContain("/courses/agentic-ai");
+    expect(html).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
   });
 }
 

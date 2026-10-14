@@ -141,6 +141,7 @@ export function ApShell({
                 <li><Link href="/get-hired">Get hired</Link></li>
                 <li><Link href="/courses">Courses</Link></li>
                 <li><Link href="/courses/enquire">Ask about a course</Link></li>
+                <li><Link href="/free-python-bootcamp">Free 5-day Python bootcamp</Link></li>
               </ul>
             </div>
             <div>
@@ -171,6 +172,9 @@ export function ApShell({
                 <li><Link href="/courses/devops-cloud">DevOps &amp; Cloud</Link></li>
                 <li><Link href="/courses/python-backend">Python Backend</Link></li>
                 <li><Link href="/courses/data-analytics">Data Analytics</Link></li>
+                <li><Link href="/courses/agentic-ai-course">Agentic AI</Link></li>
+                <li><Link href="/data-analytics-course-bangalore">data analytics course in Bangalore</Link></li>
+                <li><Link href="/agentic-ai-course-bangalore">Agentic AI course in Bangalore</Link></li>
               </ul>
             </div>
           </div>

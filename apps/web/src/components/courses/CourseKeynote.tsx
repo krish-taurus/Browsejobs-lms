@@ -1001,8 +1001,8 @@ export default function CourseKeynote({ course }: { course: CourseDetail }) {
           >
             {international
               ? `$${INTL_PRICE} registration (one payment)`
-              : "₹30,000 registration (EMI 3 × ₹10,000)"}{" "}
-            only after the free steps. Placement fee only after you accept an offer.
+              : "₹30,000 registration covers the course."}{" "}
+            Only after the free steps. The placement fee is three months of CTC, charged in EMIs only after you accept an offer.
             30-day money-back guarantee, in writing.
           </motion.p>
           <motion.div

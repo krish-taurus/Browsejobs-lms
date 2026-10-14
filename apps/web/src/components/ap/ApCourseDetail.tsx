@@ -23,7 +23,7 @@ export function courseFaqs(course: CourseDetail) {
     },
     {
       q: "Do I pay before I get a job?",
-      a: "Registration is ₹30,000, paid after three free steps. The placement fee is your first three months' CTC (salary), due only after you accept a job offer.",
+      a: "Registration is ₹30,000 and it covers the course, paid after three free steps. The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept.",
     },
     {
       q: "Is a job guaranteed after the course?",

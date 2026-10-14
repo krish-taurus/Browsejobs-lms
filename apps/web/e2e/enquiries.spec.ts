@@ -74,7 +74,7 @@ test("enquiry pages are in the sitemap and linked from the product pages", async
   const xml = await (await request.get("/sitemap.xml")).text();
   expect(xml).toContain("https://browsejobs.ai/employers/enquire");
   expect(xml).toContain("https://browsejobs.ai/courses/enquire");
-  expect(xml).not.toContain("/courses/agentic-ai");
+  expect(xml).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
 
   await page.goto("/courses");
   await expect(page.locator("#main").getByRole("link", { name: "Ask about a course" }).first()).toHaveAttribute("href", "/courses/enquire");

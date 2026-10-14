@@ -15,6 +15,7 @@ const UPDATED_LABEL = "6 Oct 2026";
 
 function formatUpdated(iso: string): string {
   if (iso === "2026-10-06") return UPDATED_LABEL;
+  if (iso === "2026-10-14") return "14 Oct 2026";
   return iso;
 }
 
@@ -54,7 +55,7 @@ export function AnswerView({
           <p className="eyebrow">{page.kicker}</p>
           <h1 className="h-hero">{page.title}</h1>
           <p className="fine">
-            Updated <time dateTime={ANSWERS_UPDATED}>{formatUpdated(ANSWERS_UPDATED)}</time>
+            Updated <time dateTime={page.updated ?? ANSWERS_UPDATED}>{formatUpdated(page.updated ?? ANSWERS_UPDATED)}</time>
           </p>
           <div className="ap-lede">
             <p data-direct-answer>{page.directAnswer}</p>

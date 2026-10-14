@@ -20,7 +20,7 @@ const READS = [
 
 export function CoursesHub() {
   const live = careerCourseCards();
-  const waitlist = courses.filter((course) => !course.live);
+  const waitlist = courses.filter((course) => !course.live && course.slug !== "agentic-ai");
 
   return (
     <>
@@ -42,6 +42,16 @@ export function CoursesHub() {
           {live.map((course) => (
             <CourseCard key={course.slug} course={course} />
           ))}
+          <CourseCard
+            course={{
+              slug: "agentic-ai-course",
+              name: "Agentic AI",
+              line: "Python, large language models, RAG, and AI agents.",
+              duration: "6 months",
+              format: "Live online + Whitefield",
+              href: "/courses/agentic-ai-course",
+            }}
+          />
         </ul>
       </section>
 

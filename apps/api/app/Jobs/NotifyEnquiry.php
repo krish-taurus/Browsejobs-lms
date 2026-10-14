@@ -92,6 +92,10 @@ final class NotifyEnquiry implements ShouldQueue
             return 'New counselling enquiry — '.$enquiry->name;
         }
 
+        if ($enquiry->type === Enquiry::TYPE_BOOTCAMP) {
+            return 'New Python bootcamp enquiry — '.$enquiry->name;
+        }
+
         return 'New course enquiry — '.($enquiry->course_slug ?: $enquiry->name);
     }
 
@@ -113,6 +117,10 @@ final class NotifyEnquiry implements ShouldQueue
         } elseif ($enquiry->type === Enquiry::TYPE_COUNSELLING) {
             $lines[] = 'Request: free counselling session';
             $lines[] = 'Preferred time: '.$enquiry->label('PREFERRED_TIMES', $enquiry->preferred_time);
+        } elseif ($enquiry->type === Enquiry::TYPE_BOOTCAMP) {
+            $lines[] = 'Bootcamp: free 5-day Python';
+            $lines[] = 'College or company: '.(string) $enquiry->company;
+            $lines[] = 'Experience: '.(string) $enquiry->message;
         } else {
             $lines[] = 'Course: '.(string) $enquiry->course_slug;
             $lines[] = 'Status: '.$enquiry->label('LEARNER_STATUSES', $enquiry->learner_status);

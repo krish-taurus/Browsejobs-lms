@@ -15,6 +15,7 @@ const COLUMNS = [
       { href: "/get-hired", label: "Get hired" },
       { href: "/courses", label: "Courses" },
       { href: "/courses/enquire", label: "Ask about a course" },
+      { href: "/free-python-bootcamp", label: "Free 5-day Python bootcamp" },
       { href: "/jobs", label: "Jobs" },
     ],
   },
@@ -68,6 +69,16 @@ export function AppleFooter() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/courses/agentic-ai-course" className="inline-flex min-h-11 items-center">
+                Agentic AI
+              </Link>
+            </li>
+            <li>
+              <Link href="/data-analytics-course-bangalore" className="inline-flex min-h-11 items-center">
+                data analytics course in Bangalore
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

@@ -28,16 +28,15 @@ export default function Terms() {
 
       <h2>Registration and access</h2>
       <p>
-        Registration is ₹30,000 (or 3 EMIs of ₹10,000), payable only after the
+        Registration is ₹30,000 and it covers the course, payable only after the
         free steps. Enrolment includes one year of unlimited access to your
         program from the enrolment date.
       </p>
 
       <h2>Placement fee</h2>
       <p>
-        The placement fee equals your first 3 months&apos; CTC, due only after
-        you accept an offer, paid as 6 monthly EMIs, with your ₹30,000
-        registration adjusted inside it. This is governed by a signed enrolment
+        The placement fee equals three months of your CTC, due only after
+        you accept an offer, and charged in EMIs after that acceptance. This is governed by a signed enrolment
         agreement — not by these terms alone.
       </p>
 

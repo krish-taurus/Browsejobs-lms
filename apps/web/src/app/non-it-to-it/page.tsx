@@ -87,7 +87,7 @@ const faqs = [
   },
   {
     q: "What do I pay while I am deciding?",
-    a: "Nothing for the three free steps: counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Registration is ₹30,000 after that, or three EMIs of ₹10,000. Read the pay-after-placement page before you treat the second fee as “free until hired”. Registration is not contingent on an offer.",
+    a: "Nothing for the three free steps: counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Registration is ₹30,000 after that, and it covers the course. Read the pay-after-placement page before you treat the second fee as “free until hired”. Registration is not contingent on an offer.",
   },
 ] as const;
 
@@ -275,10 +275,10 @@ export default function NonItToItPage() {
       <MoneySection id="fees" kicker="Money" heading="Decide before the ₹30,000, not after">
         <p>
           The order is fixed. Written report, live masterclass, 7-hour Python bootcamp, then registration of
-          ₹30,000 or three EMIs of ₹10,000. The placement fee — first three months of the CTC on an offer you
-          accept, six EMIs, registration adjusted inside it — comes only after a yes from you to an employer. If
-          the switch does not produce an offer you accept, that second fee is not charged. The registration is
-          still a real payment, refundable for 30 days for any reason, and not refundable after that window.
+          ₹30,000, which covers the course. The placement fee — three months of the CTC on an offer you accept,
+          charged in EMIs — comes only after a yes from you to an employer. If the switch does not produce an offer
+          you accept, that second fee is not charged. The registration is still a real payment, refundable for 30
+          days for any reason, and not refundable after that window.
         </p>
         <p>
           Read <TextLink href="/pay-after-placement">how pay after placement works</TextLink> before you repeat

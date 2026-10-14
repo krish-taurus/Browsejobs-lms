@@ -53,8 +53,10 @@ class Enquiry extends Model
 
     public const TYPE_COUNSELLING = 'counselling';
 
+    public const TYPE_BOOTCAMP = 'bootcamp';
+
     /** @var list<string> */
-    public const TYPES = [self::TYPE_EMPLOYER, self::TYPE_COURSE, self::TYPE_COUNSELLING];
+    public const TYPES = [self::TYPE_EMPLOYER, self::TYPE_COURSE, self::TYPE_COUNSELLING, self::TYPE_BOOTCAMP];
 
     /** @var list<string> */
     public const STATUSES = ['new', 'contacted', 'qualified', 'closed'];

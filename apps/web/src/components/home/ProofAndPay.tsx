@@ -44,12 +44,8 @@ export function ProofAndPay() {
             <div className="home-frame h-full rounded-[22px] border border-white/10 bg-surface/70 p-7 backdrop-blur-md md:p-8">
               <p className="kicker text-trust">Registration</p>
               <p className="mono mt-4 text-5xl font-semibold text-fg">{rupee(fees.registration)}</p>
-              <p className="mono mt-2 text-sm text-muted">
-                or {fees.registrationEmi.months} × {rupee(fees.registrationEmi.amount)}
-              </p>
               <p className="mt-4 text-sm leading-relaxed text-muted">
-                You pay this only after the free masterclass and the free 7-hour bootcamp. Or split
-                it: {fees.registrationEmi.months} × {rupee(fees.registrationEmi.amount)}.
+                This covers the course. You pay it only after the free masterclass and the free 7-hour bootcamp.
               </p>
             </div>
           </ScrollReveal>
@@ -58,10 +54,8 @@ export function ProofAndPay() {
               <p className="kicker text-sky">Placement fee</p>
               <p className="display mt-4 text-3xl text-fg md:text-4xl">After you accept an offer.</p>
               <p className="mt-4 text-sm leading-relaxed text-ink2">
-                This is your first {fees.placement.monthsOfCtc} months&apos; salary, and you pay it
-                only after you take the offer. Split across {fees.placement.emis} months. The{" "}
-                {rupee(fees.placement.adjusted)} you already paid comes off that bill.{" "}
-                {fees.guaranteeDays}-day money-back — any reason, in writing.
+                This is {fees.placement.monthsOfCtc} months of the CTC on the offer you accept, charged in EMIs
+                only after you take the offer. {fees.guaranteeDays}-day money-back — any reason, in writing.
               </p>
             </div>
           </ScrollReveal>
