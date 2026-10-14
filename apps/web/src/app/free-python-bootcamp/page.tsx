@@ -17,10 +17,12 @@ import { OFFICE_PHONE } from "@/content/phones";
 import { breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, ORGANIZATION_ID, SITE_ORIGIN, webPageNode } from "@/lib/seo";
 
 const UPDATED = "2026-10-14";
+const START = "2026-10-19";
+const END = "2026-10-23";
 const PATH = "/free-python-bootcamp";
 const TITLE = "Free 5-Day Python Bootcamp | BrowseJobs Bangalore";
 const DESCRIPTION =
-  "Free 5-day live online Python bootcamp, one hour each evening. Start date not set. Score 75%+ and your CV goes to 3,000 HR recruiters.";
+  "Free 5-day live online Python bootcamp, 19–23 Oct 2026, one hour each evening. Score 75%+ and your CV goes to 3,000 HR recruiters.";
 
 const faqs = [
   {
@@ -29,15 +31,15 @@ const faqs = [
   },
   {
     q: "How long is each day?",
-    a: "One hour, live and online, on five evenings. It is not the separate 7-hour Python bootcamp named in the free ladder.",
+    a: "One hour, live and online, on five evenings from Monday 19 October to Friday 23 October 2026. It is not the separate 7-hour Python bootcamp named in the free ladder.",
   },
   {
     q: "When does it start?",
-    a: "The start date on this page is a placeholder. Dr Krish Bharggav has not set the first cohort yet. The form saves your details so we can call you when the date is published.",
+    a: "Monday 19 October 2026. The five sessions run 19–23 October 2026, Monday to Friday, one hour each evening, live and online.",
   },
   {
     q: "What is on the five days?",
-    a: "Day 1 is Python basics. Day 2 is data types and control flow. Day 3 is functions and files. Day 4 is pandas basics. Day 5 is a mini project plus the AI interview.",
+    a: "Day 1, Monday 19 October 2026, is Python basics. Day 2, Tuesday 20 October 2026, is data types and control flow. Day 3, Wednesday 21 October 2026, is functions and files. Day 4, Thursday 22 October 2026, is pandas basics. Day 5, Friday 23 October 2026, is a mini project plus the AI interview.",
   },
   {
     q: "What does the AI interview do?",
@@ -50,12 +52,17 @@ const faqs = [
 ] as const;
 
 const days = [
-  { day: "Day 1", title: "Python basics" },
-  { day: "Day 2", title: "Data types and control flow" },
-  { day: "Day 3", title: "Functions and files" },
-  { day: "Day 4", title: "Pandas basics" },
-  { day: "Day 5", title: "Mini project plus the AI interview" },
+  { day: "Day 1", label: "Monday 19 October 2026", iso: "2026-10-19", title: "Python basics" },
+  { day: "Day 2", label: "Tuesday 20 October 2026", iso: "2026-10-20", title: "Data types and control flow" },
+  { day: "Day 3", label: "Wednesday 21 October 2026", iso: "2026-10-21", title: "Functions and files" },
+  { day: "Day 4", label: "Thursday 22 October 2026", iso: "2026-10-22", title: "Pandas basics" },
+  { day: "Day 5", label: "Friday 23 October 2026", iso: "2026-10-23", title: "Mini project plus the AI interview" },
 ] as const;
+
+const onlineLocation = {
+  "@type": "VirtualLocation" as const,
+  url: `${SITE_ORIGIN}${PATH}`,
+};
 
 const page = {
   path: PATH,
@@ -82,15 +89,14 @@ export default function FreePythonBootcampPage() {
       "@type": "Event",
       name: "Free 5-Day Python Bootcamp",
       description:
-        "Free live online Python bootcamp. One hour each evening for five days. The start date is not published yet.",
+        "Free live online Python bootcamp. Five sessions, one hour each evening, Monday 19 October through Friday 23 October 2026.",
+      startDate: START,
+      endDate: END,
       eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
       eventStatus: "https://schema.org/EventScheduled",
       url: `${SITE_ORIGIN}${PATH}`,
       isAccessibleForFree: true,
-      location: {
-        "@type": "VirtualLocation",
-        url: `${SITE_ORIGIN}${PATH}`,
-      },
+      location: onlineLocation,
       organizer: { "@id": ORGANIZATION_ID },
       offers: {
         "@type": "Offer",
@@ -98,6 +104,20 @@ export default function FreePythonBootcampPage() {
         priceCurrency: "INR",
         url: `${SITE_ORIGIN}${PATH}`,
       },
+      subEvent: days.map((item) => ({
+        "@type": "Event" as const,
+        name: `${item.day}: ${item.title}`,
+        description: `${item.title}. One hour, live and online, on the evening of ${item.label}.`,
+        startDate: item.iso,
+        endDate: item.iso,
+        duration: "PT1H",
+        eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+        eventStatus: "https://schema.org/EventScheduled",
+        url: `${SITE_ORIGIN}${PATH}`,
+        isAccessibleForFree: true,
+        location: onlineLocation,
+        organizer: { "@id": ORGANIZATION_ID },
+      })),
     },
     faqNode(faqs),
   ]);
@@ -118,30 +138,32 @@ export default function FreePythonBootcampPage() {
               <Link href="/founder">Dr Krish Bharggav</Link>
             </p>
             <p>
-              A free 5-day Python bootcamp, live and online, one hour each evening. It is for people who want to sit a
-              short class before a six-month course. The phone is {OFFICE_PHONE.display}.
+              A free 5-day Python bootcamp, live and online, one hour each evening, Monday 19 October through Friday 23
+              October 2026. It is for people who want to sit a short class before a six-month course. The phone is{" "}
+              {OFFICE_PHONE.display}.
             </p>
           </>
         }
       />
 
-      <MoneySection id="when" kicker="Start date" heading="Start date: not set yet">
+      <MoneySection id="when" kicker="Start date" heading="Monday 19 October 2026">
         <p>
-          <strong>Placeholder.</strong> Dr Krish Bharggav has not set the first cohort date. This line will be replaced
-          when he does. Do not treat any other date you have seen elsewhere as the start of this bootcamp.
+          The first session is <time dateTime={START}>Monday 19 October 2026</time>. Five daily sessions run{" "}
+          <time dateTime={START}>19 October</time> through <time dateTime={END}>23 October 2026</time>, Monday to
+          Friday, one hour each evening, live and online.
         </p>
         <p>
-          The class is live online. Each evening is one hour. Five days, in this order: Python basics; data types and
-          control flow; functions and files; pandas basics; a mini project plus the AI interview.
+          The order is Python basics; data types and control flow; functions and files; pandas basics; a mini project
+          plus the AI interview.
         </p>
       </MoneySection>
 
       <MoneySection id="agenda" kicker="Agenda" heading="The five evenings">
         <ol>
           {days.map((item) => (
-            <li key={item.day}>
+            <li key={item.iso}>
               <strong>
-                {item.day}. {item.title}.
+                {item.day}, <time dateTime={item.iso}>{item.label}</time>. {item.title}.
               </strong>
             </li>
           ))}
@@ -162,7 +184,7 @@ export default function FreePythonBootcampPage() {
       <MoneySection id="sign-up" kicker="Seat" heading="Request a seat">
         <p>
           This is the same callback form as the homepage. Leave your name, email, phone, city, and a time to call. We
-          phone you when Dr Krish Bharggav sets the start date.
+          phone you about a seat on the 19–23 October 2026 cohort.
         </p>
         <ApCounselForm source="free-python-bootcamp" />
       </MoneySection>

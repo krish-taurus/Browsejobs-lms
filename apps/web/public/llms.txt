@@ -18,7 +18,7 @@
 - [DevOps & Cloud](https://browsejobs.ai/courses/devops-cloud): Ship, scale, and run production systems.
 - [Python Backend](https://browsejobs.ai/courses/python-backend): APIs, databases, and production Python.
 - [All courses](https://browsejobs.ai/courses)
-- [Free 5-day Python bootcamp](https://browsejobs.ai/free-python-bootcamp): One hour each evening. Start date is a placeholder until it is set. Day 5 includes a mini project and the AI interview.
+- [Free 5-day Python bootcamp](https://browsejobs.ai/free-python-bootcamp): Monday 19 October through Friday 23 October 2026, one hour each evening, live and online. Day 5 includes a mini project and the AI interview.
 
 ## Hiring product
 
