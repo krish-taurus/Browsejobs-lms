@@ -242,21 +242,16 @@ export function HowItWorksAp() {
             <article className="tile tile-pad">
               <p className="eyebrow-sm">Registration</p>
               <p className="hiw-price num">{rupee(fees.registration)}</p>
-              <p className="hiw-price-sub num">
-                or {fees.registrationEmi.months} × {rupee(fees.registrationEmi.amount)}
-              </p>
               <p className="body">
-                You pay this only after the free masterclass and the free 7-hour bootcamp. Or split it: {fees.registrationEmi.months} ×{" "}
-                {rupee(fees.registrationEmi.amount)}.
+                This covers the course. You pay it only after the free masterclass and the free 7-hour bootcamp.
               </p>
             </article>
             <article className="tile tile-pad">
               <p className="eyebrow-sm">Placement fee</p>
               <p className="hiw-price hiw-price-words">After you accept an offer.</p>
               <p className="body">
-                This is your first {fees.placement.monthsOfCtc} months&apos; salary, and you pay it only after you take the offer. Split across{" "}
-                {fees.placement.emis} months. The {rupee(fees.placement.adjusted)} you already paid comes off that bill. {fees.guaranteeDays}-day money-back,
-                for any reason, in writing.
+                This is {fees.placement.monthsOfCtc} months of the CTC on the offer you accept, charged in EMIs only after
+                you take the offer. {fees.guaranteeDays}-day money-back, for any reason, in writing.
               </p>
             </article>
           </div>

@@ -15,6 +15,10 @@ export type AnswerLink = { href: string; label: string; note: string };
 export type AnswerPage = {
   slug: string;
   title: string;
+  /** Document title when it must differ from the H1. Includes the brand when set. */
+  documentTitle?: string;
+  /** ISO date for this page. Falls back to ANSWERS_UPDATED. */
+  updated?: string;
   description: string;
   kicker: string;
   /** Student pages lead with the free AI interview. Employer pages lead with the hiring conversation. */
@@ -69,7 +73,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "fees",
         heading: "The fee, and the step before a course",
         paragraphs: [
-          "Registration is ₹30,000 after three free steps, or three EMIs of ₹10,000. The placement fee is separate. It is the first three months of the CTC on the offer you accept, due only after you accept it. Read [how pay after placement works](/answers/is-pay-after-placement-real) before you treat the course as free until you are hired.",
+          "Registration is ₹30,000 and it covers the course. The placement fee is separate. It is three months of the CTC on the offer you accept, charged in EMIs only after you accept it. Read [how pay after placement works](/answers/is-pay-after-placement-real) before you treat the course as free until you are hired.",
           "Take the free AI interview before you pay for six months. It is 15 questions from your CV and a score out of 100. If the score shows a gap you cannot close alone, book free counselling. You leave with a written Career Analysis Report whether you join or not. A course is the step after that. If you are changing career, start with [how a non-IT person becomes a data engineer](/answers/how-can-a-non-it-person-become-a-data-engineer).",
         ],
       },
@@ -85,7 +89,7 @@ export const answerPages: readonly AnswerPage[] = [
       },
       {
         q: "How much does it cost?",
-        a: "Registration is ₹30,000 after the free counselling, the free masterclass, and the free 7-hour Python bootcamp. Or three EMIs of ₹10,000. The placement fee is due only after you accept an offer. It is not charged if you do not accept one.",
+        a: "Registration is ₹30,000 and it covers the course, after the free counselling, the free masterclass, and the free 7-hour Python bootcamp. The placement fee is three months of CTC, charged in EMIs only after you accept an offer. It is not charged if you do not accept one.",
       },
       {
         q: "Do I have to take the course to be seen by HR?",
@@ -305,7 +309,7 @@ export const answerPages: readonly AnswerPage[] = [
         id: "whitefield",
         heading: "What is actually taught from Whitefield",
         paragraphs: [
-          `Classes are instructor-led and online, with recordings for a year. The office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is ${OFFICE_PHONE.display}. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.`,
+          `Classes are instructor-led and online, with recordings for a year. The office is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. You do not commute to Whitefield for every class. The phone is ${OFFICE_PHONE.display}. The syllabus is Python, SQL, Spark, Databricks, AWS, Azure and Airflow, over six months. Interview practice is a module. Kafka is self-study.`,
           "The city page is [Data Engineering in Bengaluru](/data-engineering-course-bangalore). The modules are on the [course page](/courses/data-engineering). Illustrative pay bands, which are not an offer, are on the Bengaluru salary page linked from there. For the same course framed for the rest of the country, read [Best data engineering course in India](/answers/best-data-engineering-course-in-india).",
         ],
       },
@@ -352,7 +356,7 @@ export const answerPages: readonly AnswerPage[] = [
     kicker: "Fees · in writing",
     audience: "student",
     directAnswer:
-      "Pay after placement at BrowseJobs is real, and it is not free until you are hired. Registration is ₹30,000 after three free steps. The placement fee is the first three months of the CTC on the offer you accept, due only after you accept it, with that ₹30,000 adjusted inside it. No accepted offer means no placement fee.",
+      "Pay after placement at BrowseJobs is real, and it is not free until you are hired. Registration is ₹30,000 and it covers the course. The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept it. No accepted offer means no placement fee.",
     sections: [
       {
         id: "two-fees",
@@ -366,8 +370,8 @@ export const answerPages: readonly AnswerPage[] = [
         id: "when",
         heading: "When each fee is due",
         paragraphs: [
-          "Three steps cost nothing: counselling with a written Career Analysis Report, a live masterclass, and a 7-hour Python bootcamp. You can leave after any of them. Registration is ₹30,000, or three EMIs of ₹10,000, only after those steps. There is a 30-day money-back guarantee, any reason, in writing. After 30 days the published refund policy says registration is non-refundable. The refund processing window is still a placeholder on the policy page, so this page will not invent a number of days.",
-          "The placement fee is the first three months of the CTC on the offer you accept, paid as six monthly EMIs, with the ₹30,000 subtracted so you are not paying registration twice. Completing the course does not create it. Attending interviews does not create it. An offer you decline does not create it. Acceptance does. The worked example on the fee page is an illustration, not a salary you have been promised.",
+          "Three steps cost nothing: counselling with a written Career Analysis Report, a live masterclass, and a 7-hour Python bootcamp. You can leave after any of them. Registration is ₹30,000 and it covers the course, only after those steps. There is a 30-day money-back guarantee, any reason, in writing. After 30 days the published refund policy says registration is non-refundable. The refund processing window is still a placeholder on the policy page, so this page will not invent a number of days.",
+          "The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept. Completing the course does not create it. Attending interviews does not create it. An offer you decline does not create it. Acceptance does. There is no fixed salary attached to that fee.",
         ],
       },
       {
@@ -375,14 +379,14 @@ export const answerPages: readonly AnswerPage[] = [
         heading: "You may not need the course",
         paragraphs: [
           "Take the free AI interview first. If you clear the conversation and employers can already see you, a course is optional. If the score shows a gap, counselling will say whether Data Engineering, analytics, DevOps, or something we do not teach is the honest next step.",
-          "The live programmes this fee applies to are [Data Engineering](/courses/data-engineering), [Data Analytics](/courses/data-analytics), [DevOps and Cloud](/courses/devops-cloud), and [Python Backend](/courses/python-backend). Nobody can guarantee the offer. The market decides.",
+          "The live programmes this fee applies to are [Data Engineering](/courses/data-engineering), [Data Analytics](/courses/data-analytics), [DevOps and Cloud](/courses/devops-cloud), [Python Backend](/courses/python-backend), and [Agentic AI](/courses/agentic-ai-course). Nobody can guarantee the offer. The market decides.",
         ],
       },
     ],
     faqs: [
       {
         q: "Is pay after placement real at BrowseJobs?",
-        a: "Yes, for the placement fee. That fee is your first three months of CTC, in six EMIs, with the ₹30,000 registration adjusted inside it, and it is due only after you accept an offer. Registration itself is due after three free steps, whether or not you are hired.",
+        a: "Yes, for the placement fee. That fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept. Registration is ₹30,000, it covers the course, and it is due after three free steps, whether or not you are hired.",
       },
       {
         q: "Do I pay nothing if I am not hired?",
@@ -526,6 +530,252 @@ export const answerPages: readonly AnswerPage[] = [
     ],
     secondary: { href: "/courses/data-engineering", label: "Open the course page" },
   },
+  {
+    slug: "best-agentic-ai-course-in-india",
+    title: "Best Agentic AI course in India",
+    documentTitle: "Best Agentic AI course in India (2026) · BrowseJobs",
+    updated: "2026-10-14",
+    description:
+      "How to choose an Agentic AI course in India. BrowseJobs teaches Python, LLMs, RAG and AI agents for six months. ₹30,000 covers the course.",
+    kicker: "India · how to choose",
+    audience: "student",
+    directAnswer:
+      "There is no honest ranking of the best Agentic AI course in India. Check live teaching, a syllabus you can read, and a fee in writing. BrowseJobs teaches Python, LLMs, RAG and AI agents for six months, online and in Whitefield. Registration is ₹30,000 and covers the course. A job is not guaranteed.",
+    sections: [
+      {
+        id: "choose",
+        heading: "How to choose, without a ranking",
+        paragraphs: [
+          "This page will not name a number one. A useful choice is three checks: the classes are live, the syllabus matches work you can see in job descriptions, and every fee is written down before you pay.",
+          "The BrowseJobs syllabus for this search is Python, large language models, retrieval-augmented generation, and AI agents. There is not a second Generative AI course. The Gen AI pages describe this one.",
+        ],
+      },
+      {
+        id: "published",
+        heading: "What is published",
+        paragraphs: [
+          "Six months. Live online, and a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. The phone is " +
+            OFFICE_PHONE.display +
+            ". Founder: Dr Krish Bharggav. The long page is [Agentic AI in India](/agentic-ai-course-india). The course page is [Agentic AI](/courses/agentic-ai-course).",
+          "Registration is ₹30,000 and covers the course. Pay after placement is three months of the CTC on the offer you accept, charged in EMIs only after you accept. Read [pay after placement](/pay-after-placement).",
+        ],
+      },
+      {
+        id: "next",
+        heading: "The step before a course",
+        paragraphs: [
+          "Take the free AI interview. Score 75% or above and your CV goes to 3,000 HR recruiters. On BrowseJobs internal data, that score comes with an almost 60% higher chance of an interview call. Below 75% you get a free counselling roadmap. A person always releases the offer letter.",
+          "Freshers and people moving from non-IT roles can start, if they can give it six months. The written test of that fit is [Non-IT to IT](/non-it-to-it).",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "What is the best Agentic AI course in India?",
+        a: "There is no published ranking. Compare live teaching, the syllabus, and the written fee. BrowseJobs publishes Python, LLMs, RAG and AI agents over six months.",
+      },
+      {
+        q: "Is a Gen AI course different?",
+        a: "Not here. Gen AI pages describe the Agentic AI course. Their canonical tags point at the Agentic AI URLs.",
+      },
+      {
+        q: "What does it cost?",
+        a: "₹30,000 covers the course. The placement fee is three months of CTC, charged in EMIs only after you accept an offer.",
+      },
+    ],
+    related: [
+      { href: "/courses/agentic-ai-course", label: "Agentic AI course", note: "The syllabus." },
+      { href: "/agentic-ai-course-india", label: "Agentic AI in India", note: "Live online, six months." },
+      { href: "/agentic-ai-course-bangalore", label: "Agentic AI in Bangalore", note: "Whitefield classroom." },
+      { href: "/answers/best-gen-ai-course-in-bangalore", label: "Best Gen AI course in Bangalore", note: "The same syllabus, in the city." },
+      { href: "/get-hired", label: "Free AI interview", note: "The 75% mark." },
+    ],
+    secondary: { href: "/courses/agentic-ai-course", label: "Open the course page" },
+  },
+  {
+    slug: "best-gen-ai-course-in-bangalore",
+    title: "Best Gen AI course in Bangalore",
+    documentTitle: "Best Gen AI course in Bangalore · BrowseJobs",
+    updated: "2026-10-14",
+    description:
+      "How to choose a Gen AI course in Bangalore. BrowseJobs teaches that search as the Agentic AI course: Python, LLMs, RAG and AI agents, from Whitefield.",
+    kicker: "Bangalore · how to choose",
+    audience: "student",
+    directAnswer:
+      "There is no ranking of the best Gen AI course in Bangalore. On this site Gen AI is the Agentic AI course: Python, LLMs, RAG and AI agents, six months, live in Whitefield and online. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, after you accept an offer.",
+    sections: [
+      {
+        id: "choose",
+        heading: "How to choose in Bangalore",
+        paragraphs: [
+          "Ask whether the class is live, whether you can attend in Whitefield or online, and whether the fee is in writing. Do not take a rank that a page invented.",
+          "The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. The city page is [Gen AI in Bangalore](/gen-ai-course-bangalore). Its canonical tag points at [Agentic AI in Bangalore](/agentic-ai-course-bangalore), because they are one course.",
+        ],
+      },
+      {
+        id: "syllabus",
+        heading: "The syllabus behind the search",
+        paragraphs: [
+          "Python, large language models, retrieval-augmented generation, and AI agents. Six months. Nothing else is claimed on the Gen AI pages.",
+          "Founder: Dr Krish Bharggav. Phone " + OFFICE_PHONE.display + ". If you want the national page, read [Gen AI in India](/gen-ai-course-india).",
+        ],
+      },
+      {
+        id: "next",
+        heading: "Before you pay",
+        paragraphs: [
+          "The free AI interview comes first. 75% or above sends your CV to 3,000 HR recruiters and, on BrowseJobs internal data, comes with an almost 60% higher chance of an interview call. Below 75%, a free counselling roadmap. A person releases the offer.",
+          "People moving from non-IT work should read [Non-IT to IT](/non-it-to-it) before they pick a track.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "What is the best Gen AI course in Bangalore?",
+        a: "No ranking is published. BrowseJobs teaches the search as the Agentic AI course, live in Whitefield and online, for six months.",
+      },
+      {
+        q: "Is there a separate Gen AI syllabus?",
+        a: "No. Python, LLMs, RAG and AI agents are the modules. A second course has not been confirmed.",
+      },
+      {
+        q: "What is the fee?",
+        a: "₹30,000 covers the course. Pay after placement is three months of CTC, charged in EMIs only after an accepted offer.",
+      },
+    ],
+    related: [
+      { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "The city page." },
+      { href: "/courses/agentic-ai-course", label: "Agentic AI course", note: "The syllabus this page describes." },
+      { href: "/agentic-ai-course-bangalore", label: "Agentic AI in Bangalore", note: "Canonical page for this city." },
+      { href: "/pay-after-placement", label: "Pay after placement", note: "The two fees." },
+      { href: "/founder", label: "Dr Krish Bharggav", note: "Founder." },
+    ],
+    secondary: { href: "/gen-ai-course-bangalore", label: "Read the Bangalore page" },
+  },
+  {
+    slug: "best-data-analytics-course-in-bangalore",
+    title: "Best data analytics course in Bangalore",
+    documentTitle: "Best data analytics course in Bangalore · BrowseJobs",
+    updated: "2026-10-14",
+    description:
+      "How to choose a data analytics course in Bangalore. Six months, Excel, SQL, Python and Power BI, Whitefield and online. ₹30,000 covers the course.",
+    kicker: "Bangalore · how to choose",
+    audience: "student",
+    directAnswer:
+      "There is no honest ranking of the best data analytics course in Bangalore. Check live classes, the tools, and the fee in writing. BrowseJobs teaches Excel, SQL, Python, statistics and Power BI for six months, in Whitefield and online. Registration is ₹30,000 and covers the course. A job is not guaranteed.",
+    sections: [
+      {
+        id: "choose",
+        heading: "How to choose in the city",
+        paragraphs: [
+          "Open analyst job descriptions in Bengaluru and note the tools that repeat. Hold them against any syllabus, including ours. Then ask what you pay before anyone hires you.",
+          "The city page is [Data Analytics in Bangalore](/data-analytics-course-bangalore). The module list is on [Data Analytics](/courses/data-analytics). Illustrative bands, not offers, are on [data analyst salary in Bengaluru](/salaries/data-analyst-bengaluru).",
+        ],
+      },
+      {
+        id: "published",
+        heading: "What BrowseJobs publishes",
+        paragraphs: [
+          "Six months. Excel, SQL, Python, statistics and Power BI. Live online and at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. Phone " +
+            OFFICE_PHONE.display +
+            ". Founder Dr Krish Bharggav.",
+          "₹30,000 covers the course. Pay after placement is three months of CTC, charged in EMIs only after you accept an offer. Details are on [pay after placement](/pay-after-placement).",
+        ],
+      },
+      {
+        id: "who",
+        heading: "Who it is for",
+        paragraphs: [
+          "Freshers, and people moving from non-IT roles. The comparison with data engineering is on [Non-IT to IT](/non-it-to-it). Analytics is usually the closer start from Excel and reporting.",
+          "Take the free AI interview first. 75% or above sends the CV to 3,000 HR recruiters. Below 75%, a free counselling roadmap. Based on BrowseJobs internal data, 75% or above comes with an almost 60% higher chance of an interview call.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "What is the best data analytics course in Bangalore with placement?",
+        a: "No ranking is published. BrowseJobs offers six months of Excel, SQL, Python and Power BI, with placement support that is a process, not a guarantee.",
+      },
+      {
+        q: "Is it pay after placement?",
+        a: "Registration is ₹30,000 and covers the course. The placement fee is three months of CTC, charged in EMIs only after you accept an offer.",
+      },
+      {
+        q: "Can a non-IT graduate join?",
+        a: "Yes. Read the non-IT page and the free counselling report before you pay. The report can recommend a path we do not teach.",
+      },
+    ],
+    related: [
+      { href: "/data-analytics-course-bangalore", label: "Data Analytics in Bangalore", note: "Whitefield and online." },
+      { href: "/courses/data-analytics", label: "Data Analytics course", note: "Syllabus and projects." },
+      { href: "/skills/power-bi", label: "Power BI", note: "One of the published tools." },
+      { href: "/skills/sql", label: "SQL", note: "The query skill on the syllabus." },
+      { href: "/non-it-to-it", label: "Non-IT to IT", note: "Whether analytics is the right switch." },
+    ],
+    secondary: { href: "/data-analytics-course-bangalore", label: "Read the Bangalore page" },
+  },
+  {
+    slug: "best-data-analyst-course-in-india",
+    title: "Best data analyst course in India",
+    documentTitle: "Best data analyst course in India · BrowseJobs",
+    updated: "2026-10-14",
+    description:
+      "How to choose a data analyst course in India. Six months, live online, Excel, SQL, Python and Power BI. ₹30,000 covers the course. A job is not guaranteed.",
+    kicker: "India · how to choose",
+    audience: "student",
+    directAnswer:
+      "There is no published ranking of the best data analyst course in India. Choose on live teaching, the tools, and a fee you can read. BrowseJobs teaches Excel, SQL, Python, statistics and Power BI for six months, live online, with a Whitefield classroom. Registration is ₹30,000 and covers the course.",
+    sections: [
+      {
+        id: "choose",
+        heading: "How to choose, without a ranking",
+        paragraphs: [
+          "The same three checks as every other answer on this hub: live classes, a syllabus that matches job descriptions you opened yourself, and fees in writing. A list that ranks institutes is not something we publish.",
+          "The India page is [Data Analytics in India](/data-analytics-course-india). Bangalore readers can use [Data Analytics in Bangalore](/data-analytics-course-bangalore). The tools are the same.",
+        ],
+      },
+      {
+        id: "published",
+        heading: "Length, fee, and tools",
+        paragraphs: [
+          "Six months, not a shorter programme. Excel, SQL, Python, statistics and Power BI. ₹30,000 covers the course. Pay after placement is three months of the CTC on an offer you accept, charged in EMIs afterwards. See [pay after placement](/pay-after-placement).",
+          "The office is in Whitefield, Bengaluru, 560066. You can study online from any city. The phone is " +
+            OFFICE_PHONE.display +
+            ". Founder: Dr Krish Bharggav.",
+        ],
+      },
+      {
+        id: "next",
+        heading: "Placement, as a process",
+        paragraphs: [
+          "The free AI interview is the step before a course. Score 75% or above and your CV goes to 3,000 HR recruiters, with an almost 60% higher chance of an interview call on BrowseJobs internal data. Below 75%, a free counselling roadmap. A person always releases the offer letter.",
+          "Nobody can guarantee employment. If you are switching from a non-IT job, start with [Non-IT to IT](/non-it-to-it).",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "What is the best data analyst course in India?",
+        a: "There is no honest number one. BrowseJobs publishes a six-month live course in Excel, SQL, Python and Power BI. A job is not guaranteed.",
+      },
+      {
+        q: "How long is it, and what is the fee?",
+        a: "Six months. ₹30,000 covers the course. The placement fee is three months of CTC, charged in EMIs only after you accept an offer.",
+      },
+      {
+        q: "Which tools are covered?",
+        a: "Excel, SQL, Python, statistics and Power BI. Spark and cloud pipelines are the Data Engineering course.",
+      },
+    ],
+    related: [
+      { href: "/data-analytics-course-india", label: "Data Analytics in India", note: "Live online, six months." },
+      { href: "/courses/data-analytics", label: "Data Analytics course", note: "The published syllabus." },
+      { href: "/answers/best-data-analytics-course-in-bangalore", label: "Best data analytics course in Bangalore", note: "The same course, for the city." },
+      { href: "/skills/python", label: "Python", note: "Analysis Python on the syllabus." },
+      { href: "/get-hired", label: "Free AI interview", note: "Before you pick a course." },
+    ],
+    secondary: { href: "/data-analytics-course-india", label: "Read the India page" },
+  },
 ];
 
 export function getAnswerPage(slug: string): AnswerPage | undefined {
@@ -538,4 +788,8 @@ export const priorityAnswerSlugs = new Set([
   "how-can-a-non-it-person-become-a-data-engineer",
   "ai-interview-platform-for-hiring-in-india",
   "ai-hiring-tool-to-shortlist-candidates-automatically",
+  "best-agentic-ai-course-in-india",
+  "best-gen-ai-course-in-bangalore",
+  "best-data-analytics-course-in-bangalore",
+  "best-data-analyst-course-in-india",
 ]);

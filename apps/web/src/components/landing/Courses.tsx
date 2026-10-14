@@ -19,7 +19,7 @@ const EXTRAS: Record<string, { tools: string[]; projects: string }> = {
 
 export function Courses() {
   const live = courses.filter((c) => c.live);
-  const soon = courses.filter((c) => !c.live);
+  const soon = courses.filter((c) => !c.live && c.slug !== "agentic-ai");
 
   return (
     <section id="courses" className="mx-auto max-w-6xl px-5 py-20 md:py-28">
@@ -84,7 +84,7 @@ export function Courses() {
           {soon.map((c) => (
             <Link
               key={c.code}
-              href={`/courses/${c.slug}`}
+              href={`/courses/enquire?course=${c.slug}`}
               className="group flex items-center justify-between rounded-[14px] border border-dashed border-line bg-white/60 px-5 py-5 transition-colors hover:border-muted"
             >
               <span>

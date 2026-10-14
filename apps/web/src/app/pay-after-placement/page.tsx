@@ -22,11 +22,11 @@ const page = SEO_PAGES.payAfter;
 const faqs = [
   {
     q: "What does pay after placement mean at BrowseJobs?",
-    a: "It means the placement fee is charged only after you accept an offer. That fee is your first three months of CTC, paid as six monthly EMIs, with the ₹30,000 registration adjusted inside it. It does not mean the whole programme is free until you are hired. Registration is a separate ₹30,000, due after three free steps and before the placement fee exists.",
+    a: "It means the placement fee is charged only after you accept an offer. That fee is three months of the CTC on the offer you accept, charged in EMIs afterwards. It does not mean the whole programme is free until you are hired. Registration is ₹30,000, it covers the course, and it is due after three free steps.",
   },
   {
     q: "Do I pay nothing if I am not hired?",
-    a: "You do not pay the placement fee if you do not accept an offer. You may already have paid registration. Registration is ₹30,000, or three EMIs of ₹10,000, and it is refundable for 30 days for any reason. After 30 days the published refund policy says registration is non-refundable. Placement fees arise only after you accept an offer, under the enrolment agreement.",
+    a: "You do not pay the placement fee if you do not accept an offer. You may already have paid registration. Registration is ₹30,000 and it covers the course. It is refundable for 30 days for any reason. After 30 days the published refund policy says registration is non-refundable. Placement fees arise only after you accept an offer, under the enrolment agreement.",
   },
   {
     q: "When is the ₹30,000 due?",
@@ -38,11 +38,11 @@ const faqs = [
   },
   {
     q: "How is the placement fee calculated?",
-    a: "Take the annual CTC on the offer you accept. Three months of that CTC is the starting figure. Subtract the ₹30,000 registration you have already paid. Divide the remainder by six. That is the EMI. A ₹12 LPA illustration is published on the homepage and repeated on this page so the arithmetic is visible. It is an example, not a salary you have been promised.",
+    a: "The placement fee is three months of the CTC on the offer you accept. It is charged in EMIs only after you accept. The CTC is not known until that offer exists, so this page does not print a rupee example. A higher CTC raises the fee. A lower CTC lowers it. It is not a salary you have been promised.",
   },
   {
     q: "What is included, and what costs extra?",
-    a: "Included with registration: live instructor-led classes, recordings for one year, an AI tutor, MCQ tests and mastery tracking, a first comprehensive CV, the base mock-interview quota, and the student support desk. Optional extras published on the site are extra CV credits at ₹99 for three, voice mock interviews at ₹249 or ₹599 for three, an extra 1:1 mentor session at ₹499, and Career+ at ₹499 a month after placement. Those extras are not the placement fee.",
+    a: "Included with registration: live instructor-led classes, recordings for one year, an AI tutor, MCQ tests and mastery tracking, a first comprehensive CV, the base mock-interview quota, and the student support desk. Those are part of the ₹30,000 that covers the course. They are not the placement fee.",
   },
 ] as const;
 
@@ -67,9 +67,9 @@ export default function PayAfterPlacementPage() {
         lede={
           <p>
             Pay after placement, at BrowseJobs, means one of the two fees waits until you accept an offer. It does
-            not mean you pay nothing unless you are hired. Registration is ₹30,000 after three free steps. The
-            placement fee is the first three months of the CTC on the offer you accept, in six EMIs, with that
-            ₹30,000 adjusted inside it. Nobody can guarantee the offer. The market decides.
+            not mean you pay nothing unless you are hired. Registration is ₹30,000 and it covers the course. The
+            placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept.
+            Nobody can guarantee the offer. The market decides.
           </p>
         }
       />
@@ -119,36 +119,29 @@ export default function PayAfterPlacementPage() {
 
       <MoneySection id="registration" kicker="Fee one" heading="₹30,000, only after those three steps">
         <p>
-          Registration is ₹30,000 in one payment, or three EMIs of ₹10,000. It is what opens the paid batch: live
-          instructor-led classes, recordings for a year, the AI tutor, tests, the first CV, the base mock quota, and
-          the support desk. Optional extras — more CV credits, voice mocks, an additional mentor session, Career+
-          after you are placed — are priced separately on the homepage. They are not bundled into a surprise at the
-          end.
+          Registration is ₹30,000. It covers the course: live instructor-led classes, recordings for a year, the AI
+          tutor, tests, the first CV, the base mock quota, and the support desk. It is payable only after the three
+          free steps.
         </p>
         <p>
           The guarantee on this fee is 30 days, any reason, full refund, in writing. The refund policy says to email
           {contact.email} or WhatsApp <WhatsAppLink phone={OFFICE_PHONE} className="ap-link">{OFFICE_PHONE.display}</WhatsAppLink> with the subject “Refund”, from your registered contact.
           After 30 days, registration is non-refundable. Read that sentence before you pay, not after. The
-          processing window for the refund itself is still marked on the policy page as a placeholder pending the
-          founder’s legal review. [Krish: the refund policy still shows “[refund processing window]”. Replace it
-          there; this page should not invent a number of days.]
+          processing window for the refund itself is still unpublished on the policy page, so this page does not
+          invent a number of days.
         </p>
       </MoneySection>
 
       <MoneySection id="placement-fee" kicker="Fee two" heading="Charged only when you accept an offer">
         <p>
-          The placement fee is not a flat success bonus printed in the brochure. It is defined as the first three
-          months of the CTC on the offer you accept. It is paid as six monthly EMIs from the new salary. The ₹30,000
-          you already paid is subtracted, so you are not paying registration twice. If you do not accept an offer,
-          this fee is not raised. Completing the course does not create it. Attending interviews does not create it.
-          An offer you decline does not create it. Acceptance does.
+          The placement fee is not a flat success bonus printed in the brochure. It is three months of the CTC on the
+          offer you accept, charged in EMIs only after you accept. If you do not accept an offer, this fee is not
+          raised. Completing the course does not create it. Attending interviews does not create it. An offer you
+          decline does not create it. Acceptance does.
         </p>
         <p>
-          Because the fee depends on a CTC we do not control, we cannot print your number today. The homepage shows
-          a worked example at ₹12 LPA so the shape is visible: three months of that CTC is ₹3,00,000, minus ₹30,000
-          is ₹2,70,000, which is six EMIs of ₹45,000. Change the offer and the EMIs change. A higher CTC raises the
-          fee. A lower CTC lowers it. That is the formula, not a target. The disclaimer under the example is
-          mandatory because a salary figure is a stat, even when it is only an illustration.
+          Because the fee depends on a CTC we do not control, this page does not print a rupee example. A higher CTC
+          raises the fee. A lower CTC lowers it. That is the rule, not a target, and it is not a salary promise.
         </p>
         <FeeModel />
       </MoneySection>
@@ -172,6 +165,7 @@ export default function PayAfterPlacementPage() {
           The programmes this fee applies to are the live ones:{" "}
           <TextLink href="/courses/data-engineering">Data Engineering</TextLink>,{" "}
           <TextLink href="/courses/data-analytics">Data Analytics</TextLink>,{" "}
+          <TextLink href="/courses/agentic-ai-course">Agentic AI</TextLink>,{" "}
           <TextLink href="/courses/devops-cloud">DevOps & Cloud</TextLink>, and{" "}
           <TextLink href="/courses/python-backend">Python Backend</TextLink>. Choosing among them is a separate
           question, covered on <TextLink href="/non-it-to-it">Non-IT to IT</TextLink> if you are changing domain.

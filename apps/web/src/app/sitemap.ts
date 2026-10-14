@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { answerPages, answerPath, priorityAnswerSlugs } from "@/content/answers";
+import { ANSWERS_UPDATED, answerPages, answerPath, priorityAnswerSlugs } from "@/content/answers";
 import { courseDetails } from "@/content/courses";
 import { courses } from "@/content/landing";
 import { salaryPages } from "@/content/salaries";
@@ -13,14 +13,15 @@ const liveCourseSlugs = courses
   .map((course) => course.slug);
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const dated = (path: string, priority: number): MetadataRoute.Sitemap[number] => ({
+  const dated = (path: string, priority: number, lastModified?: string): MetadataRoute.Sitemap[number] => ({
     url: path === "/" ? SITE_ORIGIN : `${SITE_ORIGIN}${path}`,
     priority,
+    ...(lastModified ? { lastModified } : {}),
   });
 
   return [
-    dated("/", 1),
-    dated("/courses", 0.9),
+    dated("/", 1, "2026-10-14"),
+    dated("/courses", 0.9, "2026-10-14"),
     dated("/courses/enquire", 0.7),
     ...liveCourseSlugs.map((slug) => dated(`/courses/${slug}`, 0.8)),
     dated("/masterclass", 0.9),
@@ -32,6 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     dated("/students", 0.8),
     dated("/demo", 0.5),
     dated("/get-hired", 0.9),
+    dated("/free-python-bootcamp", 0.8, "2026-10-14"),
     dated("/jobs", 0.8),
     dated("/brief", 0.8),
     dated("/salaries", 0.8),
@@ -39,9 +41,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     dated("/skills", 0.8),
     ...skillPages.map((page) => dated(`/skills/${page.slug}`, 0.7)),
     dated("/reviews", 0.6),
-    ...seoMoneyLinks.map((page) => dated(page.path, page.priority)),
+    ...seoMoneyLinks.map((page) => dated(page.path, page.priority, page.updated)),
     dated("/founder", 0.5),
     dated("/answers", 0.75),
-    ...answerPages.map((page) => dated(answerPath(page.slug), priorityAnswerSlugs.has(page.slug) ? 0.8 : 0.7)),
+    ...answerPages.map((page) =>
+      dated(answerPath(page.slug), priorityAnswerSlugs.has(page.slug) ? 0.8 : 0.7, page.updated ?? ANSWERS_UPDATED),
+    ),
   ];
 }

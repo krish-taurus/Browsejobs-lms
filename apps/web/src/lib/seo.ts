@@ -31,6 +31,7 @@ export const SITE_ORIGIN = "https://browsejobs.ai";
 export const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 export const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
 export const FOUNDER_ID = `${SITE_ORIGIN}/#founder`;
+export const BANGALORE_PLACE_ID = `${SITE_ORIGIN}/#bangalore`;
 
 /**
  * Share image for pages that set their own `openGraph`. Next.js replaces the
@@ -49,10 +50,15 @@ export function moneyMetadata(page: {
   path: string;
   title: string;
   description: string;
+  /** When set, this URL is the canonical. The page path can still be indexed as an alias. */
+  canonicalPath?: string;
+  /** Keep `title` exactly, including when it must not gain the layout's "· BrowseJobs" suffix. */
+  absoluteTitle?: boolean;
 }): Metadata {
-  const url = absoluteUrl(page.path);
+  const url = absoluteUrl(page.canonicalPath ?? page.path);
+  const title = page.absoluteTitle || page.title.includes("· BrowseJobs") ? { absolute: page.title } : page.title;
   return {
-    title: page.title,
+    title,
     description: page.description,
     alternates: { canonical: url },
     openGraph: {
@@ -140,6 +146,20 @@ export function courseNode(slug: string): Course | undefined {
   if (!course.format.toLowerCase().includes("online")) return undefined;
 
   const workload = isoDuration(course.duration) ?? course.duration;
+  const online = {
+    "@type": "CourseInstance" as const,
+    courseMode: "Online",
+    courseWorkload: workload,
+    inLanguage: "en",
+  };
+  const onsite = {
+    "@type": "CourseInstance" as const,
+    courseMode: "Onsite",
+    courseWorkload: workload,
+    inLanguage: "en",
+    location: { "@id": BANGALORE_PLACE_ID },
+  };
+  const classroom = course.slug === "data-engineering" || course.slug === "data-analytics";
   const node = {
     "@type": "Course" as const,
     "@id": `${SITE_ORIGIN}/courses/${course.slug}#course`,
@@ -154,22 +174,59 @@ export function courseNode(slug: string): Course | undefined {
     },
     offers: {
       "@type": "Offer" as const,
-      category: "Registration",
+      category: "Paid",
       price: String(fees.registration),
       priceCurrency: "INR",
-      url: `${SITE_ORIGIN}/pay-after-placement`,
+      url: `${SITE_ORIGIN}/courses/${course.slug}`,
     },
     timeRequired: workload,
-    hasCourseInstance: {
-      "@type": "CourseInstance" as const,
-      courseMode: "Online",
-      courseWorkload: workload,
-      inLanguage: "en",
-    },
+    hasCourseInstance: classroom ? [onsite, online] : online,
     ...(course.tools.length > 0 ? { teaches: course.tools } : {}),
   } satisfies Course;
 
   return node;
+}
+
+/** Course node for a programme that is not in the live LMS catalogue (Agentic AI). */
+export function programmeCourseNode(input: {
+  idPath: string;
+  name: string;
+  description: string;
+  urlPath: string;
+  teaches: readonly string[];
+}): Course {
+  const workload = "P6M";
+  return {
+    "@type": "Course",
+    "@id": `${SITE_ORIGIN}${input.idPath}#course`,
+    name: input.name,
+    description: input.description,
+    url: `${SITE_ORIGIN}${input.urlPath}`,
+    inLanguage: "en",
+    provider: { "@id": ORGANIZATION_ID },
+    timeRequired: workload,
+    offers: {
+      "@type": "Offer",
+      price: String(fees.registration),
+      priceCurrency: "INR",
+      category: "Paid",
+      url: `${SITE_ORIGIN}${input.urlPath}`,
+    },
+    teaches: [...input.teaches],
+    hasCourseInstance: [
+      {
+        "@type": "CourseInstance",
+        courseMode: "Onsite",
+        courseWorkload: workload,
+        location: { "@id": BANGALORE_PLACE_ID },
+      },
+      {
+        "@type": "CourseInstance",
+        courseMode: "Online",
+        courseWorkload: workload,
+      },
+    ],
+  };
 }
 
 /** One Course entity, shared by the location pages and /courses/data-engineering. */
@@ -248,9 +305,39 @@ export function websiteNode(): WebSite {
   };
 }
 
-/** Sitewide entity graph: organization, website, founder. Rendered from the root layout. */
+/**
+ * Whitefield centre. Hours are the hours already published on the site.
+ * Geo coordinates stay off until they are confirmed.
+ */
+export function bangalorePlaceNode(): EducationalOrganization {
+  return {
+    "@type": ["EducationalOrganization", "LocalBusiness"],
+    "@id": BANGALORE_PLACE_ID,
+    name: "BrowseJobs",
+    url: SITE_ORIGIN,
+    telephone: OFFICE_PHONE.tel,
+    address: {
+      "@type": "PostalAddress",
+      ...publishedAddress,
+    },
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: publishedHours.dayOfWeek,
+      opens: publishedHours.opens,
+      closes: publishedHours.closes,
+    },
+    founder: {
+      "@type": "Person",
+      name: founder.name,
+      url: absoluteUrl(founderProfileUrl),
+    },
+    parentOrganization: { "@id": ORGANIZATION_ID },
+  } as unknown as EducationalOrganization;
+}
+
+/** Sitewide entity graph: organization, Whitefield centre, website, founder. */
 export function siteJsonLd(): Graph {
-  return jsonLdGraph([organizationNode(), websiteNode(), founderNode()]);
+  return jsonLdGraph([organizationNode(), bangalorePlaceNode(), websiteNode(), founderNode()]);
 }
 
 export function jsonLdGraph(nodes: readonly Thing[]): Graph {

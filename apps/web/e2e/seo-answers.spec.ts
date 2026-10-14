@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { answerPages, answerPath, priorityAnswerSlugs, wordCount } from "../src/content/answers";
+import { ANSWERS_UPDATED, answerPages, answerPath, priorityAnswerSlugs, wordCount } from "../src/content/answers";
 
 const BANNED = ["HirePro", "InCruiter", "Talview", "TheHireHub", "Shifttotech", "Taurus", "guaranteed job", "100% placement"];
 
@@ -56,10 +56,10 @@ for (const item of answerPages) {
       `https://browsejobs.ai${answerPath(item.slug)}`,
     );
     await expect(page.locator("[data-direct-answer]")).toHaveText(item.directAnswer);
-    await expect(page.locator("time")).toHaveAttribute("datetime", "2026-10-06");
+    await expect(page.locator("time")).toHaveAttribute("datetime", item.updated ?? ANSWERS_UPDATED);
 
     const html = await page.content();
-    expect(html).not.toContain("/courses/agentic-ai");
+    expect(html).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
     // The answer itself never names competitors or Taurus; the site-wide footer may link the Taurus product page.
     const answer = (await page.locator("#main").innerHTML()).toLowerCase();
     for (const banned of BANNED) {

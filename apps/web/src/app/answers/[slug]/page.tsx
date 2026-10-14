@@ -19,7 +19,7 @@ export async function generateMetadata({
   if (!page) return {};
   return moneyMetadata({
     path: answerPath(page.slug),
-    title: page.title,
+    title: page.documentTitle ?? page.title,
     description: page.description,
   });
 }
@@ -38,7 +38,7 @@ export default async function AnswerPage({
       path,
       title: page.title,
       description: page.description,
-      dateModified: ANSWERS_UPDATED,
+      dateModified: page.updated ?? ANSWERS_UPDATED,
     }),
     breadcrumbNode([
       { name: "Home", path: "/" },

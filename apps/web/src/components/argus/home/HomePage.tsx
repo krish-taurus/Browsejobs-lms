@@ -19,8 +19,25 @@ const ICONS: Record<string, "pipeline" | "cloud" | "chart" | "code"> = {
   "python-backend": "code",
 };
 
+const AGENTIC_CARD = {
+  slug: "agentic-ai-course",
+  name: "Agentic AI",
+  line: "Python, large language models, RAG, and AI agents.",
+  duration: "6 months",
+  format: "Live online + Whitefield",
+  href: "/courses/agentic-ai-course",
+};
+
+const CITY_LINKS = [
+  { href: "/data-engineering-course-bangalore", label: "data engineering course in Bangalore" },
+  { href: "/data-analytics-course-bangalore", label: "data analytics course in Bangalore" },
+  { href: "/agentic-ai-course-bangalore", label: "agentic AI course in Bangalore" },
+  { href: "/gen-ai-course-bangalore", label: "gen AI course in Bangalore" },
+  { href: "/free-python-bootcamp", label: "free 5-day Python bootcamp" },
+] as const;
+
 export function HomeCourses({ interviewHref = "/#interview-start" }: { interviewHref?: string }) {
-  const cards = careerCourseCards();
+  const cards = [...careerCourseCards(), AGENTIC_CARD];
   const itemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -81,6 +98,14 @@ export function HomeCourses({ interviewHref = "/#interview-start" }: { interview
             </li>
           ))}
         </StaggerIn>
+        <nav className="argus-row argus-course-cta" aria-label="Courses by city">
+          {CITY_LINKS.map((item) => (
+            <Link key={item.href} href={item.href} className="argus-more">
+              {item.label}
+              <i aria-hidden>›</i>
+            </Link>
+          ))}
+        </nav>
         <div className="argus-row argus-course-cta">
           <Link href="/courses" className="argus-btn argus-btn-primary">
             Explore courses

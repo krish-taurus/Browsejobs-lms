@@ -16,7 +16,7 @@ const NODES = [
   { step: "01", free: true, title: "Free counselling", body: "A written Career Analysis Report — whether you join or not." },
   { step: "02", free: true, title: "Free live masterclass", body: "See the method live: how the syllabus is reverse-engineered." },
   { step: "03", free: true, title: "Free 7-hour bootcamp", body: "Sit a real teaching day of live Python before you decide." },
-  { step: "04", free: false, title: "Paid batch", body: "Live, instructor-led. ₹30,000 — EMI 3 × ₹10,000." },
+  { step: "04", free: false, title: "Paid batch", body: "Live, instructor-led. ₹30,000 covers the course." },
   { step: "05", free: false, title: "AI coach", body: "PRI, mastery map, and one clear next best action, daily." },
   { step: "06", free: false, title: "Mock interviews", body: "Voice mocks scored on real interview data, with a gap report." },
   { step: "07", free: false, title: "Placement", body: "Your profile worked until you accept an offer." },

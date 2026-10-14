@@ -11,7 +11,7 @@ test("employer page keeps its canonical, FAQ, and service schema", async ({ page
   const html = await page.content();
   expect(html).toContain('"@type":"FAQPage"');
   expect(html).toContain('"@type":"Service"');
-  expect(html).not.toContain("/courses/agentic-ai");
+  expect(html).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
   expect(html).toContain("Powered by Taurus AI");
   // The product stays "BrowseJobs AI Recruiter"; Taurus appears as the engine and in the hiring-story film.
   await expect(page.locator('#taurus-demo a[href="/taurusai/hiring-demo"]')).toBeAttached();

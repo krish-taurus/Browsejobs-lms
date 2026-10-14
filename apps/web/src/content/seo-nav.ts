@@ -1,8 +1,23 @@
+import { courseLandingNav } from "@/content/course-landings";
+
 /**
- * Public SEO landing pages. Titles are the H1 and the document title.
+ * Public SEO landing pages. `title` is the H1 unless `h1` is set.
  * Sitemap, footer, and the courses hub read this list so a new page
  * cannot ship without an internal link and a sitemap URL.
  */
+
+export type SeoNavItem = {
+  path: string;
+  title: string;
+  description: string;
+  footerLabel: string;
+  priority: number;
+  h1?: string;
+  documentTitle?: string;
+  canonicalPath?: string;
+  updated?: string;
+  courseSchema?: boolean;
+};
 export const SEO_PAGES = {
   deBangalore: {
     path: "/data-engineering-course-bangalore",
@@ -11,6 +26,7 @@ export const SEO_PAGES = {
       "A live six-month Data Engineering course in Whitefield, Bengaluru. SQL, Python, Spark, Databricks, AWS, Azure and Airflow. Placement fee only after you accept an offer.",
     footerLabel: "Data Engineering, Bengaluru",
     priority: 0.9,
+    updated: "2026-10-14",
   },
   deIndia: {
     path: "/data-engineering-course-india",
@@ -19,6 +35,7 @@ export const SEO_PAGES = {
       "The same live six-month Data Engineering course, taught online across India, with counselling from the Whitefield, Bengaluru office. Placement fee only after an accepted offer.",
     footerLabel: "Data Engineering, India",
     priority: 0.85,
+    updated: "2026-10-14",
   },
   nonIt: {
     path: "/non-it-to-it",
@@ -32,9 +49,10 @@ export const SEO_PAGES = {
     path: "/pay-after-placement",
     title: "Pay After Placement: How the BrowseJobs Fee Works",
     description:
-      "₹30,000 registration after three free steps. The placement fee is your first three months' CTC, due only after you accept an offer. Nobody can guarantee a job.",
+      "₹30,000 registration covers the course. The placement fee is three months of CTC, charged in EMIs only after you accept an offer.",
     footerLabel: "Pay after placement",
     priority: 0.8,
+    updated: "2026-10-14",
   },
   aiHiring: {
     path: "/ai-hiring",
@@ -72,4 +90,4 @@ export const SEO_PAGES = {
 
 export type SeoPageKey = keyof typeof SEO_PAGES;
 
-export const seoMoneyLinks = Object.values(SEO_PAGES);
+export const seoMoneyLinks: readonly SeoNavItem[] = [...Object.values(SEO_PAGES), ...courseLandingNav];

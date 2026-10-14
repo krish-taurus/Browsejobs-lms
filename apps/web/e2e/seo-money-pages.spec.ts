@@ -2,8 +2,10 @@ import { expect, test } from "@playwright/test";
 import { seoMoneyLinks } from "../src/content/seo-nav";
 
 /**
- * Money landing pages must be crawlable: 200, one H1, a self-canonical,
+ * Money landing pages must be crawlable: 200, one H1, a canonical,
  * FAQPage JSON-LD, and a sitemap entry. Course pages also emit Course schema.
+ * Gen AI URLs canonicalise to the matching Agentic AI page so the two addresses
+ * do not compete.
  */
 
 test("sitemap lists every money page", async ({ request }) => {
@@ -23,7 +25,10 @@ for (const page of seoMoneyLinks) {
     await expect(browserPage.getByRole("heading", { level: 1 })).toHaveText(page.title);
 
     const canonical = browserPage.locator('link[rel="canonical"]');
-    await expect(canonical).toHaveAttribute("href", `https://browsejobs.ai${page.path}`);
+    await expect(canonical).toHaveAttribute(
+      "href",
+      `https://browsejobs.ai${page.canonicalPath ?? page.path}`,
+    );
 
     const html = await browserPage.content();
     expect(html).toContain('"@type":"FAQPage"');

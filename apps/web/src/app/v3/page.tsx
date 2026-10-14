@@ -970,30 +970,13 @@ const BENTO: { span: string; accent: string; el: React.ReactNode }[] = [
   { span: "md:col-span-3", accent: "#7c3aed", el: <MentorsTile /> },
 ];
 
-/* ------------------------------ pricing by region -------------------------- */
-
-/** Optional extras. The dollar column is the rupee one converted at roughly ₹85 = $1. */
-const EXTRAS: [string, string][] = [
-  ["Extra CV credits", "₹99 / 3"],
-  ["Voice mock interview", "₹249 · ₹599 / 3"],
-  ["Extra 1:1 mentor session", "₹499"],
-  ["Career+ (post-placement)", "₹499 / mo"],
-];
-
-const INTL_EXTRAS: [string, string][] = [
-  ["Extra CV credits", "$2 / 3"],
-  ["Voice mock interview", "$3 · $7 / 3"],
-  ["Extra 1:1 mentor session", "$6"],
-  ["Career+ (post-placement)", "$6 / mo"],
-];
-
 /* ------------------------------ path / journey ----------------------------- */
 
 const PATH_STEPS = [
   { n: "01", free: true, icon: "📞", t: "Free counselling", b: "A written Career Analysis Report — whether you join or not." },
   { n: "02", free: true, icon: "🎓", t: "Free live masterclass", b: "See the method live: how the syllabus is reverse-engineered." },
   { n: "03", free: true, icon: "🐍", t: "Free 7-hour bootcamp", b: "Sit a real teaching day of live Python before you decide." },
-  { n: "04", free: false, icon: "💺", t: "Paid batch", b: "Live, instructor-led. ₹30,000 — EMI 3 × ₹10,000." },
+  { n: "04", free: false, icon: "💺", t: "Paid batch", b: "Live, instructor-led. ₹30,000 covers the course." },
   { n: "05", free: false, icon: "🧠", t: "AI coach", b: "PRI, mastery map, and one clear next best action, daily." },
   { n: "06", free: false, icon: "🎙️", t: "Mock interviews", b: "Voice mocks scored on real interview data, with a gap report." },
   { n: "07", free: false, icon: "🏁", t: "Placement", b: "Your profile worked until you accept an offer." },
@@ -1301,34 +1284,46 @@ function ProgramsSection() {
         className="mt-6 grid gap-4 sm:grid-cols-3"
       >
         {[
-          { name: "Agentic AI", slug: "agentic-ai" },
-          { name: "Cyber Security", slug: "cyber-security" },
-          { name: "ServiceNow", slug: "servicenow" },
+          { name: "Agentic AI", href: "/courses/agentic-ai-course", label: "Open course" },
+          { name: "Cyber Security", href: "/courses", label: "Waitlist" },
+          { name: "ServiceNow", href: "/courses", label: "Waitlist" },
         ].map((w) => (
-          <Link key={w.slug} href="/courses" className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
+          <Link key={w.name} href={w.href} className="group flex items-center justify-between rounded-2xl border border-fg/[0.07] bg-paper px-6 py-4 transition-colors hover:border-[#1b6df0]/30">
             <span className="font-semibold text-fg/60">{w.name}</span>
             <span className="text-xs font-bold uppercase tracking-wider text-fg/35 transition-colors group-hover:text-[#1b6df0]">
-              Waitlist <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
+              {w.label} <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
             </span>
           </Link>
         ))}
       </motion.div>
       <p className="mt-10 text-sm text-fg/55">
-        <a href="/data-engineering-course-bangalore" className="font-semibold text-[#1b6df0]">
+        <Link href="/data-engineering-course-bangalore" className="font-semibold text-[#1b6df0]">
           Data Engineering in Bengaluru
-        </a>
+        </Link>
         <span aria-hidden>{" · "}</span>
-        <a href="/data-engineering-course-india" className="font-semibold text-[#1b6df0]">
+        <Link href="/data-engineering-course-india" className="font-semibold text-[#1b6df0]">
           Data Engineering in India
-        </a>
+        </Link>
         <span aria-hidden>{" · "}</span>
-        <a href="/non-it-to-it" className="font-semibold text-[#1b6df0]">
+        <Link href="/non-it-to-it" className="font-semibold text-[#1b6df0]">
           Non-IT to IT
-        </a>
+        </Link>
         <span aria-hidden>{" · "}</span>
-        <a href="/pay-after-placement" className="font-semibold text-[#1b6df0]">
+        <Link href="/data-analytics-course-bangalore" className="font-semibold text-[#1b6df0]">
+          data analytics course in Bangalore
+        </Link>
+        <span aria-hidden>{" · "}</span>
+        <Link href="/courses/agentic-ai-course" className="font-semibold text-[#1b6df0]">
+          Agentic AI
+        </Link>
+        <span aria-hidden>{" · "}</span>
+        <Link href="/free-python-bootcamp" className="font-semibold text-[#1b6df0]">
+          Free Python bootcamp
+        </Link>
+        <span aria-hidden>{" · "}</span>
+        <Link href="/pay-after-placement" className="font-semibold text-[#1b6df0]">
           Pay after placement
-        </a>
+        </Link>
       </p>
     </section>
   );
@@ -1534,7 +1529,7 @@ function FeesSection() {
             <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">One payment</span>
             {/* No instalment plan outside India yet, so the EMI chip stays home. */}
             {!international && (
-              <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">EMI · 3 × ₹10,000</span>
+              <span className="rounded-full bg-sky px-3 py-1.5 text-xs font-bold text-[#0e3fa9]">Covers the course</span>
             )}
           </div>
           <p className="mt-6 rounded-2xl bg-verify-bg px-4 py-3 text-sm font-semibold text-[#0ba860]">
@@ -1548,29 +1543,14 @@ function FeesSection() {
         >
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">02 · Placement fee</p>
           <p className="mt-4 text-lg leading-relaxed text-white/75">
-            Your first 3 months&apos; CTC, due <strong className="text-white">only after you accept an offer</strong> — paid as 6 monthly
-            EMIs from your new salary. Your {international ? `$${INTL_PRICE}` : "₹30,000"} registration is adjusted inside it.
+            Three months of the CTC on the offer you accept, due <strong className="text-white">only after you accept an offer</strong>,
+            charged in EMIs after that. Registration of {international ? `$${INTL_PRICE}` : "₹30,000"} covers the course.
           </p>
           {/* The worked example is an Indian salary in rupees; it tells a
               visitor abroad nothing, so only the rule above travels. */}
-          <div className={`mt-6 rounded-2xl bg-surface/[0.05] p-5 ${international ? "hidden" : ""}`}>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#4d94ff]">Worked example · ₹12 LPA offer</p>
-            {[
-              ["3 months' CTC", "₹3,00,000"],
-              ["− registration already paid", "− ₹30,000"],
-              ["Placement fee", "₹2,70,000"],
-              ["= 6 EMIs of", "₹45,000 / month"],
-            ].map(([k, v], i) => (
-              <motion.div
-                key={k}
-                initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-                transition={{ delay: 0.3 + i * 0.15, duration: 0.5, ease: EASE }}
-                className={`flex items-center justify-between py-2 text-sm ${i === 3 ? "border-t border-white/10 pt-3 font-bold text-white" : "text-white/60"}`}
-              >
-                <span>{k}</span><span className="font-mono">{v}</span>
-              </motion.div>
-            ))}
-          </div>
+          <p className="mt-6 text-sm text-white/60">
+            The fee follows the offer. This page does not print a rupee example, because the CTC is not known until you accept one.
+          </p>
         </motion.div>
       </div>
       <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -1597,16 +1577,10 @@ function FeesSection() {
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
           className="rounded-3xl border border-fg/[0.07] bg-surface p-8"
         >
-          <p className="font-display text-lg font-bold">Optional extras</p>
-          <ul className="mt-4 space-y-2.5">
-            {(international ? INTL_EXTRAS : EXTRAS).map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between text-sm text-fg/65">
-                <span>{k}</span><span className="font-mono text-xs font-bold text-fg/45">{v}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-5 text-xs leading-relaxed text-fg/40">
-            Everything needed for the placement promise is included. Charges apply only to extras beyond generous quotas.
+          <p className="font-display text-lg font-bold">What registration covers</p>
+          <p className="mt-4 text-sm leading-relaxed text-fg/65">
+            ₹30,000 covers the course. Anything beyond the included list is quoted in writing before you pay it. This
+            page does not publish a menu of extra prices.
           </p>
         </motion.div>
       </div>

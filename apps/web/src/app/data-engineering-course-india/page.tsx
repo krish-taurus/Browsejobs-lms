@@ -28,11 +28,11 @@ const faqs = [
   },
   {
     q: "Do I have to travel to Bengaluru to enrol?",
-    a: `You do not have to travel for classes. They are live and online. If you want the counselling conversation in person, the office is in Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is ${OFFICE_PHONE.display}.`,
+    a: `You do not have to travel for classes. They are live online, and there is a classroom in Whitefield if you want the room. The address is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066, Monday to Saturday, 9:00 AM to 7:00 PM IST. The phone is ${OFFICE_PHONE.display}.`,
   },
   {
     q: "Is the fee different outside Bengaluru?",
-    a: "No separate city price is published. Registration is ₹30,000 after the three free steps, or three EMIs of ₹10,000. The placement fee is the first three months of the CTC on the offer you accept, in six EMIs, with the ₹30,000 adjusted inside it. It is due only after you accept. It is not a different number because of your city.",
+    a: "No separate city price is published. Registration is ₹30,000 and it covers the course. The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept. It is not a different number because of your city.",
   },
   {
     q: "Will you place me in my home city?",
@@ -45,6 +45,14 @@ const faqs = [
   {
     q: "How is this page different from the Bengaluru page?",
     a: "The programme is the same. The Bengaluru page answers people searching for a Whitefield or Bangalore classroom. This page answers people searching for a national, online course who still want a real office behind the counselling. Both link to /courses/data-engineering, which is the syllabus.",
+  },
+  {
+    q: "Is there a Whitefield classroom?",
+    a: "Yes. One classroom, in Whitefield: Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Bengaluru 560066. There is no published classroom in every other city.",
+  },
+  {
+    q: "Online or offline?",
+    a: `Both. Live online from any city, or the Whitefield classroom. The phone is ${OFFICE_PHONE.display}.`,
   },
 ] as const;
 
@@ -100,8 +108,8 @@ export default function DataEngineeringIndiaPage() {
           writing and compare it with this page.
         </p>
         <p>
-          The company is IBrowseJobs Technologies Pvt Ltd. The published address is Whitefield, Bengaluru, Karnataka
-          560066. Use it when you want a person in the room: the free counselling that produces a written Career
+          The company is IBrowseJobs Technologies Pvt Ltd. The published address is Aashvi, 3rd Floor, Whitefield
+          Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. Use it when you want a person in the room: the free counselling that produces a written Career
           Analysis Report. You can also do that conversation remotely. The report is yours whether you join or not,
           including when the recommendation is a track we do not teach, or no course at all.
         </p>
@@ -169,27 +177,23 @@ export default function DataEngineeringIndiaPage() {
         <Disclaimer />
         <p>
           Hyderabad and Pune are on that list because the dataset includes them, not because we run a local campus
-          there. If your city is missing, that is a gap in the published benchmark set. [Krish: add a salary page
-          only when you have a sourced band. Do not backfill cities on this landing page.] Your counselling report
-          can still talk about the roles hiring where you live. The report is allowed to say the local market is
-          thin.
+          there. If your city is missing, that is a gap in the published benchmark set. A salary page is added only
+          when a band is sourced. Your counselling report can still talk about the roles hiring where you live. The
+          report is allowed to say the local market is thin.
         </p>
       </MoneySection>
 
       <MoneySection id="fees" kicker="Fees" heading="One fee model for the country">
         <p>
-          Registration does not change with PIN code. ₹30,000 after the free steps, or three EMIs of ₹10,000. Thirty
-          days to ask for that registration back, any reason. The placement fee is not a flat “success charge”
-          printed in advance, because it is defined as the first three months of the CTC you actually accept, minus
-          the registration you already paid, split into six EMIs. If you never accept an offer, that fee is not
-          raised. Finishing the six months does not create it.
+          Registration does not change with PIN code. ₹30,000 covers the course. Thirty days to ask for that
+          registration back, any reason. The placement fee is three months of the CTC you actually accept, charged
+          in EMIs only after you accept. If you never accept an offer, that fee is not raised. Finishing the six
+          months does not create it.
         </p>
         <p>
-          A worked example at ₹12 LPA is on the fee block because the homepage already shows it. Copying it here
-          keeps the arithmetic in one place. It is not a salary target for India, and it is not what we expect you
-          to be offered. The{" "}
-          <TextLink href="/pay-after-placement">pay-after-placement explainer</TextLink> walks through the same rules
-          without the city framing.
+          This page does not print a rupee example of that fee, because the CTC is not known until an offer exists.
+          The <TextLink href="/pay-after-placement">pay-after-placement explainer</TextLink> walks through the same
+          rules without the city framing.
         </p>
         <FeeModel />
       </MoneySection>
@@ -245,6 +249,41 @@ export default function DataEngineeringIndiaPage() {
             href: "/masterclass",
             label: "Free masterclass",
             note: "See the method before you pay anything.",
+          },
+          {
+            href: "/non-it-to-it",
+            label: "Non-IT to IT",
+            note: "Which track fits a career switch.",
+          },
+          {
+            href: "/answers/best-data-engineering-course-in-india",
+            label: "Best data engineering course in India",
+            note: "How to choose, without a ranking.",
+          },
+          {
+            href: "/skills/python",
+            label: "Python",
+            note: "A core tool on the syllabus.",
+          },
+          {
+            href: "/skills/sql",
+            label: "SQL",
+            note: "The query skill the syllabus teaches.",
+          },
+          {
+            href: "/founder",
+            label: "Dr Krish Bharggav",
+            note: "Founder.",
+          },
+          {
+            href: "/get-hired",
+            label: "Free AI interview",
+            note: "The step before a course.",
+          },
+          {
+            href: "/free-python-bootcamp",
+            label: "Free 5-day Python bootcamp",
+            note: "One hour each evening. Start date not set yet.",
           },
         ]}
       />

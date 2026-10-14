@@ -70,7 +70,7 @@ test("students page explains 75 percent, the roadmap, and a counselling callback
   // from Google Maps re-published on our own site) risks a manual action.
   expect(html).not.toContain('"@type":"AggregateRating"');
   expect(html).not.toContain('"@type":"Review"');
-  expect(html).not.toContain("/courses/agentic-ai");
+  expect(html).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
 
   const courses = page.locator("#career-courses");
   await expect(courses).toContainText("Career-driven courses");
@@ -152,5 +152,5 @@ test("students and demo are in the sitemap", async ({ request }) => {
   const xml = await response.text();
   expect(xml).toContain("https://browsejobs.ai/students");
   expect(xml).toContain("https://browsejobs.ai/demo");
-  expect(xml).not.toContain("/courses/agentic-ai");
+  expect(xml).not.toMatch(/\/courses\/agentic-ai(?!-course)/);
 });

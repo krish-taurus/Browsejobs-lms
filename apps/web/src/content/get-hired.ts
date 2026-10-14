@@ -40,11 +40,11 @@ export const GET_HIRED_FAQ = [
   },
   {
     q: "What if I don't clear?",
-    a: "Free counselling shows what's blocking you. If a live course closes that gap, that is the next step — Data Engineering, DevOps & Cloud, Python Backend, or Data Analytics. We name the one that matches. Agentic AI is on the waitlist. We will not send you to a course page that is not open.",
+    a: "Free counselling shows what's blocking you. If a live course closes that gap, that is the next step — Data Engineering, DevOps & Cloud, Python Backend, Data Analytics, or Agentic AI. We name the one that matches.",
   },
   {
     q: "When do I pay?",
-    a: "Registration is ₹30,000, and only after the free masterclass and the free 7-hour bootcamp. Or 3 EMIs of ₹10,000. The placement fee is your first 3 months' pay, due only after you accept an offer, paid as 6 monthly EMIs, with the ₹30,000 taken off that bill. 30-day money-back, any reason, in writing.",
+    a: "Registration is ₹30,000 and it covers the course, and only after the free masterclass and the free 7-hour bootcamp. The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept. 30-day money-back, any reason, in writing.",
   },
   {
     q: "Do you guarantee a job?",
@@ -60,7 +60,7 @@ export const GET_HIRED_FAQ = [
   },
   {
     q: "Is there an Agentic AI course I can join now?",
-    a: "No. Agentic AI, Cyber Security and ServiceNow are waitlist. The live courses are Data Engineering, DevOps & Cloud, Python Backend and Data Analytics. If an AI-shaped gap shows up, we start from a live course or a counselling conversation — not from a page that is not open.",
+    a: "Yes. Agentic AI is a six-month live course in Python, large language models, RAG and AI agents, online and at the Whitefield classroom. Cyber Security and ServiceNow are still waitlist. The other live courses are Data Engineering, DevOps & Cloud, Python Backend and Data Analytics.",
   },
 ] as const;
 

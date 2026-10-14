@@ -8,7 +8,7 @@ import { CALL_TIMES, COUNTRY_CODES } from "@/content/enquiries";
  * same payload as components/apple/EnquiryForm (type "counselling") to
  * /api/enquiries.
  */
-export function ApCounselForm() {
+export function ApCounselForm({ source }: { source?: string } = {}) {
   const [values, setValues] = useState({ name: "", email: "", country: "+91", phone: "", city: "", time: "", message: "", consent: false });
   const [honeypot, setHoneypot] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,7 +41,7 @@ export function ApCounselForm() {
           landing_page: `${window.location.pathname}${window.location.search}`.slice(0, 500),
           form_started_at: startedAt.current,
           website: honeypot,
-          utm_source: pick("utm_source"),
+          utm_source: pick("utm_source") || source || "",
           utm_medium: pick("utm_medium"),
           utm_campaign: pick("utm_campaign"),
         }),

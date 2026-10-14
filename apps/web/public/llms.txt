@@ -1,14 +1,24 @@
 # BrowseJobs
 
-> IBrowseJobs Technologies, Whitefield, Bengaluru. Data Engineering, DevOps & Cloud, Python Backend and Data Analytics courses, plus an AI interview product for employers. The syllabus is reverse-engineered from real interviews. Nobody can guarantee employment — the market decides.
+> IBrowseJobs Technologies, Whitefield, Bengaluru. Data Engineering, Data Analytics, DevOps & Cloud, Python Backend, and Agentic AI courses, plus an AI interview product for employers. The syllabus is reverse-engineered from real interviews. Nobody can guarantee employment — the market decides.
 
 ## Courses
 
-- [Data Engineering course](https://browsejobs.ai/courses/data-engineering): Pipelines, warehouses, and the modern data stack. Pay after you're hired — the placement fee is due only after an offer is accepted.
+- [Data Engineering course](https://browsejobs.ai/courses/data-engineering): Pipelines, warehouses, and the modern data stack. Six months. ₹30,000 covers the course. The placement fee is due only after an offer is accepted.
+- [Data Engineering in Bangalore](https://browsejobs.ai/data-engineering-course-bangalore): Whitefield classroom and live online.
+- [Data Engineering in India](https://browsejobs.ai/data-engineering-course-india): The same six-month course, live online.
+- [Data Analytics](https://browsejobs.ai/courses/data-analytics): Excel, SQL, Python, and Power BI. Six months. Pay after placement.
+- [Data Analytics course in Bangalore](https://browsejobs.ai/data-analytics-course-bangalore): Whitefield classroom and live online.
+- [Data Analytics course in India](https://browsejobs.ai/data-analytics-course-india): The same six-month course, live online.
+- [Agentic AI course](https://browsejobs.ai/courses/agentic-ai-course): Python, large language models, RAG, and AI agents. Six months. ₹30,000 covers the course.
+- [Agentic AI course in Bangalore](https://browsejobs.ai/agentic-ai-course-bangalore): Whitefield classroom and live online.
+- [Agentic AI course in India](https://browsejobs.ai/agentic-ai-course-india): The same six-month course, live online.
+- [Gen AI course in Bangalore](https://browsejobs.ai/gen-ai-course-bangalore): The Agentic AI syllabus. Canonical page is the Bangalore Agentic AI course.
+- [Gen AI course in India](https://browsejobs.ai/gen-ai-course-india): The Agentic AI syllabus. Canonical page is the India Agentic AI course.
 - [DevOps & Cloud](https://browsejobs.ai/courses/devops-cloud): Ship, scale, and run production systems.
 - [Python Backend](https://browsejobs.ai/courses/python-backend): APIs, databases, and production Python.
-- [Data Analytics](https://browsejobs.ai/courses/data-analytics): SQL, dashboards, and decisions from data.
 - [All courses](https://browsejobs.ai/courses)
+- [Free 5-day Python bootcamp](https://browsejobs.ai/free-python-bootcamp): One hour each evening. Start date is a placeholder until it is set. Day 5 includes a mini project and the AI interview.
 
 ## Hiring product
 
@@ -17,13 +27,17 @@
 
 ## Fees
 
-Three free steps come first: counselling with a written Career Analysis Report, a live masterclass, and a 7-hour Python bootcamp. Registration is ₹30,000 after those steps, or 3 × ₹10,000. The placement fee is the first 3 months' CTC, due only after the student accepts an offer, paid as 6 monthly EMIs, with the ₹30,000 adjusted inside it. 30-day money-back guarantee, any reason, in writing.
+Three free steps come first: counselling with a written Career Analysis Report, a live masterclass, and a 7-hour Python bootcamp. Registration is ₹30,000 after those steps, and it covers the course. The placement fee is three months of the CTC on the offer the student accepts, charged in EMIs only after that acceptance. 30-day money-back guarantee, any reason, in writing. Nobody can guarantee employment.
+
+A score of 75% or above on the AI interview sends the CV to 3,000 HR recruiters and, on BrowseJobs internal data, comes with an almost 60% higher chance of an interview call. Below 75%, the next step is a free counselling roadmap. A person always releases the offer.
 
 ## Key pages
 
 - [Home](https://browsejobs.ai/)
 - [Dr Krish Bharggav](https://browsejobs.ai/founder): Founder. Short bio drawn from published press profiles, with links to those articles.
 - [Free masterclass](https://browsejobs.ai/masterclass)
+- [Pay after placement](https://browsejobs.ai/pay-after-placement)
+- [Non-IT to IT](https://browsejobs.ai/non-it-to-it)
 - [Reviews](https://browsejobs.ai/reviews)
 - [Salaries](https://browsejobs.ai/salaries)
 - [Skills](https://browsejobs.ai/skills)
@@ -39,11 +53,16 @@ Short pages written so an answer can be quoted. Each one starts with the answer.
 - [AI interview platform for hiring in India](https://browsejobs.ai/answers/ai-interview-platform-for-hiring-in-india): Disclosed screening call, proctored rounds, written brief. A person releases the offer.
 - [AI hiring tool to shortlist candidates automatically](https://browsejobs.ai/answers/ai-hiring-tool-to-shortlist-candidates-automatically): Ranked shortlist with a written reason. Rules you set can move someone forward. The tool does not reject or hire on its own.
 - [Best data engineering course in Bangalore](https://browsejobs.ai/answers/best-data-engineering-course-in-bangalore): How to choose in Bengaluru. Live online course, Whitefield office, fees in writing.
-- [Is pay after placement real?](https://browsejobs.ai/answers/is-pay-after-placement-real): ₹30,000 registration after three free steps. Placement fee only after an accepted offer.
+- [Is pay after placement real?](https://browsejobs.ai/answers/is-pay-after-placement-real): ₹30,000 registration covers the course. Placement fee only after an accepted offer.
 - [What is an AI interview, and how does the score work?](https://browsejobs.ai/answers/what-is-an-ai-interview): 15 questions from your CV, a score out of 100, and when employers can see your profile.
 - [How long does it take to become a data engineer?](https://browsejobs.ai/answers/how-long-to-become-a-data-engineer): The course is six months. That is not a hire date.
+- [Best Agentic AI course in India](https://browsejobs.ai/answers/best-agentic-ai-course-in-india): How to choose. Python, LLMs, RAG, and AI agents. Six months. ₹30,000 covers the course.
+- [Best Gen AI course in Bangalore](https://browsejobs.ai/answers/best-gen-ai-course-in-bangalore): The Gen AI page teaches the Agentic AI syllabus. Canonical city page is Agentic AI in Bangalore.
+- [Best data analytics course in Bangalore](https://browsejobs.ai/answers/best-data-analytics-course-in-bangalore): How to choose in the city. Six months. Pay after placement.
+- [Best data analyst course in India](https://browsejobs.ai/answers/best-data-analyst-course-in-india): The same Data Analytics course, live online across India.
 
-## Contact
+## Office
 
-Candidates and students: +91 79755 54666 · tel:+917975554666 · https://wa.me/917975554666 · hello@browsejobs.ai · Whitefield, Bengaluru · Mon–Sat 9:00–19:00 IST
-Employers, hiring partners, and Taurus AI: +91 63634 02404 · tel:+916363402404 · https://wa.me/916363402404
+Candidates and students: +91 79755 54666 · tel:+917975554666 · https://wa.me/917975554666 · hello@browsejobs.ai
+Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066 · Mon–Sat 9:00–19:00 IST
+Employers, hiring partners, and the hiring agent: +91 63634 02404 · tel:+916363402404 · https://wa.me/916363402404

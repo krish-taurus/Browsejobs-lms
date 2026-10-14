@@ -94,15 +94,20 @@ export function GetHiredView() {
           <div className="tile tile-pad gh-ai" data-reveal="">
             <h3 className="h-card">If the gap is shaped like AI</h3>
             <p className="body">
-              Start with a live track that already teaches the engineering around it — Data Engineering or Python
-              Backend — or talk to us. Agentic AI is not a live course page. Joining the waitlist is the honest action.
-              Cyber Security and ServiceNow are waitlist too.
+              Agentic AI is a live six-month course: Python, large language models, RAG and AI agents. Cyber Security
+              and ServiceNow are still waitlist.
             </p>
             <div className="cta-row">
-              <ApLeadButton variant="waitlist" courseSlug="agentic-ai" kind="secondary">
-                Join the Agentic AI waitlist
-              </ApLeadButton>
-              <span className="fine gh-soon">{soon.map((c) => c.name).join(" · ")} · waitlist</span>
+              <Link href="/courses/agentic-ai-course" className="more">
+                Agentic AI course <span className="chev" aria-hidden="true">›</span>
+              </Link>
+              <span className="fine gh-soon">
+                {soon
+                  .filter((course) => course.slug !== "agentic-ai")
+                  .map((course) => course.name)
+                  .join(" · ")}{" "}
+                · waitlist
+              </span>
             </div>
           </div>
         </div>
@@ -132,9 +137,8 @@ export function GetHiredView() {
                 <p className="eyebrow-sm">Registration</p>
                 <p className="pg-price">₹{fees.registration.toLocaleString("en-IN")}</p>
                 <p>
-                  Payable only after the free masterclass and the free 7-hour bootcamp. Or {fees.registrationEmi.months} × ₹
-                  {fees.registrationEmi.amount.toLocaleString("en-IN")}. {fees.guaranteeDays}-day money-back guarantee — any
-                  reason, in writing.
+                  This covers the course. Payable only after the free masterclass and the free 7-hour bootcamp.{" "}
+                  {fees.guaranteeDays}-day money-back guarantee — any reason, in writing.
                 </p>
                 <Link href="/masterclass" className="more">
                   See the free masterclass <span className="chev" aria-hidden="true">›</span>
@@ -143,9 +147,8 @@ export function GetHiredView() {
               <div className="pg-fee is-dark">
                 <p className="eyebrow-sm">Placement fee</p>
                 <p className="pg-fee-strong">
-                  Your first {fees.placement.monthsOfCtc} months&apos; CTC, due only after you accept an offer — paid as{" "}
-                  {fees.placement.emis} monthly EMIs from the new salary. The ₹
-                  {fees.placement.adjusted.toLocaleString("en-IN")} registration is adjusted inside it.
+                  {fees.placement.monthsOfCtc} months of the CTC on the offer you accept, charged in EMIs only after you
+                  accept.
                 </p>
                 <p className="fine">
                   Worked example on the homepage uses a ₹12 LPA offer to show the arithmetic. It is not a salary we are

@@ -95,6 +95,16 @@ export function Footer() {
                   </li>
                 ))}
               <li>
+                <Link href="/courses/agentic-ai-course" className="text-sky/80 hover:text-white">
+                  Agentic AI
+                </Link>
+              </li>
+              <li>
+                <Link href="/free-python-bootcamp" className="text-sky/80 hover:text-white">
+                  Free 5-day Python bootcamp
+                </Link>
+              </li>
+              <li>
                 <Link href="/reviews" className="text-sky/80 hover:text-white">
                   Reviews
                 </Link>

@@ -3,9 +3,28 @@ import { careerCourseCards } from "@/content/courses";
 
 const COVERS = new Set(["data-engineering", "devops-cloud", "data-analytics", "python-backend"]);
 
-/** The four live course tiles, with the Higgsfield studio renders as covers. */
+const PUBLISHED = [
+  {
+    slug: "agentic-ai-course",
+    name: "Agentic AI",
+    line: "Python, large language models, RAG, and AI agents. Six months. ₹30,000 covers the course.",
+    duration: "6 months",
+    format: "Live online + Whitefield",
+    href: "/courses/agentic-ai-course",
+  },
+  {
+    slug: "gen-ai",
+    name: "Gen AI",
+    line: "The same Agentic AI syllabus: Python, LLMs, RAG, and AI agents. Six months.",
+    duration: "6 months",
+    format: "Live online + Whitefield",
+    href: "/courses/agentic-ai-course",
+  },
+];
+
+/** Live course tiles, plus Agentic AI and Gen AI on the published course URL. */
 export function ApCourseTiles() {
-  const cards = careerCourseCards();
+  const cards = [...careerCourseCards(), ...PUBLISHED];
   return (
     <div className="tiles-2" data-reveal-kids="">
       {cards.map((course) => (

@@ -110,6 +110,15 @@ export function SCourses() {
     <p className="lead">Six months, live online, with recordings. You build real projects and practise real interviews.</p>
   </div>
   <div className="wrap" style={{ marginTop: "clamp(36px,5vw,60px)" } as CSSProperties}><ApCourseTiles /></div>
+  <nav className="wrap center" aria-label="Courses by city" style={{ marginTop: "clamp(28px,4vw,48px)" } as CSSProperties}>
+    <div className="cta-row">
+      <Link className="more" href="/data-engineering-course-bangalore">data engineering course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
+      <Link className="more" href="/data-analytics-course-bangalore">data analytics course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
+      <Link className="more" href="/agentic-ai-course-bangalore">agentic AI course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
+      <Link className="more" href="/gen-ai-course-bangalore">gen AI course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
+      <Link className="more" href="/free-python-bootcamp">free 5-day Python bootcamp <span className="chev" aria-hidden="true">›</span></Link>
+    </div>
+  </nav>
   <div className="wrap center"><div className="cta-row"><Link className="btn btn-primary" href="/courses">Explore courses</Link><a className="more" href="#counselling">Talk to a counsellor <span className="chev" aria-hidden="true">›</span></a><a className="more" href="#top">Take the free AI interview <span className="chev" aria-hidden="true">›</span></a></div></div>
 </section>
   );

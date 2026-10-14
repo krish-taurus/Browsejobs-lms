@@ -24,11 +24,11 @@ const page = SEO_PAGES.deBangalore;
 const faqs = [
   {
     q: "What is the best data engineering course in Bangalore?",
-    a: "“Best” is the wrong test. Check three things: the syllabus matches job descriptions you can open today, the classes are actually live, and every fee is in writing. BrowseJobs publishes a six-month live Data Engineering syllabus — SQL, Python, Spark, Databricks, AWS, Azure, and Airflow — taught online, with an office in Whitefield, Bengaluru. Registration is ₹30,000 after three free steps. The placement fee is due only after you accept an offer. Nobody can guarantee you a job.",
+    a: "“Best” is the wrong test. Check three things: the syllabus matches job descriptions you can open today, the classes are actually live, and every fee is in writing. BrowseJobs publishes a six-month live Data Engineering syllabus — SQL, Python, Spark, Databricks, AWS, Azure, and Airflow — taught online and at the Whitefield classroom. Registration is ₹30,000 and covers the course. The placement fee is three months of CTC, charged in EMIs only after you accept an offer. Nobody can guarantee you a job.",
   },
   {
     q: "Is the Data Engineering course taught in Whitefield, or online?",
-    a: "The published format is live online, with recordings. The office is in Whitefield, Bengaluru, Karnataka 560066, for counselling and a conversation. You do not need to commute to Whitefield for every class. Hours are Monday to Saturday, 9:00 AM to 7:00 PM IST.",
+    a: "Both. Classes are live online, and there is a classroom at Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. You do not need to commute for every session. Recordings cover a miss. Hours are Monday to Saturday, 9:00 AM to 7:00 PM IST.",
   },
   {
     q: "How long is the data engineering course, and what does it cover?",
@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "What does pay after placement mean on this course?",
-    a: "It does not mean the course is free until you are hired. Registration is ₹30,000, or three EMIs of ₹10,000, payable after the free masterclass and the free 7-hour Python bootcamp. The placement fee — the first three months of the CTC on the offer you accept, minus that ₹30,000, in six EMIs — is due only after you accept an offer. If you do not accept an offer, that second fee is not charged.",
+    a: "It does not mean the course is free until you are hired. Registration is ₹30,000 and it covers the course, payable after the free masterclass and the free Python bootcamp. The placement fee is three months of the CTC on the offer you accept, charged in EMIs only after you accept. If you do not accept an offer, that second fee is not charged.",
   },
   {
     q: "Do you guarantee a data engineering job in Bengaluru?",
@@ -49,6 +49,14 @@ const faqs = [
   {
     q: "Where do I read the full syllabus and the Bengaluru salary context?",
     a: "The module list on this page is the published brochure syllabus. The course page is /courses/data-engineering. Illustrative pay bands for a data engineer in Bengaluru are on /salaries/data-engineer-bengaluru. Those bands are benchmarks with a disclaimer. They are not an offer.",
+  },
+  {
+    q: "Is there a Whitefield classroom?",
+    a: "Yes. The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. The same six-month course is taught there and live online.",
+  },
+  {
+    q: "Online or offline?",
+    a: "Both. You can attend live online or in the Whitefield classroom. Recordings are kept so a missed class can be caught up. The phone is +91 79755 54666.",
   },
 ] as const;
 
@@ -79,9 +87,8 @@ export default function DataEngineeringBangalorePage() {
           <p>
             BrowseJobs teaches Data Engineering as a live, six-month programme for people who want to work in
             Bengaluru. Classes are instructor-led and online, with recordings kept for a year. The office is in
-            Whitefield. You pay the ₹30,000 registration only after the free counselling, the free masterclass, and
-            the free Python bootcamp. The placement fee — the first three months of your CTC — is due only after you
-            accept an offer. Nobody can guarantee you a job.
+            Whitefield. Registration is ₹30,000 and it covers the course. The placement fee — three months of the CTC
+            on the offer you accept — is charged in EMIs only after you accept. Nobody can guarantee you a job.
           </p>
         }
       />
@@ -107,7 +114,8 @@ export default function DataEngineeringBangalorePage() {
         <p>
           The published class format is live online plus recordings, with one year of access. You do not have to sit
           in Whitefield for every session. The office is where counselling happens and where you can come in. The
-          address published on the site is Whitefield, Bengaluru, Karnataka 560066. The phone is <TelLink phone={OFFICE_PHONE} className="ap-link" />.
+          address published on the site is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru,
+          Karnataka 560066. The phone is <TelLink phone={OFFICE_PHONE} className="ap-link" />.
           The hours are Monday to Saturday, 9:00 AM to 7:00 PM IST. Email is hello@browsejobs.ai.
         </p>
         <p>
@@ -206,11 +214,11 @@ export default function DataEngineeringBangalorePage() {
 
       <MoneySection id="fees" kicker="Fees" heading="What you pay, and what “pay after placement” does not mean">
         <p>
-          There are two fees. Registration is ₹30,000, or three payments of ₹10,000. It is payable only after the
-          three free steps: counselling with a written report, the live masterclass, and the 7-hour Python bootcamp.
-          The placement fee is separate. It is the first three months of the CTC on the offer you accept, paid as six
-          monthly EMIs from the new salary, with the ₹30,000 adjusted inside it. You do not owe that second fee
-          because you finished the course. You owe it because you accepted an offer.
+          There are two fees. Registration is ₹30,000 and it covers the course. It is payable only after the three
+          free steps: counselling with a written report, the live masterclass, and the Python bootcamp. The placement
+          fee is separate. It is three months of the CTC on the offer you accept, charged in EMIs only after you
+          accept. You do not owe that second fee because you finished the course. You owe it because you accepted an
+          offer.
         </p>
         <p>
           There is a 30-day money-back guarantee on registration, any reason, in writing. After 30 days the
@@ -276,6 +284,36 @@ export default function DataEngineeringBangalorePage() {
             href: "/non-it-to-it",
             label: "Non-IT to IT",
             note: "Which track fits a career switch, including a gap.",
+          },
+          {
+            href: "/answers/best-data-engineering-course-in-bangalore",
+            label: "Best data engineering course in Bangalore",
+            note: "How to choose, without a ranking.",
+          },
+          {
+            href: "/skills/python",
+            label: "Python",
+            note: "A core tool on the syllabus.",
+          },
+          {
+            href: "/skills/sql",
+            label: "SQL",
+            note: "The query skill the syllabus teaches.",
+          },
+          {
+            href: "/founder",
+            label: "Dr Krish Bharggav",
+            note: "Founder.",
+          },
+          {
+            href: "/get-hired",
+            label: "Free AI interview",
+            note: "The step before a course.",
+          },
+          {
+            href: "/free-python-bootcamp",
+            label: "Free 5-day Python bootcamp",
+            note: "One hour each evening. Start date not set yet.",
           },
         ]}
       />

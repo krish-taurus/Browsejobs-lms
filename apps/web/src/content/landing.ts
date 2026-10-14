@@ -27,7 +27,7 @@ export const contact = {
   /** Office line. Hiring pages use EMPLOYER_PHONE instead. */
   phone: OFFICE_PHONE.display,
   email: "hello@browsejobs.ai",
-  address: "Whitefield, Bengaluru, Karnataka 560066",
+  address: "Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066",
   hours: "Mon–Sat, 9:00 AM – 7:00 PM IST",
   entity: "IBrowseJobs Technologies Pvt Ltd",
 } as const;
@@ -91,7 +91,7 @@ export const freeLadder = [
     step: "04",
     free: false,
     title: "Registration — ₹30,000",
-    body: "Only after all three free steps. EMI available: 3 × ₹10,000. Then full enrolment and LMS access.",
+    body: "Only after all three free steps. ₹30,000 covers the course. Then full enrolment and LMS access.",
   },
 ] as const;
 
@@ -150,22 +150,19 @@ export const promisesNever = [
   "That hiring is certain, or that there's a shortcut.",
 ] as const;
 
-/** Spec §3.6 — render exactly; real amounts are server-owned at checkout. */
+/** Server-owned at checkout. Registration covers the course. Placement is 3 months of CTC, in EMIs after an accepted offer. */
 export const fees = {
   registration: 30000,
-  registrationEmi: { months: 3, amount: 10000 },
   guaranteeDays: 30,
   placement: {
     monthsOfCtc: 3,
-    emis: 6,
-    adjusted: 30000,
   },
 } as const;
 
 export const faqs = [
   {
     q: "What do I pay, and when?",
-    a: "Nothing until you've finished the three free steps — counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Then registration is ₹30,000 (or 3 EMIs of ₹10,000). The placement fee — your first 3 months' CTC — is due only after you accept an offer, paid as 6 monthly EMIs from your new salary, with the ₹30,000 adjusted inside it.",
+    a: "Nothing until you've finished the three free steps — counselling with a written report, the live masterclass, and the 7-hour Python bootcamp. Then registration is ₹30,000, and it covers the course. The placement fee — your first 3 months' CTC — is charged in EMIs only after you accept an offer.",
   },
   {
     q: "Do you guarantee a job?",
