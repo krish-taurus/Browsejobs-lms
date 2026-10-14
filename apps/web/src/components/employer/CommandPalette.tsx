@@ -62,7 +62,7 @@ export function CommandPalette({ workspaceId }: { workspaceId: number }) {
 
   const items = useMemo<Item[]>(() => {
     const nav: Item[] = [
-      { id: "nav-recruiter", label: "AI Recruiter", hint: "Demo floor", go: () => go("/employer/ai-recruiter") },
+      { id: "nav-recruiter", label: "Hiring floor", hint: "Go to", go: () => go("/employer/hiring-floor") },
       { id: "nav-dash", label: "Dashboard", hint: "Go to", go: () => go("/employer/dashboard") },
       { id: "nav-jobs", label: "Jobs", hint: "Go to", go: () => go("/employer/jobs") },
       { id: "nav-team", label: "Team", hint: "Go to", go: () => go("/employer/team") },

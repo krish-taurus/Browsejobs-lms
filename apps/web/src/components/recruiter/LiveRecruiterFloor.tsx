@@ -6,7 +6,6 @@ import { useReducedMotion } from "framer-motion";
 import { useWorkspace } from "@/components/employer/EmployerShell";
 import { employerApi, type RecruiterFloorAgent, type RecruiterFloorData, type RecruiterFloorPerson } from "@/lib/employer";
 import { createHoloLab, type HoloLab } from "./holo-lab";
-import { RecruiterAsk } from "./RecruiterAsk";
 import "./taurus-floor.css";
 
 /**
@@ -431,8 +430,6 @@ export function LiveRecruiterFloor() {
           ))}
         </div>
       </aside>
-
-      <RecruiterAsk workspaceId={workspace.id} jobId={jobId} onChanged={load} />
 
       <div id="legend">
         <span style={{ color: "#00d4ff" }}>
