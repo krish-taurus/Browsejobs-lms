@@ -133,19 +133,32 @@ final readonly class HiringActionPlanner
         }
 
         $passMark = ShortlistSettings::forJob($job)->roundPassMark;
-        $passed = EmployerInterview::query()
+        $graded = EmployerInterview::query()
             ->whereHas('application', fn ($q) => $q->where('employer_job_id', $job->id))
             ->where('round', $previous)
             ->where('status', EmployerInterviewStatus::Graded->value)
-            ->where('overall_score', '>=', $passMark)
             ->with('application.candidate:id,name')
             ->orderByDesc('overall_score')
             ->get()
             ->unique('employer_job_application_id')
             ->filter(fn (EmployerInterview $i) => $i->application !== null && ! $i->application->stage->isTerminal())
             ->values();
+        $cleared = $graded->filter(fn (EmployerInterview $i) => (int) $i->overall_score >= $passMark)->values();
+        $below = $graded->reject(fn (EmployerInterview $i) => (int) $i->overall_score >= $passMark)->values();
         $prev = strtoupper($previous);
+
+        // The pass mark is the client's own rule, so the client may overrule it for
+        // someone they name ("let's process Kunal to L2"). The YES still comes first.
+        $override = $names !== [];
+        $passed = $override ? $graded : $cleared;
         if ($passed->isEmpty()) {
+            if ($below->isNotEmpty()) {
+                $nameBelow = fn (EmployerInterview $i): string => ($i->application?->candidate?->name ?? 'Candidate')." ({$i->overall_score})";
+
+                return "Nobody has cleared {$prev} for *{$job->title}* yet (pass mark {$passMark}). Below it: ".$this->people($below->map($nameBelow))
+                    .'. To move someone ahead anyway, say their name, for example "move '.Str::before((string) ($below->first()->application?->candidate?->name ?? 'Kunal'), ' ').' to '.strtoupper($key).'".';
+            }
+
             return "Nobody has cleared {$prev} for *{$job->title}* yet (pass mark {$passMark}).";
         }
 
@@ -169,9 +182,32 @@ final readonly class HiringActionPlanner
             EmployerAgentAction::KIND_START_ROUND,
             $job->id,
             ['round' => $key, 'application_ids' => $picked->pluck('employer_job_application_id')->values()->all()],
-            'Invite '.$this->people($picked->map(fn (EmployerInterview $i) => $nameOf($i)." ({$i->overall_score})"))
-                ." who cleared {$prev} for *{$job->title}* to the ".strtoupper($key).' AI interview. Each picks a day on WhatsApp.',
+            $this->laterRoundSummary($picked, $nameOf, $job, $prev, $key, $passMark),
         );
+    }
+
+    /**
+     * One sentence for the YES: who, and plainly which of them are below the
+     * pass mark and moved ahead on the client's say-so.
+     *
+     * @param  Collection<int, EmployerInterview>  $picked
+     */
+    private function laterRoundSummary(Collection $picked, callable $nameOf, EmployerJob $job, string $prev, string $key, int $passMark): string
+    {
+        $label = fn (EmployerInterview $i): string => $nameOf($i)." ({$i->overall_score})";
+        [$over, $ok] = [
+            $picked->filter(fn (EmployerInterview $i) => (int) $i->overall_score < $passMark),
+            $picked->filter(fn (EmployerInterview $i) => (int) $i->overall_score >= $passMark),
+        ];
+        $to = strtoupper($key).' AI interview. Each picks a day on WhatsApp.';
+        if ($over->isEmpty()) {
+            return 'Invite '.$this->people($picked->map($label))." who cleared {$prev} for *{$job->title}* to the {$to}";
+        }
+        if ($ok->isEmpty()) {
+            return 'Invite '.$this->people($over->map($label))." to the {$to} They scored below the {$passMark} pass mark for {$prev}; I am moving them ahead because you asked.";
+        }
+
+        return 'Invite '.$this->people($picked->map($label))." to the {$to} ".$this->people($over->map($label)).' scored below the '.$passMark.' pass mark; I am moving them ahead because you asked.';
     }
 
     /**

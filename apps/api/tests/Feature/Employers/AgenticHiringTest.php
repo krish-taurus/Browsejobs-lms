@@ -292,3 +292,22 @@ it('starts a role posted through Taurus on the web asking before each round', fu
     ])->assertOk();
     expect(ShortlistSettings::forJob($job->fresh())->confirmRounds)->toBeTrue();
 });
+
+it('moves a named candidate to L2 below the pass mark when the client says so, after YES', function (): void {
+    passedL1($this, 'Kunal Shah', '9845055555', 55); // pass mark is 60
+    expect(InterviewInvite::query()->where('round', 'l2')->exists())->toBeFalse();
+
+    // "Proceed to L2" names nobody: it says who is below the mark and how to overrule it.
+    $this->ai->reply = command(['action' => 'start_round', 'job' => $this->job->id, 'round' => 'l2']);
+    $reply = recruiterSays($this, 'Proceed to l2');
+    expect($reply)->toContain('Nobody has cleared L1')->and($reply)->toContain('Kunal Shah (55)')->and($reply)->toContain('move Kunal to L2');
+
+    // Naming him is the client's override; it is still a proposal until YES.
+    $this->ai->reply = command(['action' => 'start_round', 'job' => $this->job->id, 'round' => 'l2', 'names' => ['kunal']]);
+    $proposal = recruiterSays($this, "Let's process kunal to l2");
+    expect($proposal)->toContain('Kunal Shah (55)')->and($proposal)->toContain('below the 60 pass mark')->and($proposal)->toContain('Reply *YES*')
+        ->and(InterviewInvite::query()->where('round', 'l2')->exists())->toBeFalse();
+
+    expect(recruiterSays($this, 'Yes'))->toContain('Asked 1 candidate to book the L2 interview');
+    expect(InterviewInvite::query()->where('round', 'l2')->sole()->phone)->toBe('919845055555');
+});
