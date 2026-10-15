@@ -31,6 +31,10 @@ const faqs = [
     a: "No detector is, and we will not print a catch-rate we cannot defend. Every integrity score ships with its evidence so a false alarm is easy to overturn and a real one is easy to prove.",
   },
   {
+    q: "Do you catch answer-assist apps like Parakeet?",
+    a: "We catch their footprint, not their name. A browser cannot list the apps running on a computer, so we read what using one does to the interview: the window losing focus while the tab stays visible, the tab being hidden, and pasted text. Each is flagged. In practice interviews a repeat violation closes the interview. In employer interviews nothing closes on its own: the moment is noted with a photo for your team to decide. Naming and blocking specific apps would need a desktop client, which we have not built.",
+  },
+  {
     q: "What does the candidate see?",
     a: "They are told before the interview starts which signals are checked, and they consent to camera and microphone analysis. Nothing runs silently.",
   },
@@ -50,7 +54,7 @@ const SIGNALS = [
   { n: "01", t: "Gaze", b: "Looking down or to the side, flagged as a possible with a photo. Live today." },
   { n: "02", t: "Faces in frame", b: "Face not visible, or a possible second person. Live today, with random check-in photos." },
   { n: "03", t: "Lip-sync and voice", b: "Audio against the mouth, and a second voice behind the answer. In pilot." },
-  { n: "04", t: "Tab, window and paste", b: "Leaving the interview tab, losing window focus, or pasting an answer. Live today." },
+  { n: "04", t: "Answer-assist tools", b: "Leaving the tab, the window losing focus (how an always-on-top answer tool is used), or pasting an answer. Live today." },
 ] as const;
 
 const FILM = [
