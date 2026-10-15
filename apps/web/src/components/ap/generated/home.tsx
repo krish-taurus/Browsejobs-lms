@@ -195,8 +195,8 @@ export function SRecruiter() {
     <section className="s-black chapter" id="recruiter">
   <div className="wrap center">
     <p className="eyebrow">For companies</p>
-    <h2 className="h-section">Hiring? Meet your AI Recruiter.</h2>
-    <p className="lead">Tell it the role. You meet people who already passed the AI interview, and you can watch every step on one screen. The screen below is sample data.</p>
+    <h2 className="h-section">Hiring? Interview people you can trust.</h2>
+    <p className="lead">Tell your AI Recruiter the role. You meet people who passed an interview built to catch cheating, and you can watch every step on one screen. The screen below is sample data.</p>
     <div className="cta-row"><Link className="btn btn-primary" href="/employers">See how it works</Link><Link className="more" href="/employers/mission-control-demo">Watch the demo <span className="chev" aria-hidden="true">›</span></Link></div>
   </div>
   <div className="wrap-wide laptop-stage" data-scene="tilt">

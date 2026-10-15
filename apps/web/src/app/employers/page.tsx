@@ -1,5 +1,7 @@
 import { ApShell } from "@/components/ap/ApShell";
 import { ApTaurusFilm } from "@/components/ap/ApFilm";
+import { SampleReport } from "@/components/ap/SampleReport";
+import { SecureTrust } from "@/components/ap/SecureTrust";
 import { SDays, SFaq, SGetStarted, SHow, SOverview, STop } from "@/components/ap/generated/employers";
 import employersLd from "@/components/ap/ld/employers.json";
 
@@ -36,6 +38,8 @@ export default function EmployersRoute() {
           </div>
         </nav>
         <STop />
+        <SecureTrust audience="employers" />
+        <SampleReport />
         <SDays />
         <SOverview />
         <SHow />

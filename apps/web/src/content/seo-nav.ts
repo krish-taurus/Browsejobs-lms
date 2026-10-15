@@ -62,6 +62,14 @@ export const SEO_PAGES = {
     footerLabel: "AI hiring",
     priority: 0.8,
   },
+  secureInterview: {
+    path: "/secure-interview",
+    title: "Secure AI Interviews That Catch Cheating",
+    description:
+      "An AI interview built to be the hardest to cheat: gaze, lip-sync and second-voice signals, with the evidence in your report. A human makes every decision.",
+    footerLabel: "Secure interviews",
+    priority: 0.8,
+  },
   aiInterview: {
     path: "/ai-interview-platform",
     title: "AI Interview Platform for Hiring Teams",

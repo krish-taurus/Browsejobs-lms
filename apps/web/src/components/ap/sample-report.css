@@ -1,0 +1,483 @@
+/* Sample-report scene. Scoped to .ap; driven by the `report` handler in effects.mjs
+   (sets --t playhead 0..1, --g grading 0..1, data-ev, data-phase, and .is-on on [data-at]). */
+.ap .sreport {
+  --sig-red: #ff453a;
+  --sig-amber: #ff9f0a;
+  --sig-green: #30d158;
+  --t: 1;
+  --g: 1;
+}
+.ap .sreport .rp-head .lead {
+  max-width: 36ch;
+  margin-inline: auto;
+}
+.ap .sreport .rp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+  gap: clamp(20px, 3vw, 44px);
+  align-items: center;
+  margin-top: clamp(14px, 2.4vh, 32px);
+}
+.ap .sreport .rp-foot {
+  margin-top: clamp(10px, 2vh, 22px);
+}
+.ap .sreport .rp-foot .cta-row {
+  justify-content: center;
+  margin-top: 0;
+}
+
+/* ---------- camera ---------- */
+.ap .sreport .rp-screen {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--hair);
+  background: #0a0a0b;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+}
+.ap .sreport .rp-screen {
+  aspect-ratio: 4 / 3;
+}
+.ap .sreport .rp-photos,
+.ap .sreport .rp-ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ap .sreport .rp-photos .ph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.ap .sreport[data-img="5"] .p5,
+.ap .sreport[data-img="1"] .p1,
+.ap .sreport[data-img="2"] .p2,
+.ap .sreport[data-img="3"] .p3,
+.ap .sreport[data-img="4"] .p4,
+.ap .sreport[data-img="6"] .p6,
+.ap .sreport[data-img="7"] .p7 {
+  opacity: 1;
+}
+.ap .sreport .rp-rec {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  font: 600 11px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.04em;
+  color: #d8d8dc;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid var(--hair);
+  padding: 6px 9px;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.ap .sreport .rp-rec i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sig-red);
+  animation: rp-blink 1.3s infinite;
+}
+.ap .sreport .rp-rec b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.ap .sreport .rp-box .me {
+  fill: none;
+  stroke: var(--sig-green);
+  stroke-width: 3;
+  transform: translate(155px, 92px);
+  transition:
+    stroke 0.3s,
+    transform 0.45s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .sreport[data-img="2"] .rp-box .me,
+.ap .sreport[data-img="3"] .rp-box .me {
+  transform: translate(190px, 98px);
+}
+.ap .sreport[data-img="4"] .rp-box .me {
+  transform: translate(170px, 130px);
+}
+.ap .sreport[data-img="6"] .rp-box .me,
+.ap .sreport[data-img="7"] .rp-box .me {
+  transform: translate(180px, 95px);
+}
+.ap .sreport .rp-bys {
+  fill: none;
+  stroke: var(--sig-red);
+  stroke-width: 3;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ap .sreport[data-ev="second"] .rp-bys {
+  opacity: 1;
+}
+.ap .sreport .rp-flash {
+  opacity: 0;
+}
+
+.ap .sreport[data-ev="down"] .rp-box .me,
+.ap .sreport[data-ev="second"] .rp-box .me {
+  stroke: var(--sig-red);
+}
+.ap .sreport[data-ev="missing"] .rp-box .me {
+  stroke: var(--sig-amber);
+  stroke-dasharray: 8 8;
+}
+.ap .sreport[data-ev="check"] .rp-flash {
+  animation: rp-flash 0.7s ease-out;
+}
+
+.ap .sreport .rp-labels {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 3;
+}
+.ap .sreport .rp-lab {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  white-space: nowrap;
+  font: 600 11px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.03em;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid var(--hair);
+  color: #d8d8dc;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.3s,
+    transform 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .sreport .rp-lab.down,
+.ap .sreport .rp-lab.second {
+  color: #ffb3ad;
+  border-color: rgba(255, 69, 58, 0.6);
+}
+.ap .sreport .rp-lab.missing {
+  color: #ffd699;
+  border-color: rgba(255, 159, 10, 0.6);
+}
+.ap .sreport .rp-lab.ok {
+  color: #9ee7b1;
+  border-color: rgba(48, 209, 88, 0.4);
+}
+.ap .sreport[data-ev=""] .rp-lab.ok,
+.ap .sreport[data-ev="down"] .rp-lab.down,
+.ap .sreport[data-ev="second"] .rp-lab.second,
+.ap .sreport[data-ev="missing"] .rp-lab.missing,
+.ap .sreport[data-ev="check"] .rp-lab.check {
+  opacity: 1;
+  transform: none;
+}
+
+/* timeline */
+.ap .sreport .rp-line {
+  margin-top: 14px;
+}
+.ap .sreport .rp-track {
+  position: relative;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--tile-2);
+}
+.ap .sreport .rp-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: var(--fg);
+  transform-origin: left;
+  transform: scaleX(var(--t));
+}
+.ap .sreport .tick {
+  position: absolute;
+  top: -5px;
+  width: 3px;
+  height: 16px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--sig-green);
+}
+.ap .sreport .tick.flag {
+  background: var(--sig-red);
+}
+.ap .sreport .rp-play {
+  position: absolute;
+  top: -6px;
+  left: calc(var(--t) * 100%);
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
+}
+.ap .sreport .rp-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font: 600 11px/1 ui-monospace, monospace;
+  color: var(--fg-3);
+}
+.ap .sreport .rp-key {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ap .sreport .rp-key i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sig-green);
+}
+.ap .sreport .rp-key i.flag {
+  background: var(--sig-red);
+  margin-left: 8px;
+}
+
+/* ---------- report paper ---------- */
+.ap .sreport .rp-paper {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 20px;
+  padding: clamp(16px, 2vw, 26px);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+  text-align: left;
+}
+.ap .sreport .rp-paper .k {
+  margin: 0;
+  font: 600 11px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6e6e73;
+}
+.ap .sreport .rp-paper h3 {
+  margin: 8px 0 0;
+  font-size: clamp(22px, 2.4vw, 30px);
+  letter-spacing: -0.03em;
+  color: #1d1d1f;
+}
+.ap .sreport .rp-paper .sub {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: #6e6e73;
+}
+.ap .sreport .rp-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(16px, 2.4vw, 32px);
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5ea;
+}
+.ap .sreport .rp-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ap .sreport .rp-score b {
+  font-size: clamp(44px, 5vw, 64px);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ap .sreport .rp-score span {
+  color: #6e6e73;
+  font-size: 16px;
+}
+.ap .sreport .rp-score .below {
+  flex-basis: 100%;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c93400;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.ap .sreport.is-graded .rp-score .below {
+  opacity: 1;
+}
+.ap .sreport .rp-skills {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.ap .sreport .rp-skills li {
+  display: grid;
+  grid-template-columns: 118px 1fr 28px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.ap .sreport .rp-skills i {
+  height: 6px;
+  border-radius: 6px;
+  background: #ececf0;
+  overflow: hidden;
+  display: block;
+}
+.ap .sreport .rp-skills u {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: #1d1d1f;
+  transform-origin: left;
+  transform: scaleX(calc(var(--v) * var(--g)));
+}
+.ap .sreport .rp-skills b {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  opacity: var(--g);
+}
+.ap .sreport .rp-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6e6e73;
+}
+.ap .sreport .rp-count {
+  display: inline-block;
+  min-width: 1ch;
+  padding: 2px 7px;
+  margin: 0 2px;
+  border-radius: 999px;
+  background: #ffe5e2;
+  color: #c4261d;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ap .sreport .rp-flags {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+}
+.ap .sreport .rp-flags li {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.ap .sreport .rp-flags b {
+  display: block;
+  font-size: 12px;
+  color: #c4261d;
+}
+.ap .sreport .rp-flags span {
+  color: #1d1d1f;
+}
+.ap .sreport .rp-checks {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+}
+.ap .sreport .rp-checks li {
+  font: 600 11px/1 ui-monospace, monospace;
+  color: #6e6e73;
+  display: grid;
+  gap: 4px;
+  width: 76px;
+}
+.ap .sreport .rp-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  border-radius: 6px;
+  background: #e8e8ed;
+}
+.ap .sreport .rp-thumb .bg {
+  fill: #e8e8ed;
+}
+.ap .sreport .rp-thumb .me path,
+.ap .sreport .rp-thumb .me circle {
+  fill: #6e6e73;
+}
+.ap .sreport .rp-thumb .you path,
+.ap .sreport .rp-thumb .you circle {
+  fill: #a1a1a6;
+}
+.ap .sreport .rp-thumb .empty {
+  stroke: #c7c7cc;
+  stroke-width: 3;
+}
+.ap .sreport .rp-thumb.is-flag {
+  outline: 2px solid #ff453a;
+  outline-offset: -2px;
+}
+
+/* reveal as the playhead passes (motion mode); complete at rest */
+.ap.motion .sreport .rp-flags li,
+.ap.motion .sreport .rp-checks li {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition:
+    opacity 0.4s,
+    transform 0.5s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap.motion .sreport .rp-flags li.is-on,
+.ap.motion .sreport .rp-checks li.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes rp-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes rp-talk {
+  from {
+    transform: scaleY(0.5);
+  }
+  to {
+    transform: scaleY(1.8);
+  }
+}
+@keyframes rp-flash {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 833px) {
+  .ap .sreport .rp-grid {
+    grid-template-columns: 1fr;
+  }
+  .ap .sreport .rp-cols {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap .sreport * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
