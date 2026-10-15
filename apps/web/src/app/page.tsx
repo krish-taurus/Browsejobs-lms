@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ApShell } from "@/components/ap/ApShell";
 import { ApJourneyFilm } from "@/components/ap/ApFilm";
+import { SampleReport } from "@/components/ap/SampleReport";
 import { SecureTrust } from "@/components/ap/SecureTrust";
 import {
   SBelow75,
@@ -48,6 +49,7 @@ export default function Home() {
         <SJourney />
         <ApJourneyFilm tone="black" />
         <SecureTrust audience="home" />
+        <SampleReport />
         <SWhat75 />
         <SBelow75 />
         <SCourses />
