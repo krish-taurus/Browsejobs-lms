@@ -130,14 +130,19 @@ export function initApEffects(root) {
       if (clock) clock.textContent = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")} / 9:00`;
       let flags = 0;
       let ev = "";
+      let img = "5";
       el.querySelectorAll("[data-at]").forEach((n) => {
         const at = Number(n.dataset.at);
         const on = t >= at - 0.001;
         n.classList.toggle("is-on", on);
         if (on && n.hasAttribute("data-flag")) flags++;
-        if (on && t < at + 9 && n.dataset.ev) ev = n.dataset.ev;
+        if (on && t < at + 9 && n.dataset.ev) {
+          ev = n.dataset.ev;
+          img = n.dataset.img || img;
+        }
       });
       el.dataset.ev = ev;
+      el.dataset.img = img;
       const c = el.querySelector("[data-rcount]");
       if (c) c.textContent = String(flags);
       const sc = el.querySelector("[data-rscore]");

@@ -1,41 +1,27 @@
 import Link from "next/link";
 import "./sample-report.css";
 
-type Kind = "ok" | "down" | "second" | "missing";
+const IMG = (n: number) => `/media/secure-interview/report-${n}.jpg`;
 
-/** One captured still: a flat silhouette. The report shows real camera photos; these are staged. */
-function Thumb({ kind }: { kind: Kind }) {
+/** A captured still from a test interview. A bystander's face is blurred before publishing. */
+function Thumb({ n, alt, flagged }: { n: number; alt: string; flagged?: boolean }) {
   return (
-    <svg viewBox="0 0 96 64" className={`rp-thumb k-${kind}`} aria-hidden="true">
-      <rect width="96" height="64" rx="6" className="bg" />
-      {kind !== "missing" && (
-        <g className="me" transform={kind === "down" ? "translate(0 5) rotate(8 44 36)" : undefined}>
-          <path d="M20 64 q24 -30 48 0z" />
-          <circle cx="44" cy="30" r="14" />
-        </g>
-      )}
-      {kind === "second" && (
-        <g className="you">
-          <path d="M62 64 q16 -22 32 0z" />
-          <circle cx="78" cy="38" r="9" />
-        </g>
-      )}
-      {kind === "missing" && <path className="empty" d="M0 52 H96" />}
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={IMG(n)} alt={alt} width={96} height={72} loading="lazy" className={`rp-thumb${flagged ? " is-flag" : ""}`} />
   );
 }
 
 const FLAGS = [
-  { at: 318, time: "5:18", label: "Possibly looking down (phone?)", kind: "down", ev: "down" },
-  { at: 443, time: "7:23", label: "Possibly a second person in frame", kind: "second", ev: "second" },
-  { at: 453, time: "7:33", label: "Possibly a second person in frame", kind: "second", ev: "second" },
-  { at: 496, time: "8:16", label: "Face not visible on camera", kind: "missing", ev: "missing" },
+  { at: 318, time: "5:18", label: "Possibly looking down (phone?)", img: 1, ev: "down" },
+  { at: 443, time: "7:23", label: "Possibly a second person in frame", img: 2, ev: "second" },
+  { at: 453, time: "7:33", label: "Possibly a second person in frame", img: 3, ev: "second" },
+  { at: 496, time: "8:16", label: "Face not visible on camera", img: 4, ev: "missing" },
 ] as const;
 
 const CHECKINS = [
-  { at: 46, time: "0:46" },
-  { at: 136, time: "2:16" },
-  { at: 480, time: "8:00" },
+  { at: 46, time: "0:46", img: 5 },
+  { at: 136, time: "2:16", img: 6 },
+  { at: 480, time: "8:00", img: 7 },
 ] as const;
 
 const SKILLS: [string, number][] = [
@@ -53,11 +39,12 @@ const pct = (s: number) => `${((s / TOTAL) * 100).toFixed(2)}%`;
 /**
  * Pinned scene (handler `report` in effects.mjs): the interview plays, flags land in the report as they
  * happen, then grading fills the scores. Mirrors the structure of a real BrowseJobs interview report.
- * Staged data, anonymised candidate. At rest (narrow screens, reduced motion) it shows the finished report.
+ * Photos are from a test interview recorded with consent; the candidate is labelled "Candidate A".
+ * At rest (narrow screens, reduced motion) it shows the finished report.
  */
 export function SampleReport() {
   return (
-    <section className="s-black scene sreport" data-scene="report" data-len="600vh" id="sample-report" data-phase="play" data-ev="">
+    <section className="s-black scene sreport" data-scene="report" data-len="600vh" id="sample-report" data-phase="play" data-ev="" data-img="5">
       <div className="scene-pin chapter">
         <div className="wrap-wide">
           <div className="center rp-head">
@@ -72,28 +59,18 @@ export function SampleReport() {
                 <span className="rp-rec">
                   <i /> REC · <b className="rp-time">9:00 / 9:00</b>
                 </span>
-                <svg viewBox="0 0 320 200" aria-hidden="true">
-                  <rect width="320" height="200" fill="#0a0a0b" />
-                  <g className="rp-ghost">
-                    <path d="M232 200 q40 -64 80 0z" />
-                    <circle cx="272" cy="118" r="26" />
-                  </g>
-                  <g className="rp-me">
-                    <path d="M92 200 q68 -78 136 0z" className="sh" />
-                    <g className="rp-headg">
-                      <circle cx="160" cy="98" r="46" className="skin" />
-                      <path d="M114 90 q46 -62 92 0 q-8 -26 -46 -28 q-38 2 -46 28z" className="hair" />
-                      <ellipse cx="144" cy="94" rx="8" ry="4.5" fill="#fff" />
-                      <ellipse cx="176" cy="94" rx="8" ry="4.5" fill="#fff" />
-                      <circle className="rp-pupil" cx="144" cy="94" r="3" />
-                      <circle className="rp-pupil" cx="176" cy="94" r="3" />
-                      <ellipse cx="160" cy="124" rx="11" ry="3" className="mouth" />
-                    </g>
-                  </g>
+                <div className="rp-photos">
+                  {[5, 1, 2, 3, 4, 6, 7].map((n) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={n} className={`ph p${n}`} src={IMG(n)} alt="" width={480} height={360} loading="lazy" />
+                  ))}
+                </div>
+                <svg className="rp-ov" viewBox="0 0 480 360" aria-hidden="true">
                   <g className="rp-box">
-                    <path d="M104 44 v-14 h14 M216 44 v-14 h-14 M104 156 v14 h14 M216 156 v14 h-14" />
+                    <rect className="me" width="150" height="215" rx="10" />
                   </g>
-                  <rect className="rp-flash" width="320" height="200" fill="#fff" />
+                  <rect className="rp-bys" x="2" y="60" width="96" height="112" rx="10" />
+                  <rect className="rp-flash" width="480" height="360" fill="#fff" />
                 </svg>
                 <div className="rp-labels">
                   <span className="rp-lab ok">Monitoring · all clear</span>
@@ -158,8 +135,8 @@ export function SampleReport() {
                   </p>
                   <ol className="rp-flags">
                     {FLAGS.map((f) => (
-                      <li key={f.at} data-at={f.at} data-flag="" data-ev={f.ev}>
-                        <Thumb kind={f.kind} />
+                      <li key={f.at} data-at={f.at} data-flag="" data-ev={f.ev} data-img={f.img}>
+                        <Thumb n={f.img} alt={`${f.label} at ${f.time}`} flagged />
                         <div>
                           <b>{f.time} in</b>
                           <span>{f.label}</span>
@@ -172,8 +149,8 @@ export function SampleReport() {
                   </p>
                   <ul className="rp-checks">
                     {CHECKINS.map((c) => (
-                      <li key={c.at} data-at={c.at} data-ev="check">
-                        <Thumb kind="ok" />
+                      <li key={c.at} data-at={c.at} data-ev="check" data-img={c.img}>
+                        <Thumb n={c.img} alt={`Check-in photo at ${c.time}`} />
                         <span>{c.time}</span>
                       </li>
                     ))}
@@ -194,8 +171,8 @@ export function SampleReport() {
               </Link>
             </div>
             <p className="fine">
-              Staged sample in the format of a real BrowseJobs interview report. Candidate anonymised. Lip-sync and voice analysis are
-              not in this report yet.
+              Sample in the format of a real BrowseJobs interview report, from a test interview recorded with consent. A
+              bystander&apos;s face is blurred. Lip-sync and voice analysis are not in this report yet.
             </p>
           </div>
         </div>

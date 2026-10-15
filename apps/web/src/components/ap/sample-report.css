@@ -35,10 +35,33 @@
   background: #0a0a0b;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
 }
-.ap .sreport .rp-screen svg {
-  display: block;
+.ap .sreport .rp-screen {
+  aspect-ratio: 4 / 3;
+}
+.ap .sreport .rp-photos,
+.ap .sreport .rp-ov {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+}
+.ap .sreport .rp-photos .ph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.ap .sreport[data-img="5"] .p5,
+.ap .sreport[data-img="1"] .p1,
+.ap .sreport[data-img="2"] .p2,
+.ap .sreport[data-img="3"] .p3,
+.ap .sreport[data-img="4"] .p4,
+.ap .sreport[data-img="6"] .p6,
+.ap .sreport[data-img="7"] .p7 {
+  opacity: 1;
 }
 .ap .sreport .rp-rec {
   position: absolute;
@@ -67,72 +90,47 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
-.ap .sreport .sh {
-  fill: #1c1c1e;
-}
-.ap .sreport .skin {
-  fill: #c9a07c;
-}
-.ap .sreport .hair {
-  fill: #1e1a17;
-}
-.ap .sreport .mouth {
-  fill: #6d2a2a;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: rp-talk 0.4s ease-in-out infinite alternate;
-}
-.ap .sreport .rp-pupil {
-  fill: #0a0a0a;
-  transition: transform 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
-}
-.ap .sreport .rp-headg {
-  transition:
-    opacity 0.35s,
-    transform 0.5s cubic-bezier(0.28, 0.11, 0.32, 1);
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.ap .sreport .rp-ghost {
-  fill: #242427;
-  opacity: 0;
-  transform: translateX(34px);
-  transition:
-    opacity 0.45s,
-    transform 0.6s cubic-bezier(0.28, 0.11, 0.32, 1);
-}
-.ap .sreport .rp-box path {
+.ap .sreport .rp-box .me {
   fill: none;
   stroke: var(--sig-green);
   stroke-width: 3;
-  stroke-linecap: round;
-  transition: stroke 0.3s;
+  transform: translate(155px, 92px);
+  transition:
+    stroke 0.3s,
+    transform 0.45s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .sreport[data-img="2"] .rp-box .me,
+.ap .sreport[data-img="3"] .rp-box .me {
+  transform: translate(190px, 98px);
+}
+.ap .sreport[data-img="4"] .rp-box .me {
+  transform: translate(170px, 130px);
+}
+.ap .sreport[data-img="6"] .rp-box .me,
+.ap .sreport[data-img="7"] .rp-box .me {
+  transform: translate(180px, 95px);
+}
+.ap .sreport .rp-bys {
+  fill: none;
+  stroke: var(--sig-red);
+  stroke-width: 3;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ap .sreport[data-ev="second"] .rp-bys {
+  opacity: 1;
 }
 .ap .sreport .rp-flash {
   opacity: 0;
 }
 
-.ap .sreport[data-ev="down"] .rp-pupil {
-  transform: translateY(5px);
-}
-.ap .sreport[data-ev="down"] .rp-headg {
-  transform: rotate(7deg) translateY(4px);
-}
-.ap .sreport[data-ev="down"] .rp-box path,
-.ap .sreport[data-ev="second"] .rp-box path {
+.ap .sreport[data-ev="down"] .rp-box .me,
+.ap .sreport[data-ev="second"] .rp-box .me {
   stroke: var(--sig-red);
 }
-.ap .sreport[data-ev="second"] .rp-ghost {
-  opacity: 1;
-  transform: none;
-}
-.ap .sreport[data-ev="missing"] .rp-headg,
-.ap .sreport[data-ev="missing"] .sh {
-  opacity: 0.04;
-}
-.ap .sreport[data-ev="missing"] .rp-box path {
+.ap .sreport[data-ev="missing"] .rp-box .me {
   stroke: var(--sig-amber);
-  stroke-dasharray: 6 8;
+  stroke-dasharray: 8 8;
 }
 .ap .sreport[data-ev="check"] .rp-flash {
   animation: rp-flash 0.7s ease-out;
@@ -376,7 +374,7 @@
 }
 .ap .sreport .rp-flags li {
   display: grid;
-  grid-template-columns: 62px 1fr;
+  grid-template-columns: 76px 1fr;
   gap: 10px;
   align-items: center;
   font-size: 13px;
@@ -401,12 +399,16 @@
   color: #6e6e73;
   display: grid;
   gap: 4px;
-  width: 62px;
+  width: 76px;
 }
 .ap .sreport .rp-thumb {
   width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
   display: block;
   border-radius: 6px;
+  background: #e8e8ed;
 }
 .ap .sreport .rp-thumb .bg {
   fill: #e8e8ed;
@@ -423,7 +425,7 @@
   stroke: #c7c7cc;
   stroke-width: 3;
 }
-.ap .sreport .rp-thumb:not(.k-ok) {
+.ap .sreport .rp-thumb.is-flag {
   outline: 2px solid #ff453a;
   outline-offset: -2px;
 }
