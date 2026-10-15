@@ -13,6 +13,9 @@ Artisan::command('inspire', function () {
 
 // Dunning ladder (PRD §6.8): daily reminders + soft/hard access blocks.
 Schedule::command('fees:run-ladder')->dailyAt('07:00');
+// Midnight cross-check: anyone still blocked who no longer owes anything overdue
+// (paid on another plan or batch, plan cancelled) gets their access back.
+Schedule::command('fees:reconcile-blocks')->dailyAt('00:00')->withoutOverlapping();
 // Webhook safety net: settle any paid Razorpay links the webhook missed.
 Schedule::command('fees:reconcile-links')->everyFifteenMinutes();
 

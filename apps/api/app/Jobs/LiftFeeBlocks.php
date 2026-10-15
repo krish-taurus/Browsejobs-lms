@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Actions\Fees\LiftAccessBlocks;
-use App\Enums\InstalmentStatus;
 use App\Models\FeePlan;
-use App\Models\Instalment;
 use App\Models\Tenant;
+use App\Support\Fees\FeeStanding;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Carbon;
 
 /**
  * Instant fee unblock (PRD §6.8 "payment captured → instant auto-unblock").
@@ -47,14 +45,8 @@ final class LiftFeeBlocks implements ShouldQueue
         app(TenantContext::class)->run($tenant, function () use ($plan, $lift): void {
             $student = $plan->student;
 
-            $planIds = FeePlan::query()->where('user_id', $student->id)->pluck('id');
-            $hasOverdue = Instalment::query()
-                ->whereIn('fee_plan_id', $planIds)
-                ->where('status', '!=', InstalmentStatus::Paid->value)
-                ->whereDate('due_on', '<', Carbon::today()->toDateString())
-                ->exists();
-
-            if (! $hasOverdue) {
+            // What is really owed: not an abandoned seat in another batch, not a cancelled plan.
+            if (! app(FeeStanding::class)->hasOverdue($student->id)) {
                 $lift->handle($student);
             }
         });

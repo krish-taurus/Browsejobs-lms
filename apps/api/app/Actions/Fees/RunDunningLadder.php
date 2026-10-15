@@ -13,6 +13,7 @@ use App\Models\FeeReminder;
 use App\Models\Instalment;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Fees\FeeStanding;
 use App\Support\Notifications\FeeNotifier;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Carbon;
@@ -31,6 +32,7 @@ final readonly class RunDunningLadder
     public function __construct(
         private ApplyAccessBlock $applyBlock,
         private FeeNotifier $notifier,
+        private FeeStanding $standing,
     ) {}
 
     /**
@@ -78,6 +80,11 @@ final readonly class RunDunningLadder
 
         $student = $plan->student;
         if ($next === null || $student === null) {
+            return;
+        }
+
+        // A seat the student left for another batch (and paid there) is not owed.
+        if ($this->standing->isSuperseded($plan)) {
             return;
         }
 
