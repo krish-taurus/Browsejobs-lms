@@ -1,0 +1,518 @@
+/* Secure-interview scene. Scoped to .ap; driven by the `secure` handler in effects.mjs
+   (sets data-step on .secure and --sp, --p, --drift, --line). Signal colours are the system set. */
+.ap .secure {
+  --sig-red: #ff453a;
+  --sig-amber: #ff9f0a;
+  --sig-green: #30d158;
+  --sp: 0;
+  --drift: 0;
+  --line: 0;
+}
+
+.ap .secure .sec-head .lead {
+  max-width: 34ch;
+  margin-inline: auto;
+}
+.ap .secure .sec-foot {
+  margin-top: clamp(10px, 2vh, 24px);
+}
+.ap .secure .sec-foot .cta-row {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.ap .secure .sec-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+  margin-top: clamp(16px, 3vh, 40px);
+}
+
+/* ---------- step list ---------- */
+.ap .secure .sec-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.ap .secure .sec-steps li {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  opacity: 0.62;
+  transition:
+    opacity 0.5s cubic-bezier(0.28, 0.11, 0.32, 1),
+    background 0.5s,
+    border-color 0.5s,
+    transform 0.6s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure .sec-steps li.is-on {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--hair);
+}
+.ap.motion .secure .sec-steps li {
+  opacity: 0.28;
+}
+.ap.motion .secure .sec-steps li.is-on {
+  opacity: 1;
+  transform: translateX(10px);
+}
+.ap .secure .sec-n {
+  font: 600 12px/1 ui-monospace, "SF Mono", monospace;
+  color: var(--fg-3);
+  padding-top: 5px;
+}
+.ap .secure li.is-on .sec-n {
+  color: var(--fg);
+}
+.ap .secure .sec-steps h3 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.ap .secure .sec-steps p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--fg-2);
+}
+.ap .secure .sec-bar {
+  display: block;
+  height: 2px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--hair);
+  position: relative;
+  overflow: hidden;
+}
+.ap .secure .sec-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--fg);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+.ap .secure li.is-on .sec-bar::after {
+  transform: scaleX(var(--sp));
+}
+
+/* ---------- stage ---------- */
+.ap .secure .sec-stage {
+  position: relative;
+  border-radius: 24px;
+  background: #050506;
+  border: 1px solid var(--hair);
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  max-height: 52vh;
+  width: 100%;
+  justify-self: center;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+  perspective: 1200px;
+}
+.ap.motion .secure .sec-svg {
+  transform: rotateY(calc((var(--p, 0) - 0.5) * 5deg)) scale(calc(1 + var(--p, 0) * 0.02));
+  transition: transform 0.2s linear;
+}
+.ap .secure .sec-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ap .secure .sec-grid-bg path {
+  stroke: rgba(255, 255, 255, 0.045);
+  stroke-width: 1;
+}
+
+.ap .secure .sec-hud {
+  position: absolute;
+  inset: 12px 14px auto 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 3;
+  pointer-events: none;
+}
+.ap .secure .sec-live {
+  font: 600 11px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.04em;
+  color: #d8d8dc;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--hair);
+  padding: 7px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+}
+.ap .secure .sec-live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sig-red);
+  animation: sec-blink 1.4s infinite;
+}
+.ap .secure .sec-score {
+  display: grid;
+  justify-items: end;
+  line-height: 1;
+}
+.ap .secure .sec-score small {
+  font: 600 10px/1 ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.ap .secure .sec-score b {
+  font-size: clamp(30px, 4vw, 46px);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--sig-green);
+  transition: color 0.4s;
+}
+.ap .secure[data-step="1"] .sec-score b {
+  color: var(--sig-amber);
+}
+.ap .secure[data-step="2"] .sec-score b,
+.ap .secure[data-step="3"] .sec-score b {
+  color: var(--sig-red);
+}
+
+/* person */
+
+.ap .secure .sec-skull {
+  fill: #c9a07c;
+}
+.ap .secure .sec-hair {
+  fill: #1e1a17;
+}
+.ap .secure .sec-shoulders {
+  fill: #1c1c1e;
+}
+.ap .secure .sec-pupil {
+  fill: #0a0a0a;
+  transform-box: fill-box;
+  transition: transform 0.5s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure[data-step="0"] .sec-pupil {
+  transform: translate(calc(var(--line) * 0.9px - 3px), 3px);
+}
+.ap .secure[data-step="2"] .sec-pupil {
+  transform: translate(-5px, -3px);
+}
+.ap .secure .sec-mouth {
+  fill: #6d2a2a;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sec-talk 0.36s ease-in-out infinite alternate;
+}
+.ap .secure .sec-scanline {
+  animation: sec-scan 2.6s linear infinite;
+  mix-blend-mode: screen;
+}
+
+/* tracking box */
+.ap .secure .sec-track path {
+  fill: none;
+  stroke: var(--sig-green);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke 0.4s;
+}
+.ap .secure[data-step="0"] .sec-track path {
+  stroke: var(--sig-red);
+}
+.ap .secure[data-step="1"] .sec-track path {
+  stroke: var(--sig-amber);
+}
+.ap .secure[data-step="2"] .sec-track path,
+.ap .secure[data-step="3"] .sec-track path {
+  stroke: var(--sig-red);
+}
+
+/* reading panel + beam */
+.ap .secure .sec-panel rect:first-child {
+  fill: #0d0d0f;
+  stroke: #2a2a2d;
+}
+.ap .secure .sec-ln {
+  fill: #3a3a3e;
+}
+.ap .secure .sec-hl {
+  fill: rgba(255, 69, 58, 0.22);
+  stroke: var(--sig-red);
+  stroke-width: 1;
+  opacity: 0;
+  transform: translateY(calc(var(--line) * 16px));
+  transition:
+    opacity 0.4s,
+    transform 0.25s steps(1, end);
+}
+.ap .secure[data-step="0"] .sec-hl {
+  opacity: 1;
+}
+.ap .secure .sec-beam {
+  fill: none;
+  stroke: var(--sig-red);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 69, 58, 0.7));
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure[data-step="0"] .sec-beam {
+  stroke-dashoffset: calc(1 - var(--sp));
+  transition: none;
+}
+.ap .secure[data-step="3"] .sec-beam {
+  stroke-dashoffset: 0;
+  opacity: 0.4;
+}
+.ap .secure .sec-panel {
+  opacity: 0.5;
+  transition: opacity 0.5s;
+}
+.ap .secure[data-step="0"] .sec-panel,
+.ap .secure[data-step="3"] .sec-panel {
+  opacity: 1;
+}
+
+/* off-camera person */
+.ap .secure .sec-ghost {
+  opacity: 0;
+  transform: translateX(-24px);
+  transition:
+    opacity 0.6s,
+    transform 0.7s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure .sec-ghost circle:not(.sec-ring),
+.ap .secure .sec-ghost path {
+  fill: #232326;
+}
+.ap .secure .sec-ring {
+  fill: none;
+  stroke: var(--sig-red);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sec-ring 1.8s ease-out infinite;
+}
+.ap .secure .sec-ring.r2 {
+  animation-delay: 0.9s;
+}
+.ap .secure[data-step="2"] .sec-ghost,
+.ap .secure[data-step="3"] .sec-ghost {
+  opacity: 1;
+  transform: none;
+}
+
+/* waveforms */
+.ap .secure .sec-wave text {
+  font: 600 10px ui-monospace, monospace;
+  fill: #6e6e73;
+  letter-spacing: 0.08em;
+}
+.ap .secure .sec-row rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sec-bar 0.7s ease-in-out infinite alternate;
+}
+.ap .secure .sec-row.a rect {
+  fill: #0a84ff;
+}
+.ap .secure .sec-row.m rect {
+  fill: var(--sig-green);
+  transition: fill 0.4s;
+}
+.ap .secure .sec-row.m {
+  transform: translateX(calc(var(--drift) * 1px));
+}
+.ap .secure[data-step="1"] .sec-row.m rect,
+.ap .secure[data-step="2"] .sec-row.m rect,
+.ap .secure[data-step="3"] .sec-row.m rect {
+  fill: var(--sig-amber);
+}
+.ap .secure .sec-wave {
+  opacity: 0.45;
+  transition: opacity 0.5s;
+}
+.ap .secure[data-step="1"] .sec-wave {
+  opacity: 1;
+}
+
+/* chips */
+.ap .secure .sec-chips {
+  position: absolute;
+  left: 14px;
+  top: 52px;
+  display: grid;
+  gap: 6px;
+  z-index: 3;
+}
+.ap .secure .chip {
+  font: 600 11px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.03em;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid var(--hair);
+  color: #d8d8dc;
+  width: max-content;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition:
+    opacity 0.4s,
+    transform 0.5s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure .chip.c0 {
+  border-color: rgba(255, 69, 58, 0.6);
+  color: #ffb3ad;
+}
+.ap .secure .chip.c1 {
+  border-color: rgba(255, 159, 10, 0.6);
+  color: #ffd699;
+}
+.ap .secure .chip.c2 {
+  border-color: rgba(255, 69, 58, 0.6);
+  color: #ffb3ad;
+}
+.ap .secure .chip b {
+  font-variant-numeric: tabular-nums;
+}
+.ap .secure[data-step="0"] .chip.c0,
+.ap .secure[data-step="1"] .chip.c1,
+.ap .secure[data-step="2"] .chip.c2 {
+  opacity: 1;
+  transform: none;
+}
+.ap .secure[data-step="1"] .chip.c0,
+.ap .secure[data-step="2"] .chip.c0,
+.ap .secure[data-step="2"] .chip.c1 {
+  opacity: 0.45;
+  transform: none;
+}
+.ap .secure[data-step="3"] .sec-chips {
+  opacity: 0;
+}
+
+/* report */
+.ap .secure .sec-report {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 4;
+  width: min(250px, 56%);
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(22, 22, 23, 0.94);
+  border: 1px solid var(--hair);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(18px) scale(0.97);
+  transition:
+    opacity 0.5s,
+    transform 0.7s cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+.ap .secure[data-step="3"] .sec-report {
+  opacity: 1;
+  transform: none;
+}
+.ap .secure .sec-report ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--fg);
+}
+.ap .secure .sec-report li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ap .secure .sec-report li i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sig-red);
+}
+.ap .secure .sec-report li i.c1 {
+  background: var(--sig-amber);
+}
+.ap .secure .sec-decide {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+
+@keyframes sec-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes sec-talk {
+  from {
+    transform: scaleY(0.5);
+  }
+  to {
+    transform: scaleY(1.8);
+  }
+}
+@keyframes sec-scan {
+  from {
+    transform: translateY(-10px);
+  }
+  to {
+    transform: translateY(96px);
+  }
+}
+@keyframes sec-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes sec-bar {
+  from {
+    transform: scaleY(0.2);
+  }
+  to {
+    transform: scaleY(1.6);
+  }
+}
+
+/* narrow screens: stack, show everything */
+@media (max-width: 833px) {
+  .ap .secure .sec-grid {
+    grid-template-columns: 1fr;
+  }
+  .ap .secure .sec-stage {
+    order: -1;
+    max-height: none;
+  }
+  .ap .secure .sec-chips,
+  .ap .secure .sec-report {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap .secure * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

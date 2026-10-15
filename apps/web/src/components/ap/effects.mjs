@@ -100,6 +100,24 @@ export function initApEffects(root) {
       el.dataset.p = p.toFixed(3);
       el.__3d?.(p);
     },
+    secure(el, p) {
+      const n = 4;
+      const f = clamp(p / 0.94);
+      const step = Math.min(n - 1, Math.floor(f * n));
+      const sp = f >= 1 ? 1 : f * n - step;
+      const marks = [100, 82, 61, 38];
+      const score = step >= n - 1 ? marks[n - 1] : marks[step] + (marks[step + 1] - marks[step]) * ease(sp);
+      el.dataset.step = String(step);
+      el.style.setProperty("--p", p.toFixed(3));
+      el.style.setProperty("--sp", sp.toFixed(3));
+      el.style.setProperty("--drift", (step === 0 ? 0 : step === 1 ? sp * 28 : 28).toFixed(1));
+      el.style.setProperty("--line", String(step === 0 ? Math.min(7, Math.floor(sp * 8)) : 6));
+      const s = el.querySelector("[data-score]");
+      if (s) s.textContent = String(Math.round(score));
+      const d = el.querySelector(".sec-delta");
+      if (d) d.textContent = (step === 1 ? Math.round(180 * ease(sp)) : step > 1 ? 180 : 0) + " ms";
+      el.querySelectorAll(".sec-steps li").forEach((li) => li.classList.toggle("is-on", Number(li.dataset.s) === step));
+    },
     journey(el, p) {
       el.dataset.p = p.toFixed(3);
       if (el.__3d) el.__3d(p);

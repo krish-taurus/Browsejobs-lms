@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { IntegrityDemo } from "@/components/seo/IntegrityDemo";
-import {
-  ContactStrip,
-  Contents,
-  MoneyArticle,
-  MoneyFaq,
-  MoneyHero,
-  MoneySection,
-  RelatedLinks,
-} from "@/components/seo/MoneyArticle";
+import Link from "next/link";
+import { ApShell } from "@/components/ap/ApShell";
+import { SGetStarted } from "@/components/ap/generated/employers";
+import { SecureTrust } from "@/components/ap/SecureTrust";
 import { contact } from "@/content/landing";
 import { EMPLOYER_PHONE } from "@/content/phones";
 import { SEO_PAGES } from "@/content/seo-nav";
@@ -41,7 +35,7 @@ const faqs = [
   },
   {
     q: "Is the integrity layer live today?",
-    a: "Not yet. Today's interviews do not capture camera or window-switch checks, and the AI interview page says so. This page describes what we are building and how it will behave. Join the pilot list to get it first.",
+    a: "Not yet. Today's interviews do not capture camera or window-switch checks, and the AI interview page says so. This page describes what we are building and how it will behave. Join the pilot to get it first.",
   },
 ] as const;
 
@@ -52,26 +46,17 @@ const crumbs = [
 ] as const;
 
 const SIGNALS = [
-  {
-    tag: "Gaze",
-    title: "Eyes that read, not recall",
-    body: "Tracks where the candidate looks and how. Reading a second screen leaves a steady left-to-right scan; thinking leaves drift and return.",
-  },
-  {
-    tag: "Lip-sync",
-    title: "One voice, one face",
-    body: "Compares the audio against the mouth frame by frame. A lead or lag, a looped clip, or a synthetic face all break the alignment.",
-  },
-  {
-    tag: "Second voice",
-    title: "Catches the whisper behind the answer",
-    body: "Separates speakers in the room audio. A prompt, then a pause, then a fluent answer is a pattern, and it is logged with timestamps.",
-  },
-  {
-    tag: "Environment",
-    title: "Tabs, windows and tools",
-    body: "Flags focus loss, extra displays and answer-assist overlays running during the session.",
-  },
+  { n: "01", t: "Gaze", b: "Where the candidate looks, and how. Reading leaves a steady scan. Thinking leaves drift and return." },
+  { n: "02", t: "Lip-sync", b: "Audio against the mouth, frame by frame. A lead, a lag, a looped clip or a synthetic face breaks the match." },
+  { n: "03", t: "Second voice", b: "Speakers separated in the room audio. A prompt, a pause, then a fluent answer is logged with timestamps." },
+  { n: "04", t: "Environment", b: "Focus loss, extra displays and answer-assist overlays running during the session." },
+] as const;
+
+const FILM = [
+  ["0–8s", "A candidate nails every answer. Pull back: a second laptop, a phone, a friend."],
+  ["8–16s", "Same interview through our layer: gaze trace, audio-mouth drift, a second voice."],
+  ["16–24s", "Integrity score drops. Clips and timestamps attach to the report."],
+  ["24–30s", "A recruiter reviews the evidence and decides. BrowseJobs: interviews you can trust."],
 ] as const;
 
 export const metadata: Metadata = moneyMetadata(page);
@@ -98,110 +83,130 @@ export default function SecureInterviewPage() {
   ]);
 
   return (
-    <MoneyArticle jsonLd={jsonLd}>
-      <MoneyHero
-        kicker="For hiring teams"
-        title="The interview you can trust the answers to."
-        crumbs={crumbs}
-        primary={{ kind: "link", href: "/employers", label: "Join the secure-interview pilot" }}
-        secondary={{ href: "#demo", label: "See how it catches cheating" }}
-        lede={
-          <p>
-            AI answers, a hidden second screen, a friend whispering off camera. Remote interviews are easy to game and
-            hard to audit. BrowseJobs runs the whole hiring pipeline end to end, and its interview is built to be the
-            hardest one to cheat: it reads gaze, lip-sync and speaker audio live, and hands your team the evidence.
-          </p>
-        }
-      />
-      <Contents
-        items={[
-          { href: "#problem", label: "The problem" },
-          { href: "#demo", label: "How it catches it" },
-          { href: "#signals", label: "Four signals" },
-          { href: "#film", label: "30-second film" },
-          { href: "#report", label: "What you receive" },
-          { href: "#faq", label: "Questions" },
-        ]}
-      />
-
-      <MoneySection id="problem" kicker="The problem" heading="If the answers are not theirs, the score means nothing.">
-        <p>
-          A fluent answer used to mean a prepared candidate. Now it can mean a language model reading over their
-          shoulder, a hidden prompter, or a face that is not speaking the words you hear. Teams spend a round of
-          senior time on a candidate who could not repeat the answer unaided.
-        </p>
-        <p>
-          The automated pipeline from job description to graded brief saves hours. It saves nothing if the interview
-          at the centre of it can be faked. That is why our first promise is integrity, and the automation is built
-          around it.
-        </p>
-      </MoneySection>
-
-      <MoneySection id="demo" kicker="Staged demonstration" heading="Three ways to cheat. Three signals that expose them.">
-        <p>Pick a pattern. The candidate and transcript are staged; the signals shown are the ones the layer reads.</p>
-        <IntegrityDemo />
-      </MoneySection>
-
-      <MoneySection id="signals" kicker="What is read" heading="Four signals, one integrity score.">
-        <div className="not-prose" style={{ display: "grid", gap: 14, marginTop: 8 }}>
-          {SIGNALS.map((s) => (
-            <div key={s.tag} className="rounded-[14px] border border-line bg-white p-5">
-              <p className="mono text-[11px] text-trust">{s.tag}</p>
-              <h3 className="mt-1 text-lg font-semibold text-ink">{s.title}</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink2">{s.body}</p>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ApShell current="employers" cta={{ label: "Join the pilot", href: "/employers#get-started" }}>
+        <section className="s-black emp-hero" id="top">
+          <div className="wrap center">
+            <p className="eyebrow">Secure interviews</p>
+            <h1 className="h-hero">
+              <span>The interview you can</span> <span>trust the answers to.</span>
+            </h1>
+            <p className="lead">
+              Reading from a screen. A voice that is not the face. Someone feeding the answers. BrowseJobs interviews are
+              built to catch all three, and to show your team the evidence.
+            </p>
+            <div className="cta-row">
+              <Link className="btn btn-primary" href="/employers#get-started">
+                Join the pilot
+              </Link>
+              <a className="more" href="#secure">
+                See how it catches cheating <span className="chev" aria-hidden="true">›</span>
+              </a>
             </div>
-          ))}
-        </div>
-      </MoneySection>
+          </div>
+          <div className="eclipse" aria-hidden="true"></div>
+        </section>
 
-      <MoneySection id="film" kicker="Watch" heading="Thirty seconds: the cheat, and the catch.">
-        {FILM_SRC ? (
-          <video
-            controls
-            playsInline
-            preload="metadata"
-            src={FILM_SRC}
-            style={{ width: "100%", borderRadius: 14, background: "#000" }}
-          />
-        ) : (
-          <ol className="not-prose" style={{ display: "grid", gap: 10, paddingLeft: 0, listStyle: "none" }}>
-            {[
-              ["0–8s", "A candidate nails every answer. Cut wider: a second laptop, a phone, a friend."],
-              ["8–16s", "The same interview through our layer: gaze trace, audio-mouth drift, a second voice."],
-              ["16–24s", "Integrity score drops. Clip and timestamps attach to the report."],
-              ["24–30s", "A recruiter reviews the evidence, decides, moves on. BrowseJobs: interviews you can trust."],
-            ].map(([t, d]) => (
-              <li key={t} className="rounded-[14px] border border-line bg-white p-4 text-[15px] text-ink2">
-                <span className="mono text-[11px] text-trust">{t}</span>
-                <br />
-                {d}
-              </li>
-            ))}
-          </ol>
-        )}
-      </MoneySection>
+        <section className="s-white chapter" id="problem">
+          <div className="wrap center">
+            <p className="eyebrow">The problem</p>
+            <h2 className="h-section" data-reveal="">
+              If the answers are not theirs, the score means nothing.
+            </h2>
+            <p className="lead" data-reveal="">
+              A fluent answer used to mean a prepared candidate. Now it can mean a model reading over their shoulder.
+              Automation saves hours only if the interview at its centre cannot be faked.
+            </p>
+          </div>
+        </section>
 
-      <MoneySection id="report" kicker="What you receive" heading="Evidence, not a verdict.">
-        <p>
-          Every interview ends in a graded brief with an integrity section: the score, each flag, its timestamp and
-          the clip behind it. A clean interview says so. A flagged one is parked for a human, who decides.
-        </p>
-        <ul>
-          <li>Integrity score alongside the rubric score, shown separately.</li>
-          <li>Flag timeline you can scrub, with the source clip for each flag.</li>
-          <li>Candidate told up front what is checked, and consents.</li>
-          <li>No automatic rejection. No automatic offer.</li>
-        </ul>
-      </MoneySection>
+        <SecureTrust audience="page" />
 
-      <MoneyFaq faqs={faqs} />
-      <RelatedLinks
-        links={[
-          { href: SEO_PAGES.aiHiring.path, label: "AI hiring platform", note: "The end-to-end pipeline around the interview" },
-          { href: SEO_PAGES.aiInterview.path, label: "AI interview platform", note: "How the interviews run today" },
-        ]}
-      />
-      <ContactStrip phone={EMPLOYER_PHONE} />
-    </MoneyArticle>
+        <section className="s-paper chapter" id="signals">
+          <div className="wrap">
+            <div className="center" style={{ marginBottom: "clamp(28px,4vw,48px)" }}>
+              <p className="eyebrow">What is read</p>
+              <h2 className="h-section" style={{ fontSize: "clamp(32px,4.6vw,56px)" }}>
+                Four signals. One integrity score.
+              </h2>
+            </div>
+            <div className="tiles-2" data-reveal-kids="">
+              {SIGNALS.map((s) => (
+                <article key={s.n} className="tile tile-pad">
+                  <p className="eyebrow-sm num">{s.n}</p>
+                  <h3 className="h-tile" style={{ marginTop: "10px" }}>
+                    {s.t}
+                  </h3>
+                  <p className="body">{s.b}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="s-black chapter" id="film">
+          <div className="wrap center">
+            <p className="eyebrow">Watch</p>
+            <h2 className="h-section">Thirty seconds: the cheat, and the catch.</h2>
+            {FILM_SRC ? (
+              <video
+                controls
+                playsInline
+                preload="metadata"
+                src={FILM_SRC}
+                style={{ width: "100%", maxWidth: 960, borderRadius: 24, marginTop: 32, background: "#000" }}
+              />
+            ) : (
+              <div className="tiles-2" style={{ marginTop: 32, textAlign: "left" }} data-reveal-kids="">
+                {FILM.map(([t, d]) => (
+                  <article key={t} className="tile tile-pad">
+                    <p className="eyebrow-sm num">{t}</p>
+                    <p className="body" style={{ marginTop: 8 }}>
+                      {d}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="s-white chapter" id="report">
+          <div className="wrap center">
+            <p className="eyebrow">What you receive</p>
+            <h2 className="h-section">Evidence, not a verdict.</h2>
+            <p className="lead">
+              Every interview ends in a graded brief with an integrity section: the score, each flag, its timestamp and the
+              clip behind it. A clean interview says so. A flagged one waits for a person.
+            </p>
+            <ul className="check-list" style={{ textAlign: "left", maxWidth: 560, marginInline: "auto" }}>
+              <li>Integrity score shown beside the rubric score, never blended into it.</li>
+              <li>A flag timeline you can scrub, with the source clip for each flag.</li>
+              <li>The candidate is told up front what is checked, and consents.</li>
+              <li>No automatic rejection. No automatic offer.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="s-paper chapter" id="faq">
+          <div className="wrap center">
+            <h2 className="h-section">Questions before you book.</h2>
+            <div className="faq">
+              {faqs.map((f) => (
+                <details key={f.q}>
+                  <summary>
+                    <h3 className="q">{f.q}</h3>
+                  </summary>
+                  <p className="answer">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <SGetStarted />
+      </ApShell>
+    </>
   );
 }
