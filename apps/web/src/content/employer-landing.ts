@@ -11,9 +11,9 @@
 
 export const EMPLOYER_META = {
   path: "/employers",
-  title: "Hire in 3 days, not 90",
+  title: "The AI interview you can trust. Hire in 3 days, not 90",
   description:
-    "Share a role on WhatsApp. Bots screen applicants, run a proctored AI interview, and send a performance report with the CV. Hiring time drops from 90 days to 3 days.",
+    "End-to-end AI hiring on interviews built to catch cheating: gaze, lip-sync and second-voice signals, with the evidence in your report. Hiring time drops from 90 days to 3 days.",
 } as const;
 
 export const EMPLOYER_WAYS = [

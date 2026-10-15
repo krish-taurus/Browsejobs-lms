@@ -9,8 +9,8 @@ export function STop() {
     <section className="s-black emp-hero" id="top">
   <div className="wrap center">
     <p className="eyebrow">For employers</p>
-    <h1 className="h-hero"><span>Your AI</span> <span>Recruiter.</span></h1>
-    <p className="lead">Hire in about <b>3 days</b> instead of <b>90.</b><sup>1</sup> You only meet people who already passed our AI interview. You still decide who gets the offer.</p>
+    <h1 className="h-hero"><span>The interview</span> <span>you can trust.</span></h1>
+    <p className="lead">Your AI Recruiter runs hiring end to end, on interviews built to catch reading from a screen, lip-sync and a second voice. You meet people who passed it, with the evidence. You still decide who gets the offer. Hiring takes about <b>3 days</b> instead of <b>90.</b><sup>1</sup></p>
     <p className="fine">Based on BrowseJobs internal data. Historical figures — not a promise of individual outcome. Hiring depends on the live market and your performance.</p>
     <div className="cta-row"><a className="btn btn-primary" href="#get-started">Onboard with us</a><a className="more" href="#how">See how it works <span className="chev" aria-hidden="true">›</span></a></div>
   </div>
