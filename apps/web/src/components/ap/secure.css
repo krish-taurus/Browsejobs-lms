@@ -205,7 +205,7 @@
 .ap .secure[data-step="0"] .sec-pupil {
   transform: translate(calc(var(--line) * 0.9px - 3px), 3px);
 }
-.ap .secure[data-step="2"] .sec-pupil {
+.ap .secure[data-step="1"] .sec-pupil {
   transform: translate(-5px, -3px);
 }
 .ap .secure .sec-mouth {
@@ -230,12 +230,12 @@
 .ap .secure[data-step="0"] .sec-track path {
   stroke: var(--sig-red);
 }
-.ap .secure[data-step="1"] .sec-track path {
-  stroke: var(--sig-amber);
-}
-.ap .secure[data-step="2"] .sec-track path,
+.ap .secure[data-step="1"] .sec-track path,
 .ap .secure[data-step="3"] .sec-track path {
   stroke: var(--sig-red);
+}
+.ap .secure[data-step="2"] .sec-track path {
+  stroke: var(--sig-amber);
 }
 
 /* reading panel + beam */
@@ -308,6 +308,7 @@
 .ap .secure .sec-ring.r2 {
   animation-delay: 0.9s;
 }
+.ap .secure[data-step="1"] .sec-ghost,
 .ap .secure[data-step="2"] .sec-ghost,
 .ap .secure[data-step="3"] .sec-ghost {
   opacity: 1;
@@ -335,7 +336,6 @@
 .ap .secure .sec-row.m {
   transform: translateX(calc(var(--drift) * 1px));
 }
-.ap .secure[data-step="1"] .sec-row.m rect,
 .ap .secure[data-step="2"] .sec-row.m rect,
 .ap .secure[data-step="3"] .sec-row.m rect {
   fill: var(--sig-amber);
@@ -344,7 +344,7 @@
   opacity: 0.45;
   transition: opacity 0.5s;
 }
-.ap .secure[data-step="1"] .sec-wave {
+.ap .secure[data-step="2"] .sec-wave {
   opacity: 1;
 }
 
@@ -377,12 +377,12 @@
   color: #ffb3ad;
 }
 .ap .secure .chip.c1 {
-  border-color: rgba(255, 159, 10, 0.6);
-  color: #ffd699;
-}
-.ap .secure .chip.c2 {
   border-color: rgba(255, 69, 58, 0.6);
   color: #ffb3ad;
+}
+.ap .secure .chip.c2 {
+  border-color: rgba(255, 159, 10, 0.6);
+  color: #ffd699;
 }
 .ap .secure .chip b {
   font-variant-numeric: tabular-nums;
@@ -515,4 +515,21 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+.ap .secure .tag {
+  font: 600 10px/1 ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-style: normal;
+  margin-left: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--hair);
+  color: var(--fg-3);
+  vertical-align: 2px;
+}
+.ap .secure .tag.live {
+  color: var(--sig-green);
+  border-color: rgba(48, 209, 88, 0.45);
 }

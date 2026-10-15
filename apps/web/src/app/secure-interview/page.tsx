@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ApShell } from "@/components/ap/ApShell";
 import { SGetStarted } from "@/components/ap/generated/employers";
+import { SampleReport } from "@/components/ap/SampleReport";
 import { SecureTrust } from "@/components/ap/SecureTrust";
 import { contact } from "@/content/landing";
 import { EMPLOYER_PHONE } from "@/content/phones";
@@ -19,7 +20,7 @@ const FILM_SRC: string | null = null;
 const faqs = [
   {
     q: "What kinds of cheating does the integrity layer look for?",
-    a: "Three patterns that account for most interview fraud: reading answers from a screen, a voice that does not belong to the face on camera (lip-sync mismatch, pre-recorded or synthetic video), and a second person feeding answers. Each is read from a different signal, and each is shown to your team with the clip it came from.",
+    a: "Reading answers from a phone or second screen, a second person in the room, and leaving the interview to look something up are caught today from camera, tab and paste signals. A voice that does not belong to the face (lip-sync, pre-recorded or synthetic video) and a second voice are in pilot. Each flag is shown to your team with the photo it came from.",
   },
   {
     q: "Does a flag reject the candidate?",
@@ -34,8 +35,8 @@ const faqs = [
     a: "They are told before the interview starts which signals are checked, and they consent to camera and microphone analysis. Nothing runs silently.",
   },
   {
-    q: "Is the integrity layer live today?",
-    a: "Not yet. Today's interviews do not capture camera or window-switch checks, and the AI interview page says so. This page describes what we are building and how it will behave. Join the pilot to get it first.",
+    q: "What is live today, and what is in pilot?",
+    a: "Live: tab and window-focus checks, paste detection, face not visible, a possible second person in frame, gaze down or to the side, and random check-in photos, all shown in the report with a photo. These are camera estimates and can misfire on glasses, posters or reflections, so every flag carries its photo. In pilot: lip-sync matching and second-voice analysis. We will say so on the report when they ship.",
   },
 ] as const;
 
@@ -46,16 +47,16 @@ const crumbs = [
 ] as const;
 
 const SIGNALS = [
-  { n: "01", t: "Gaze", b: "Where the candidate looks, and how. Reading leaves a steady scan. Thinking leaves drift and return." },
-  { n: "02", t: "Lip-sync", b: "Audio against the mouth, frame by frame. A lead, a lag, a looped clip or a synthetic face breaks the match." },
-  { n: "03", t: "Second voice", b: "Speakers separated in the room audio. A prompt, a pause, then a fluent answer is logged with timestamps." },
-  { n: "04", t: "Environment", b: "Focus loss, extra displays and answer-assist overlays running during the session." },
+  { n: "01", t: "Gaze", b: "Looking down or to the side, flagged as a possible with a photo. Live today." },
+  { n: "02", t: "Faces in frame", b: "Face not visible, or a possible second person. Live today, with random check-in photos." },
+  { n: "03", t: "Lip-sync and voice", b: "Audio against the mouth, and a second voice behind the answer. In pilot." },
+  { n: "04", t: "Tab, window and paste", b: "Leaving the interview tab, losing window focus, or pasting an answer. Live today." },
 ] as const;
 
 const FILM = [
   ["0–8s", "A candidate nails every answer. Pull back: a second laptop, a phone, a friend."],
-  ["8–16s", "Same interview through our layer: gaze trace, audio-mouth drift, a second voice."],
-  ["16–24s", "Integrity score drops. Clips and timestamps attach to the report."],
+  ["8–16s", "Same interview through our layer: gaze drops, a second face, a face that leaves the frame."],
+  ["16–24s", "Flags land in the report with a time and a photo."],
   ["24–30s", "A recruiter reviews the evidence and decides. BrowseJobs: interviews you can trust."],
 ] as const;
 
@@ -93,8 +94,8 @@ export default function SecureInterviewPage() {
               <span>The interview you can</span> <span>trust the answers to.</span>
             </h1>
             <p className="lead">
-              Reading from a screen. A voice that is not the face. Someone feeding the answers. BrowseJobs interviews are
-              built to catch all three, and to show your team the evidence.
+              Looking away to read. A second person in the room. A voice that is not the face. BrowseJobs interviews flag them,
+              attach a photo to each flag, and leave the decision to your team.
             </p>
             <div className="cta-row">
               <Link className="btn btn-primary" href="/employers#get-started">
@@ -122,6 +123,7 @@ export default function SecureInterviewPage() {
         </section>
 
         <SecureTrust audience="page" />
+        <SampleReport />
 
         <section className="s-paper chapter" id="signals">
           <div className="wrap">

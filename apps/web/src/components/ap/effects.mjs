@@ -110,13 +110,39 @@ export function initApEffects(root) {
       el.dataset.step = String(step);
       el.style.setProperty("--p", p.toFixed(3));
       el.style.setProperty("--sp", sp.toFixed(3));
-      el.style.setProperty("--drift", (step === 0 ? 0 : step === 1 ? sp * 28 : 28).toFixed(1));
+      el.style.setProperty("--drift", (step < 2 ? 0 : step === 2 ? sp * 28 : 28).toFixed(1));
       el.style.setProperty("--line", String(step === 0 ? Math.min(7, Math.floor(sp * 8)) : 6));
       const s = el.querySelector("[data-score]");
       if (s) s.textContent = String(Math.round(score));
       const d = el.querySelector(".sec-delta");
-      if (d) d.textContent = (step === 1 ? Math.round(180 * ease(sp)) : step > 1 ? 180 : 0) + " ms";
+      if (d) d.textContent = (step === 2 ? Math.round(180 * ease(sp)) : step > 2 ? 180 : 0) + " ms";
       el.querySelectorAll(".sec-steps li").forEach((li) => li.classList.toggle("is-on", Number(li.dataset.s) === step));
+    },
+    report(el, p) {
+      const total = 540;
+      const f = clamp(p / 0.7);
+      const t = f * total;
+      const g = ease(clamp((p - 0.72) / 0.2));
+      el.style.setProperty("--t", f.toFixed(4));
+      el.style.setProperty("--g", g.toFixed(3));
+      el.dataset.phase = p < 0.72 ? "play" : "grade";
+      const clock = el.querySelector(".rp-time");
+      if (clock) clock.textContent = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")} / 9:00`;
+      let flags = 0;
+      let ev = "";
+      el.querySelectorAll("[data-at]").forEach((n) => {
+        const at = Number(n.dataset.at);
+        const on = t >= at - 0.001;
+        n.classList.toggle("is-on", on);
+        if (on && n.hasAttribute("data-flag")) flags++;
+        if (on && t < at + 9 && n.dataset.ev) ev = n.dataset.ev;
+      });
+      el.dataset.ev = ev;
+      const c = el.querySelector("[data-rcount]");
+      if (c) c.textContent = String(flags);
+      const sc = el.querySelector("[data-rscore]");
+      if (sc) sc.textContent = g > 0 ? String(Math.round(55 * g)) : "—";
+      el.classList.toggle("is-graded", g >= 1);
     },
     journey(el, p) {
       el.dataset.p = p.toFixed(3);

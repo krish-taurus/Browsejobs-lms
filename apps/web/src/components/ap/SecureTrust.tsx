@@ -5,7 +5,7 @@ const COPY = {
   employers: {
     eyebrow: "Why teams trust it",
     heading: "An interview you can believe.",
-    lead: "Scroll. Watch three ways to cheat a remote interview, and the signal that exposes each one.",
+    lead: "Scroll. Watch how a remote interview gets gamed, and the signal that exposes each move.",
   },
   home: {
     eyebrow: "Why your pass counts",
@@ -14,16 +14,16 @@ const COPY = {
   },
   page: {
     eyebrow: "How it catches cheating",
-    heading: "Three ways to cheat. Three signals.",
+    heading: "Ways to cheat. Signals that catch them.",
     lead: "Scroll. Each pattern, and what the integrity layer reads to expose it.",
   },
 } as const;
 
 const STEPS = [
-  { t: "Reading from a screen", b: "Gaze sweeps a fixed line, then snaps back. That is reading, not remembering." },
-  { t: "A voice that is not their face", b: "Audio leads the mouth by 180 ms. Looped, pre-recorded or synthetic video breaks the match." },
-  { t: "Someone feeding the answers", b: "A second voice speaks first. The candidate's answer starts after it ends." },
-  { t: "Evidence, not a verdict", b: "Score, timestamps and clips go to your team. A person decides. Nothing rejects on its own." },
+  { t: "Looking away to read", live: true, b: "Gaze drops to a phone or slides to a second screen. It is flagged as a possible, with a photo from that moment." },
+  { t: "A second person in the room", live: true, b: "A second face in frame is flagged with a still, so your team can check it for themselves." },
+  { t: "A voice that is not their face", live: false, b: "In pilot: audio that leads the mouth, a looped or synthetic video, and a second voice behind the answer." },
+  { t: "Evidence, not a verdict", live: true, b: "Every flag lands in the report with its time and photo. A person decides. Nothing rejects on its own." },
 ] as const;
 
 const READ_LINES = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -52,7 +52,9 @@ export function SecureTrust({ audience }: { audience: keyof typeof COPY }) {
                 <li key={s.t} data-s={i} className={i === 0 ? "is-on" : undefined}>
                   <span className="sec-n">0{i + 1}</span>
                   <div>
-                    <h3>{s.t}</h3>
+                    <h3>
+                      {s.t} <em className={s.live ? "tag live" : "tag"}>{s.live ? "Live today" : "In pilot"}</em>
+                    </h3>
                     <p>{s.b}</p>
                     <i className="sec-bar" aria-hidden="true" />
                   </div>
@@ -141,27 +143,27 @@ export function SecureTrust({ audience }: { audience: keyof typeof COPY }) {
               </svg>
 
               <div className="sec-chips">
-                <span className="chip c0">GAZE · reading pattern</span>
-                <span className="chip c1">
-                  LIP-SYNC · drift <b className="sec-delta">0 ms</b>
+                <span className="chip c0">GAZE · possibly looking down</span>
+                <span className="chip c1">SECOND PERSON · possibly in frame</span>
+                <span className="chip c2">
+                  LIP-SYNC · drift <b className="sec-delta">0 ms</b> · in pilot
                 </span>
-                <span className="chip c2">SECOND VOICE · 3 prompts</span>
               </div>
 
               <div className="sec-report">
                 <p className="eyebrow-sm">Integrity report</p>
                 <ul>
                   <li>
-                    <i className="c0" /> Reading pattern · 0:41
+                    <i className="c0" /> Possibly looking down · 5:18
                   </li>
                   <li>
-                    <i className="c1" /> Audio-visual drift · 1:12
+                    <i className="c1" /> Possibly a second person · 7:23
                   </li>
                   <li>
-                    <i className="c2" /> Second voice ×3 · 2:03
+                    <i className="c1" /> Face not visible · 8:16
                   </li>
                 </ul>
-                <p className="sec-decide">Clips attached. Decision: your team.</p>
+                <p className="sec-decide">Photos attached. Decision: your team.</p>
               </div>
             </div>
           </div>
@@ -173,8 +175,7 @@ export function SecureTrust({ audience }: { audience: keyof typeof COPY }) {
               </Link>
             </div>
             <p className="fine">
-              Staged demonstration. The integrity layer is in pilot: today&apos;s interviews do not yet capture camera or
-              window-switch checks. A flag sends the interview to a person. It never rejects anyone on its own.
+              Staged demonstration. Tab, paste, face and gaze checks run in interviews today; they are camera estimates and can misfire on glasses or reflections. Lip-sync and voice analysis are in pilot. A flag sends the interview to a person and never rejects anyone on its own.
             </p>
           </div>
         </div>
