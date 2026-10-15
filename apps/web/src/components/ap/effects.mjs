@@ -119,11 +119,24 @@ export function initApEffects(root) {
       el.querySelectorAll(".sec-steps li").forEach((li) => li.classList.toggle("is-on", Number(li.dataset.s) === step));
     },
     report(el, p) {
-      const total = 540;
       const f = clamp(p / 0.7);
-      const t = f * total;
+      // Playback time is warped so the scroll dwells on each flag: [scroll progress, seconds into the interview].
+      const warp = [
+        [0, 0], [0.05, 46], [0.09, 46], [0.15, 136], [0.19, 136], [0.4, 318], [0.49, 318], [0.58, 443],
+        [0.64, 443], [0.67, 453], [0.73, 453], [0.77, 480], [0.82, 480], [0.86, 496], [0.94, 496], [1, 540],
+      ];
+      let t = 540;
+      for (let i = 1; i < warp.length; i++) {
+        if (f <= warp[i][0]) {
+          const [f0, t0] = warp[i - 1];
+          const [f1, t1] = warp[i];
+          t = t0 + ((t1 - t0) * (f - f0)) / (f1 - f0);
+          break;
+        }
+      }
+      const fl = t / 540;
       const g = ease(clamp((p - 0.72) / 0.2));
-      el.style.setProperty("--t", f.toFixed(4));
+      el.style.setProperty("--t", fl.toFixed(4));
       el.style.setProperty("--g", g.toFixed(3));
       el.dataset.phase = p < 0.72 ? "play" : "grade";
       const clock = el.querySelector(".rp-time");
@@ -136,7 +149,7 @@ export function initApEffects(root) {
         const on = t >= at - 0.001;
         n.classList.toggle("is-on", on);
         if (on && n.hasAttribute("data-flag")) flags++;
-        if (on && t < at + 9 && n.dataset.ev) {
+        if (on && t < at + 12 && n.dataset.ev) {
           ev = n.dataset.ev;
           img = n.dataset.img || img;
         }
