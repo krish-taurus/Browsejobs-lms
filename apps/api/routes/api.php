@@ -167,6 +167,7 @@ use App\Http\Controllers\Placement\ProofController;
 use App\Http\Controllers\Public\AtsCheckController;
 use App\Http\Controllers\Public\CareerReportController;
 use App\Http\Controllers\Public\DailyBriefController;
+use App\Http\Controllers\Public\InterviewRecordingController;
 use App\Http\Controllers\Public\JobBoardController;
 use App\Http\Controllers\Public\MarketIntelController;
 use App\Http\Controllers\Public\MasterclassWatchController;
@@ -204,6 +205,12 @@ Route::get('v1/cv/shared/{token}', [CvController::class, 'shared'])
 // page to interested leads). NO tenant.domain — course resolved by slug.
 Route::get('v1/masterclass/watch/{slug?}', [MasterclassWatchController::class, 'show'])
     ->middleware('throttle:60,1');
+
+// The recording link in an employer's interview report: signed + expiring, no login.
+Route::get('v1/public/interview-recordings/{mock}', [InterviewRecordingController::class, 'show'])
+    ->whereNumber('mock')
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('public.interview-recording');
 
 Route::get('v1/verify/{code}', [CertificateVerifyController::class, 'show'])
     ->middleware('throttle:30,1')
@@ -481,6 +488,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('me/mocks/{mock}/transcribe', TranscribeMockAnswer::class)->middleware('throttle:30,1');
     Route::post('me/mocks/{mock}/finish', [MockController::class, 'finish'])->middleware('throttle:ai');
     Route::post('me/mocks/{mock}/recording', [MockController::class, 'uploadRecording'])->middleware('throttle:10,1');
+    // The same recording, in slices uploaded during the interview (so ending is instant).
+    Route::post('me/mocks/{mock}/recording-part', [MockController::class, 'recordingPart'])->middleware('throttle:240,1');
+    Route::post('me/mocks/{mock}/recording-complete', [MockController::class, 'recordingComplete'])->middleware('throttle:20,1');
     // Candidate's own view of their recording, and the option to remove it —
     // score/scorecard stay untouched either way.
     Route::get('me/mocks/{mock}/recording', [MockController::class, 'recording']);
@@ -551,6 +561,7 @@ Route::middleware(['auth:sanctum', 'tenant.user'])->prefix('v1/employer')->group
     Route::post('workspaces/{workspace}/hiring-floor/ask', [EmployerHiringFloorController::class, 'ask'])->middleware('throttle:ai');
     // Agentic hiring: say what to do, Taurus proposes it, a YES carries it out.
     Route::post('workspaces/{workspace}/agent/command', [EmployerHiringAgentController::class, 'command'])->middleware('throttle:ai');
+    Route::post('workspaces/{workspace}/agent/transcribe', [EmployerHiringAgentController::class, 'transcribe'])->middleware('throttle:30,1');
     Route::get('workspaces/{workspace}/agent/actions', [EmployerHiringAgentController::class, 'index']);
     Route::post('workspaces/{workspace}/agent/actions/{agentAction}/confirm', [EmployerHiringAgentController::class, 'confirm'])->middleware('throttle:30,1');
     Route::post('workspaces/{workspace}/agent/actions/{agentAction}/cancel', [EmployerHiringAgentController::class, 'cancel'])->middleware('throttle:30,1');

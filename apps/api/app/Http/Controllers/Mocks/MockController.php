@@ -10,6 +10,8 @@ use App\Actions\Mocks\StartMockInterview;
 use App\Actions\Mocks\StartVoiceMock;
 use App\Enums\EntitlementFeature;
 use App\Http\Controllers\Controller;
+use App\Jobs\AssembleMockRecording;
+use App\Jobs\FinishMockInterviewJob;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobRound;
 use App\Models\MockBlueprint;
@@ -219,6 +221,28 @@ final class MockController extends Controller
 
     public function finish(Request $request, int $mock): JsonResponse
     {
+        // The interview room ends the interview AT ONCE and builds the scorecard
+        // (and the employer's report) in the background: `background: true`.
+        // Everything else (typed practice) still waits for the scorecard.
+        if ($request->boolean('background')) {
+            return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+                $interview = $this->owned($request, $mock);
+
+                if ($interview->status === MockInterview::STATUS_IN_PROGRESS) {
+                    $min = (int) config('mocks.min_answers', 2);
+                    if ($interview->candidateAnswers() < $min) {
+                        throw ValidationException::withMessages(['mock' => "Answer at least {$min} questions before finishing."]);
+                    }
+                    if ($interview->ended_at === null) {
+                        $interview->update(['ended_at' => now()]);
+                        FinishMockInterviewJob::dispatch($interview->id);
+                    }
+                }
+
+                return $this->session($interview->refresh());
+            });
+        }
+
         return $this->guardBudget(fn (): JsonResponse => app(TenantContext::class)->run(
             $request->user()->tenant,
             function () use ($request, $mock): JsonResponse {
@@ -264,6 +288,44 @@ final class MockController extends Controller
 
             $disk->putFileAs("mock-recordings/{$interview->tenant_id}", $file, "{$interview->id}.{$extension}");
             $interview->update(['recording_url' => $path]);
+
+            return response()->json(['ok' => true]);
+        });
+    }
+
+    /**
+     * One slice of the recording, uploaded while the interview is still running
+     * so that ending it never has to wait for a big upload (and a closed tab
+     * loses seconds, not the whole interview). Parts are numbered from 0 and
+     * joined by `recordingComplete`.
+     */
+    public function recordingPart(Request $request, int $mock): JsonResponse
+    {
+        $request->validate([
+            'part' => ['required', 'file', 'max:20480'],
+            'seq' => ['required', 'integer', 'min:0', 'max:2000'],
+        ]);
+
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock): JsonResponse {
+            $interview = $this->owned($request, $mock);
+            Storage::disk('s3')->putFileAs(
+                AssembleMockRecording::partsDir($interview),
+                $request->file('part'),
+                ((int) $request->input('seq')).'.part',
+            );
+
+            return response()->json(['ok' => true]);
+        });
+    }
+
+    /** All parts are up: join them into the recording (in the background). */
+    public function recordingComplete(Request $request, int $mock): JsonResponse
+    {
+        $data = $request->validate(['parts' => ['required', 'integer', 'min:1', 'max:2001']]);
+
+        return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock, $data): JsonResponse {
+            $interview = $this->owned($request, $mock);
+            AssembleMockRecording::dispatch($interview->id, (int) $data['parts']);
 
             return response()->json(['ok' => true]);
         });
@@ -400,6 +462,8 @@ final class MockController extends Controller
                         ? EmployerJobRound::query()->with('job.workspace:id,name')->find($interview->blueprint->employer_job_round_id)?->job?->workspace?->name
                         : null),
                 'status' => $interview->status,
+                // Pressed "End interview": closed to answers, scorecard still being built.
+                'ending' => $interview->status === MockInterview::STATUS_IN_PROGRESS && $interview->ended_at !== null,
                 'mode' => $interview->mode,
                 // The plain (non-room) page uses this to redirect a room-kind
                 // interview back to /mock/{id}/room instead of rendering its

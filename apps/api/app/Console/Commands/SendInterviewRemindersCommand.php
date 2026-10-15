@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Enums\EmployerInterviewStatus;
 use App\Actions\Employers\SendInterviewInvites;
+use App\Enums\EmployerInterviewStatus;
+use App\Jobs\FinishMockInterviewJob;
 use App\Jobs\SendClientUpdate;
 use App\Jobs\SendInterviewInviteMessage;
 use App\Models\EmployerInterview;
 use App\Models\EmployerWhatsappMessage;
 use App\Models\InterviewInvite;
+use App\Models\MockInterview;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Employers\InterviewTemplates;
@@ -44,6 +46,7 @@ final class SendInterviewRemindersCommand extends Command
     public function handle(WhatsAppClient $whatsapp, InterviewTemplates $templates): int
     {
         $sent = $this->recoverStuck() + $this->chaseUnanswered();
+        $this->finishEndedInterviews();
 
         $invites = InterviewInvite::withoutGlobalScopes()
             ->whereIn('status', [InterviewInvite::SCHEDULED, InterviewInvite::OPEN])
@@ -65,6 +68,22 @@ final class SendInterviewRemindersCommand extends Command
         $this->line("Sent {$sent} interview reminders.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Safety net for the instant "End interview": an interview the candidate
+     * ended whose scorecard job never ran (queue down, worker restart) is queued
+     * again after ten minutes. The job is idempotent, so a second run is harmless.
+     */
+    private function finishEndedInterviews(): void
+    {
+        MockInterview::query()->withoutGlobalScopes()
+            ->where('status', MockInterview::STATUS_IN_PROGRESS)
+            ->whereNotNull('ended_at')
+            ->where('ended_at', '<', now()->subMinutes(10))
+            ->where('ended_at', '>', now()->subDays(2))
+            ->pluck('id')
+            ->each(fn (int $id) => FinishMockInterviewJob::dispatch($id));
     }
 
     /** An invite claimed for sending but never finished, or never picked up at all: send it again. */

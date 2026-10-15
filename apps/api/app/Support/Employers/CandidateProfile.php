@@ -171,6 +171,8 @@ final readonly class CandidateProfile
             'overall' => $interview->overall_score !== null ? (int) $interview->overall_score : null,
             'graded_by' => $interview->scorecard_source, // ai | fallback
             'competencies' => $competencies,
+            // Skills in the plan nobody was asked about: "not assessed", never a score.
+            'not_covered' => array_values(array_filter((array) ($card['not_covered'] ?? []), 'is_string')),
             'strengths' => array_values(array_filter((array) ($card['strong_moments'] ?? []), 'is_string')),
             'concerns' => array_values(array_filter((array) ($card['weak_moments'] ?? []), 'is_string')),
             'session' => [

@@ -14,7 +14,9 @@ use App\Models\MockInterview;
 use App\Models\User;
 use App\Services\AI\AiGateway;
 use App\Services\AI\JsonOutput;
+use App\Support\Mocks\CompetencyCoverage;
 use App\Support\Points\PointsService;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -94,10 +96,20 @@ final readonly class FinishMockInterview
         $blueprint = $interview->blueprint;
 
         try {
-            $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_scorecard', 1, [
+            $transcript = $this->answers->transcript($interview);
+            // Which skills the conversation really touched. The grader is told, and
+            // whatever it answers is checked against the same facts below, so a skill
+            // nobody was asked about can never carry a score into a client's report.
+            $coverage = CompetencyCoverage::check($blueprint->competencies, $transcript);
+            $covered = array_keys(array_filter($coverage));
+            $notCovered = array_keys(array_filter($coverage, fn (bool $c): bool => ! $c));
+
+            $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_scorecard', 2, [
                 'role_title' => $blueprint->role_title,
                 'competencies' => implode(', ', $blueprint->competencies),
-                'transcript' => $this->answers->transcript($interview),
+                'covered' => $covered === [] ? '(none)' : implode(', ', $covered),
+                'not_covered' => $notCovered === [] ? '(none)' : implode(', ', $notCovered),
+                'transcript' => $transcript,
             ], ['max_tokens' => (int) config('mocks.scorecard_max_tokens', 4000)]);
 
             $decoded = JsonOutput::object($result->text);
@@ -105,13 +117,55 @@ final readonly class FinishMockInterview
             if (is_array($decoded) && $this->isValid($decoded)) {
                 $decoded['overall'] = max(0, min(100, (int) $decoded['overall']));
 
-                return [$decoded, 'ai'];
+                return [$this->onlyWhatWasAsked($decoded, $blueprint->competencies, $coverage), 'ai'];
             }
         } catch (Throwable) {
             // Budget/transport failure — deterministic fallback below.
         }
 
         return [$this->fallback($blueprint->competencies), 'fallback'];
+    }
+
+    /**
+     * Keeps a score only for a skill that was talked about AND that the grader
+     * could back with evidence. Everything else moves to `not_covered`, so it
+     * shows as "not assessed" instead of as a number.
+     *
+     * @param  array<string, mixed>  $card
+     * @param  list<string>  $planned
+     * @param  array<string, bool>  $coverage
+     * @return array<string, mixed>
+     */
+    private function onlyWhatWasAsked(array $card, array $planned, array $coverage): array
+    {
+        $assessed = [];
+        $seen = [];
+
+        foreach ((array) $card['competencies'] as $row) {
+            if (! is_array($row) || ! is_string($row['name'] ?? null)) {
+                continue;
+            }
+            $name = $row['name'];
+            $seen[] = Str::lower($name);
+
+            $asked = ($row['asked'] ?? true) !== false;
+            $talkedAbout = $coverage[$name] ?? collect($coverage)->first(fn (bool $c, string $k): bool => Str::lower($k) === Str::lower($name), true);
+            if (! $asked || ! $talkedAbout || ! is_numeric($row['score'] ?? null)) {
+                continue;
+            }
+
+            $assessed[] = array_filter([
+                'name' => $name,
+                'score' => max(0, min(100, (int) $row['score'])),
+                'evidence' => is_string($row['evidence'] ?? null) && trim($row['evidence']) !== '' ? trim($row['evidence']) : null,
+            ], fn ($v) => $v !== null);
+        }
+
+        $assessedNames = array_map(fn (array $r): string => Str::lower($r['name']), $assessed);
+        $card['competencies'] = $assessed;
+        $card['not_covered'] = array_values(array_filter($planned, fn (string $c): bool => ! in_array(Str::lower($c), $assessedNames, true)));
+
+        return $card;
     }
 
     /**

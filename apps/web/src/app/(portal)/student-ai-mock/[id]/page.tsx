@@ -44,6 +44,8 @@ function voiceModeSupported(): boolean {
 type Scorecard = {
   overall: number;
   competencies: { name: string; score: number }[];
+  /** Skills in the plan that nobody was asked about: shown as not assessed, never as a score. */
+  not_covered?: string[];
   strong_moments: string[];
   weak_moments: string[];
   model_answers: { question: string; answer: string }[];
@@ -55,6 +57,8 @@ type MockSession = {
   kind: MockKind;
   company: string | null;
   status: "in_progress" | "completed" | "abandoned";
+  /** The candidate pressed End interview; the scorecard is still being prepared. */
+  ending?: boolean;
   mode: "text" | "voice";
   // A room-kind interview (the spoken, proctored /student-ai-mock/[id]/room experience —
   // employer-JD interviews, the AI Readiness Interview) should never render
@@ -98,6 +102,9 @@ function ScorecardView({ session }: { session: MockSession }) {
       )}
 
       <div className="mt-5 space-y-2">
+        {card.competencies.length === 0 && (
+          <p className="rounded-[10px] bg-paper px-3 py-2 text-xs text-muted">No single skill was covered enough to score on its own.</p>
+        )}
         {card.competencies.map((c) => (
           <div key={c.name}>
             <div className="flex justify-between text-xs text-muted"><span>{c.name}</span><span>{c.score}</span></div>
@@ -107,6 +114,10 @@ function ScorecardView({ session }: { session: MockSession }) {
           </div>
         ))}
       </div>
+
+      {(card.not_covered ?? []).length > 0 && (
+        <p className="mt-3 text-xs text-muted">Not assessed in this interview (not asked): {(card.not_covered ?? []).join(", ")}.</p>
+      )}
 
       {card.strong_moments.length > 0 && (
         <div className="mt-6">
@@ -243,6 +254,13 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  // The interview has ended and the scorecard is being prepared in the background.
+  const preparing = session?.ending === true && session.status === "in_progress";
+  useEffect(() => {
+    if (!preparing) return;
+    const timer = window.setInterval(load, 3000);
+    return () => window.clearInterval(timer);
+  }, [preparing, load]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [session?.turns.length]);
 
   // A room-kind interview belongs in its own spoken, proctored experience —
@@ -259,7 +277,7 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
   const pathname = usePathname();
   useEffect(() => {
     if (!session) return;
-    const target = mockPath(session.kind, id, session.is_room && session.status === "in_progress");
+    const target = mockPath(session.kind, id, session.is_room && session.status === "in_progress" && !session.ending);
     if (pathname !== target) router.replace(target);
   }, [session, id, router, pathname]);
 
@@ -311,6 +329,17 @@ export default function MockSessionPage({ params }: { params: Promise<{ id: stri
   if (!session) return <div className="mx-auto max-w-2xl text-sm text-muted">Interview not found.</div>;
   // Redirecting to the room (see the effect above) — render nothing of the
   // text UI in the meantime rather than flashing the wrong interview.
+  if (preparing) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-[14px] border border-line bg-white p-8 text-center">
+          <div className="shimmer mx-auto h-10 w-10 rounded-full" />
+          <h1 className="display mt-4 text-xl text-ink">Your interview has ended</h1>
+          <p className="mt-2 text-sm text-muted">Thank you. We are preparing your scorecard now. This page updates by itself, and you can close it.</p>
+        </div>
+      </div>
+    );
+  }
   if (session.is_room && session.status === "in_progress") {
     return <div className="mx-auto max-w-2xl"><div className="shimmer h-64 rounded-[14px]" /></div>;
   }

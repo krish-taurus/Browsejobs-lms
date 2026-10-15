@@ -273,6 +273,12 @@ export default function CandidateProfilePage() {
               </ul>
             )}
 
+            {(interview.not_covered ?? []).length > 0 && (
+              <p className="mt-4 text-[12px] text-[#65676b]">
+                Not assessed in this interview (not asked): {(interview.not_covered ?? []).join(", ")}.
+              </p>
+            )}
+
             {interview.graded_by && (
               <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8a8d91]">
                 Graded by {interview.graded_by === "ai" ? "AI against this JD's rubric" : "the fallback rubric"}

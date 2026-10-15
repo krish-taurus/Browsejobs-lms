@@ -9,6 +9,7 @@ use App\Models\MockInterview;
 use App\Models\MockTurn;
 use App\Models\RealInterviewQuestion;
 use App\Services\AI\AiGateway;
+use App\Support\Mocks\CompetencyCoverage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -27,7 +28,7 @@ final readonly class AnswerMockInterview
      */
     public function handle(MockInterview $interview, string $answer): array
     {
-        if ($interview->status !== MockInterview::STATUS_IN_PROGRESS) {
+        if ($interview->status !== MockInterview::STATUS_IN_PROGRESS || $interview->ended_at !== null) {
             throw ValidationException::withMessages(['mock' => 'This interview is already completed.']);
         }
 
@@ -69,9 +70,18 @@ final readonly class AnswerMockInterview
         // every INTERVIEWER line before asking. The bank-question dedup
         // below is unrelated: it only stops the same BANK question being
         // suggested twice, not the model repeating a question of its own.
-        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 3, [
+        // v4 (Oct 2026): also tells the interviewer which competencies the
+        // conversation has not touched yet, so each one is asked before the
+        // report scores it (a skill nobody asks about is "not assessed").
+        $untested = array_keys(array_filter(
+            CompetencyCoverage::check($blueprint->competencies, $transcript),
+            fn (bool $covered): bool => ! $covered,
+        ));
+
+        $result = $this->gateway->complete($interview->student, AiPurpose::Mock, 'mock_interview', 4, [
             'role_title' => $blueprint->role_title,
             'competencies' => implode(', ', $blueprint->competencies),
+            'untested' => $untested === [] ? '(none)' : implode(', ', $untested),
             'remaining' => (string) max(0, $max - $asked - 1),
             'bank_questions' => $this->bankQuestions($interview, $transcript),
             'transcript' => $transcript,

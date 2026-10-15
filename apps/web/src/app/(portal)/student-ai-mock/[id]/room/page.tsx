@@ -40,6 +40,8 @@ type MockSession = {
   kind: MockKind;
   company: string | null;
   status: "in_progress" | "completed" | "abandoned";
+  /** The candidate pressed End interview; the scorecard is still being prepared. */
+  ending?: boolean;
   mode: "text" | "voice";
   role_title: string | null;
   questions_asked: number;
@@ -276,6 +278,14 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const committedRef = useRef("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  // The recording goes up in slices while the interview runs, so pressing End
+  // only ever has the last few seconds left to send. The full copy stays in
+  // memory as the fallback if any slice could not be uploaded.
+  const partFromRef = useRef(0);
+  const partSeqRef = useRef(0);
+  const partsFailedRef = useRef(false);
+  const partChainRef = useRef<Promise<void>>(Promise.resolve());
+  const flushPartRef = useRef<(final: boolean) => void>(() => {});
 
   hiringRef.current = session?.kind === "job";
   const question = session ? [...session.turns].reverse().find((t) => t.role === "interviewer") : undefined;
@@ -377,13 +387,47 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         audioBitsPerSecond: 48_000,
       });
       recordedChunksRef.current = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+          flushPartRef.current(false);
+        }
+      };
       recorder.start(1000);
       recorderRef.current = recorder;
     } catch {
       recorderRef.current = null;
     }
   }, [pastRules, camOn]);
+
+  /**
+   * Sends the recording slices not yet uploaded (every ~10 s while the interview
+   * runs, and the remainder once it ends). Strictly in order; a slice that fails
+   * three times flags the whole recording for the full-upload fallback.
+   */
+  const flushRecordingPart = useCallback((final: boolean) => {
+    const chunks = recordedChunksRef.current;
+    const from = partFromRef.current;
+    if (chunks.length - from < (final ? 1 : 10) || partsFailedRef.current) return;
+    const blob = new Blob(chunks.slice(from), { type: chunks[0]?.type || "video/webm" });
+    partFromRef.current = chunks.length;
+    const seq = partSeqRef.current++;
+    partChainRef.current = partChainRef.current.then(async () => {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const form = new FormData();
+          form.append("seq", String(seq));
+          form.append("part", blob, `part-${seq}.webm`);
+          await apiJson(`/api/v1/me/mocks/${id}/recording-part`, { method: "POST", body: form });
+          return;
+        } catch {
+          if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 1500));
+        }
+      }
+      partsFailedRef.current = true;
+    });
+  }, [id]);
+  flushPartRef.current = flushRecordingPart;
 
   /** Stops recording and hands back the finished blob, or null if there is none. */
   const stopRecording = useCallback((): Promise<Blob | null> => {
@@ -1225,34 +1269,49 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     stopAudio();
     setPhase("grading");
 
-    // Stop first so the very last seconds are captured, before either
-    // network call — an evidence upload that missed the closing answer
-    // because it fired too early would defeat the point of recording at all.
+    // Stop first so the very last seconds are captured.
     const recording = await stopRecording();
 
-    // Save the recording at the same time as grading, never after it. Grading
-    // can take a minute; a recording that waited for it was lost whenever the
-    // page was reloaded or closed meanwhile (Oct 2026: a 10-minute interview
-    // kept only its last 17 seconds). Retried, and still best-effort — the
-    // score stands on its own without it.
-    const upload = recording === null ? Promise.resolve() : (async () => {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+    // 1. End the interview NOW. The scorecard and the employer's report are
+    // built in the background, so this is one quick call, not a minute of
+    // grading. (If the quick call cannot be made, fall back to grading here
+    // rather than leave the interview open.)
+    const ended = await apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST", body: JSON.stringify({ background: true }) })
+      .then(() => true)
+      .catch(() => false);
+    if (!ended) {
+      await apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST" }).catch(() => {
+        // The session page shows the precise error state.
+      });
+    }
+
+    // 2. Send what is left of the recording: the slices were going up all
+    // along, so this is only the last few seconds. Joined on the server; if a
+    // slice never made it, upload the whole recording from memory instead.
+    if (recording !== null) {
+      flushRecordingPart(true);
+      await partChainRef.current;
+      if (!partsFailedRef.current && partSeqRef.current > 0) {
         try {
-          const form = new FormData();
-          form.append("recording", recording, `interview-${id}.webm`);
-          await apiJson(`/api/v1/me/mocks/${id}/recording`, { method: "POST", body: form });
-          return;
+          await apiJson(`/api/v1/me/mocks/${id}/recording-complete`, { method: "POST", body: JSON.stringify({ parts: partSeqRef.current }) });
         } catch {
-          if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 2000));
+          partsFailedRef.current = true;
         }
       }
-    })();
+      if (partsFailedRef.current || partSeqRef.current === 0) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const form = new FormData();
+            form.append("recording", recording, `interview-${id}.webm`);
+            await apiJson(`/api/v1/me/mocks/${id}/recording`, { method: "POST", body: form });
+            break;
+          } catch {
+            if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 2000));
+          }
+        }
+      }
+    }
 
-    const grade = apiJson(`/api/v1/me/mocks/${id}/finish`, { method: "POST" }).catch(() => {
-      // The session page shows the precise error state.
-    });
-
-    await Promise.allSettled([upload, grade]);
     router.push(sessionHref);
   }
 
@@ -1264,7 +1323,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  if (!session || session.status !== "in_progress" || session.mode !== "text") {
+  if (!session || session.status !== "in_progress" || session.ending === true || session.mode !== "text") {
     return (
       <div className="fixed inset-0 z-[60] grid place-items-center bg-ink p-6 text-center">
         <div>
@@ -1583,7 +1642,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           )}
           {phase === "grading" && (
             <p className="mt-2 text-sm text-white/70">
-              Saving your recording and preparing your scorecard — this can take up to a minute. Please keep this page open.
+              Your interview has ended. Saving the last seconds of your recording — just a moment, then you can close this page.
             </p>
           )}
           {serverStt && listening && (

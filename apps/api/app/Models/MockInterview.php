@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $scorecard_source
  * @property Carbon $started_at
  * @property Carbon|null $completed_at
+ * @property Carbon|null $ended_at
  */
 class MockInterview extends Model
 {
@@ -61,7 +62,7 @@ class MockInterview extends Model
     /** @var list<string> */
     protected $fillable = [
         'tenant_id', 'user_id', 'mock_blueprint_id', 'mode', 'is_room', 'status',
-        'overall_score', 'scorecard', 'scorecard_source', 'started_at', 'completed_at',
+        'overall_score', 'scorecard', 'scorecard_source', 'started_at', 'completed_at', 'ended_at',
         'provider_session_id', 'join_url', 'recording_url', 'duration_seconds', 'cost_micros',
     ];
 
@@ -153,6 +154,7 @@ class MockInterview extends Model
             'overall_score' => 'integer',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'ended_at' => 'datetime',
         ];
     }
 }

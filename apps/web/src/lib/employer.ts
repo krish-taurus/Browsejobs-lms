@@ -453,6 +453,8 @@ export type CandidateProfileData = {
     overall: number | null;
     graded_by: string | null;
     competencies: { name: string; score: number | null }[];
+    /** Skills in the plan nobody was asked about. */
+    not_covered?: string[];
     strengths: string[];
     concerns: string[];
     session: {

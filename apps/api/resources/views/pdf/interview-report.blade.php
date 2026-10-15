@@ -81,9 +81,20 @@
             @endforeach
           </table>
         @endif
+        @if(count($notCovered) > 0)
+          <p class="meta" style="margin-top: 6px">Not assessed in this interview (not asked): {{ implode(', ', $notCovered) }}.</p>
+        @endif
       </td>
     </tr>
   </table>
+
+  @if($recordingUrl)
+    <div class="note" style="margin-top: 10px">
+      <b>Watch the full interview recording:</b>
+      <a href="{{ $recordingUrl }}" style="color: #1B6DF0">Open the recording</a>
+      — the whole interview, video and audio, exactly as it happened. The link works for 30 days and needs no login.
+    </div>
+  @endif
 
   @if($summary)
     <h2>Summary</h2>

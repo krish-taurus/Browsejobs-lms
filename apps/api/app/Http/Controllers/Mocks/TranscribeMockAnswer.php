@@ -39,7 +39,7 @@ final class TranscribeMockAnswer extends Controller
             ->where('user_id', $request->user()->id)
             ->findOrFail($mock);
 
-        if ($interview->status !== MockInterview::STATUS_IN_PROGRESS) {
+        if ($interview->status !== MockInterview::STATUS_IN_PROGRESS || $interview->ended_at !== null) {
             return response()->json(['error' => ['code' => 'closed', 'message' => 'This interview has ended.']], 409);
         }
 

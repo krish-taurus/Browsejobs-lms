@@ -38,7 +38,7 @@ final class RecordMockIntegrityEvent extends Controller
 
         return app(TenantContext::class)->run($request->user()->tenant, function () use ($request, $mock, $data): JsonResponse {
             $interview = MockInterview::query()->where('user_id', $request->user()->id)->findOrFail($mock);
-            if ($interview->status !== MockInterview::STATUS_IN_PROGRESS) {
+            if ($interview->status !== MockInterview::STATUS_IN_PROGRESS || $interview->ended_at !== null) {
                 return response()->json(['ok' => false, 'reason' => 'not_running'], 409);
             }
 

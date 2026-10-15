@@ -13,6 +13,7 @@ use App\Models\MockIntegrityEvent;
 use App\Models\MockInterview;
 use App\Models\User;
 use App\Support\Employers\ShortlistSettings;
+use App\Support\Mocks\RecordingLink;
 use App\Support\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
@@ -92,6 +93,10 @@ final readonly class BuildInterviewReport
                 'proctored' => $mock !== null && ! $onZoom && $events->isNotEmpty(),
                 'onZoom' => $onZoom,
                 'hasRecording' => $mock?->recording_url !== null,
+                // Skills in the plan nobody was asked about: shown as "not assessed", never as a score.
+                'notCovered' => array_values(array_filter((array) ($mock?->scorecard['not_covered'] ?? []), 'is_string')),
+                // A link the client can open without logging in (signed, 30 days).
+                'recordingUrl' => $mock !== null ? RecordingLink::for($mock) : null,
                 'profileUrl' => rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}/candidates/{$application->id}",
                 'generatedOn' => now('Asia/Kolkata')->format('j M Y, g:i A'),
             ])->setPaper('a4')->setOption('isFontSubsettingEnabled', true);
