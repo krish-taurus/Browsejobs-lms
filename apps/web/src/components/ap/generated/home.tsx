@@ -115,6 +115,7 @@ export function SCourses() {
       <Link className="more" href="/data-engineering-course-bangalore">data engineering course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
       <Link className="more" href="/data-analytics-course-bangalore">data analytics course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
       <Link className="more" href="/agentic-ai-course-bangalore">agentic AI course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
+      <Link className="more" href="/courses/gen-ai">Gen AI course in Bangalore with pay after placement <span className="chev" aria-hidden="true">›</span></Link>
       <Link className="more" href="/gen-ai-course-bangalore">gen AI course in Bangalore <span className="chev" aria-hidden="true">›</span></Link>
       <Link className="more" href="/free-python-bootcamp">free 5-day Python bootcamp <span className="chev" aria-hidden="true">›</span></Link>
     </div>

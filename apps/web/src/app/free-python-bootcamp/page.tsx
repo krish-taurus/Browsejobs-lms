@@ -195,7 +195,7 @@ export default function FreePythonBootcampPage() {
           <TextLink href="/courses/data-engineering">Data Engineering</TextLink>,{" "}
           <TextLink href="/courses/data-analytics">Data Analytics</TextLink>,{" "}
           <TextLink href="/courses/agentic-ai-course">Agentic AI</TextLink>, and{" "}
-          <TextLink href="/gen-ai-course-bangalore">Gen AI</TextLink>. Gen AI on this site is the Agentic AI syllabus.
+          <TextLink href="/courses/gen-ai">Gen AI</TextLink>. Gen AI publishes Python, LLMs, RAG and AI agents on its own course page.
           Registration on those courses is ₹30,000 and covers the course. Pay after placement is three months of CTC,
           charged in EMIs only after you accept an offer.
         </p>
@@ -207,7 +207,7 @@ export default function FreePythonBootcampPage() {
           { href: "/courses/data-engineering", label: "Data Engineering", note: "Six months. Pipelines and the modern data stack." },
           { href: "/courses/data-analytics", label: "Data Analytics", note: "Six months. Excel, SQL, Python, Power BI." },
           { href: "/courses/agentic-ai-course", label: "Agentic AI", note: "Six months. Python, LLMs, RAG, AI agents." },
-          { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "The same Agentic AI syllabus." },
+          { href: "/courses/gen-ai", label: "Gen AI", note: "Six months in Bangalore. Pay after placement." },
           { href: "/get-hired", label: "Free AI interview", note: "The 75% mark, before a course." },
           { href: "/founder", label: "Dr Krish Bharggav", note: "Founder." },
         ]}

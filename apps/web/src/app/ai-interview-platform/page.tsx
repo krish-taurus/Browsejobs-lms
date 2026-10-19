@@ -20,6 +20,10 @@ const page = SEO_PAGES.aiInterview;
 
 const faqs = [
   {
+    q: "Is this an AI interview platform for hiring in India?",
+    a: `Yes. It is for hiring teams in India. You send a role-specific AI interview. The candidate speaks or types. Your team reads a written brief after grading. A person on your team releases every offer. The employer line is ${EMPLOYER_PHONE.display}.`,
+  },
+  {
     q: "What is included in the AI interview platform?",
     a: "An async AI interview for the role, spoken or typed, graded against that job's rubric. L1, L2, or a round you design. Questions come from the bank generated for the job. A human round is a conversation your team holds. It is tracked here, not generated, and there is no slot-booking network yet. The brief is the answers, the dimension scores once graded, and a short written read. Camera and window-switch checks are not captured. A score stays empty until grading finishes.",
   },
@@ -85,12 +89,17 @@ export default function AiInterviewPlatformPage() {
         primary={{ kind: "link", href: "/employers", label: "Book an employer call" }}
         secondary={{ href: "/ai-hiring", label: "The full hiring pipeline" }}
         lede={
-          <p>
-            The AI interview platform is the part of BrowseJobs hiring that asks the questions and scores the
-            answers. The interview is async and role-specific. The candidate speaks or types. Later rounds use your
-            questions or questions generated from the job description. Your panel reads the answers and the scores
-            before it spends an hour. The platform does not hire anyone. A person releases the offer.
-          </p>
+          <>
+            <p>
+              BrowseJobs is an AI interview platform for hiring in India. A team sends a role-specific AI interview.
+              The candidate speaks or types. The team reads a written brief. A person releases the offer. The employer
+              line is {EMPLOYER_PHONE.display}.
+            </p>
+            <p>
+              The interview is async. Later rounds use your questions or questions generated from the job description.
+              Your panel reads the answers and the scores before it spends an hour. The platform does not hire anyone.
+            </p>
+          </>
         }
       />
       <Contents

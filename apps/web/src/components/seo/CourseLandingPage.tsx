@@ -13,6 +13,7 @@ import {
 } from "@/components/seo/MoneyArticle";
 import { courseLandings, getCourseLanding, type CourseLanding } from "@/content/course-landings";
 import { OFFICE_PHONE } from "@/content/phones";
+import { GOOGLE_LISTING_URL, GOOGLE_RATING_VALUE, GOOGLE_REVIEW_COUNT, GOOGLE_REVIEWS_CAPTURED_AT } from "@/content/reviews";
 import { courseNode, breadcrumbNode, faqNode, jsonLdGraph, moneyMetadata, programmeCourseNode, webPageNode } from "@/lib/seo";
 
 export function courseLandingMetadata(id: string): Metadata {
@@ -59,7 +60,7 @@ export function CourseLandingPage({ id }: { id: string }) {
         lede={
           <>
             <p className="fine">
-              Updated <time dateTime={page.updated}>14 Oct 2026</time>
+              Updated <time dateTime={page.updated}>{writtenDate(page.updated)}</time>
               {" · "}
               <Link href="/founder">Dr Krish Bharggav</Link>
             </p>
@@ -95,6 +96,17 @@ export function CourseLandingPage({ id }: { id: string }) {
             ))}
           </tbody>
         </table>
+        {page.showGoogleRating ? (
+          <>
+            <p>
+              The BrowseJobs Google Business Profile shows {GOOGLE_RATING_VALUE} from {GOOGLE_REVIEW_COUNT} reviews.
+              That figure is the business listing, captured {writtenDate(GOOGLE_REVIEWS_CAPTURED_AT)}. It is not a
+              rating BrowseJobs calculated for this course.{" "}
+              <a href={GOOGLE_LISTING_URL}>Read the Google listing</a>.
+            </p>
+            <Disclaimer />
+          </>
+        ) : null}
         <p>
           Registration of ₹30,000 covers the course. It is not a promise of a job. Pay after placement is three months
           of the CTC on the offer you accept, charged in EMIs only after you accept that offer. The full fee page is{" "}
@@ -148,8 +160,16 @@ export function CourseLandingPage({ id }: { id: string }) {
 }
 
 /** Turn a few known paths written in prose into links, without a markdown parser. */
+function writtenDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${Number(day)} ${names[Number(month) - 1] ?? month} ${year}`;
+}
+
 function linkKnownPaths(paragraph: string) {
-  const parts = paragraph.split(/(\/get-hired|\/non-it-to-it|\/courses\/data-analytics|\/courses\/data-engineering)/g);
+  const parts = paragraph.split(
+    /(\/get-hired|\/non-it-to-it|\/courses\/gen-ai|\/courses\/agentic-ai-course|\/gen-ai-course-bangalore|\/courses\/data-analytics|\/courses\/data-engineering)/g,
+  );
   if (parts.length === 1) return paragraph;
   return parts.map((part, index) =>
     part.startsWith("/") ? (

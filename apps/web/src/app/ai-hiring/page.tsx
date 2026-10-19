@@ -25,6 +25,10 @@ const page = SEO_PAGES.aiHiring;
 
 const faqs = [
   {
+    q: "Do you offer an AI interview platform for hiring in India?",
+    a: `Yes. The interview itself is on the AI interview platform page. This page is the hiring pipeline around it, for teams in India: the job description, the ranking, the interview, and the brief. The employer line is ${EMPLOYER_PHONE.display}.`,
+  },
+  {
     q: "What does the AI hiring platform actually do?",
     a: "You paste a job description, or start from a title and notes. The AI drafts a structured role — skills, experience band, locations, knockout questions — and you publish it. Applicants are ranked with a written reason. What runs next is an async, role-specific AI interview, spoken or typed, graded against that job's rubric. A human round is a conversation your team holds. It is not generated. Your team gets a graded report before anyone meets the candidate. Scores stay empty until grading finishes. Offer release is a human action. It is never automated.",
   },
@@ -94,7 +98,8 @@ export default function AiHiringPage() {
         secondary={{ href: "/ai-interview-platform", label: "How the interviews run" }}
         lede={
           <p>
-            BrowseJobs AI hiring is a pipeline for teams, not a student course. You bring a role. The product
+            If you want an AI interview platform for hiring in India, start with the interview page. This page is the
+            pipeline around it. BrowseJobs AI hiring is for teams, not a student course. You bring a role. The product
             structures the job description, ranks applicants with a written reason, runs a role-specific AI
             interview, and hands your HR team a graded brief before a human meeting. The first six months are free.
             We do not publish a hire rate, a time-to-fill, or a claim that this beats another ATS. An AI

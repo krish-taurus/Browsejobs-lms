@@ -6,7 +6,7 @@ test("employer page keeps its canonical, FAQ, and service schema", async ({ page
 
   await expect(page).toHaveTitle(/Hire in 3 days, not 90/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://browsejobs.ai/employers");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Your AI Recruiter/i);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/The interview you can trust/i);
 
   const html = await page.content();
   expect(html).toContain('"@type":"FAQPage"');

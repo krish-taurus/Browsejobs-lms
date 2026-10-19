@@ -15,10 +15,10 @@ const PUBLISHED = [
   {
     slug: "gen-ai",
     name: "Gen AI",
-    line: "The same Agentic AI syllabus: Python, LLMs, RAG, and AI agents. Six months.",
+    line: "Python, LLMs, RAG, and AI agents. Six months in Bangalore. ₹30,000 covers the course.",
     duration: "6 months",
     format: "Live online + Whitefield",
-    href: "/courses/agentic-ai-course",
+    href: "/courses/gen-ai",
   },
 ];
 

@@ -173,6 +173,7 @@ export function ApShell({
                 <li><Link href="/courses/python-backend">Python Backend</Link></li>
                 <li><Link href="/courses/data-analytics">Data Analytics</Link></li>
                 <li><Link href="/courses/agentic-ai-course">Agentic AI</Link></li>
+                <li><Link href="/courses/gen-ai">Gen AI</Link></li>
                 <li><Link href="/data-analytics-course-bangalore">data analytics course in Bangalore</Link></li>
                 <li><Link href="/agentic-ai-course-bangalore">Agentic AI course in Bangalore</Link></li>
               </ul>

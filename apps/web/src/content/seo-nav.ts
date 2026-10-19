@@ -35,7 +35,7 @@ export const SEO_PAGES = {
       "The same live six-month Data Engineering course, taught online across India, with counselling from the Whitefield, Bengaluru office. Placement fee only after an accepted offer.",
     footerLabel: "Data Engineering, India",
     priority: 0.85,
-    updated: "2026-10-14",
+    updated: "2026-10-19",
   },
   nonIt: {
     path: "/non-it-to-it",
@@ -61,10 +61,12 @@ export const SEO_PAGES = {
       "AI hiring for teams: structure the JD, rank applicants, run a role-specific AI interview, then read a written brief. Free for six months. You still make the hire.",
     footerLabel: "AI hiring",
     priority: 0.8,
+    updated: "2026-10-19",
   },
   secureInterview: {
     path: "/secure-interview",
     title: "Secure AI Interviews That Catch Cheating",
+    h1: "The interview you can trust the answers to.",
     description:
       "An AI interview built to be the hardest to cheat: gaze, lip-sync and second-voice signals, with the evidence in your report. A human makes every decision.",
     footerLabel: "Secure interviews",
@@ -77,6 +79,7 @@ export const SEO_PAGES = {
       "Role-specific AI interviews, scored only after grading, then a written brief. Camera checks are not captured. Automation never releases an offer.",
     footerLabel: "AI interview platform",
     priority: 0.75,
+    updated: "2026-10-19",
   },
   taurusAi: {
     path: "/taurusai",

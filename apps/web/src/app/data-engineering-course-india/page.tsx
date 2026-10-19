@@ -23,6 +23,10 @@ const salaryLinks = salaryPages.filter((item) => item.role === "Data Engineer");
 
 const faqs = [
   {
+    q: "What is the Data Engineering fee in India?",
+    a: "One fee for the country. Registration is ₹30,000 and it covers the course. Pay after placement is three months of the CTC on the offer you accept, charged in EMIs only after you accept. If you do not accept an offer, that second fee is not charged. Your city does not change the number.",
+  },
+  {
     q: "Is there an online data engineering course for people outside Bengaluru?",
     a: "Yes. The published format of the BrowseJobs Data Engineering programme is live online, with recordings, for six months. You can study from any city in India. Counselling and the office are in Whitefield, Bengaluru. The syllabus is the same one published for the Bengaluru page: Python, SQL, Spark, Databricks, AWS, Azure, and Airflow.",
   },
@@ -91,6 +95,7 @@ export default function DataEngineeringIndiaPage() {
       />
       <Contents
         items={[
+          { href: "#india", label: "India-wide" },
           { href: "#online", label: "Online, with a Bengaluru office" },
           { href: "#syllabus", label: "The national syllabus" },
           { href: "#cities", label: "Cities and salary pages" },
@@ -99,6 +104,21 @@ export default function DataEngineeringIndiaPage() {
           { href: "#faq", label: "Questions" },
         ]}
       />
+
+      <MoneySection id="india" kicker="India" heading="India-wide: live online, plus Bangalore">
+        <p>
+          The Data Engineering course is one programme for the country. Classes are live online, with recordings, so
+          you can study from any city in India. The classroom is in Bangalore: Aashvi, 3rd Floor, Whitefield
+          Channasandra Main Road, Whitefield, Bengaluru, Karnataka 560066. You can attend in that room or online.
+          There is no second syllabus for people outside Karnataka, and no published classroom in every other city.
+        </p>
+        <p>
+          Registration is ₹30,000 and it covers the course. Pay after placement is three months of the CTC on the
+          offer you accept, charged in EMIs only after you accept. If you do not accept an offer, that fee is not
+          charged. The phone is {OFFICE_PHONE.display}. The longer fee page is{" "}
+          <TextLink href="/pay-after-placement">Pay after placement</TextLink>.
+        </p>
+      </MoneySection>
 
       <MoneySection id="online" kicker="How it runs" heading="Live online teaching. Counselling from Bengaluru.">
         <p>

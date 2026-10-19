@@ -35,7 +35,7 @@ test("homepage demo is labelled and links to the full floor", async ({ page }) =
   await page.goto("/");
   const stage = page.locator("#recruiter");
   await stage.scrollIntoViewIfNeeded();
-  await expect(stage.getByRole("heading", { level: 2, name: "Hiring? Meet your AI Recruiter." })).toBeVisible();
+  await expect(stage.getByRole("heading", { level: 2, name: "Hiring? Interview people you can trust." })).toBeVisible();
   await expect(stage.getByText(/Sample data/).first()).toBeVisible();
   await expect(stage.locator("video")).toHaveAttribute("src", "/media/taurus/taurus-hiring-story.mp4");
   const full = stage.getByRole("link", { name: "Watch the demo" });
