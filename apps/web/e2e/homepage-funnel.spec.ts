@@ -92,7 +92,7 @@ test("homepage employer CTA opens the employer page", async ({ page }) => {
   await cta.scrollIntoViewIfNeeded();
   await cta.click();
   await expect(page).toHaveURL(/\/employers$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Your AI Recruiter/i);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/The interview you can trust/i);
 });
 
 test("counselling modal opens from the miss path", async ({ page }) => {
