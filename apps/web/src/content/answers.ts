@@ -534,7 +534,7 @@ export const answerPages: readonly AnswerPage[] = [
     slug: "best-agentic-ai-course-in-india",
     title: "Best Agentic AI course in India",
     documentTitle: "Best Agentic AI course in India (2026) · BrowseJobs",
-    updated: "2026-10-14",
+    updated: "2026-10-19",
     description:
       "How to choose an Agentic AI course in India. BrowseJobs teaches Python, LLMs, RAG and AI agents for six months. ₹30,000 covers the course.",
     kicker: "India · how to choose",
@@ -547,7 +547,7 @@ export const answerPages: readonly AnswerPage[] = [
         heading: "How to choose, without a ranking",
         paragraphs: [
           "This page will not name a number one. A useful choice is three checks: the classes are live, the syllabus matches work you can see in job descriptions, and every fee is written down before you pay.",
-          "The BrowseJobs syllabus for this search is Python, large language models, retrieval-augmented generation, and AI agents. There is not a second Generative AI course. The Gen AI pages describe this one.",
+          "The BrowseJobs syllabus for this search is Python, large language models, retrieval-augmented generation, and AI agents. The Gen AI course page publishes those same modules at /courses/gen-ai. This answer stays on the Agentic AI course.",
         ],
       },
       {
@@ -576,7 +576,7 @@ export const answerPages: readonly AnswerPage[] = [
       },
       {
         q: "Is a Gen AI course different?",
-        a: "Not here. Gen AI pages describe the Agentic AI course. Their canonical tags point at the Agentic AI URLs.",
+        a: "The Gen AI course has its own page at /courses/gen-ai. The published modules are the same four. The Bangalore Gen AI URL canonicalises to that page. This answer stays on the Agentic AI course.",
       },
       {
         q: "What does it cost?",
@@ -596,20 +596,20 @@ export const answerPages: readonly AnswerPage[] = [
     slug: "best-gen-ai-course-in-bangalore",
     title: "Best Gen AI course in Bangalore",
     documentTitle: "Best Gen AI course in Bangalore · BrowseJobs",
-    updated: "2026-10-14",
+    updated: "2026-10-19",
     description:
-      "How to choose a Gen AI course in Bangalore. BrowseJobs teaches that search as the Agentic AI course: Python, LLMs, RAG and AI agents, from Whitefield.",
+      "How to choose a Gen AI course in Bangalore. The BrowseJobs course is six months: Python, LLMs, RAG and AI agents, live in Whitefield and online.",
     kicker: "Bangalore · how to choose",
     audience: "student",
     directAnswer:
-      "There is no ranking of the best Gen AI course in Bangalore. On this site Gen AI is the Agentic AI course: Python, LLMs, RAG and AI agents, six months, live in Whitefield and online. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, after you accept an offer.",
+      "There is no ranking of the best Gen AI course in Bangalore. The BrowseJobs Gen AI course is six months, live in Whitefield and online: Python, LLMs, RAG and AI agents. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, after you accept an offer.",
     sections: [
       {
         id: "choose",
         heading: "How to choose in Bangalore",
         paragraphs: [
           "Ask whether the class is live, whether you can attend in Whitefield or online, and whether the fee is in writing. Do not take a rank that a page invented.",
-          "The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. The city page is [Gen AI in Bangalore](/gen-ai-course-bangalore). Its canonical tag points at [Agentic AI in Bangalore](/agentic-ai-course-bangalore), because they are one course.",
+          "The classroom is Aashvi, 3rd Floor, Whitefield Channasandra Main Road, Whitefield, Bengaluru 560066. The course page is [Gen AI](/courses/gen-ai). The city URL [Gen AI in Bangalore](/gen-ai-course-bangalore) canonicalises to that page so the two Bangalore addresses do not compete.",
         ],
       },
       {
@@ -632,11 +632,11 @@ export const answerPages: readonly AnswerPage[] = [
     faqs: [
       {
         q: "What is the best Gen AI course in Bangalore?",
-        a: "No ranking is published. BrowseJobs teaches the search as the Agentic AI course, live in Whitefield and online, for six months.",
+        a: "No ranking is published. The BrowseJobs Gen AI course is live in Whitefield and online, for six months: Python, LLMs, RAG and AI agents.",
       },
       {
         q: "Is there a separate Gen AI syllabus?",
-        a: "No. Python, LLMs, RAG and AI agents are the modules. A second course has not been confirmed.",
+        a: "The course page is /courses/gen-ai. The published modules are Python, LLMs, RAG and AI agents. The Bangalore city URL canonicalises to that page.",
       },
       {
         q: "What is the fee?",
@@ -644,13 +644,13 @@ export const answerPages: readonly AnswerPage[] = [
       },
     ],
     related: [
-      { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "The city page." },
-      { href: "/courses/agentic-ai-course", label: "Agentic AI course", note: "The syllabus this page describes." },
-      { href: "/agentic-ai-course-bangalore", label: "Agentic AI in Bangalore", note: "Canonical page for this city." },
+      { href: "/courses/gen-ai", label: "Gen AI course", note: "The self-canonical course page." },
+      { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "Canonicalises to the course page." },
+      { href: "/courses/agentic-ai-course", label: "Agentic AI course", note: "The same published modules, under that name." },
       { href: "/pay-after-placement", label: "Pay after placement", note: "The two fees." },
       { href: "/founder", label: "Dr Krish Bharggav", note: "Founder." },
     ],
-    secondary: { href: "/gen-ai-course-bangalore", label: "Read the Bangalore page" },
+    secondary: { href: "/courses/gen-ai", label: "Open the Gen AI course" },
   },
   {
     slug: "best-data-analytics-course-in-bangalore",

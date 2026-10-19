@@ -13,8 +13,9 @@
 - [Agentic AI course](https://browsejobs.ai/courses/agentic-ai-course): Python, large language models, RAG, and AI agents. Six months. ₹30,000 covers the course.
 - [Agentic AI course in Bangalore](https://browsejobs.ai/agentic-ai-course-bangalore): Whitefield classroom and live online.
 - [Agentic AI course in India](https://browsejobs.ai/agentic-ai-course-india): The same six-month course, live online.
-- [Gen AI course in Bangalore](https://browsejobs.ai/gen-ai-course-bangalore): The Agentic AI syllabus. Canonical page is the Bangalore Agentic AI course.
-- [Gen AI course in India](https://browsejobs.ai/gen-ai-course-india): The Agentic AI syllabus. Canonical page is the India Agentic AI course.
+- [Gen AI course](https://browsejobs.ai/courses/gen-ai): Gen AI course in Bangalore with pay after placement. Six months. ₹30,000 covers the course. Pay after placement is three months of CTC, charged in EMIs after an accepted offer. Self-canonical.
+- [Gen AI course in Bangalore](https://browsejobs.ai/gen-ai-course-bangalore): Alias of the Gen AI course page. Canonical tag points at /courses/gen-ai.
+- [Gen AI course in India](https://browsejobs.ai/gen-ai-course-india): The same course, live online from any city. Self-canonical. Course record is /courses/gen-ai.
 - [DevOps & Cloud](https://browsejobs.ai/courses/devops-cloud): Ship, scale, and run production systems.
 - [Python Backend](https://browsejobs.ai/courses/python-backend): APIs, databases, and production Python.
 - [All courses](https://browsejobs.ai/courses)

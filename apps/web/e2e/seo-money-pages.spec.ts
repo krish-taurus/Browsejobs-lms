@@ -4,8 +4,8 @@ import { seoMoneyLinks } from "../src/content/seo-nav";
 /**
  * Money landing pages must be crawlable: 200, one H1, a canonical,
  * FAQPage JSON-LD, and a sitemap entry. Course pages also emit Course schema.
- * Gen AI URLs canonicalise to the matching Agentic AI page so the two addresses
- * do not compete.
+ * /gen-ai-course-bangalore canonicalises to /courses/gen-ai. /gen-ai-course-india
+ * stays self-canonical. A page may set h1 when the visible heading differs from the document title.
  */
 
 test("sitemap lists every money page", async ({ request }) => {
@@ -22,7 +22,7 @@ for (const page of seoMoneyLinks) {
     const response = await browserPage.goto(page.path);
     expect(response?.ok()).toBeTruthy();
 
-    await expect(browserPage.getByRole("heading", { level: 1 })).toHaveText(page.title);
+    await expect(browserPage.getByRole("heading", { level: 1 })).toHaveText(page.h1 ?? page.title);
 
     const canonical = browserPage.locator('link[rel="canonical"]');
     await expect(canonical).toHaveAttribute(

@@ -16,8 +16,14 @@ export type CourseLanding = {
   title: string;
   h1: string;
   description: string;
-  /** Self canonical when omitted. Gen AI points at the Agentic AI page for the same place. */
+  /** Self canonical when omitted. Bangalore Gen AI points at /courses/gen-ai. */
   canonicalPath?: string;
+  /**
+   * Show the Google Business Profile rating in the page copy.
+   * It is not copied into Course.aggregateRating: Google does not allow a
+   * business to mark up its own listing, or a rating taken from another site.
+   */
+  showGoogleRating?: boolean;
   kicker: string;
   updated: string;
   /** 40–60 word answer box. */
@@ -127,7 +133,7 @@ function aiFaqs(where: string): readonly FaqItem[] {
     },
     {
       q: "Is this different from a Gen AI course?",
-      a: "On this site, no. There is not a second Generative AI course. The Gen AI pages describe this Agentic AI syllabus: Python, LLMs, RAG and AI agents. The Gen AI URLs point their canonical tag at the matching Agentic AI page so the two addresses do not compete.",
+      a: "The Gen AI course has its own page at /courses/gen-ai. The published modules on both pages are Python, LLMs, RAG and AI agents. The Bangalore Gen AI URL canonicalises to /courses/gen-ai so those two addresses do not compete. This page stays the Agentic AI course.",
     },
     {
       q: "Do I need to know coding already?",
@@ -181,6 +187,37 @@ function daFaqs(where: string): readonly FaqItem[] {
     {
       q: "Online or a Whitefield classroom?",
       a: `Both. Live online, and a classroom at ${ADDRESS}. The phone is ${PHONE}. Hours are Monday to Saturday, 9:00 AM to 7:00 PM IST.`,
+    },
+  ];
+}
+
+const GEN_UPDATED = "2026-10-19";
+
+function genFaqs(where: string): readonly FaqItem[] {
+  return [
+    {
+      q: "Is the Gen AI course pay after placement?",
+      a: "Registration is ₹30,000 and it covers the course. Pay after placement is the second fee: three months of the CTC on the offer you accept, charged in EMIs only after you accept. If you do not accept an offer, that second fee is not charged.",
+    },
+    {
+      q: `Who is the Gen AI course in ${where} for?`,
+      a: "People who can study for six months and want Python, large language models, RAG and AI agents. Freshers can start. Take the free AI interview and read the written Career Analysis Report before you pay. The report can say this course is the wrong one.",
+    },
+    {
+      q: "Can non-IT switchers join?",
+      a: "Yes. The course starts with Python. You do not need a prior software job. Read the non-IT page and book free counselling first. A switch is allowed to end in a different course, or in no course.",
+    },
+    {
+      q: "How long is the Gen AI course?",
+      a: "Six months. That is the length of the teaching. It is not a date by which you will be hired.",
+    },
+    {
+      q: "Is there placement support?",
+      a: "Yes, as a process, not as a promise of a job. Score 75% or above on the free AI interview and your CV goes to 3,000 HR recruiters. On BrowseJobs internal data, that score comes with an almost 60% higher chance of an interview call. Below 75% you get a free counselling roadmap. A person always releases the offer letter. Nobody can guarantee employment.",
+    },
+    {
+      q: "Is it online or in Bangalore?",
+      a: `Both. Live online, and a classroom at ${ADDRESS}. The phone is ${PHONE}, Monday to Saturday, 9:00 AM to 7:00 PM IST. Founder: Dr Krish Bharggav.`,
     },
   ];
 }
@@ -271,7 +308,7 @@ export const courseLandings: readonly CourseLanding[] = [
         kicker: "The course",
         heading: "What this course is",
         paragraphs: [
-          "This is the Agentic AI course. It is also the syllabus our Gen AI pages describe. There is not a second product under another name. The pages for Bangalore and for the rest of India are the same six months, written for those searches, and they link back here.",
+          "This is the Agentic AI course: Python, large language models, retrieval-augmented generation, and AI agents. The Gen AI course page is /courses/gen-ai. It publishes those same four modules under the Gen AI name, for the Bangalore search. The two pages stay separate so each name has an address.",
           `Classes are live. One way to attend is online. The other is the classroom at ${ADDRESS}. The phone on this page is ${PHONE}. Founder: Dr Krish Bharggav.`,
           "It is for freshers and for people moving from non-IT roles who can give it six months. If your work today is spreadsheets and you want dashboards first, Data Analytics is the closer course. This one starts with Python and ends with an agent.",
         ],
@@ -422,42 +459,110 @@ export const courseLandings: readonly CourseLanding[] = [
     ],
   },
   {
+    id: "gen-course",
+    path: "/courses/gen-ai",
+    title: "Gen AI Bangalore · Pay After Placement",
+    h1: "Gen AI Course in Bangalore with Pay After Placement",
+    description:
+      "Gen AI course in Bangalore, six months, Whitefield and online. ₹30,000 covers the course. Placement fee is three months of CTC, in EMIs after you accept.",
+    kicker: "Gen AI · Bangalore",
+    updated: GEN_UPDATED,
+    answer:
+      "The Gen AI course in Bangalore is six months, live in Whitefield and online. The published modules are Python, LLMs, RAG and AI agents. Registration is ₹30,000 and covers the course. Pay after placement is three months of the CTC on the offer you accept, charged in EMIs only after you accept. A job is not guaranteed.",
+    footerLabel: "Gen AI course",
+    priority: 0.9,
+    courseSchema: true,
+    showGoogleRating: true,
+    schema: {
+      idPath: "/courses/gen-ai",
+      name: "Gen AI Course",
+      description:
+        "6-month Gen AI course in Bangalore covering Python, LLMs, RAG and AI agents, live online and at the Whitefield centre. Registration is ₹30,000. Pay after placement is three months of CTC, charged in EMIs after an accepted offer.",
+      urlPath: "/courses/gen-ai",
+      teaches: ["Python", "LLMs", "RAG", "AI agents"],
+    },
+    facts: [
+      ...feeFacts,
+      { label: "Mode", value: "Whitefield classroom and live online" },
+    ],
+    months: AI_MONTHS,
+    sections: [
+      {
+        id: "where",
+        kicker: "The course",
+        heading: "Gen AI in Bangalore, with the fee in writing",
+        paragraphs: [
+          "This is the Gen AI course page. Six months, in Bangalore: the Whitefield classroom and the same class live online. The published modules are Python, large language models, retrieval-augmented generation, and AI agents. A topic that is not in that list is not claimed here.",
+          "Registration is ₹30,000 and it covers the course. Pay after placement is three months of the CTC on the offer you accept, charged in EMIs only after you accept. The Agentic AI course lists the same four modules under its own name at /courses/agentic-ai-course.",
+          `The classroom is ${ADDRESS}. The phone is ${PHONE}. Founder: Dr Krish Bharggav. The Bangalore search URL /gen-ai-course-bangalore canonicalises here so the two addresses do not compete. The India page stays separate.`,
+        ],
+      },
+      placementSection("this course"),
+      {
+        id: "who",
+        kicker: "Fit",
+        heading: "Who it is for, including a non-IT switch",
+        paragraphs: [
+          "Freshers, and people moving from non-IT work, who can give it six months and can start with Python. The non-IT page is the written test of that fit. Take the free AI interview and the counselling report before you pay. The report is allowed to recommend a different course, or none.",
+          "Skip it if you want Excel, SQL and Power BI first. That is Data Analytics. Skip it if a page promises a job in exchange for the fee. This one does not.",
+        ],
+      },
+      chooseSection,
+    ],
+    faqs: genFaqs("Bangalore"),
+    related: [
+      { href: "/gen-ai-course-india", label: "Gen AI course in India", note: "The same course, for people outside the city." },
+      { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "This search URL canonicalises here." },
+      { href: "/courses/agentic-ai-course", label: "Agentic AI course", note: "The same published modules, under that name." },
+      { href: "/pay-after-placement", label: "Pay after placement", note: "₹30,000 covers the course. The placement fee waits." },
+      { href: "/non-it-to-it", label: "Non-IT to IT", note: "Whether this course fits a switch." },
+      { href: "/founder", label: "Dr Krish Bharggav", note: "Founder." },
+      { href: "/get-hired", label: "Free AI interview", note: "The step before a course." },
+      { href: "/reviews", label: "Reviews", note: "The Google listing, and the words we copied from it." },
+    ],
+    crumbs: [
+      { name: "Home", path: "/" },
+      { name: "Courses", path: "/courses" },
+      { name: "Gen AI", path: "/courses/gen-ai" },
+    ],
+  },
+  {
     id: "gen-bangalore",
     path: "/gen-ai-course-bangalore",
     title: "Generative AI Course in Bangalore · BrowseJobs",
     h1: "Gen AI Course in Bangalore: LLMs, RAG and AI Agents",
     description:
       "Gen AI in Bangalore (Whitefield): 6 months, ₹30,000, pay after placement. Take a free AI interview; score 75%+ and your CV goes to 3,000 HR recruiters.",
-    canonicalPath: "/agentic-ai-course-bangalore",
+    canonicalPath: "/courses/gen-ai",
     kicker: "Gen AI · Bangalore",
-    updated: COURSE_LANDING_UPDATED,
+    updated: GEN_UPDATED,
     answer:
-      "The Gen AI course in Bangalore is the BrowseJobs Agentic AI course. There is not a separate Generative AI product. For six months you study Python, LLMs, RAG and AI agents, live in Whitefield and online. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, after you accept an offer.",
+      "The Gen AI course in Bangalore lives at /courses/gen-ai. Six months, live in Whitefield and online: Python, LLMs, RAG and AI agents. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, after you accept an offer. This URL canonicalises to that course page.",
     footerLabel: "Gen AI, Bangalore",
     priority: 0.8,
     courseSchema: true,
     schema: {
-      idPath: "/courses/agentic-ai-course",
-      name: "Agentic AI Course",
+      idPath: "/courses/gen-ai",
+      name: "Gen AI Course",
       description:
-        "6-month course covering Python, LLMs, RAG and AI agents, live online and at the Whitefield, Bengaluru centre.",
-      urlPath: "/courses/agentic-ai-course",
+        "6-month Gen AI course in Bangalore covering Python, LLMs, RAG and AI agents, live online and at the Whitefield centre.",
+      urlPath: "/courses/gen-ai",
       teaches: ["Python", "LLMs", "RAG", "AI agents"],
     },
     facts: [
       ...feeFacts,
       { label: "Mode", value: "Whitefield classroom and live online" },
-      { label: "Same course as", value: "Agentic AI" },
+      { label: "Course page", value: "/courses/gen-ai" },
     ],
     months: AI_MONTHS,
     sections: [
       {
         id: "where",
         kicker: "One syllabus",
-        heading: "Gen AI here means the Agentic AI course",
+        heading: "This Bangalore URL points at the Gen AI course",
         paragraphs: [
-          "Searchers say Gen AI and Generative AI. The programme we teach under that search is the Agentic AI course: Python, large language models, retrieval-augmented generation, and AI agents. Krish has not confirmed a second Gen AI course, so this page does not invent one.",
-          "The canonical tag on this URL points at the Agentic AI course in Bangalore. Use either address. They should not compete in search, because they are one course. The course page holds the same syllabus without the city framing.",
+          "Searchers say Gen AI and Generative AI. The course page for that search is /courses/gen-ai. The published modules are Python, large language models, retrieval-augmented generation, and AI agents, over six months.",
+          "The canonical tag on this URL points at /courses/gen-ai. Use either address. They should not compete in search, because they are one Bangalore course page and one alias. The Agentic AI course is a separate URL that lists the same four modules.",
           `The classroom is in Whitefield, ${ADDRESS}. Online attendance is the same batch. Phone ${PHONE}. Founder Dr Krish Bharggav.`,
         ],
       },
@@ -473,10 +578,10 @@ export const courseLandings: readonly CourseLanding[] = [
       },
       chooseSection,
     ],
-    faqs: aiFaqs("Bangalore"),
+    faqs: genFaqs("Bangalore"),
     related: relatedAi(
-      { href: "/gen-ai-course-india", label: "Gen AI course in India", note: "The same syllabus, live online." },
-      { href: "/answers/best-gen-ai-course-in-bangalore", label: "Best Gen AI course in Bangalore", note: "How to choose in the city." },
+      { href: "/courses/gen-ai", label: "Gen AI course", note: "Canonical page for this Bangalore course." },
+      { href: "/gen-ai-course-india", label: "Gen AI course in India", note: "The same course, live online." },
     ),
     crumbs: [
       { name: "Home", path: "/" },
@@ -491,37 +596,36 @@ export const courseLandings: readonly CourseLanding[] = [
     h1: "Gen AI Course in India: Live Online, 6 Months",
     description:
       "Gen AI in India, live online: 6 months, ₹30,000, pay after placement. Take a free AI interview; score 75%+ and your CV goes to 3,000 HR recruiters.",
-    canonicalPath: "/agentic-ai-course-india",
     kicker: "Gen AI · India",
-    updated: COURSE_LANDING_UPDATED,
+    updated: GEN_UPDATED,
     answer:
-      "The Gen AI course in India is the Agentic AI course, live online for six months: Python, LLMs, RAG and AI agents. There is no second Generative AI syllabus. Registration is ₹30,000 and covers the course. The placement fee is three months of CTC, in EMIs, only after you accept an offer.",
+      "The Gen AI course in India is the six-month programme on /courses/gen-ai: Python, LLMs, RAG and AI agents, live online, with a Whitefield classroom if you want the room. Registration is ₹30,000 and covers the course. Pay after placement is three months of CTC, in EMIs, only after you accept an offer.",
     footerLabel: "Gen AI, India",
     priority: 0.8,
     courseSchema: true,
     schema: {
-      idPath: "/courses/agentic-ai-course",
-      name: "Agentic AI Course",
+      idPath: "/courses/gen-ai",
+      name: "Gen AI Course",
       description:
-        "6-month course covering Python, LLMs, RAG and AI agents, live online and at the Whitefield, Bengaluru centre.",
-      urlPath: "/courses/agentic-ai-course",
+        "6-month Gen AI course covering Python, LLMs, RAG and AI agents, live online across India and at the Whitefield, Bengaluru centre.",
+      urlPath: "/courses/gen-ai",
       teaches: ["Python", "LLMs", "RAG", "AI agents"],
     },
     facts: [
       ...feeFacts,
       { label: "Mode", value: "Live online, classroom in Whitefield if you want it" },
-      { label: "Same course as", value: "Agentic AI" },
+      { label: "Course page", value: "/courses/gen-ai" },
     ],
     months: AI_MONTHS,
     sections: [
       {
         id: "where",
         kicker: "One syllabus",
-        heading: "A Gen AI search, the Agentic AI course",
+        heading: "India-wide, with the Bangalore course page",
         paragraphs: [
-          "This page exists so a search for a Generative AI course in India lands on the syllabus we actually teach. That syllabus is Python, LLMs, RAG and AI agents. The canonical tag points at the Agentic AI course in India, which is the same programme.",
-          "You attend live online from any city. The Whitefield classroom is there if you want it. Six months is the length. ₹30,000 is the registration, and it covers the course.",
-          `Office: ${ADDRESS}. Phone ${PHONE}. The founder is Dr Krish Bharggav. The Bangalore Gen AI page is the city version of this same course.`,
+          "This page is for a Gen AI course you can take from anywhere in India. Classes are live online. The Whitefield classroom is there if you want the room. The course record is /courses/gen-ai. This India URL stays self-canonical because the search is national, not the Bangalore query.",
+          "The published modules are Python, LLMs, RAG and AI agents. Six months. ₹30,000 covers the course. Pay after placement is three months of CTC, charged in EMIs only after you accept an offer.",
+          `Office: ${ADDRESS}. Phone ${PHONE}. The founder is Dr Krish Bharggav. The Bangalore alias /gen-ai-course-bangalore canonicalises to the course page.`,
         ],
       },
       placementSection("the India Gen AI page"),
@@ -536,10 +640,10 @@ export const courseLandings: readonly CourseLanding[] = [
       },
       chooseSection,
     ],
-    faqs: aiFaqs("India"),
+    faqs: genFaqs("India"),
     related: relatedAi(
-      { href: "/gen-ai-course-bangalore", label: "Gen AI course in Bangalore", note: "Whitefield and online." },
-      { href: "/answers/best-agentic-ai-course-in-india", label: "Best Agentic AI course in India", note: "The same syllabus, under the course name." },
+      { href: "/courses/gen-ai", label: "Gen AI course", note: "The Bangalore course page for this programme." },
+      { href: "/gen-ai-course-bangalore", label: "Gen AI in Bangalore", note: "Canonicalises to the course page." },
     ),
     crumbs: [
       { name: "Home", path: "/" },
