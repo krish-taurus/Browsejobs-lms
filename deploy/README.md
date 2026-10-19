@@ -37,7 +37,8 @@ password is generated for you.
 | File | Purpose |
 |------|---------|
 | `deploy.sh` | the setup/install/update automation above |
-| `systemd/browsejobs-worker.service` | queue worker (restarted on every update) |
+| `systemd/browsejobs-worker.service` | queue worker for the `high` (login codes) and `default` queues (restarted on every update) |
+| `systemd/browsejobs-worker-bulk.service` | queue worker for the `bulk` queue: slow, high-volume jobs such as the weekly reports (restarted on every update) |
 | `systemd/browsejobs-web.service` | the Next.js runtime |
 | `nginx/api.conf` | `api.browsejobs.ai` → PHP-FPM |
 | `nginx/web.conf` | `browsejobs.ai` + `www` → Next on :3000 |

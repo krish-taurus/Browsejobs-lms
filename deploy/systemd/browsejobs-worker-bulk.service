@@ -1,0 +1,25 @@
+; BrowseJobs LMS BULK queue worker (Redis). Slow, high-volume work that must never
+; stand in front of a student logging in or a class reminder: the Monday weekly
+; reports (one AI call per student, ~9 s each, ~3 hours in total). Runs beside
+; browsejobs-worker, which serves the `high` and `default` queues.
+; RESTART THIS ON EVERY DEPLOY so new code is picked up.
+;
+; Install:
+;   sudo cp deploy/systemd/browsejobs-worker-bulk.service /etc/systemd/system/
+;   sudo systemctl daemon-reload && sudo systemctl enable --now browsejobs-worker-bulk
+
+[Unit]
+Description=BrowseJobs LMS bulk queue worker
+After=network.target redis-server.service mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/browsejobs/apps/api
+ExecStart=/usr/bin/php artisan queue:work redis --queue=bulk --tries=3 --timeout=180 --max-time=3600 --backoff=10 --sleep=2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

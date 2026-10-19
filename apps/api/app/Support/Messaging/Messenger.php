@@ -20,6 +20,7 @@ use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Support\Crm\PhoneNormalizer;
 use App\Support\MagicLink\MagicLinkService;
+use App\Support\Queues;
 use Illuminate\Support\Carbon;
 
 /**
@@ -199,9 +200,12 @@ final class Messenger
 
     private function deliver(Message $message, ?User $to): void
     {
+        // A login code goes on the fast lane so it never waits behind a bulk send.
+        $queue = Queues::forTemplate($message->template_key);
+
         match ($message->channel) {
-            MessageChannel::WhatsApp => SendWhatsAppMessage::dispatch($message->id),
-            MessageChannel::Email => SendEmailMessage::dispatch($message->id),
+            MessageChannel::WhatsApp => SendWhatsAppMessage::dispatch($message->id)->onQueue($queue),
+            MessageChannel::Email => SendEmailMessage::dispatch($message->id)->onQueue($queue),
             MessageChannel::InApp => $this->deliverInApp($message, $to),
         };
     }

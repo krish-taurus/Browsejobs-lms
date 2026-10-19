@@ -269,9 +269,10 @@ cmd_install(){
 
   say "Installing services (worker + web) + scheduler cron…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker-bulk.service" >/etc/systemd/system/browsejobs-worker-bulk.service
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
   systemctl daemon-reload
-  systemctl enable --now browsejobs-worker browsejobs-web
+  systemctl enable --now browsejobs-worker browsejobs-worker-bulk browsejobs-web
   # `crontab -l` exits 1 when root has no crontab yet (fresh server) — the
   # `|| true` keeps set -e/pipefail from silently killing the script here.
   CRON_KEEP="$(crontab -l 2>/dev/null | grep -v 'schedule:run' || true)"
@@ -330,10 +331,12 @@ cmd_update(){
   give_to www-data www-data "${WEB_DIR}/.next"
   say "Refreshing systemd units (picks up worker timeout/flag changes)…"
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker.service" >/etc/systemd/system/browsejobs-worker.service
+  sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-worker-bulk.service" >/etc/systemd/system/browsejobs-worker-bulk.service
   sed "s#/var/www/browsejobs#${APP_DIR}#g" "${APP_DIR}/deploy/systemd/browsejobs-web.service"    >/etc/systemd/system/browsejobs-web.service
   systemctl daemon-reload
-  say "Restarting services (worker MUST restart to run new code)…"
-  systemctl restart browsejobs-worker browsejobs-web
+  say "Restarting services (workers MUST restart to run new code)…"
+  systemctl enable browsejobs-worker-bulk >/dev/null 2>&1 || true
+  systemctl restart browsejobs-worker browsejobs-worker-bulk browsejobs-web
   systemctl reload php8.3-fpm || true
   # Last, and isolated: a Taurus problem must never undo the LMS update above.
   taurus_deploy || true

@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Actions\Reports\GenerateWeeklyReport;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Queues;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,7 +27,12 @@ final class GenerateWeeklyReportJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public readonly int $studentId) {}
+    public function __construct(public readonly int $studentId)
+    {
+        // ~9 s of AI per student, over a thousand students: its own worker, never the
+        // queue that carries login codes and reminders.
+        $this->onQueue(Queues::BULK);
+    }
 
     public function handle(GenerateWeeklyReport $action): void
     {

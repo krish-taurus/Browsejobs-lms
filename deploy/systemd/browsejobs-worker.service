@@ -16,7 +16,8 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/browsejobs/apps/api
-ExecStart=/usr/bin/php artisan queue:work redis --tries=3 --timeout=180 --max-time=3600 --backoff=10 --sleep=1
+; `high` (login codes) is always served before `default`; a long job can no longer hold one up.
+ExecStart=/usr/bin/php artisan queue:work redis --queue=high,default --tries=3 --timeout=180 --max-time=3600 --backoff=10 --sleep=1
 Restart=always
 RestartSec=5
 ; Recycle the process hourly (--max-time) to release memory; systemd restarts it.
