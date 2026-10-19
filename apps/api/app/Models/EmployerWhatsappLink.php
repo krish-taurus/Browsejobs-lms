@@ -34,7 +34,7 @@ final class EmployerWhatsappLink extends Model
     public const STATE_CONFIRMING = 'confirming';
 
     protected $fillable = [
-        'tenant_id', 'employer_workspace_id', 'user_id', 'phone', 'profile_name', 'state', 'draft', 'last_inbound_at',
+        'tenant_id', 'employer_workspace_id', 'user_id', 'phone', 'profile_name', 'state', 'draft', 'choice', 'last_inbound_at',
     ];
 
     /** @return array<string, string> */
@@ -42,6 +42,7 @@ final class EmployerWhatsappLink extends Model
     {
         return [
             'draft' => 'array',
+            'choice' => 'array',
             'last_inbound_at' => 'datetime',
         ];
     }

@@ -57,6 +57,8 @@ final class EmployerAgentAction extends Model
 
     public const KIND_JOB_STATUS = 'job_status';
 
+    public const KIND_RETAKE_ROUND = 'retake_round';
+
     public const CHANNEL_WHATSAPP = 'whatsapp';
 
     public const CHANNEL_WEB = 'web';

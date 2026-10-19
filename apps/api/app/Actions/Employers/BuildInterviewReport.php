@@ -41,6 +41,14 @@ final readonly class BuildInterviewReport
 
     private const MAX_ANSWERS = 12;
 
+    /** Findings that belong in the lip-sync report rather than the general flag list. */
+    private const LIP_KINDS = ['lip_voice_mismatch', 'lip_lag', 'lip_no_voice', 'second_voice'];
+
+    /** A person speaking normally has visible lip movement through most of their speech. */
+    private const MATCH_OK_PCT = 75;
+
+    private const MATCH_BAD_PCT = 60;
+
     public function handle(EmployerInterview $interview): ?EmployerInterviewReport
     {
         if ($interview->overall_score === null) {
@@ -69,6 +77,9 @@ final readonly class BuildInterviewReport
             $flags = $events->where('severity', MockIntegrityEvent::FLAG)->count();
             $possible = $events->where('severity', MockIntegrityEvent::POSSIBLE)->count();
 
+            $recordingUrl = $mock !== null ? RecordingLink::for($mock) : null;
+            $lipReport = $this->lipReport($events, $mock, $onZoom, $recordingUrl);
+
             $pdf = Pdf::loadView('pdf.interview-report', [
                 'company' => (string) ($job->workspace->name ?? ''),
                 'role' => $job->title,
@@ -84,9 +95,13 @@ final readonly class BuildInterviewReport
                 'answers' => $this->answers($mock),
                 'duration' => $mock?->duration_seconds,
                 'takenAt' => ($mock->completed_at ?? $interview->submitted_at ?? $interview->graded_at)?->setTimezone('Asia/Kolkata')->format('D j M Y, g:i A'),
-                'flagged' => $this->withImages($events->where('severity', '!=', MockIntegrityEvent::INFO)->values()),
-                'checkIns' => $this->withImages($events->where('severity', MockIntegrityEvent::INFO)->values()),
-                'flagCounts' => $events->where('severity', '!=', MockIntegrityEvent::INFO)->groupBy('kind')->map->count(),
+                'flagged' => $this->withImages($events->where('severity', '!=', MockIntegrityEvent::INFO)->reject(fn (MockIntegrityEvent $e) => in_array($e->kind, self::LIP_KINDS, true))->values()),
+                // Check-in photos only: the lip-sync and voice summaries are measurements, not photos.
+                'checkIns' => $this->withImages($events->where('severity', MockIntegrityEvent::INFO)->reject(fn (MockIntegrityEvent $e) => $e->isMeasurement())->values()),
+                'lipSync' => $this->lipSync($events, $onZoom),
+                'voiceCheck' => $this->voiceCheck($events),
+                'flagCounts' => $events->where('severity', '!=', MockIntegrityEvent::INFO)->reject(fn (MockIntegrityEvent $e) => in_array($e->kind, self::LIP_KINDS, true))->groupBy('kind')->map->count(),
+                'lipReport' => $lipReport,
                 'flags' => $flags,
                 'possible' => $possible,
                 // Every room that checks integrity also logs check-ins: no events at all means not captured, never "clean".
@@ -96,7 +111,7 @@ final readonly class BuildInterviewReport
                 // Skills in the plan nobody was asked about: shown as "not assessed", never as a score.
                 'notCovered' => array_values(array_filter((array) ($mock?->scorecard['not_covered'] ?? []), 'is_string')),
                 // A link the client can open without logging in (signed, 30 days).
-                'recordingUrl' => $mock !== null ? RecordingLink::for($mock) : null,
+                'recordingUrl' => $recordingUrl,
                 'profileUrl' => rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}/candidates/{$application->id}",
                 'generatedOn' => now('Asia/Kolkata')->format('j M Y, g:i A'),
             ])->setPaper('a4')->setOption('isFontSubsettingEnabled', true);
@@ -106,6 +121,8 @@ final readonly class BuildInterviewReport
             $cvPath = $candidate !== null ? $this->cv($candidate, $name, $job, "{$base}-cv.pdf") : null;
 
             $verdict = $score >= $passMark ? 'passed' : "below your pass mark of {$passMark}";
+            // The lip-sync result rides on the line the client sees first, in WhatsApp.
+            $lipNote = $lipReport['verdict'] === 'not_matched' ? ' · 👄 Lip-sync NOT matched ('.count($lipReport['moments']).' '.Str::plural('moment', count($lipReport['moments'])).')' : '';
             $integrity = match (true) {
                 $mock === null || $onZoom => 'Zoom interview: see the recording',
                 $events->isEmpty() => 'Integrity not captured',
@@ -123,12 +140,196 @@ final readonly class BuildInterviewReport
                     'cv_path' => $cvPath,
                     'flags' => $flags,
                     'possible_flags' => $possible,
-                    'caption' => Str::limit("📄 {$name} · {$job->title} · {$round} {$score}/100 ({$verdict}) · {$integrity}", 480),
+                    'caption' => Str::limit("📄 {$name} · {$job->title} · {$round} {$score}/100 ({$verdict}) · {$integrity}{$lipNote}", 480),
                     'status' => EmployerInterviewReport::PENDING,
                     'sent_at' => null,
                 ],
             );
         });
+    }
+
+    /**
+     * The lip-sync report: a verdict, the reasons for it, the numbers, a timeline of where the
+     * voice and the lips disagreed, and every such moment with its time, photo and a link that
+     * opens the recording at that second. "Not matched" is a possible finding from automatic
+     * measurements, worded that way; "matched" needs real evidence (a summary with enough
+     * speech), and missing data is "not captured", never a pass.
+     *
+     * @param  Collection<int, MockIntegrityEvent>  $events
+     * @return array<string, mixed>
+     */
+    private function lipReport(Collection $events, ?MockInterview $mock, bool $onZoom, ?string $recordingUrl): array
+    {
+        $lip = $this->lipSync($events, $onZoom);
+        $voice = $this->voiceCheck($events);
+        $numbers = $lip['numbers'];
+        $match = $numbers['match_pct'] ?? null;
+        $lag = $numbers['lag_ms'] ?? null;
+        $voices = $events->firstWhere('kind', 'voice_check')?->detail['voices'] ?? null;
+
+        /** @var Collection<int, MockIntegrityEvent> $found */
+        $found = $events->filter(fn (MockIntegrityEvent $e) => in_array($e->kind, self::LIP_KINDS, true))->sortBy('elapsed_seconds')->values();
+
+        $verdict = match (true) {
+            $onZoom => 'not_checked',
+            $found->isNotEmpty() || ($match !== null && $match < self::MATCH_BAD_PCT) => 'not_matched',
+            $lip['captured'] && $match !== null && $match >= self::MATCH_OK_PCT && ($lag === null || $lag < 350) => 'matched',
+            $lip['captured'] || $voice['checked'] => 'inconclusive',
+            default => 'not_captured',
+        };
+
+        $headline = match ($verdict) {
+            'not_matched' => 'Lip-sync did NOT match the voice',
+            'matched' => 'Lip-sync matched the voice',
+            'inconclusive' => 'Lip-sync check was inconclusive',
+            'not_checked' => 'Lip-sync is not checked on Zoom',
+            default => 'Lip-sync was not captured',
+        };
+
+        $reasons = [];
+        $count = fn (string $kind): int => $found->where('kind', $kind)->count();
+        $first = fn (string $kind): string => $this->clock((int) ($found->firstWhere('kind', $kind)?->elapsed_seconds ?? 0));
+        if ($count('lip_voice_mismatch') > 0) {
+            $reasons[] = 'Speech while the mouth stayed still: '.$count('lip_voice_mismatch').' moment'.($count('lip_voice_mismatch') === 1 ? '' : 's').' (first at '.$first('lip_voice_mismatch').'). Someone else may have been speaking, or the sound was played.';
+        }
+        if ($count('lip_lag') > 0) {
+            $reasons[] = 'The lips started about '.($found->firstWhere('kind', 'lip_lag')?->detail['lag_ms'] ?? $lag).' ms after the voice, phrase after phrase (first at '.$first('lip_lag').'). A person speaking for themselves is usually within about 250 ms. This is what miming to another person\'s words looks like.';
+        }
+        if ($count('lip_no_voice') > 0) {
+            $reasons[] = 'Lips moving with no sound: '.$count('lip_no_voice').' moment'.($count('lip_no_voice') === 1 ? '' : 's').' (first at '.$first('lip_no_voice').'). Miming, or reading silently while someone else answers.';
+        }
+        if ($count('second_voice') > 0) {
+            $reasons[] = 'A second voice answered from '.$first('second_voice').' (the recording has '.($voices ?? 2).' different voices answering).';
+        }
+        if ($match !== null && $match < self::MATCH_BAD_PCT) {
+            $reasons[] = "Lips were moving during only {$match}% of the candidate's speech (a person speaking normally is above about ".self::MATCH_OK_PCT.'%).';
+        }
+
+        $stats = [];
+        if ($numbers !== null && isset($numbers['speech_s'])) {
+            $stats[] = ['label' => 'Speech compared with the camera', 'value' => (int) $numbers['speech_s'].' s', 'note' => ''];
+            $stats[] = ['label' => 'Lips moving during speech', 'value' => $match !== null ? "{$match}%" : 'too little to say', 'note' => 'expected: above about '.self::MATCH_OK_PCT.'%'];
+            $stats[] = ['label' => 'Lips behind the voice (median)', 'value' => $lag !== null ? "{$lag} ms" : 'too few phrases', 'note' => 'expected: up to about 250 ms'];
+            $stats[] = ['label' => 'Face tracked on camera', 'value' => (int) ($numbers['face_pct'] ?? 0).'%', 'note' => ''];
+        }
+        $stats[] = ['label' => 'Voices answering', 'value' => $voice['checked'] ? (string) ($voices ?? 1) : 'not checked', 'note' => 'expected: 1'];
+
+        $total = max(
+            (int) ($mock?->duration_seconds ?? 0),
+            (int) ($mock?->started_at !== null && $mock?->completed_at !== null ? $mock->started_at->diffInSeconds($mock->completed_at) : 0),
+            ((int) ($found->max('elapsed_seconds') ?? 0)) + 30,
+            60,
+        );
+
+        $images = collect($this->withImages($found));
+        $moments = $found->map(function (MockIntegrityEvent $e, int $i) use ($images, $recordingUrl): array {
+            $at = (int) ($e->elapsed_seconds ?? 0);
+
+            return [
+                'at' => $this->clock($at),
+                'seconds' => $at,
+                'kind' => $e->kind,
+                'label' => $e->label(),
+                'text' => $e->detailText(),
+                'image' => $images->get($i)['image'] ?? null,
+                'link' => $recordingUrl !== null ? $recordingUrl.'#t='.max(0, $at - 3) : null,
+            ];
+        })->all();
+
+        return [
+            'verdict' => $verdict,
+            'headline' => $headline,
+            'reasons' => $reasons,
+            'stats' => $stats,
+            'moments' => $moments,
+            'timeline' => $this->timeline($found, $total),
+            'total' => $this->clock($total),
+            'line' => $lip['line'],
+            'captured' => $lip['captured'],
+        ];
+    }
+
+    /**
+     * Sixty equal slices of the interview, each marked where a lip-sync or voice finding falls in it.
+     *
+     * @param  Collection<int, MockIntegrityEvent>  $found
+     * @return list<string> 'ok' | 'lip' | 'voice' per slice
+     */
+    private function timeline(Collection $found, int $total): array
+    {
+        $slices = array_fill(0, 60, 'ok');
+        $each = max(1, $total / 60);
+        foreach ($found as $e) {
+            $start = (int) ($e->elapsed_seconds ?? 0);
+            $length = max(6, (int) (($e->detail['secs'] ?? 0) ?: 8));
+            $mark = $e->kind === 'second_voice' ? 'voice' : 'lip';
+            for ($i = (int) floor($start / $each); $i <= min(59, (int) floor(($start + $length) / $each)); $i++) {
+                $slices[$i] = $mark;
+            }
+        }
+
+        return $slices;
+    }
+
+    private function clock(int $seconds): string
+    {
+        return sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
+    }
+
+    /**
+     * What the lip-sync check found, in words an employer can read. Never "clean" when it
+     * was not captured: no summary means the camera model or microphone was not available.
+     *
+     * @param  Collection<int, MockIntegrityEvent>  $events
+     * @return array{captured: bool, line: string, numbers: array<string, int|null>|null}
+     */
+    private function lipSync(Collection $events, bool $onZoom): array
+    {
+        if ($onZoom) {
+            return ['captured' => false, 'line' => 'Zoom interview: lip-sync is not checked; the recording shows the call.', 'numbers' => null];
+        }
+
+        /** @var MockIntegrityEvent|null $summary */
+        $summary = $events->firstWhere('kind', 'lip_sync_summary');
+        $d = $summary !== null ? (array) ($summary->detail ?? []) : null;
+        if ($d === null || ! isset($d['speech_s'])) {
+            return ['captured' => false, 'line' => 'Lip-sync was not captured for this interview (the camera model or the microphone was not available). It was neither passed nor failed.', 'numbers' => null];
+        }
+
+        $speech = (int) $d['speech_s'];
+        $match = $d['match_pct'] ?? null;
+        $lag = $d['lag_ms'] ?? null;
+        $moments = $events->whereIn('kind', ['lip_voice_mismatch', 'lip_lag', 'lip_no_voice'])->count();
+
+        if ($match === null) {
+            return ['captured' => true, 'line' => "Only {$speech} s of the candidate's speech could be compared with the camera, too little to say either way.", 'numbers' => $d];
+        }
+
+        $line = "Lips were moving during {$match}% of {$speech} s of the candidate's speech."
+            .($lag !== null ? " The lips started about {$lag} ms after the voice on average (a person speaking for themselves is usually within about 250 ms)." : '')
+            .($moments > 0 ? " {$moments} moment".($moments === 1 ? '' : 's').' flagged below, with the time and a photo.' : ' No moment looked wrong.');
+
+        return ['captured' => true, 'line' => $line, 'numbers' => $d];
+    }
+
+    /**
+     * @param  Collection<int, MockIntegrityEvent>  $events
+     * @return array{checked: bool, line: string}
+     */
+    private function voiceCheck(Collection $events): array
+    {
+        /** @var MockIntegrityEvent|null $check */
+        $check = $events->firstWhere('kind', 'voice_check');
+        $d = $check !== null ? (array) ($check->detail ?? []) : null;
+        if ($d === null || ! isset($d['voices'])) {
+            return ['checked' => false, 'line' => 'The voice check (is one person answering?) did not run for this interview.'];
+        }
+
+        $voices = (int) $d['voices'];
+
+        return ['checked' => true, 'line' => $voices <= 1
+            ? 'Voice check: one voice answered throughout.'
+            : "Voice check: {$voices} different voices answered. See the moment flagged below."];
     }
 
     /** "Python 85", most important first as the grader returned them. @return list<array{label: string, score: int}> */
@@ -175,7 +376,7 @@ final readonly class BuildInterviewReport
      * Events with their still inlined (dompdf reads data URIs, never a URL).
      *
      * @param  Collection<int, MockIntegrityEvent>  $events
-     * @return list<array{label: string, severity: string, at: string, image: string|null}>
+     * @return list<array{label: string, detail: string|null, severity: string, at: string, image: string|null}>
      */
     private function withImages(Collection $events): array
     {
@@ -190,7 +391,7 @@ final readonly class BuildInterviewReport
                 ? sprintf('%d:%02d in', intdiv($e->elapsed_seconds, 60), $e->elapsed_seconds % 60)
                 : $e->occurred_at->setTimezone('Asia/Kolkata')->format('g:i:s A');
 
-            return ['label' => $e->label(), 'severity' => $e->severity, 'at' => $at, 'image' => $image];
+            return ['label' => $e->label(), 'detail' => $e->detailText(), 'severity' => $e->severity, 'at' => $at, 'image' => $image];
         })->values()->all();
     }
 

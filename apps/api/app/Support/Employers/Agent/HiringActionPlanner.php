@@ -262,6 +262,38 @@ final readonly class HiringActionPlanner
         );
     }
 
+    /**
+     * Let the chosen candidates sit a round again. Only people who were invited to it
+     * can retake it; the first result stays on record.
+     *
+     * @param  list<int>  $applicationIds
+     */
+    public function retakeRound(EmployerJob $job, string $roundKey, array $applicationIds): PlannedAction|string
+    {
+        $invites = InterviewInvite::query()
+            ->where('employer_job_id', $job->id)
+            ->where('round', $roundKey)
+            ->whereIn('employer_job_application_id', $applicationIds)
+            ->with(['candidate:id,name', 'application', 'interview'])
+            ->get()
+            ->filter(fn (InterviewInvite $i) => $i->application !== null && ! $i->application->stage->isTerminal())
+            ->values();
+
+        if ($invites->isEmpty()) {
+            return 'None of them can retake '.strtoupper($roundKey).' for *'.$job->title.'*: they were never invited to it, or they are already hired or rejected.';
+        }
+
+        $label = fn (InterviewInvite $i): string => (string) ($i->candidate?->name ?? 'Candidate')
+            .($i->interview?->overall_score !== null ? " ({$i->interview->overall_score}/100 before)" : '');
+
+        return new PlannedAction(
+            EmployerAgentAction::KIND_RETAKE_ROUND,
+            $job->id,
+            ['round' => $roundKey, 'application_ids' => $invites->pluck('employer_job_application_id')->values()->all()],
+            'Let '.$this->people($invites->map($label)).' retake '.strtoupper($roundKey)." for *{$job->title}*. Each gets a new WhatsApp to pick a day; the first result stays on record.",
+        );
+    }
+
     public function jobStatus(EmployerJob $job, EmployerJobStatus $to): PlannedAction|string
     {
         if ($job->status === $to) {

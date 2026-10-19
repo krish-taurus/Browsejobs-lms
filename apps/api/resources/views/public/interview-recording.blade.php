@@ -27,7 +27,17 @@
   <p class="meta">{{ $minutes !== null ? "About {$minutes} min · " : '' }}The whole interview, video and audio, as it happened.</p>
 
   @if($video)
-    <div class="frame"><video controls playsinline preload="metadata" src="{{ $video }}"></video></div>
+    <div class="frame"><video id="rec" controls playsinline preload="metadata" src="{{ $video }}"></video></div>
+    <script>
+      // A link ending in #t=125 opens the recording at 2:05 (the lip-sync report links each moment this way).
+      (function () {
+        var v = document.getElementById('rec');
+        var m = /[#&]t=(\d+)/.exec(window.location.hash);
+        if (!v || !m) { return; }
+        var at = parseInt(m[1], 10);
+        v.addEventListener('loadedmetadata', function () { v.currentTime = at; });
+      })();
+    </script>
     <p class="note">If the video does not play on your phone, open this link in Chrome or on a computer. The link is private to you and expires; do not forward it.</p>
   @else
     <div class="wait">

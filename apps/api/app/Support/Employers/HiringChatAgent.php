@@ -25,8 +25,10 @@ use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Employers\Agent\AgentWords;
 use App\Support\Employers\Agent\HiringAgent;
+use App\Support\Employers\Agent\WhatsAppChoice;
 use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\WhatsAppClient;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -78,6 +80,7 @@ final readonly class HiringChatAgent
         private HiringAgent $agent,
         private InterviewReportDelivery $interviewReports,
         private OpenInterviewNow $openNow,
+        private WhatsAppChoice $choices,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
@@ -131,6 +134,32 @@ final readonly class HiringChatAgent
 
         if (preg_match('/^\[[a-z]+ message\]$/i', $text) === 1) {
             $this->reply($in->phone, $link, 'I can read typed messages and voice notes. Please type or say the job details: the role, experience, location and how many people you need.');
+
+            return;
+        }
+
+        // A question Taurus asked in this chat ("which role?", "which candidates?"): this message answers it.
+        if ($this->choices->active($link) !== null) {
+            $this->reply($in->phone, $link, $this->choices->answer($workspace, $user, $link, $text));
+
+            return;
+        }
+
+        // "Retake L1", "send Kunal's report": ask which role, then which candidates. This comes before a
+        // waiting job draft, which would otherwise read it as an edit to the draft.
+        if (($request = WhatsAppChoice::detect($text)) !== null && $this->canPost($workspace, $user)) {
+            $reply = $this->choices->start($workspace, $link, $request, $text);
+            $draftWaiting = $link->state === EmployerWhatsappLink::STATE_CONFIRMING && is_array($link->draft);
+            $this->reply($in->phone, $link, $reply.($draftWaiting ? "\n\n(Your new job draft is still waiting. Reply *YES* to post it or *CANCEL* to discard it when we are done.)" : ''));
+
+            return;
+        }
+
+        // A proposal made after the draft (a retake, an invite) is what a bare YES or NO answers.
+        $newer = $link->state === EmployerWhatsappLink::STATE_CONFIRMING ? $this->proposalNewerThanDraft($workspace, $user, $link) : null;
+        if ($newer !== null && (AgentWords::isYes($text) || AgentWords::isNo($text))) {
+            $answer = AgentWords::isYes($text) ? $this->agent->confirm($newer, $user) : $this->agent->hold($newer, $user);
+            $this->reply($in->phone, $link, $answer->text);
 
             return;
         }
@@ -195,6 +224,15 @@ final readonly class HiringChatAgent
         }
 
         $this->draft($in->phone, $link, $workspace, $user, $text);
+    }
+
+    /** The open proposal in this chat, if it was made after the waiting job draft. */
+    private function proposalNewerThanDraft(EmployerWorkspace $workspace, User $user, EmployerWhatsappLink $link): ?EmployerAgentAction
+    {
+        $proposal = $this->agent->pending($workspace, $user, $link);
+        $draftAt = is_array($link->draft) && isset($link->draft['at']) ? Carbon::parse((string) $link->draft['at']) : null;
+
+        return $proposal !== null && $draftAt !== null && $proposal->created_at !== null && $proposal->created_at->gt($draftAt) ? $proposal : null;
     }
 
     private function join(EmployerWhatsappMessage $in, string $code): void
@@ -277,6 +315,7 @@ final readonly class HiringChatAgent
             'request' => mb_substr($text, 0, 1200),
         ];
 
+        $draft['at'] = now()->toIso8601String();
         $link->update(['state' => EmployerWhatsappLink::STATE_CONFIRMING, 'draft' => $draft]);
         $this->reply($phone, $link, $this->summary($draft));
     }
@@ -396,6 +435,7 @@ final readonly class HiringChatAgent
 
         return "Hi! This chat runs hiring for *{$workspace->name}* on BrowseJobs.\n\n".$this->example()
             ."\n\nOnce a job is live, just tell me what to do: _\"send the L1 invites\"_, _\"invite everyone who cleared L1 to L2\"_, _\"make an offer to Priya\"_. I always ask before anything goes out."
+            ."\n\nI can also let someone *retake* a round (_\"retake L1\"_) and send a candidate's *report* with the recording (_\"send Kunal's report\"_). I ask which role and which candidates, one question at a time."
             ."\n\nSend *SHORTLIST* to see who the shortlist agent found for your latest job.".$pending;
     }
 

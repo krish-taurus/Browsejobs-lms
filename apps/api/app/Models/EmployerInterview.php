@@ -67,6 +67,7 @@ final class EmployerInterview extends Model
         'started_at',
         'submitted_at',
         'graded_at',
+        'previous_attempts',
     ];
 
     protected function casts(): array
@@ -82,6 +83,7 @@ final class EmployerInterview extends Model
             'started_at' => 'datetime',
             'submitted_at' => 'datetime',
             'graded_at' => 'datetime',
+            'previous_attempts' => 'array',
         ];
     }
 

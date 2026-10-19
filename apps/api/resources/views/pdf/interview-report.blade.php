@@ -88,6 +88,56 @@
     </tr>
   </table>
 
+  @if($proctored && $lipReport['verdict'] === 'not_matched')
+    <div style="border: 2px solid #B4232A; background: #FDECEC; padding: 10px 12px; margin-top: 12px">
+      <p class="kicker" style="color: #B4232A">Lip-sync report</p>
+      <p style="font-size: 15px; font-weight: bold; margin: 3px 0 6px; color: #B4232A">{{ $lipReport['headline'] }}</p>
+      <p style="margin: 0 0 4px; font-size: 10.5px">The candidate's mouth, seen on camera, did not match the sound of the answers at the moments below. This is an automatic estimate: read it with the photos and the recording, which opens at each moment.</p>
+      <ul style="font-size: 10.5px">@foreach($lipReport['reasons'] as $reason)<li>{{ $reason }}</li>@endforeach</ul>
+
+      <table class="dims" style="width: 100%; margin-top: 6px">
+        @foreach($lipReport['stats'] as $stat)
+          <tr>
+            <td style="width: 44%">{{ $stat['label'] }}</td>
+            <td style="width: 20%; font-weight: bold">{{ $stat['value'] }}</td>
+            <td style="width: 36%; color: #5A6B85; font-size: 9.5px">{{ $stat['note'] }}</td>
+          </tr>
+        @endforeach
+      </table>
+
+      <p style="margin: 8px 0 2px; font-size: 9.5px; color: #5A6B85">Timeline of the interview (red = lips and voice disagree, orange = a second voice)</p>
+      <table style="width: 100%; border-collapse: collapse; table-layout: fixed">
+        <tr>
+          @foreach($lipReport['timeline'] as $slice)
+            <td style="height: 12px; padding: 0; border: 0; background: {{ $slice === 'lip' ? '#B4232A' : ($slice === 'voice' ? '#E08A00' : '#C9D8EE') }}"></td>
+          @endforeach
+        </tr>
+      </table>
+      <table style="width: 100%; font-size: 8.5px; color: #5A6B85"><tr><td>0:00</td><td style="text-align: right">{{ $lipReport['total'] }}</td></tr></table>
+
+      <table class="flags" style="margin-top: 6px">
+        @foreach($lipReport['moments'] as $m)
+          <tr>
+            <td style="width: 54px; color: #5A6B85">{{ $m['at'] }}</td>
+            <td>
+              <strong>{{ $m['label'] }}</strong>
+              @if($m['text'])<br><span style="font-size: 10px">{{ $m['text'] }}</span>@endif
+              @if($m['link'])<br><a href="{{ $m['link'] }}" style="color: #1B6DF0; font-size: 10px">Watch the recording from {{ $m['at'] }}</a>@endif
+            </td>
+            <td style="width: 140px; text-align: right">
+              @if($m['image'])<img src="{{ $m['image'] }}">@else<span style="color: #5A6B85; font-size: 9.5px">No photo</span>@endif
+            </td>
+          </tr>
+        @endforeach
+      </table>
+    </div>
+  @elseif($proctored)
+    <p style="margin: 10px 0 0; font-size: 10.5px">
+      <span class="pill {{ $lipReport['verdict'] === 'matched' ? 'pass' : ($lipReport['verdict'] === 'inconclusive' ? 'warn' : 'ok') }}">{{ $lipReport['headline'] }}</span>
+      {{ $lipReport['line'] }}
+    </p>
+  @endif
+
   @if($recordingUrl)
     <div class="note" style="margin-top: 10px">
       <b>Watch the full interview recording:</b>
@@ -130,7 +180,7 @@
   @else
     <p style="margin: 0 0 6px">
       @foreach($flagCounts as $kind => $count)
-        <span class="pill {{ in_array($kind, ['multi_face', 'gaze_down', 'gaze_side'], true) ? 'warn' : 'fail' }}">{{ \App\Models\MockIntegrityEvent::LABELS[$kind] ?? $kind }} × {{ $count }}</span>
+        <span class="pill {{ (\App\Models\MockIntegrityEvent::KINDS[$kind] ?? '') === 'possible' ? 'warn' : 'fail' }}">{{ \App\Models\MockIntegrityEvent::LABELS[$kind] ?? $kind }} × {{ $count }}</span>
       @endforeach
     </p>
     <table class="flags">
@@ -139,7 +189,8 @@
           <td style="width: 70px; color: #5A6B85">{{ $f['at'] }}</td>
           <td>
             <strong>{{ $f['label'] }}</strong>
-            @if($f['severity'] === 'possible')<br><span style="color: #9A5B00; font-size: 9.5px">Camera estimate — check the photo; can misfire on posters, reflections or glasses.</span>@endif
+            @if($f['detail'])<br><span style="font-size: 10px">{{ $f['detail'] }}</span>@endif
+            @if($f['severity'] === 'possible')<br><span style="color: #9A5B00; font-size: 9.5px">Automatic estimate — check the photo and the recording; it can misfire (poor light, a dropped camera frame, a noisy microphone).</span>@endif
           </td>
           <td style="width: 140px; text-align: right">
             @if($f['image'])<img src="{{ $f['image'] }}">@else<span style="color: #5A6B85; font-size: 9.5px">No photo (camera off or tab hidden)</span>@endif
@@ -147,6 +198,19 @@
         </tr>
       @endforeach
     </table>
+  @endif
+
+  @if($proctored)
+    <p style="margin: 12px 0 2px; font-weight: bold">Lip-sync and voice check</p>
+    <p style="margin: 0; font-size: 10.5px">
+      <span class="pill {{ $lipSync['captured'] ? 'ok' : 'warn' }}">{{ $lipSync['captured'] ? 'Lip-sync checked' : 'Lip-sync not captured' }}</span>
+      {{ $lipSync['line'] }}
+    </p>
+    <p style="margin: 4px 0 0; font-size: 10.5px">
+      <span class="pill {{ $voiceCheck['checked'] ? 'ok' : 'warn' }}">{{ $voiceCheck['checked'] ? 'Voice checked' : 'Voice not checked' }}</span>
+      {{ $voiceCheck['line'] }}
+    </p>
+    @if($lipReport['verdict'] === 'not_matched')<p style="margin: 4px 0 0; font-size: 10px; color: #B4232A">The moments are listed in the lip-sync report on the first page.</p>@endif
   @endif
 
   @if(count($checkIns) > 0)

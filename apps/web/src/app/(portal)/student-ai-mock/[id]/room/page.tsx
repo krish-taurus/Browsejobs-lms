@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { MOCK_KIND_META, mockPath, type MockKind } from "@/lib/mockKinds";
 import { use, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { apiJson, apiPostBlob } from "@/lib/api";
+import { LipSyncAnalyzer, SpeechDetector, type LipFlag } from "@/lib/lip-sync";
 import { AiAvatar, type AiAvatarPhase } from "@/components/portal/AiAvatar";
 
 // Paused proctoring checks (Sept 2026): multi-face was firing on candidates
@@ -30,6 +31,9 @@ type Turn = { id: number; role: "interviewer" | "candidate"; body: string };
 
 /** What the room reports for an employer interview (RecordMockIntegrityEvent). */
 type IntegrityKind = "tab_hidden" | "window_blur" | "paste" | "face_missing" | "multi_face" | "gaze_down" | "gaze_side" | "check_in";
+
+/** What the lip-sync check reports (see lib/lip-sync.ts). */
+type LipKind = LipFlag["kind"] | "lip_sync_summary";
 
 /** Stills kept per interview (the server caps it too), and the gap between two notes of the same kind. */
 const MAX_STILLS = 24;
@@ -268,6 +272,10 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // re-subscribe when the session reloads.
   const hiringRef = useRef(false);
   const liveSinceRef = useRef(0);
+  // The lip-sync check: the analyzer lives for the live part of an employer interview;
+  // speakingRef tells it when the interviewer's own voice is playing (the mic proves nothing then).
+  const lipAnalyzerRef = useRef<LipSyncAnalyzer | null>(null);
+  const speakingRef = useRef(false);
   const stillsRef = useRef(0);
   const lastNoteRef = useRef<Partial<Record<IntegrityKind, number>>>({});
 
@@ -288,6 +296,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const flushPartRef = useRef<(final: boolean) => void>(() => {});
 
   hiringRef.current = session?.kind === "job";
+  speakingRef.current = speaking;
   const question = session ? [...session.turns].reverse().find((t) => t.role === "interviewer") : undefined;
   const answered = session?.turns.filter((t) => t.role === "candidate").length ?? 0;
   const canFinish = session?.status === "in_progress" && answered >= (session?.min_answers ?? 2);
@@ -589,6 +598,29 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     })();
   }, [id, captureStill]);
 
+  /**
+   * A lip-sync finding for the employer's report: the numbers (never free text),
+   * and a still of the candidate at that moment. Fire-and-forget like every note.
+   */
+  const noteLip = useCallback((kind: LipKind, detail: Record<string, number | null>, atMs?: number) => {
+    if (!hiringRef.current) return;
+    void (async () => {
+      const form = new FormData();
+      form.append("kind", kind);
+      const elapsed = atMs !== undefined ? Math.round(atMs / 1000) : liveSinceRef.current > 0 ? Math.round((Date.now() - liveSinceRef.current) / 1000) : 0;
+      form.append("elapsed", String(Math.max(0, elapsed)));
+      form.append("detail", JSON.stringify(detail));
+      if (kind !== "lip_sync_summary" && stillsRef.current < MAX_STILLS) {
+        const still = await captureStill();
+        if (still !== null) {
+          stillsRef.current += 1;
+          form.append("image", still, "still.jpg");
+        }
+      }
+      await apiJson(`/api/v1/me/mocks/${id}/integrity`, { method: "POST", body: form }).catch(() => {});
+    })();
+  }, [id, captureStill]);
+
   // Proctoring: hiding the tab, looking away from the camera, or a second
   // person stepping into frame are all the same kind of violation — one
   // warning, then the interview closes. Shared so the tab check below and
@@ -709,6 +741,8 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
+    let audioTimer: ReturnType<typeof setInterval> | null = null;
+    let mouthTimer: ReturnType<typeof setInterval> | null = null;
     let detector: {
       detectForVideo: (video: HTMLVideoElement, timestamp: number) => {
         faceLandmarks: unknown[][];
@@ -821,6 +855,66 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             // A single failed frame read isn't a violation.
           }
         }, 2500);
+
+        // Lip-sync check (employer interviews only): the same face model, read about nine
+        // times a second for the mouth, against the microphone's loudness. Everything is
+        // compared here in the browser; only a few numbers and a still at a flagged moment
+        // are sent (noteLip). If the mic cannot be read, the check simply is not captured.
+        if (hiringRef.current && streamRef.current !== null) {
+          const startPerf = performance.now();
+          const startEpoch = Date.now();
+          const analyzer = new LipSyncAnalyzer((flag: LipFlag) => {
+            const atMs = flag.atMs + (startEpoch - liveSinceRef.current);
+            noteLip(flag.kind, { secs: flag.secs ?? null, lag_ms: flag.lagMs ?? null, pct: flag.pct ?? null, n: flag.n ?? null }, atMs);
+          });
+          lipAnalyzerRef.current = analyzer;
+
+          const ctx = getAudioContext();
+          const tracks = streamRef.current.getAudioTracks();
+          if (ctx !== null && tracks.length > 0) {
+            void ctx.resume().catch(() => {});
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 1024;
+            const source = ctx.createMediaStreamSource(new MediaStream(tracks));
+            source.connect(analyser); // read only: never connected to the speakers
+            const buffer = new Float32Array(analyser.fftSize);
+            const detectorOfSpeech = new SpeechDetector();
+            let lastInterviewer = 0;
+
+            audioTimer = setInterval(() => {
+              const t = performance.now() - startPerf;
+              if (speakingRef.current) lastInterviewer = t;
+              analyser.getFloatTimeDomainData(buffer);
+              let sum = 0;
+              for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+              const speech = detectorOfSpeech.push(t, Math.sqrt(sum / buffer.length));
+              // While the interviewer's voice plays (and half a second after) the mic hears the speakers.
+              analyzer.audio(t, t - lastInterviewer < 500 ? null : speech);
+            }, 25);
+
+            mouthTimer = setInterval(() => {
+              const video = videoRef.current;
+              if (video === null || video.readyState < 2 || detector === null || document.hidden) return;
+              try {
+                const result = detector.detectForVideo(video, performance.now());
+                const t = performance.now() - startPerf;
+                if (result.faceLandmarks.length !== 1) {
+                  analyzer.mouth(t, null);
+
+                  return;
+                }
+                const categories = result.faceBlendshapes?.[0]?.categories ?? [];
+                const score = (name: string) => categories.find((c) => c.categoryName === name)?.score ?? 0;
+                analyzer.mouth(t, {
+                  open: score("jawOpen"),
+                  shape: score("mouthFunnel") + score("mouthPucker") + (score("mouthStretchLeft") + score("mouthStretchRight")) / 2 + (score("mouthLowerDownLeft") + score("mouthLowerDownRight")) / 2,
+                });
+              } catch {
+                // A dropped frame is not a finding.
+              }
+            }, 110);
+          }
+        }
       } catch {
         // No network access to the CDN, or this browser can't run the WASM
         // model — an enhancement, not a requirement.
@@ -830,9 +924,11 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     return () => {
       cancelled = true;
       if (timer !== null) clearInterval(timer);
+      if (audioTimer !== null) clearInterval(audioTimer);
+      if (mouthTimer !== null) clearInterval(mouthTimer);
       detector?.close?.();
     };
-  }, [step, camOn, session?.status, raiseViolation, noteIntegrity]);
+  }, [step, camOn, session?.status, raiseViolation, noteIntegrity, noteLip]);
 
   // Leaving the room must release the mic, camera, and speaker — and the
   // shared recording mix, which is module-scoped like currentAudio (same
@@ -1272,6 +1368,16 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     // Stop first so the very last seconds are captured.
     const recording = await stopRecording();
 
+    // 0. The lip-sync summary: a handful of numbers, sent while the interview still accepts notes.
+    const lip = lipAnalyzerRef.current?.summary();
+    if (lip !== undefined && hiringRef.current) {
+      const form = new FormData();
+      form.append("kind", "lip_sync_summary");
+      form.append("detail", JSON.stringify({ speech_s: lip.speechSecs, match_pct: lip.matchPct, lag_ms: lip.medianLagMs, onsets: lip.onsets, face_pct: lip.facePct, flags: lip.flags }));
+      await apiJson(`/api/v1/me/mocks/${id}/integrity`, { method: "POST", body: form }).catch(() => {});
+    }
+    lipAnalyzerRef.current = null;
+
     // 1. End the interview NOW. The scorecard and the employer's report are
     // built in the background, so this is one quick call, not a minute of
     // grading. (If the quick call cannot be made, fall back to grading here
@@ -1501,6 +1607,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             <div className="mt-2 rounded-[10px] bg-paper px-4 py-3 text-xs text-muted">
               📸 A few still photos are taken during the interview — at random, and whenever something above is noted. They are
               shared with the employer in your interview report, with your answers, scores and CV. By starting, you agree to this.
+            </div>
+          )}
+          {session?.kind === "job" && (
+            <div className="mt-2 rounded-[10px] bg-paper px-4 py-3 text-xs text-muted">
+              👄 Your lip movement is compared with your voice, on your own device, to confirm that you are the one answering. Only a short
+              summary and a photo at any moment that does not match are kept, and shown to the employer.
             </div>
           )}
 

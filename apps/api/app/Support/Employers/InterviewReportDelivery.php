@@ -9,6 +9,8 @@ use App\Models\EmployerInterviewReport;
 use App\Models\EmployerJob;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWhatsappMessage;
+use App\Models\MockInterview;
+use App\Support\Mocks\RecordingLink;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -89,6 +91,21 @@ final readonly class InterviewReportDelivery
         }
 
         return $waiting->count();
+    }
+
+    /**
+     * The client asks for a report again ("send Kunal's report"): the PDF goes now
+     * (their message just opened the 24-hour window), then the recording link.
+     */
+    public function resend(EmployerInterviewReport $report, EmployerWhatsappLink $link, bool $withRecording = true): void
+    {
+        $this->send($report, $link);
+
+        $mock = $report->interview?->mock_interview_id !== null ? MockInterview::query()->withoutGlobalScopes()->find($report->interview->mock_interview_id) : null;
+        if ($withRecording && $mock !== null) {
+            $name = (string) ($report->interview?->application?->candidate()->withoutGlobalScopes()->value('name') ?? 'Candidate');
+            $this->log($link, "🎥 Recording · {$name}\n".RecordingLink::for($mock), fn (): string => $this->whatsapp->sendMessage($link->phone, "🎥 Full interview recording · {$name}\n".RecordingLink::for($mock)."\n\nThe link works for ".RecordingLink::DAYS.' days and needs no login.'));
+        }
     }
 
     private function send(EmployerInterviewReport $report, EmployerWhatsappLink $link): void

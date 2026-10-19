@@ -8,6 +8,7 @@ use App\Actions\Employers\ChangeEmployerJobStatus;
 use App\Actions\Employers\InviteToNextRound;
 use App\Actions\Employers\MoveApplicationStage;
 use App\Actions\Employers\PublishEmployerJob;
+use App\Actions\Employers\RetakeInterviewRound;
 use App\Actions\Employers\SendInterviewInvites;
 use App\Enums\EmployerApplicationStage;
 use App\Enums\EmployerJobStatus;
@@ -38,6 +39,7 @@ final readonly class HiringActionExecutor
     public function __construct(
         private SendInterviewInvites $l1,
         private InviteToNextRound $nextRound,
+        private RetakeInterviewRound $retake,
         private MoveApplicationStage $move,
         private PublishEmployerJob $publish,
         private ChangeEmployerJobStatus $status,
@@ -137,6 +139,7 @@ final readonly class HiringActionExecutor
                 EmployerAgentAction::KIND_MOVE_STAGE => $this->moveAll($job, $actor, EmployerApplicationStage::from((string) $p['stage']), array_map('intval', (array) $p['application_ids']), null),
                 EmployerAgentAction::KIND_REJECT => $this->moveAll($job, $actor, EmployerApplicationStage::Rejected, array_map('intval', (array) $p['application_ids']), (string) $p['reason']),
                 EmployerAgentAction::KIND_JOB_STATUS => $this->jobStatus($job, $actor, EmployerJobStatus::from((string) $p['status'])),
+                EmployerAgentAction::KIND_RETAKE_ROUND => $this->retake($job, $actor, (string) $p['round'], array_map('intval', (array) ($p['application_ids'] ?? []))),
                 default => throw ValidationException::withMessages(['action' => 'I do not know how to do that.']),
             };
         });
@@ -173,6 +176,23 @@ final readonly class HiringActionExecutor
             ? "No {$label} invites went out for *{$job->title}*: they had already been asked, or have no WhatsApp number."
             : "✅ Asked {$sent} ".Str::plural('candidate', $sent)." to book the {$label} interview for *{$job->title}*"
                 .($left > 0 ? " ({$left} already asked or unreachable)" : '').'.';
+    }
+
+    /** @param  list<int>  $applicationIds */
+    private function retake(EmployerJob $job, User $actor, string $round, array $applicationIds): string
+    {
+        $names = [];
+        foreach ($this->applications($job, $applicationIds) as $application) {
+            if ($this->retake->handle($job, $application, $round, $actor) !== null) {
+                $names[] = (string) ($application->candidate()->withoutGlobalScopes()->value('name') ?? 'Candidate');
+            }
+        }
+
+        $label = strtoupper($round);
+
+        return $names === []
+            ? "Nobody could retake {$label} for *{$job->title}*: they were never invited to it, or they are already hired or rejected."
+            : "✅ {$label} reopened for ".implode(', ', $names)." (*{$job->title}*). Each has a new WhatsApp to pick a day. The first result stays on record; I will tell you when the new one is scored.";
     }
 
     /** @param  list<int>  $applicationIds */
