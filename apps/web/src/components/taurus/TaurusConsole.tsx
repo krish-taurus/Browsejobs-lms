@@ -41,7 +41,7 @@ const SPEECH_LANG_KEY = "taurus-speech-lang";
  * only tells the browser's speech recognition what to expect.
  */
 const SPEECH_LANGS = [
-  { key: "en", label: "EN", hint: "English", tag: "en-IN" },
+  { key: "auto", label: "Auto", hint: "the language you speak or type (English, Hindi, Kannada)", tag: "en-IN" },
   { key: "hi", label: "हिं", hint: "Hindi", tag: "hi-IN" },
   { key: "kn", label: "ಕನ್", hint: "Kannada", tag: "kn-IN" },
 ] as const;
@@ -78,7 +78,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [heldIds, setHeldIds] = useState<Set<number>>(new Set());
   const [voice, setVoice] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
   const [question, setQuestion] = useState("");
-  const [speechLang, setSpeechLang] = useState<SpeechLangKey>("en");
+  const [speechLang, setSpeechLang] = useState<SpeechLangKey>("auto");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const [clock, setClock] = useState("");
   const seenFeed = useRef<Set<string>>(new Set());
@@ -302,7 +302,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       setAnswer(null);
       setAnswerProposal(null);
       try {
-        const res = await source.ask(q.trim(), speechLang);
+        const res = await source.ask(q.trim(), speechLang === "auto" ? undefined : speechLang);
         setAnswer(res.answer);
         setAnswerProposal(res.proposal ?? null);
         setVoice("idle");
@@ -382,9 +382,14 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const listen = () => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    // The server transcribes whatever language is spoken, so prefer it over the browser's own recogniser,
+    // which only listens for the one language it is set to.
+    if (source.transcribe && typeof MediaRecorder !== "undefined" && "mediaDevices" in navigator) {
+      void listenByRecording();
+      return;
+    }
     if (!Ctor) {
-      if (source.transcribe) void listenByRecording();
-      else void runAsk(question || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
+      void runAsk(question || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
       return;
     }
     const rec = new Ctor();
@@ -594,8 +599,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             type="button"
             className="tc-lang"
             onClick={cycleSpeechLang}
-            title={`Talk and read in ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
-            aria-label={`Voice language: ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
+            title={`Answers in ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
+            aria-label={`Answer language: ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
           >
             {SPEECH_LANGS.find((l) => l.key === speechLang)?.label}
           </button>
@@ -606,7 +611,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             id={`tc-ask-${mode}-${variant}`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={voice === "listening" ? "Listening…" : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
+            placeholder={voice === "listening" ? (source.transcribe ? "Listening… tap the orb to send" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
             autoComplete="off"
           />
           <span className="tc-wave" aria-hidden="true">
