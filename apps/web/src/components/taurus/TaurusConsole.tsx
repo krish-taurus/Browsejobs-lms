@@ -79,6 +79,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [voice, setVoice] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
   const [question, setQuestion] = useState("");
   const [speechLang, setSpeechLang] = useState<SpeechLangKey>("en");
+  const recorderRef = useRef<MediaRecorder | null>(null);
   const [clock, setClock] = useState("");
   const seenFeed = useRef<Set<string>>(new Set());
   const prevStages = useRef<Record<string, number>>({});
@@ -301,7 +302,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       setAnswer(null);
       setAnswerProposal(null);
       try {
-        const res = await source.ask(q.trim());
+        const res = await source.ask(q.trim(), speechLang);
         setAnswer(res.answer);
         setAnswerProposal(res.proposal ?? null);
         setVoice("idle");
@@ -311,7 +312,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         setAnswer("I couldn't answer that just now. Try again in a moment.");
       }
     },
-    [source, speak],
+    [source, speak, speechLang],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -321,11 +322,69 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     void runAsk(q || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
   };
 
+  // Firefox, Safari and some phones have no speech recognition: record, and the server turns it into text
+  // (it hears Hindi and Kannada too). Tap the orb again to send; it also stops by itself after 15 seconds.
+  const listenByRecording = useCallback(async () => {
+    if (recorderRef.current) {
+      recorderRef.current.stop();
+      return;
+    }
+    const transcribe = source.transcribe;
+    if (!transcribe || typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      flash("This browser can't listen. Type your question instead.");
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      flash("Microphone blocked. Allow it for this site, or type your question.");
+      return;
+    }
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const chunks: Blob[] = [];
+    recorderRef.current = recorder;
+    const stopTimer = window.setTimeout(() => {
+      if (recorder.state === "recording") recorder.stop();
+    }, 15000);
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.onstop = async () => {
+      window.clearTimeout(stopTimer);
+      stream.getTracks().forEach((t) => t.stop());
+      recorderRef.current = null;
+      const clip = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+      if (clip.size < 800) {
+        setVoice("idle");
+        flash("I didn't catch that. Tap the orb and try again.");
+        return;
+      }
+      setVoice("thinking");
+      try {
+        const heard = await transcribe(clip);
+        if (!heard || /^\[[^\]]*\]$/.test(heard)) {
+          setVoice("idle");
+          flash("I didn't catch that. Tap the orb and try again.");
+          return;
+        }
+        void runAsk(heard);
+      } catch {
+        setVoice("idle");
+        flash("Couldn't turn that into text. Type your question instead.");
+      }
+    };
+    recorder.start();
+    setVoice("listening");
+  }, [source, flash, runAsk]);
+
   const listen = () => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Ctor) {
-      void runAsk(question || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
+      if (source.transcribe) void listenByRecording();
+      else void runAsk(question || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
       return;
     }
     const rec = new Ctor();
@@ -535,7 +594,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             type="button"
             className="tc-lang"
             onClick={cycleSpeechLang}
-            title={`Talk in ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change. Taurus answers in the language you ask in.`}
+            title={`Talk and read in ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
             aria-label={`Voice language: ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
           >
             {SPEECH_LANGS.find((l) => l.key === speechLang)?.label}

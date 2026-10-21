@@ -84,7 +84,10 @@ export interface ConsoleSource {
   }): () => void;
   /** Approve the pending action of an agent; resolves to a confirmation line. */
   approve?(agentId: string): Promise<string>;
-  ask?(question: string): Promise<AskResult>;
+  /** `language` is the one picked on the Ask bar (en, hi, kn): Taurus answers in it. */
+  ask?(question: string, language?: string): Promise<AskResult>;
+  /** Turn a recording into text, for browsers with no speech recognition of their own (Firefox, Safari). */
+  transcribe?(audio: Blob): Promise<string>;
   /** Yes or not-now to a proposal; resolves to what happened, in a sentence. */
   decide?(id: number, yes: boolean): Promise<string>;
   /** Choose a quick reply in the chat (story demos). */

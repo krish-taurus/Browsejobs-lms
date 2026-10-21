@@ -366,10 +366,17 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
         window.clearTimeout(timer);
       };
     },
-    async ask(question) {
+    async transcribe(audio) {
+      const ext = audio.type.includes("mp4") ? "mp4" : audio.type.includes("ogg") ? "ogg" : "webm";
+      const form = new FormData();
+      form.append("audio", audio, `command.${ext}`);
+      const res = await apiJson<{ data: { text: string } }>(`${base}/agent/transcribe`, { method: "POST", body: form });
+      return res.data.text.trim();
+    },
+    async ask(question, language) {
       const res = await apiJson<{ data: AgentReplyRow }>(`${base}/agent/command`, {
         method: "POST",
-        body: JSON.stringify(jobId ? { text: question, job_id: jobId } : { text: question }),
+        body: JSON.stringify({ text: question, ...(jobId ? { job_id: jobId } : {}), ...(language ? { lang: language } : {}) }),
       });
       const answer = plainText(res.data.reply);
       if (res.data.intent !== "proposed") kick?.();

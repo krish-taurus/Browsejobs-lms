@@ -29,17 +29,25 @@ final readonly class ReplyLocalizer
         private BrainStatus $brain,
     ) {}
 
-    public function localize(?User $user, ?string $clientSaid, string $reply): string
+    /** Languages a client can pick in the console; the message alone decides everywhere else. */
+    private const PICKED = ['hi' => 'Hindi', 'kn' => 'Kannada'];
+
+    /** @param  string|null  $picked  'hi' or 'kn' when the recruiter chose that language in the console, whatever they typed */
+    public function localize(?User $user, ?string $clientSaid, string $reply, ?string $picked = null): string
     {
-        if ($user === null || $clientSaid === null || trim($reply) === '' || ! ClientLanguage::needsLocalizing($clientSaid)) {
+        $language = self::PICKED[(string) $picked] ?? null;
+        if ($user === null || trim($reply) === '' || ($language === null && ($clientSaid === null || ! ClientLanguage::needsLocalizing($clientSaid)))) {
             return $reply;
         }
 
         $active = $this->brain->active();
 
         try {
-            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 1, [
-                'said' => mb_substr(trim($clientSaid), 0, 600),
+            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 2, [
+                'said' => mb_substr(trim((string) $clientSaid), 0, 600),
+                'language' => $language !== null
+                    ? "They chose {$language} in the console: answer in {$language}, in its own script, even if they typed English. This overrides the rule about English below."
+                    : 'Use the language and script they wrote in.',
                 'reply' => $reply,
             ], ['max_tokens' => 1200, ...($active !== null ? BrainStatus::gatewayOptions($active) : [])]);
         } catch (Throwable $e) {

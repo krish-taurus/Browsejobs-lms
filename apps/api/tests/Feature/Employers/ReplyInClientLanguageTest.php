@@ -177,3 +177,22 @@ it('answers the web Ask bar in the language the recruiter used', function (): vo
     $english = $this->postJson($url, ['text' => 'How many are in L1?'])->assertOk()->json('data.reply');
     expect($english)->not->toStartWith('[HI] ')->and($this->ai->rewrites)->toBe($before);
 });
+
+it('answers in the language picked in the console even when the words typed are plain English', function (): void {
+    $localizer = app(ReplyLocalizer::class);
+
+    expect($localizer->localize($this->recruiter, 'Where are we in hiring?', 'One open role.', 'hi'))->toBe('[HI] One open role.')
+        ->and($localizer->localize($this->recruiter, 'Where are we in hiring?', 'One open role.', 'kn'))->toBe('[HI] One open role.')
+        ->and($localizer->localize($this->recruiter, 'Where are we in hiring?', 'One open role.', 'en'))->toBe('One open role.')
+        ->and($localizer->localize($this->recruiter, 'Where are we in hiring?', 'One open role.', 'fr'))->toBe('One open role.')
+        ->and($this->ai->rewrites)->toBe(2);
+
+    $this->actingAs($this->recruiter);
+    $this->ai->replies = [json_encode([
+        'intent' => 'question', 'action' => null, 'job' => null, 'round' => null, 'names' => [], 'top_n' => null,
+        'from_stage' => null, 'to_stage' => null, 'reason' => null, 'reply' => '',
+    ]), 'You have 1 open role.'];
+    $url = "/api/v1/employer/workspaces/{$this->workspace->id}/agent/command";
+    expect($this->postJson($url, ['text' => 'Where are we in hiring?', 'lang' => 'hi'])->assertOk()->json('data.reply'))->toStartWith('[HI] ');
+    $this->postJson($url, ['text' => 'hello', 'lang' => 'de'])->assertStatus(422);
+});
