@@ -24,11 +24,15 @@ use App\Models\InterviewInvite;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Employers\Agent\AgentWords;
+use App\Support\Employers\Agent\ClientLanguage;
+use App\Support\Employers\Agent\ClientSaid;
 use App\Support\Employers\Agent\HiringAgent;
+use App\Support\Employers\Agent\ReplyLocalizer;
 use App\Support\Employers\Agent\WhatsAppChoice;
 use App\Support\Tenancy\TenantContext;
 use App\Support\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -56,9 +60,10 @@ use Throwable;
  */
 final readonly class HiringChatAgent
 {
-    private const YES = ['yes', 'y', 'yes post', 'post', 'post it', 'ok', 'okay', 'confirm', 'confirmed', 'go', 'go ahead', 'publish', 'haan', 'han', 'ha', 'haa', 'ji', 'done', '👍'];
+    private const YES = ['yes', 'y', 'yes post', 'post', 'post it', 'ok', 'okay', 'confirm', 'confirmed', 'go', 'go ahead', 'publish', 'haan', 'han', 'ha', 'haa', 'ji', 'done', '👍',
+        'हाँ', 'हां', 'जी', 'ठीक है', 'theek hai', 'thik hai', 'houdu', 'haudu', 'sari', 'ಹೌದು', 'ಸರಿ', 'ಆಯ್ತು', 'post karo', 'पोस्ट करो'];
 
-    private const CANCEL = ['cancel', 'discard', 'stop', 'delete', 'nahi', 'no'];
+    private const CANCEL = ['cancel', 'discard', 'stop', 'delete', 'nahi', 'no', 'नहीं', 'रद्द', 'रद्द करो', 'radd', 'beda', 'illa', 'ಬೇಡ', 'ಇಲ್ಲ', 'ರದ್ದು'];
 
     private const GREETING = ['hi', 'hello', 'hey', 'help', 'menu', 'start', 'namaste'];
 
@@ -81,11 +86,14 @@ final readonly class HiringChatAgent
         private InterviewReportDelivery $interviewReports,
         private OpenInterviewNow $openNow,
         private WhatsAppChoice $choices,
+        private ReplyLocalizer $localizer,
+        private ClientSaid $said,
     ) {}
 
     public function handle(EmployerWhatsappMessage $in): void
     {
         $text = trim($in->body);
+        $this->said->remember(null);
 
         if (preg_match(ReceiveEmployerWhatsApp::CODE_PATTERN, $text, $m) === 1) {
             $this->join($in, strtoupper($m[0]));
@@ -129,6 +137,9 @@ final readonly class HiringChatAgent
             $this->reply($in->phone, $link, "🎤 I heard: \"{$heard}\"");
             $text = $heard;
         }
+
+        // Answer in the language they write in (Hindi, Kannada, English), from here on.
+        $this->said->remember($this->languageOf($link, $text));
 
         $word = $this->word($text);
 
@@ -501,7 +512,8 @@ final readonly class HiringChatAgent
      */
     public static function looksLikePipelineTalk(string $text): bool
     {
-        return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who)\b/iu', $text) === 1;
+        return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who|bhejo|bhejiye|kitne|kaun|kaunsa|kya|batao|dikhao|shuru|kalisi|torisi|yeshtu|yaaru)\b/iu', $text) === 1
+            || preg_match('/(?<![\p{L}\p{M}])(इंटरव्यू|राउंड|रिपोर्ट|उम्मीदवार|शॉर्टलिस्ट|भेजो|भेजिए|कितने|कौन|बताओ|दिखाओ|शुरू|ऑफर|ಇಂಟರ್ವ್ಯೂ|ರೌಂಡ್|ರಿಪೋರ್ಟ್|ಅಭ್ಯರ್ಥಿ|ಕಳುಹಿಸಿ|ಎಷ್ಟು|ಯಾರು|ತೋರಿಸಿ|ಶುರು)/u', $text) === 1;
     }
 
     private function example(): string
@@ -511,6 +523,8 @@ final readonly class HiringChatAgent
 
     private function reply(string $phone, ?EmployerWhatsappLink $link, string $body): void
     {
+        $body = $this->localizer->localize($link?->user, $this->said->text(), $body);
+
         $message = EmployerWhatsappMessage::query()->create([
             'tenant_id' => $link->tenant_id ?? app(TenantContext::class)->id(),
             'employer_whatsapp_link_id' => $link?->id,
@@ -546,7 +560,36 @@ final readonly class HiringChatAgent
 
     private function word(string $text): string
     {
-        return trim(preg_replace('/[^\p{L}\p{N}\s👍]+/u', '', mb_strtolower($text)) ?? '');
+        return trim(preg_replace('/[^\p{L}\p{M}\p{N}\s👍]+/u', '', mb_strtolower($text)) ?? '');
+    }
+
+    /**
+     * The text whose language the reply should follow. A short answer ("ok", "haan") carries no
+     * language of its own, so it follows the last longer message this person wrote in Hindi or
+     * Kannada; a fresh sentence in English switches back.
+     */
+    private function languageOf(EmployerWhatsappLink $link, string $text): string
+    {
+        $key = "hiring-chat-language:{$link->id}";
+        try {
+            if (ClientLanguage::needsLocalizing($text)) {
+                if (mb_strlen($text) >= 12) {
+                    Cache::put($key, mb_substr($text, 0, 300), now()->addHours(12));
+                }
+
+                return $text;
+            }
+
+            if (str_word_count($text) > 3) {
+                Cache::forget($key);
+
+                return $text;
+            }
+
+            return (string) Cache::get($key, $text);
+        } catch (Throwable) {
+            return $text;
+        }
     }
 
     private function firstError(ValidationException $e): string

@@ -15,6 +15,7 @@ use App\Support\Certificates\HtmlCertificateRenderer;
 use App\Support\Drive\DriveClient;
 use App\Support\Drive\GoogleDriveClient;
 use App\Support\Drive\NullDriveClient;
+use App\Support\Employers\Agent\ClientSaid;
 use App\Support\Enquiries\ClientIp;
 use App\Support\Fees\DuesFeeGate;
 use App\Support\Fees\FeeGate;
@@ -75,6 +76,8 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(TenantContext::class);
+        // What the client wrote in the message being answered, so replies come back in their language.
+        $this->app->scoped(ClientSaid::class);
         $this->app->singleton(PlatformSettings::class);
 
         // OTP + live-class + dunning notifications route through the P2.4

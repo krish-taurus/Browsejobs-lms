@@ -34,6 +34,22 @@ type Props = {
 };
 
 const LOOK_KEY = "taurus-look";
+const SPEECH_LANG_KEY = "taurus-speech-lang";
+
+/**
+ * The language the mic listens for. Taurus answers in whatever language the question was asked in, so this
+ * only tells the browser's speech recognition what to expect.
+ */
+const SPEECH_LANGS = [
+  { key: "en", label: "EN", hint: "English", tag: "en-IN" },
+  { key: "hi", label: "हिं", hint: "Hindi", tag: "hi-IN" },
+  { key: "kn", label: "ಕನ್", hint: "Kannada", tag: "kn-IN" },
+] as const;
+type SpeechLangKey = (typeof SPEECH_LANGS)[number]["key"];
+
+/** Kannada script has no ElevenLabs voice here; Devanagari and the rest read fine. */
+const KANNADA = /[\u0C80-\u0CFF]/;
+const DEVANAGARI = /[\u0900-\u097F]/;
 
 /**
  * The Taurus console: the 3D floor (lib/taurus-floor/floor.mjs) plus the HUD
@@ -62,6 +78,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [heldIds, setHeldIds] = useState<Set<number>>(new Set());
   const [voice, setVoice] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
   const [question, setQuestion] = useState("");
+  const [speechLang, setSpeechLang] = useState<SpeechLangKey>("en");
   const [clock, setClock] = useState("");
   const seenFeed = useRef<Set<string>>(new Set());
   const prevStages = useRef<Record<string, number>>({});
@@ -100,6 +117,24 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     } catch {
       /* storage unavailable: keep the default */
     }
+    try {
+      const lang = localStorage.getItem(SPEECH_LANG_KEY);
+      if (SPEECH_LANGS.some((l) => l.key === lang)) setSpeechLang(lang as SpeechLangKey);
+    } catch {
+      /* storage unavailable: stay on English */
+    }
+  }, []);
+
+  const cycleSpeechLang = useCallback(() => {
+    setSpeechLang((current) => {
+      const next = SPEECH_LANGS[(SPEECH_LANGS.findIndex((l) => l.key === current) + 1) % SPEECH_LANGS.length].key;
+      try {
+        localStorage.setItem(SPEECH_LANG_KEY, next);
+      } catch {
+        /* not remembered */
+      }
+      return next;
+    });
   }, []);
 
   const flash = useCallback((msg: string) => {
@@ -228,7 +263,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
 
   // ask Taurus: typed or spoken
   const speak = useCallback(async (text: string, audio?: Blob | null) => {
-    if (audio && audio.size > 0) {
+    const kannada = KANNADA.test(text);
+    if (audio && audio.size > 0 && !kannada) {
       const url = URL.createObjectURL(audio);
       const a = new Audio(url);
       setVoice("speaking");
@@ -245,6 +281,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     }
     try {
       const u = new SpeechSynthesisUtterance(text);
+      if (kannada) u.lang = "kn-IN";
+      else if (DEVANAGARI.test(text)) u.lang = "hi-IN";
       u.rate = 1;
       u.pitch = 0.9;
       u.onstart = () => setVoice("speaking");
@@ -291,7 +329,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       return;
     }
     const rec = new Ctor();
-    rec.lang = "en-IN";
+    rec.lang = SPEECH_LANGS.find((l) => l.key === speechLang)?.tag ?? "en-IN";
     rec.interimResults = false;
     let heard = "";
     setVoice("listening");
@@ -493,6 +531,15 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       {showAsk && (
         <form className="tc-askbar tc-panel" onSubmit={onSubmit}>
           <button type="button" className="tc-orb" onClick={listen} aria-label="Ask Taurus out loud" />
+          <button
+            type="button"
+            className="tc-lang"
+            onClick={cycleSpeechLang}
+            title={`Talk in ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change. Taurus answers in the language you ask in.`}
+            aria-label={`Voice language: ${SPEECH_LANGS.find((l) => l.key === speechLang)?.hint}. Tap to change.`}
+          >
+            {SPEECH_LANGS.find((l) => l.key === speechLang)?.label}
+          </button>
           <label className="sr-only" htmlFor={`tc-ask-${mode}-${variant}`}>
             Ask Taurus
           </label>

@@ -374,10 +374,12 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
       const answer = plainText(res.data.reply);
       if (res.data.intent !== "proposed") kick?.();
       let audio: Blob | null = null;
-      try {
-        audio = await apiPostBlob(`${base}/speak`, { text: answer });
-      } catch {
-        audio = null;
+      if (!/[\u0C80-\u0CFF]/.test(answer)) {
+        try {
+          audio = await apiPostBlob(`${base}/speak`, { text: answer });
+        } catch {
+          audio = null;
+        }
       }
       return {
         answer,

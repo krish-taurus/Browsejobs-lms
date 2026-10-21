@@ -53,7 +53,7 @@ final readonly class WhatsAppChoice
      */
     public static function detect(string $text): ?array
     {
-        $t = mb_strtolower(trim($text));
+        $t = self::digits(mb_strtolower(trim($text)));
         if ($t === '' || mb_strlen($t) > 200) {
             return null;
         }
@@ -65,16 +65,24 @@ final readonly class WhatsAppChoice
             $round = 'l1';
         } elseif (preg_match('/\b(second|2nd)\s+round\b/u', $t) === 1) {
             $round = 'l2';
+        } elseif (preg_match('/\b(pehla|pehli|pahla|pahli|modalu)\s+round\b|पहला\s+राउंड|ಮೊದಲ\s+ರೌಂಡ್/u', $t) === 1) {
+            $round = 'l1';
+        } elseif (preg_match('/\b(doosra|doosri|dusra|dusri|eradane)\s+round\b|दूसरा\s+राउंड|ಎರಡನೇ\s+ರೌಂಡ್/u', $t) === 1) {
+            $round = 'l2';
         }
 
-        $retake = preg_match('/\b(re-?take|re-?do|re-?attempt|re-?open|re-?sit|again|another (?:attempt|chance|try)|one more (?:attempt|chance|try|time))\b/u', $t) === 1
-            && ($round !== null || preg_match('/\b(interview|round|test)\b/u', $t) === 1);
+        $retake = preg_match('/\b(re-?take|re-?do|re-?attempt|re-?open|re-?sit|again|dobara|dubara|phir se|fir se|ek aur baar|ek baar aur|matte|mattomme|another (?:attempt|chance|try)|one more (?:attempt|chance|try|time))\b/u', $t) === 1
+            || preg_match('/(?<![\p{L}\p{M}])(दोबारा|दुबारा|फिर से|फिरसे|एक बार और|ಮತ್ತೆ|ಮರು|ಇನ್ನೊಂದು ಬಾರಿ)/u', $t) === 1;
+        $retake = $retake
+            && ($round !== null || preg_match('/\b(interview|round|test)\b/u', $t) === 1 || preg_match('/(?<![\p{L}\p{M}])(इंटरव्यू|राउंड|टेस्ट|ಇಂಟರ್ವ್ಯೂ|ರೌಂಡ್|ಟೆಸ್ಟ್)/u', $t) === 1);
         if ($retake) {
             return ['type' => 'retake', 'round' => $round];
         }
 
-        $wantsFile = preg_match('/\b(report|reports|recording|recordings|recorded|video)\b/u', $t) === 1;
-        $verb = preg_match('/\b(send|share|show|get|give|need|want|forward|resend|bhejo|bhej|dena|chahiye)\b/u', $t) === 1;
+        $wantsFile = preg_match('/\b(report|reports|recording|recordings|recorded|video)\b/u', $t) === 1
+            || preg_match('/(?<![\p{L}\p{M}])(रिपोर्ट|रिकॉर्डिंग|वीडियो|ರಿಪೋರ್ಟ್|ರೆಕಾರ್ಡಿಂಗ್|ವೀಡಿಯೋ|ವಿಡಿಯೋ)/u', $t) === 1;
+        $verb = preg_match('/\b(send|share|show|get|give|need|want|forward|resend|bhejo|bhej|bhejiye|dena|dijiye|chahiye|dikhao|dikhaiye|kalisi|torisi|kodi|beku)\b/u', $t) === 1
+            || preg_match('/(?<![\p{L}\p{M}])(भेजो|भेज|भेजिए|दीजिए|चाहिए|दिखाओ|दिखाइए|ಕಳುಹಿಸಿ|ತೋರಿಸಿ|ಕೊಡಿ|ಬೇಕು)/u', $t) === 1;
         if ($wantsFile && $verb) {
             return ['type' => 'report', 'round' => $round];
         }
@@ -151,7 +159,7 @@ final readonly class WhatsAppChoice
         $options = collect((array) $choice['options'])->map(fn ($id) => $jobs->get((int) $id))->filter()->values();
 
         $picked = null;
-        $t = trim($text);
+        $t = self::digits(trim($text));
         if (preg_match('/^#?\s*(\d{1,6})\.?$/', $t, $m) === 1) {
             $n = (int) $m[1];
             $picked = $options->get($n - 1) ?? $options->firstWhere('id', $n);
@@ -373,13 +381,13 @@ final readonly class WhatsAppChoice
      */
     private function select(Collection $rows, string $text): Collection
     {
-        $t = mb_strtolower(trim($text));
-        if (preg_match('/^(all|everyone|everybody|sab|sabhi|all of them|them all)$/u', $t) === 1) {
+        $t = self::digits(mb_strtolower(trim($text)));
+        if (preg_match('/^(all|everyone|everybody|sab|sabhi|sabko|saare|sare|all of them|them all|सभी|सब|सबको|सारे|ಎಲ್ಲರೂ|ಎಲ್ಲಾ|ಎಲ್ಲರಿಗೂ)$/u', $t) === 1) {
             return $rows;
         }
 
         $numbers = [];
-        $listy = preg_replace('/\band\b/u', ',', $t) ?? $t;
+        $listy = preg_replace('/\b(?:and|aur)\b|और|ಮತ್ತು/u', ',', $t) ?? $t;
         if (preg_match('/^[\d\s,&.\-]+$/u', $listy) === 1) {
             preg_match_all('/(\d+)\s*-\s*(\d+)|(\d+)/', $listy, $m, PREG_SET_ORDER);
             foreach ($m as $hit) {
@@ -397,7 +405,7 @@ final readonly class WhatsAppChoice
         }
 
         // Names, as said ("kunal", "kunal and priya").
-        $said = preg_split('/\s*(?:,|&|\band\b)\s*/u', $t) ?: [];
+        $said = preg_split('/\s*(?:,|&|\band\b|\baur\b|और|ಮತ್ತು)\s*/u', $t) ?: [];
 
         return $rows->filter(function (array $row) use ($said): bool {
             foreach ($said as $name) {
@@ -465,9 +473,18 @@ final readonly class WhatsAppChoice
             ->all();
     }
 
+    /** Devanagari and Kannada digits (१२३, ೧೨೩) read as 123. */
+    private static function digits(string $t): string
+    {
+        return strtr($t, [
+            '०' => '0', '१' => '1', '२' => '2', '३' => '3', '४' => '4', '५' => '5', '६' => '6', '७' => '7', '८' => '8', '९' => '9',
+            '೦' => '0', '೧' => '1', '೨' => '2', '೩' => '3', '೪' => '4', '೫' => '5', '೬' => '6', '೭' => '7', '೮' => '8', '೯' => '9',
+        ]);
+    }
+
     public static function roundIn(string $text): ?string
     {
-        $t = mb_strtolower(trim($text));
+        $t = self::digits(mb_strtolower(trim($text)));
 
         return preg_match('/\bl\s?([1-9])\b/u', $t, $m) === 1 || preg_match('/^\s*(?:round\s*)?([1-9])\s*$/u', $t, $m) === 1 ? 'l'.$m[1] : null;
     }
