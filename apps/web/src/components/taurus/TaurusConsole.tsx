@@ -317,6 +317,10 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (recorderRef.current) {
+      recorderRef.current.stop();
+      return;
+    }
     const q = question;
     setQuestion("");
     void runAsk(q || (mode === "recruitment" ? "Where are we in hiring?" : "What needs me right now?"));
@@ -351,8 +355,40 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunks.push(e.data);
     };
+    // Send it once they have spoken and then gone quiet for a moment, so there is nothing to tap.
+    let watch = 0;
+    let audioCtx: AudioContext | null = null;
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (Ctx) {
+        audioCtx = new Ctx();
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        audioCtx.createMediaStreamSource(stream).connect(analyser);
+        const samples = new Uint8Array(analyser.fftSize);
+        const began = performance.now();
+        let spoke = false;
+        let quietSince = began;
+        watch = window.setInterval(() => {
+          analyser.getByteTimeDomainData(samples);
+          let peak = 0;
+          for (const v of samples) peak = Math.max(peak, Math.abs(v - 128));
+          const now = performance.now();
+          if (peak > 14) {
+            spoke = true;
+            quietSince = now;
+          } else if (recorder.state === "recording" && ((spoke && now - quietSince > 1600) || (!spoke && now - began > 8000))) {
+            recorder.stop();
+          }
+        }, 100);
+      }
+    } catch {
+      /* no silence detection here: tap the orb or Ask to send */
+    }
     recorder.onstop = async () => {
       window.clearTimeout(stopTimer);
+      window.clearInterval(watch);
+      void audioCtx?.close();
       stream.getTracks().forEach((t) => t.stop());
       recorderRef.current = null;
       const clip = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
@@ -611,7 +647,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             id={`tc-ask-${mode}-${variant}`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={voice === "listening" ? (source.transcribe ? "Listening… tap the orb to send" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
+            placeholder={voice === "listening" ? (source.transcribe ? "Listening… speak, then pause" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
             autoComplete="off"
           />
           <span className="tc-wave" aria-hidden="true">
