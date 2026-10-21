@@ -49,6 +49,11 @@ final class DuesFeeGate implements FeeGate
     /** Whether this student has an unexpired access extension on this batch. */
     private function hasActiveExtension(User $student, Batch $batch): bool
     {
+        // The whole batch was kept in class (CRM: Live Batches, Extend access).
+        if ($batch->accessExtensionActive()) {
+            return true;
+        }
+
         $plan = FeePlan::query()->withoutGlobalScopes()
             ->where('user_id', $student->id)
             ->where('batch_id', $batch->id)

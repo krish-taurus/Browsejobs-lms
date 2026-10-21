@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -22,6 +23,8 @@ use Illuminate\Support\Collection;
  * @property BatchType $type
  * @property int|null $capacity
  * @property string $status
+ * @property Carbon|null $access_extended_until
+ * @property string|null $access_extended_reason
  */
 class Batch extends Model
 {
@@ -32,7 +35,19 @@ class Batch extends Model
     protected $fillable = [
         'tenant_id', 'course_id', 'number', 'type', 'capacity',
         'starts_on', 'ends_on', 'linked_source_batch_id', 'status', 'trainer_id',
+        'access_extended_until', 'access_extended_reason',
     ];
+
+    /**
+     * The academic team has kept this whole batch in class for longer: the fee
+     * gate lets every student in, and the dunning ladder does not block anyone
+     * here until it ends.
+     */
+    public function accessExtensionActive(): bool
+    {
+        return $this->access_extended_until !== null
+            && $this->access_extended_until->endOfDay()->greaterThanOrEqualTo(now());
+    }
 
     /**
      * @return BelongsTo<Course, $this>
@@ -184,6 +199,7 @@ class Batch extends Model
             'type' => BatchType::class,
             'capacity' => 'integer',
             'starts_on' => 'date',
+            'access_extended_until' => 'date',
             'ends_on' => 'date',
         ];
     }

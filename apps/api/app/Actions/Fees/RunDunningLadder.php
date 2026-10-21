@@ -57,7 +57,7 @@ final readonly class RunDunningLadder
             app(TenantContext::class)->run($tenant, function () use ($today, &$summary): void {
                 FeePlan::query()
                     ->where('status', FeePlanStatus::Active->value)
-                    ->with(['instalments', 'student'])
+                    ->with(['instalments', 'student', 'batch'])
                     ->get()
                     ->each(function (FeePlan $plan) use ($today, &$summary): void {
                         $this->processPlan($plan, $today, $summary);
@@ -109,7 +109,7 @@ final readonly class RunDunningLadder
 
         // An access extension pauses blocking entirely — reminders still go out
         // so the student knows the money is owed, but nothing locks until it ends.
-        if ($plan->accessExtensionActive()) {
+        if ($plan->accessExtensionActive() || $plan->batch?->accessExtensionActive()) {
             return;
         }
 
