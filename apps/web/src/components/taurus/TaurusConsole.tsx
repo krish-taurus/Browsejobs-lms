@@ -35,6 +35,8 @@ type Props = {
 
 const LOOK_KEY = "taurus-look";
 const SPEECH_LANG_KEY = "taurus-speech-lang-v2";
+/** Set when they switch the live mic off, so it stays off next time until they tap the orb. */
+const LIVE_MUTED_KEY = "taurus-live-muted";
 
 /**
  * The language the mic listens for. Taurus answers in whatever language the question was asked in, so this
@@ -101,6 +103,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [live, setLive] = useState(false);
   const liveRef = useRef(false);
   const quietRounds = useRef(0);
+  const cancelRec = useRef(false);
+  const pausedByHide = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const listenRef = useRef<(() => void) | null>(null);
   const [clock, setClock] = useState("");
@@ -344,7 +348,10 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       liveRef.current = false;
       setLive(false);
       quietRounds.current = 0;
-      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      if (recorderRef.current?.state === "recording") {
+        cancelRec.current = true;
+        recorderRef.current.stop();
+      }
       audioRef.current?.pause();
       audioRef.current = null;
       try {
@@ -384,8 +391,9 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (recorderRef.current) {
+      if (question.trim()) cancelRec.current = true;
       recorderRef.current.stop();
-      return;
+      if (!question.trim()) return;
     }
     const q = question;
     setQuestion("");
@@ -401,16 +409,27 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     }
     const transcribe = source.transcribe;
     if (!transcribe || typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      flash("This browser can't listen. Type your question instead.");
+      if (liveRef.current) stopLive("This browser can't listen. Type your question instead.");
+      else flash("This browser can't listen. Type your question instead.");
       return;
     }
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      flash("Microphone blocked. Allow it for this site, or type your question.");
+      if (liveRef.current) {
+        // Do not ask again on every visit; the orb turns it back on.
+        try {
+          localStorage.setItem(LIVE_MUTED_KEY, "1");
+        } catch {
+          /* not remembered */
+        }
+        stopLive("Microphone blocked. Allow it for this site, then tap the orb.");
+      }
+      else flash("Microphone blocked. Allow it for this site, or type your question.");
       return;
     }
+    cancelRec.current = false;
     const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     const chunks: Blob[] = [];
@@ -423,6 +442,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     };
     // Send it once they have spoken and then gone quiet for a moment, so there is nothing to tap.
     let watch = 0;
+    let sawSpeech = false;
     let audioCtx: AudioContext | null = null;
     try {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -433,17 +453,18 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         audioCtx.createMediaStreamSource(stream).connect(analyser);
         const samples = new Uint8Array(analyser.fftSize);
         const began = performance.now();
-        let spoke = false;
+        let loud = 0;
         let quietSince = began;
         watch = window.setInterval(() => {
           analyser.getByteTimeDomainData(samples);
           let peak = 0;
           for (const v of samples) peak = Math.max(peak, Math.abs(v - 128));
           const now = performance.now();
-          if (peak > 14) {
-            spoke = true;
+          if (peak > 18) {
+            loud += 1;
             quietSince = now;
-          } else if (recorder.state === "recording" && ((spoke && now - quietSince > 1600) || (!spoke && now - began > 8000))) {
+            if (loud >= 3) sawSpeech = true;
+          } else if (recorder.state === "recording" && ((sawSpeech && now - quietSince > 1600) || (!sawSpeech && now - began > 8000))) {
             recorder.stop();
           }
         }, 100);
@@ -457,16 +478,24 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       void audioCtx?.close();
       stream.getTracks().forEach((t) => t.stop());
       recorderRef.current = null;
+      // Switched off, or the tab was hidden: throw the recording away.
+      if (cancelRec.current) {
+        cancelRec.current = false;
+        return;
+      }
       const clip = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+      // A live mic that heard nobody speak sends nothing: it just keeps listening.
+      if (!sawSpeech && audioCtx !== null && liveRef.current) {
+        window.setTimeout(() => liveRef.current && listenRef.current?.(), 200);
+        return;
+      }
       const missed = (message: string) => {
         setVoice("idle");
         if (!liveRef.current) {
           flash(message);
           return;
         }
-        quietRounds.current += 1;
-        if (quietRounds.current >= 2) stopLive("I stopped listening. Tap the orb to talk again.");
-        else window.setTimeout(() => liveRef.current && listenRef.current?.(), 300);
+        window.setTimeout(() => liveRef.current && listenRef.current?.(), 600);
       };
       if (clip.size < 800) {
         missed("I didn't catch that. Tap the orb and try again.");
@@ -482,7 +511,9 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         quietRounds.current = 0;
         void runAsk(heard);
       } catch {
-        if (liveRef.current) stopLive("Couldn't turn that into text. Type your question instead.");
+        quietRounds.current += 1;
+        if (liveRef.current && quietRounds.current >= 3) stopLive("Voice isn't working right now. Type your question, or tap the orb to try again.");
+        else if (liveRef.current) window.setTimeout(() => liveRef.current && listenRef.current?.(), 1500);
         else {
           setVoice("idle");
           flash("Couldn't turn that into text. Type your question instead.");
@@ -499,14 +530,63 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   // One tap starts a live conversation; tap again to end it.
   const toggleLive = useCallback(() => {
     if (liveRef.current) {
+      try {
+        localStorage.setItem(LIVE_MUTED_KEY, "1");
+      } catch {
+        /* not remembered */
+      }
       stopLive();
       return;
+    }
+    try {
+      localStorage.removeItem(LIVE_MUTED_KEY);
+    } catch {
+      /* not remembered */
     }
     liveRef.current = true;
     quietRounds.current = 0;
     setLive(true);
     void listenByRecording();
   }, [listenByRecording, stopLive]);
+
+  // Nothing to click: on the hiring floor the mic opens by itself and Taurus answers out loud. It stays off
+  // if they switched it off last time, and the browser asks for the microphone once.
+  useEffect(() => {
+    if (!source.ask || !source.transcribe || typeof MediaRecorder === "undefined" || !("mediaDevices" in navigator)) return;
+    let muted = false;
+    try {
+      muted = localStorage.getItem(LIVE_MUTED_KEY) === "1";
+    } catch {
+      /* start listening */
+    }
+    if (muted || liveRef.current) return;
+    const t = window.setTimeout(() => {
+      if (liveRef.current) return;
+      liveRef.current = true;
+      quietRounds.current = 0;
+      setLive(true);
+      void listenByRecording();
+    }, 900);
+    return () => window.clearTimeout(t);
+  }, [source, listenByRecording]);
+
+  // A hidden tab does not listen; it picks up again when it comes back.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (liveRef.current && recorderRef.current?.state === "recording") {
+          pausedByHide.current = true;
+          cancelRec.current = true;
+          recorderRef.current.stop();
+        }
+      } else if (pausedByHide.current) {
+        pausedByHide.current = false;
+        if (liveRef.current) listenRef.current?.();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   const listen = () => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
@@ -724,7 +804,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
 
       {showAsk && (
         <form className="tc-askbar tc-panel" onSubmit={onSubmit}>
-          <button type="button" className="tc-orb" data-live={live ? "on" : "off"} onClick={listen} aria-label={live ? "End the live conversation" : "Start a live conversation with Taurus"} title={live ? "Live. Tap to stop" : "Tap to talk. It listens and answers on its own"} />
+          <button type="button" className="tc-orb" data-live={live ? "on" : "off"} onClick={listen} aria-label={live ? "End the live conversation" : "Start a live conversation with Taurus"} title={live ? "Microphone on. Tap to turn it off" : "Microphone off. Tap to talk to Taurus"} />
           <button
             type="button"
             className="tc-lang"
@@ -741,7 +821,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             id={`tc-ask-${mode}-${variant}`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={live ? (voice === "speaking" ? "Taurus is speaking…" : voice === "thinking" ? "Thinking…" : "Live: just talk. Tap the orb to stop") : voice === "listening" ? (source.transcribe ? "Listening… speak, then pause" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
+            placeholder={live ? (voice === "speaking" ? "Taurus is speaking…" : voice === "thinking" ? "Thinking…" : "Listening. Just talk, or type and press Enter") : voice === "listening" ? (source.transcribe ? "Listening… speak, then pause" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
             autoComplete="off"
           />
           <span className="tc-wave" aria-hidden="true">
@@ -750,9 +830,11 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             <i />
             <i />
           </span>
-          <button type="submit" className="tc-btn primary">
-            Ask
-          </button>
+          {!source.transcribe && (
+            <button type="submit" className="tc-btn primary">
+              Ask
+            </button>
+          )}
         </form>
       )}
       {answer && (
