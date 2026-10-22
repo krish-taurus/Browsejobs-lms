@@ -187,6 +187,12 @@ function nextQuestion(intent: JdIntent): Question | null {
   return null;
 }
 
+/**
+ * The robot and voice-chat panel is switched off: hiring is run from the Hiring floor (Ask bar, Live agents) and
+ * from WhatsApp. The code stays so it can be brought back by flipping this.
+ */
+const SHOW_ASSISTANT = false;
+
 export default function TaurusAiPage() {
   const { user } = useAuth();
   const { workspace } = useWorkspace();
@@ -1083,11 +1089,12 @@ export default function TaurusAiPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--bj-dash-primary)" }}>
-            Your AI hiring companion
+            Hiring on WhatsApp
           </p>
-          <h1 className="bj-dash-serif mt-1" style={{ fontSize: "var(--bj-dash-title-size)", color: "var(--bj-dash-ink)" }}>AI Recruiter voice</h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--bj-dash-muted)" }}>A helping hand for every hiring decision.</p>
+          <h1 className="bj-dash-serif mt-1" style={{ fontSize: "var(--bj-dash-title-size)", color: "var(--bj-dash-ink)" }}>AI Recruiter</h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--bj-dash-muted)" }}>Post a role and run your hiring from WhatsApp. Ask Taurus about your pipeline on the Hiring floor.</p>
         </div>
+        {SHOW_ASSISTANT && (
         <button
           type="button"
           onClick={startNewConversation}
@@ -1096,10 +1103,12 @@ export default function TaurusAiPage() {
         >
           <span aria-hidden>+</span> New conversation
         </button>
+        )}
       </div>
 
       <WhatsAppJobPosting />
 
+      {SHOW_ASSISTANT && (
       <div className="grid flex-1 gap-5 lg:grid-cols-2">
         {/* Robot scene */}
         <div className="flex flex-col items-center justify-center rounded-[var(--bj-dash-radius)] border bg-white p-6" style={{ borderColor: "var(--bj-dash-border)" }}>
@@ -1316,6 +1325,7 @@ export default function TaurusAiPage() {
           <p className="mt-2 text-center text-xs" style={{ color: "var(--bj-dash-muted)" }}>Voice and text, in one conversation.</p>
         </div>
       </div>
+      )}
     </div>
   );
 }
