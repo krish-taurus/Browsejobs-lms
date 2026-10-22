@@ -150,7 +150,13 @@ final readonly class HiringChatAgent
         }
 
         // A question Taurus asked in this chat ("which role?", "which candidates?"): this message answers it.
-        if ($this->choices->active($link) !== null) {
+        // A new request (a role to post, a fresh retake or report) is never mistaken for the answer, and drops the question.
+        $open = $this->choices->active($link);
+        if ($open !== null && WhatsAppChoice::startsSomethingNew($text)) {
+            $link->update(['choice' => null]);
+            $open = null;
+        }
+        if ($open !== null) {
             $this->reply($in->phone, $link, $this->choices->answer($workspace, $user, $link, $text));
 
             return;
@@ -218,7 +224,17 @@ final readonly class HiringChatAgent
             return;
         }
 
-        if ($link->state === EmployerWhatsappLink::STATE_CONFIRMING && is_array($link->draft)) {
+        // A question about the pipeline while a draft waits is a question, not an edit to the draft; so is small talk.
+        if ($link->state === EmployerWhatsappLink::STATE_CONFIRMING && is_array($link->draft) && self::isPipelineQuestion($text)) {
+            $answer = $this->agent->respond($workspace, $user, $text, EmployerAgentAction::CHANNEL_WHATSAPP, null, $link);
+            if (! in_array($answer->intent, ['post_job', 'unknown'], true)) {
+                $this->reply($in->phone, $link, $answer->text."\n\n(Your new job draft is still waiting. Reply *YES* to post it or *CANCEL* to discard it.)");
+
+                return;
+            }
+        }
+
+        if ($link->state === EmployerWhatsappLink::STATE_CONFIRMING && is_array($link->draft) && ! self::isSmallTalk($text)) {
             $this->revise($in->phone, $link, $workspace, $user, $text);
 
             return;
@@ -514,6 +530,16 @@ final readonly class HiringChatAgent
     {
         return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who|bhejo|bhejiye|kitne|kaun|kaunsa|kya|batao|dikhao|shuru|kalisi|torisi|yeshtu|yaaru)\b/iu', $text) === 1
             || preg_match('/(?<![\p{L}\p{M}])(इंटरव्यू|राउंड|रिपोर्ट|उम्मीदवार|शॉर्टलिस्ट|भेजो|भेजिए|कितने|कौन|बताओ|दिखाओ|शुरू|ऑफर|ಇಂಟರ್ವ್ಯೂ|ರೌಂಡ್|ರಿಪೋರ್ಟ್|ಅಭ್ಯರ್ಥಿ|ಕಳುಹಿಸಿ|ಎಷ್ಟು|ಯಾರು|ತೋರಿಸಿ|ಶುರು)/u', $text) === 1;
+    }
+
+    /** "How many cleared L1?", "who is waiting?": asking about the pipeline, not changing a job draft. */
+    public static function isPipelineQuestion(string $text): bool
+    {
+        $t = trim($text);
+
+        return mb_strlen($t) <= 160
+            && self::looksLikePipelineTalk($t)
+            && (str_ends_with($t, '?') || preg_match('/^(how many|how much|what|who|where|which|when|status|kitne|kaun|kya|kab)\b/iu', $t) === 1);
     }
 
     /** "Good morning", "how are you?", "kaise ho", "what are you doing", "thanks": a person talking, not a role. */

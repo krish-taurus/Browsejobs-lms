@@ -145,6 +145,10 @@ it('sends the English reply untouched when the rewrite drops a link or the model
 });
 
 it('answers a Hindi message on WhatsApp in Hindi, and an English one in English with no extra model call', function (): void {
+    // Two roles, so Taurus has to ask which one.
+    EmployerJob::factory()->for($this->tenant)->published()->create([
+        'employer_workspace_id' => $this->workspace->id, 'created_by_id' => $this->recruiter->id, 'title' => 'Java Developer',
+    ]);
     $hindi = clientWrites($this, 'L1 dobara karna hai');
     expect($hindi)->toStartWith('[HI] ')->and($hindi)->toContain('Which role?')->and($this->ai->rewrites)->toBe(1);
 

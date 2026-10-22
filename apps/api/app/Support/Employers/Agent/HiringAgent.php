@@ -13,6 +13,7 @@ use App\Models\EmployerJob;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWorkspace;
 use App\Models\User;
+use App\Support\Employers\HiringChatAgent;
 use App\Services\AI\AiBudgetExceeded;
 use App\Support\AI\ProviderNotConfigured;
 use Illuminate\Validation\ValidationException;
@@ -61,7 +62,7 @@ final readonly class HiringAgent
 
         // On the web a new role is drafted right here; on WhatsApp the chat's own draft flow takes over.
         $draft = $channel === EmployerAgentAction::CHANNEL_WEB ? $this->openDraft($workspace, $user) : null;
-        if ($channel === EmployerAgentAction::CHANNEL_WEB && ($read['intent'] === 'post_job' || ($draft !== null && $read['intent'] === 'other'))) {
+        if ($channel === EmployerAgentAction::CHANNEL_WEB && ($read['intent'] === 'post_job' || ($draft !== null && $read['intent'] === 'other' && ! HiringChatAgent::isSmallTalk($text)))) {
             return $this->posting->handle($workspace, $user, $text, $draft);
         }
 

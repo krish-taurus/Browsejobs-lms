@@ -90,6 +90,28 @@ final readonly class WhatsAppChoice
         return null;
     }
 
+    /**
+     * Is this message a new request rather than an answer to the question Taurus just asked? While a
+     * conversation is open ("whose report?") a short reply is its answer ("1", "Kunal", "all"), but a
+     * new role to post, a fresh retake or report request, or a long message is not, and must never be
+     * swallowed as a wrong answer.
+     */
+    public static function startsSomethingNew(string $text): bool
+    {
+        $t = trim($text);
+        if (self::detect($t) !== null) {
+            return true;
+        }
+        if (preg_match('/^[\d\s,&.\-#]+$/u', self::digits($t)) === 1) {
+            return false;
+        }
+        if (preg_match('/\b(post|hire|hiring|vacancy|opening|openings|looking for|we need|i need|need \d|requirement|required|experience|years? of|work mode|remote|jd)\b/iu', $t) === 1) {
+            return true;
+        }
+
+        return count(preg_split('/\s+/u', $t, -1, PREG_SPLIT_NO_EMPTY) ?: []) > 7;
+    }
+
     /** The conversation open in this chat, unless it has gone cold. @return array<string, mixed>|null */
     public function active(EmployerWhatsappLink $link): ?array
     {
@@ -117,8 +139,10 @@ final readonly class WhatsAppChoice
             return 'You have no roles yet. Tell me about one and I will post it.';
         }
 
-        $named = $this->jobNamedIn($jobs, $text);
-        $choice = ['type' => $request['type'], 'round' => $request['round'], 'step' => 'job', 'options' => $jobs->pluck('id')->all(), 'tries' => 0, 'at' => now()->toIso8601String()];
+        // With one role there is nothing to ask. The words said stay with the conversation, so "send Kunal's report"
+        // does not ask for Kunal again.
+        $named = $this->jobNamedIn($jobs, $text) ?? ($jobs->count() === 1 ? $jobs->first() : null);
+        $choice = ['type' => $request['type'], 'round' => $request['round'], 'step' => 'job', 'options' => $jobs->pluck('id')->all(), 'tries' => 0, 'at' => now()->toIso8601String(), 'hint' => mb_substr($text, 0, 200)];
 
         if ($named !== null) {
             return $this->afterJob($workspace, $link, $choice, $named);
@@ -230,6 +254,12 @@ final readonly class WhatsAppChoice
                 : "There is no finished interview report for *{$job->title}* yet. I send each report here the moment an interview is scored.";
         }
 
+        // One person to choose from, or one named in the request: do it, do not ask.
+        $only = $rows->count() === 1 ? $rows : $this->hinted($rows, (string) ($choice['hint'] ?? ''));
+        if ($only->isNotEmpty() && $link->user !== null) {
+            return $this->finish($workspace, $link->user, $link, $job, $choice, $only->pluck('application_id')->all());
+        }
+
         $choice['step'] = 'people';
         $choice['job_id'] = $job->id;
         $choice['people'] = $rows->pluck('application_id')->all();
@@ -260,8 +290,18 @@ final readonly class WhatsAppChoice
             return $this->retry($link, $choice, 'I did not get who. Reply the numbers from the list (for example *1* or *1,3*), a name, or *ALL*.');
         }
 
+        return $this->finish($workspace, $user, $link, $job, $choice, $picked->pluck('application_id')->all());
+    }
+
+    /**
+     * Everything is known: send the reports, or propose the retake for a YES.
+     *
+     * @param  array<string, mixed>  $choice
+     * @param  list<int>  $ids
+     */
+    private function finish(EmployerWorkspace $workspace, User $user, EmployerWhatsappLink $link, EmployerJob $job, array $choice, array $ids): string
+    {
         $link->update(['choice' => null]);
-        $ids = $picked->pluck('application_id')->all();
 
         if ($choice['type'] === 'report') {
             return $this->sendReports($link, $ids);
@@ -275,6 +315,37 @@ final readonly class WhatsAppChoice
         $action = $this->planner->propose($plan, $workspace, $user, EmployerAgentAction::CHANNEL_WHATSAPP, $link->id);
 
         return $action->summary."\n\nReply *YES* to go ahead, or *NO* to hold.";
+    }
+
+    /**
+     * The one person the request named, even with a typo ("kunar" finds Kunal); none when it named nobody or more than one.
+     *
+     * @param  Collection<int, array{application_id: int, name: string, status: string}>  $rows
+     * @return Collection<int, array{application_id: int, name: string, status: string}>
+     */
+    private function hinted(Collection $rows, string $hint): Collection
+    {
+        $said = array_values(array_filter(preg_split('/[^\p{L}]+/u', mb_strtolower($hint)) ?: [], fn (string $w): bool => mb_strlen($w) >= 3));
+        if ($said === []) {
+            return collect();
+        }
+
+        $hits = $rows->filter(function (array $row) use ($said): bool {
+            foreach (preg_split('/[^\p{L}]+/u', mb_strtolower($row['name'])) ?: [] as $part) {
+                if (mb_strlen($part) < 3) {
+                    continue;
+                }
+                foreach ($said as $word) {
+                    if ($word === $part || (mb_strlen($part) >= 4 && levenshtein($word, $part) <= 1)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        });
+
+        return $hits->count() === 1 ? $hits->values() : collect();
     }
 
     /** @param  list<int>  $applicationIds */

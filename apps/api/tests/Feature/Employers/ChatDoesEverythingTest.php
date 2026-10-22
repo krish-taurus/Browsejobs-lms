@@ -20,6 +20,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AI\AiClient;
 use App\Services\AI\FakeAiClient;
+use App\Support\Employers\Agent\WhatsAppChoice;
 use App\Support\Employers\HiringChatAgent;
 use App\Support\WhatsApp\FakeWhatsAppClient;
 use App\Support\WhatsApp\WhatsAppClient;
@@ -144,4 +145,61 @@ it('treats a greeting on WhatsApp as a person talking, not as a job to post', fu
     $last = collect($this->wa->sent)->where('to', '919800000001')->last()['body'];
     expect($last)->toContain('Good morning!')
         ->and(EmployerJob::query()->count())->toBe(1); // nothing was drafted or posted
+});
+
+it('does not swallow a new role as the answer to an open question', function (): void {
+    // "send a report" leaves a question open (two roles); a long new request must not be taken for its answer.
+    EmployerJob::factory()->for($this->tenant)->published()->create([
+        'employer_workspace_id' => $this->workspace->id, 'created_by_id' => $this->owner->id, 'title' => 'Java Developer',
+    ]);
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'send the report', '--id' => 'wamid.q1']);
+    expect($this->link->fresh()->choice)->not->toBeNull();
+
+    $this->ai->replies = [
+        json_encode(['title' => 'Big Data Engineer', 'experience_min_years' => 3, 'experience_max_years' => null, 'locations' => [], 'openings' => null, 'remote' => true]),
+        json_encode(['description' => 'You will build big data pipelines.', 'skills' => ['SQL', 'PySpark', 'Hadoop', 'AWS']]),
+    ];
+    Artisan::call('employer:whatsapp-inbound', [
+        'from' => '919800000001',
+        '--text' => 'post a job for big data engineer role with 3 years of experience. Required tools are sql, PYSPARK, Hadoop, AWS, hive, python. Work mode is remote',
+        '--id' => 'wamid.q2',
+    ]);
+
+    $last = collect($this->wa->sent)->where('to', '919800000001')->last()['body'];
+    expect($last)->toContain('Big Data Engineer')->and($last)->not->toContain('I did not get who')
+        ->and($this->link->fresh()->choice)->toBeNull()
+        ->and($this->link->fresh()->state)->toBe('confirming');
+});
+
+it('still takes short answers to an open question, and tells a new request apart', function (): void {
+    expect(WhatsAppChoice::startsSomethingNew('1'))->toBeFalse()
+        ->and(WhatsAppChoice::startsSomethingNew('1,3'))->toBeFalse()
+        ->and(WhatsAppChoice::startsSomethingNew('ALL'))->toBeFalse()
+        ->and(WhatsAppChoice::startsSomethingNew('Kunal'))->toBeFalse()
+        ->and(WhatsAppChoice::startsSomethingNew('the Data Engineer one'))->toBeFalse()
+        ->and(WhatsAppChoice::startsSomethingNew('post a job for java developer'))->toBeTrue()
+        ->and(WhatsAppChoice::startsSomethingNew('retake L1'))->toBeTrue()
+        ->and(WhatsAppChoice::startsSomethingNew('we need 2 testers in Pune'))->toBeTrue();
+});
+
+it('answers a pipeline question and small talk while a job draft waits, without editing the draft', function (): void {
+    $this->ai->replies = [
+        json_encode(['title' => 'Java Developer', 'experience_min_years' => 2, 'experience_max_years' => null, 'locations' => ['Pune'], 'openings' => 1, 'remote' => false]),
+        json_encode(['description' => 'Build services in Java.', 'skills' => ['Java']]),
+    ];
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'need a java developer in pune', '--id' => 'wamid.d1']);
+    $before = $this->link->fresh()->draft;
+    expect($this->link->fresh()->state)->toBe('confirming');
+
+    $this->ai->replies = [chatRead(['intent' => 'question']), 'One person is in L1 right now.'];
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'how many people are in L1?', '--id' => 'wamid.d2']);
+    $last = collect($this->wa->sent)->where('to', '919800000001')->last()['body'];
+    expect($last)->toContain('One person is in L1')->toContain('draft is still waiting')
+        ->and($this->link->fresh()->draft)->toEqual($before);
+
+    $this->ai->replies = [chatRead(['intent' => 'other']), 'Good morning! Your draft is ready when you are.'];
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'good morning', '--id' => 'wamid.d3']);
+    expect(collect($this->wa->sent)->where('to', '919800000001')->last()['body'])->toContain('Good morning')
+        ->and($this->link->fresh()->draft)->toEqual($before)
+        ->and($this->link->fresh()->state)->toBe('confirming');
 });

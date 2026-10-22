@@ -108,20 +108,38 @@ it('asks which role when the client says retake L1, then shows that role\'s cand
     $asked = clientSays($this, 'retake L1');
     expect($asked)->toContain('Which role?')->and($asked)->toContain('Data Engineer')->and($asked)->toContain('Java Developer');
 
-    // "1" is an answer, never a new job. The newest role is listed first.
-    $list = clientSays($this, '2');
-    expect($list)->toContain('*Data Engineer*')->and($list)->toContain('Kunal Shah')->and($list)->toContain('L1 28/100')
-        ->and($list)->toContain('below the pass mark of 60')->and($list)->toContain('Who should retake L1?');
+    // "2" is an answer, never a new job. The newest role is listed first. Kunal is the only person who
+    // took L1 there, so there is nobody to choose between: it goes straight to the proposal.
+    $proposal = clientSays($this, '2');
+    expect($proposal)->toContain('Kunal Shah (28/100 before)')->and($proposal)->toContain('Reply *YES*');
 
     expect(EmployerJob::query()->count())->toBe(2); // nothing was drafted or posted
+});
+
+it('lists the people when there is more than one, and takes a number or a name', function (): void {
+    retakeCandidate($this, $this->jobA, 'Priya Nair', '9845066666', 70);
+
+    clientSays($this, 'Retake L1');
+    $list = clientSays($this, '2');
+    expect($list)->toContain('*Data Engineer*')->and($list)->toContain('Kunal Shah')->and($list)->toContain('L1 28/100')
+        ->and($list)->toContain('Priya Nair')->and($list)->toContain('below the pass mark of 60')->and($list)->toContain('Who should retake L1?');
+
+    expect(clientSays($this, 'priya'))->toContain('Priya Nair (70/100 before)')->and(EmployerAgentAction::query()->sole()->kind)->toBe(EmployerAgentAction::KIND_RETAKE_ROUND);
+});
+
+it('does not ask which role, or who, when there is one role and the message names the person', function (): void {
+    EmployerJob::query()->whereKey($this->jobB->id)->delete();
+
+    $proposal = clientSays($this, 'I want kunar to retake L1');
+
+    expect($proposal)->not->toContain('Which role?')->and($proposal)->toContain('Kunal Shah (28/100 before)');
 });
 
 it('lets the client pick the candidate, asks YES, then reopens L1 and keeps the first result', function (): void {
     $oldToken = InterviewInvite::query()->where('employer_job_application_id', $this->kunal->id)->value('token');
     clientSays($this, 'Retake L1');
-    clientSays($this, '2');
 
-    $proposal = clientSays($this, '1');
+    $proposal = clientSays($this, '2');
     expect($proposal)->toContain('retake L1')->and($proposal)->toContain('Kunal Shah (28/100 before)')->and($proposal)->toContain('Reply *YES*')
         ->and(EmployerAgentAction::query()->sole()->kind)->toBe(EmployerAgentAction::KIND_RETAKE_ROUND);
     // Nothing moved before the YES.
@@ -155,8 +173,7 @@ it('answers a retake even while a new job draft is waiting for YES, and YES then
     $asked = clientSays($this, 'retake L1');
     expect($asked)->toContain('Which role?')->and($asked)->toContain('job draft is still waiting');
 
-    clientSays($this, '2');
-    $proposal = clientSays($this, '1');
+    $proposal = clientSays($this, '2');
     expect($proposal)->toContain('Reply *YES*');
 
     // The newer question wins: YES runs the retake and the draft stays waiting, unposted.
@@ -237,10 +254,8 @@ it('sends a report and the recording link on request, role then candidate', func
     $asked = clientSays($this, "send Kunal's report");
     expect($asked)->toContain('Which role?');
 
-    $list = clientSays($this, '2');
-    expect($list)->toContain('Kunal Shah')->and($list)->toContain('Whose report do you want?');
-
-    $done = clientSays($this, '1');
+    // The message named Kunal, and he is the only one with a report: it is sent, not asked about again.
+    $done = clientSays($this, '2');
     expect($done)->toContain('Sent the report and the recording link for Kunal Shah')
         ->and($this->wa->documents)->toHaveCount(1)
         ->and($this->wa->documents[0]['filename'])->toContain('interview report')
