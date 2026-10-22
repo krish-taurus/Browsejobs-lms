@@ -25,7 +25,7 @@ final class AskHiringFloor
 {
     private const PROMPT = 'taurus_hiring_ask';
 
-    private const PROMPT_VERSION = 2;
+    private const PROMPT_VERSION = 3;
 
     public function __construct(
         private readonly BuildHiringFloor $floor,

@@ -117,7 +117,7 @@ it('draws the pipeline as stations, bots and a name-free feed', function (): voi
         ->and($bots['sourcing']['status'])->toBe('working');
 
     expect(collect($bots['interviewer_l1']['metrics'])->pluck('value', 'label')->all())
-        ->toEqual(['In progress' => 1, 'Graded' => 1, 'Avg score' => 70]);
+        ->toEqual(['Invited, not started' => 0, 'In progress' => 1, 'Waiting to be graded' => 0, 'Graded' => 1, 'Avg score' => 70]);
 
     $events = collect($data['events']);
     expect($events->pluck('message')->all())->toContain('A candidate was shortlisted for Data Analyst')
@@ -131,6 +131,27 @@ it('draws the pipeline as stations, bots and a name-free feed', function (): voi
     // Never a candidate's name anywhere on the floor.
     expect($response->getContent())->not->toContain('Arjun Secret')
         ->and($response->getContent())->not->toContain('Priya Candidate');
+});
+
+it('says an invite nobody has opened is waiting, not running, and has no result', function (): void {
+    $application = floorApplication($this->tenant, $this->job, 'l1', 75);
+    EmployerInterview::factory()->for($this->tenant)->create([
+        'employer_job_application_id' => $application->id,
+        'round' => 'l1',
+        'status' => 'invited',
+        'invited_at' => now()->subDays(2),
+        'started_at' => null,
+        'overall_score' => null,
+        'graded_at' => null,
+    ]);
+
+    Sanctum::actingAs($this->owner);
+    $bot = collect($this->getJson("/api/v1/employer/workspaces/{$this->workspace->id}/hiring-floor")->assertOk()->json('data.bots'))->keyBy('key')['interviewer_l1'];
+
+    expect($bot['task'])->toBe('1 L1 invite sent, waiting for 2 days for the candidate to start.')
+        ->and($bot['task'])->not->toContain('Running')
+        ->and(collect($bot['metrics'])->pluck('value', 'label')->all())
+        ->toEqual(['Invited, not started' => 1, 'In progress' => 0, 'Waiting to be graded' => 0, 'Graded' => 0, 'Avg score' => null]);
 });
 
 it('filters to one role of this workspace', function (): void {

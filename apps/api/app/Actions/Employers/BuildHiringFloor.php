@@ -196,15 +196,23 @@ final class BuildHiringFloor
             $ofRound = $interviews->filter(fn (EmployerInterview $i): bool => $i->round === $round);
             $inFlight = $ofRound->filter(fn (EmployerInterview $i): bool => in_array($i->status->value, self::IN_FLIGHT, true))->count();
             $graded = $this->gradedInterviews($interviews, $round);
+            // An invite nobody has opened is not a running interview and has no result: say who it is waiting on.
+            $invited = $ofRound->filter(fn (EmployerInterview $i): bool => $i->status->value === 'invited');
+            $started = $ofRound->filter(fn (EmployerInterview $i): bool => $i->status->value === 'in_progress')->count();
+            $toGrade = $ofRound->filter(fn (EmployerInterview $i): bool => $i->status->value === 'submitted')->count();
+            $oldestInvite = $invited->pluck('invited_at')->filter()->min();
+            $waitingDays = $oldestInvite !== null ? (int) $oldestInvite->diffInDays($this->now) : null;
             $active = $ofRound->contains(fn (EmployerInterview $i): bool => collect([$i->invited_at, $i->started_at, $i->submitted_at, $i->graded_at])
                 ->contains(fn ($at): bool => $at !== null && $at->gte($this->dayAgo)));
 
             $bots[] = $this->bot("interviewer_{$round}", "AI interviewer · {$label}", $round, $active,
                 $inFlight > 0
-                    ? 'Running '.$this->plural($inFlight, "{$label} interview").'.'
+                    ? $this->interviewTask($label, $invited->count(), $started, $toGrade, $waitingDays)
                     : ($graded->isNotEmpty() ? $this->plural($graded->count(), "{$label} interview").' graded so far.' : "No {$label} interviews yet."),
                 [
-                    ['label' => 'In progress', 'value' => $inFlight],
+                    ['label' => 'Invited, not started', 'value' => $invited->count()],
+                    ['label' => 'In progress', 'value' => $started],
+                    ['label' => 'Waiting to be graded', 'value' => $toGrade],
                     ['label' => 'Graded', 'value' => $graded->count()],
                     ['label' => 'Avg score', 'value' => $this->average($graded->pluck('overall_score'))],
                 ],
@@ -239,6 +247,24 @@ final class BuildHiringFloor
         );
 
         return $bots;
+    }
+
+    /** What the interviewer is doing, told honestly: invited and waiting is not the same as running. */
+    private function interviewTask(string $label, int $invited, int $started, int $toGrade, ?int $waitingDays): string
+    {
+        $parts = [];
+        if ($started > 0) {
+            $parts[] = $this->plural($started, "{$label} interview").' in progress';
+        }
+        if ($toGrade > 0) {
+            $parts[] = $this->plural($toGrade, "{$label} interview").' finished and waiting to be graded';
+        }
+        if ($invited > 0) {
+            $wait = $waitingDays === null || $waitingDays < 1 ? 'since today' : 'for '.$this->plural($waitingDays, 'day');
+            $parts[] = $this->plural($invited, "{$label} invite").' sent, waiting '.$wait.' for the candidate to start';
+        }
+
+        return ucfirst(implode('; ', $parts)).'.';
     }
 
     /**
