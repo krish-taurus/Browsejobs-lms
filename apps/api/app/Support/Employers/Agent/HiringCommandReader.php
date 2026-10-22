@@ -30,7 +30,7 @@ final readonly class HiringCommandReader
 {
     public const INTENTS = ['act', 'question', 'post_job', 'other'];
 
-    public const ACTIONS = ['start_round', 'move_stage', 'reject', 'publish_job', 'pause_job', 'close_job'];
+    public const ACTIONS = ['start_round', 'move_stage', 'reject', 'publish_job', 'pause_job', 'close_job', 'retake_round', 'send_report'];
 
     private const STAGES = ['shortlisted', 'l1', 'l2', 'human_round', 'offer'];
 
@@ -59,7 +59,7 @@ final readonly class HiringCommandReader
         $active = $this->brain->active();
 
         try {
-            $result = $this->ai->complete($user, AiPurpose::Taurus, 'hiring_command', 2, [
+            $result = $this->ai->complete($user, AiPurpose::Taurus, 'hiring_command', 3, [
                 'jobs' => $this->describe($jobs),
                 'scope' => $scope !== null ? "They are looking at the role with id {$scope->id} ({$scope->title}); a request that names no role means this one." : '',
                 'said' => mb_substr($said, 0, 1200),

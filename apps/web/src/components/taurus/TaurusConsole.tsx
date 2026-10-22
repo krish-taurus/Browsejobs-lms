@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { FloorLook, TaurusFloor } from "@/lib/taurus-floor/floor";
-import { STATUS_LABEL, istTime, type ConsoleChat, type ConsoleSource, type ConsoleState, type FloorEffect, type Proposal } from "@/lib/taurus-floor/types";
+import { STATUS_LABEL, istTime, speakable, type ConsoleChat, type ConsoleSource, type ConsoleState, type FloorEffect, type Proposal } from "@/lib/taurus-floor/types";
 import "./taurus-console.css";
 
 export const LOOKS: { key: FloorLook; letter: string; name: string; line: string }[] = [
@@ -34,7 +34,7 @@ type Props = {
 };
 
 const LOOK_KEY = "taurus-look";
-const SPEECH_LANG_KEY = "taurus-speech-lang";
+const SPEECH_LANG_KEY = "taurus-speech-lang-v2";
 
 /**
  * The language the mic listens for. Taurus answers in whatever language the question was asked in, so this
@@ -46,6 +46,23 @@ const SPEECH_LANGS = [
   { key: "kn", label: "ಕನ್", hint: "Kannada", tag: "kn-IN" },
 ] as const;
 type SpeechLangKey = (typeof SPEECH_LANGS)[number]["key"];
+
+/** Web addresses in an answer become links you can open. */
+function Linked({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(https?:\/\/[^\s)]+)/g).map((part, i) =>
+        /^https?:\/\//.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noreferrer">
+            {part.length > 52 ? `${part.slice(0, 49)}…` : part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
 
 /** Kannada script has no ElevenLabs voice here; Devanagari and the rest read fine. */
 const KANNADA = /[\u0C80-\u0CFF]/;
@@ -80,6 +97,12 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   const [question, setQuestion] = useState("");
   const [speechLang, setSpeechLang] = useState<SpeechLangKey>("auto");
   const recorderRef = useRef<MediaRecorder | null>(null);
+  // Live conversation: it listens, answers out loud, then listens again, with nothing to tap in between.
+  const [live, setLive] = useState(false);
+  const liveRef = useRef(false);
+  const quietRounds = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const listenRef = useRef<(() => void) | null>(null);
   const [clock, setClock] = useState("");
   const seenFeed = useRef<Set<string>>(new Set());
   const prevStages = useRef<Record<string, number>>({});
@@ -263,37 +286,78 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
   }, [look]);
 
   // ask Taurus: typed or spoken
-  const speak = useCallback(async (text: string, audio?: Blob | null) => {
-    const kannada = KANNADA.test(text);
-    if (audio && audio.size > 0 && !kannada) {
-      const url = URL.createObjectURL(audio);
-      const a = new Audio(url);
-      setVoice("speaking");
-      a.onended = a.onerror = () => {
-        setVoice("idle");
-        URL.revokeObjectURL(url);
-      };
+  const speak = useCallback(
+    (text: string, audio?: Blob | null) =>
+      new Promise<void>((resolve) => {
+        const kannada = KANNADA.test(text);
+        const browserVoice = () => {
+          try {
+            const u = new SpeechSynthesisUtterance(text);
+            if (kannada) u.lang = "kn-IN";
+            else if (DEVANAGARI.test(text)) u.lang = "hi-IN";
+            u.rate = 1;
+            u.pitch = 0.9;
+            u.onstart = () => setVoice("speaking");
+            u.onend = u.onerror = () => {
+              setVoice("idle");
+              resolve();
+            };
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+          } catch {
+            setVoice("idle");
+            resolve();
+          }
+        };
+        if (audio && audio.size > 0 && !kannada) {
+          const url = URL.createObjectURL(audio);
+          const a = new Audio(url);
+          audioRef.current = a;
+          let finished = false;
+          const done = () => {
+            if (finished) return;
+            finished = true;
+            setVoice("idle");
+            URL.revokeObjectURL(url);
+            if (audioRef.current === a) audioRef.current = null;
+            resolve();
+          };
+          a.onended = a.onerror = done;
+          setVoice("speaking");
+          a.play().catch(() => {
+            if (finished) return;
+            finished = true;
+            URL.revokeObjectURL(url);
+            if (audioRef.current === a) audioRef.current = null;
+            browserVoice();
+          });
+          return;
+        }
+        browserVoice();
+      }),
+    [],
+  );
+
+  // Leave live conversation: stop listening and stop talking.
+  const stopLive = useCallback(
+    (why?: string) => {
+      liveRef.current = false;
+      setLive(false);
+      quietRounds.current = 0;
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      audioRef.current?.pause();
+      audioRef.current = null;
       try {
-        await a.play();
-        return;
+        window.speechSynthesis?.cancel();
       } catch {
-        URL.revokeObjectURL(url);
+        /* nothing speaking */
       }
-    }
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      if (kannada) u.lang = "kn-IN";
-      else if (DEVANAGARI.test(text)) u.lang = "hi-IN";
-      u.rate = 1;
-      u.pitch = 0.9;
-      u.onstart = () => setVoice("speaking");
-      u.onend = u.onerror = () => setVoice("idle");
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch {
       setVoice("idle");
-    }
-  }, []);
+      if (why) flash(why);
+    },
+    [flash],
+  );
+  useEffect(() => () => stopLive(), [stopLive]);
 
   const runAsk = useCallback(
     async (q: string) => {
@@ -306,7 +370,9 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
         setAnswer(res.answer);
         setAnswerProposal(res.proposal ?? null);
         setVoice("idle");
-        void speak(res.answer, res.audio);
+        await speak(speakable(res.answer), res.audio);
+        // In a live conversation the mic opens again once Taurus has finished speaking.
+        if (liveRef.current) window.setTimeout(() => liveRef.current && listenRef.current?.(), 350);
       } catch {
         setVoice("idle");
         setAnswer("I couldn't answer that just now. Try again in a moment.");
@@ -392,28 +458,55 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       stream.getTracks().forEach((t) => t.stop());
       recorderRef.current = null;
       const clip = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-      if (clip.size < 800) {
+      const missed = (message: string) => {
         setVoice("idle");
-        flash("I didn't catch that. Tap the orb and try again.");
+        if (!liveRef.current) {
+          flash(message);
+          return;
+        }
+        quietRounds.current += 1;
+        if (quietRounds.current >= 2) stopLive("I stopped listening. Tap the orb to talk again.");
+        else window.setTimeout(() => liveRef.current && listenRef.current?.(), 300);
+      };
+      if (clip.size < 800) {
+        missed("I didn't catch that. Tap the orb and try again.");
         return;
       }
       setVoice("thinking");
       try {
         const heard = await transcribe(clip);
         if (!heard || /^\[[^\]]*\]$/.test(heard)) {
-          setVoice("idle");
-          flash("I didn't catch that. Tap the orb and try again.");
+          missed("I didn't catch that. Tap the orb and try again.");
           return;
         }
+        quietRounds.current = 0;
         void runAsk(heard);
       } catch {
-        setVoice("idle");
-        flash("Couldn't turn that into text. Type your question instead.");
+        if (liveRef.current) stopLive("Couldn't turn that into text. Type your question instead.");
+        else {
+          setVoice("idle");
+          flash("Couldn't turn that into text. Type your question instead.");
+        }
       }
     };
     recorder.start();
     setVoice("listening");
-  }, [source, flash, runAsk]);
+  }, [source, flash, runAsk, stopLive]);
+  useEffect(() => {
+    listenRef.current = () => void listenByRecording();
+  }, [listenByRecording]);
+
+  // One tap starts a live conversation; tap again to end it.
+  const toggleLive = useCallback(() => {
+    if (liveRef.current) {
+      stopLive();
+      return;
+    }
+    liveRef.current = true;
+    quietRounds.current = 0;
+    setLive(true);
+    void listenByRecording();
+  }, [listenByRecording, stopLive]);
 
   const listen = () => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
@@ -421,7 +514,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
     // The server transcribes whatever language is spoken, so prefer it over the browser's own recogniser,
     // which only listens for the one language it is set to.
     if (source.transcribe && typeof MediaRecorder !== "undefined" && "mediaDevices" in navigator) {
-      void listenByRecording();
+      toggleLive();
       return;
     }
     if (!Ctor) {
@@ -631,7 +724,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
 
       {showAsk && (
         <form className="tc-askbar tc-panel" onSubmit={onSubmit}>
-          <button type="button" className="tc-orb" onClick={listen} aria-label="Ask Taurus out loud" />
+          <button type="button" className="tc-orb" data-live={live ? "on" : "off"} onClick={listen} aria-label={live ? "End the live conversation" : "Start a live conversation with Taurus"} title={live ? "Live. Tap to stop" : "Tap to talk. It listens and answers on its own"} />
           <button
             type="button"
             className="tc-lang"
@@ -648,7 +741,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
             id={`tc-ask-${mode}-${variant}`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={voice === "listening" ? (source.transcribe ? "Listening… speak, then pause" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
+            placeholder={live ? (voice === "speaking" ? "Taurus is speaking…" : voice === "thinking" ? "Thinking…" : "Live: just talk. Tap the orb to stop") : voice === "listening" ? (source.transcribe ? "Listening… speak, then pause" : "Listening…") : voice === "thinking" ? "Thinking…" : askPlaceholder ?? "Ask Taurus: what needs me right now?"}
             autoComplete="off"
           />
           <span className="tc-wave" aria-hidden="true">
@@ -665,7 +758,7 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
       {answer && (
         <div className="tc-answer tc-panel" role="status">
           <small>TAURUS · {istTime()} IST</small>
-          {answer}
+          <Linked text={answer} />
           {answerProposal && source.decide && (
             <ProposalButtons proposal={answerProposal} busy={deciding === answerProposal.id} onDecide={decide} />
           )}

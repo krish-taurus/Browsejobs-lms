@@ -39,6 +39,7 @@ final readonly class HiringAgent
         private HiringActionExecutor $executor,
         private AskHiringFloor $ask,
         private WebJobPosting $posting,
+        private InterviewReportLinks $reportLinks,
     ) {}
 
     public function respond(EmployerWorkspace $workspace, User $user, string $text, string $channel, ?EmployerJob $scope = null, ?EmployerWhatsappLink $link = null): AgentReply
@@ -68,7 +69,9 @@ final readonly class HiringAgent
             'post_job' => new AgentReply('post_job', ''),
             'question' => $this->answer($workspace, $user, $text, $this->job($workspace, $read['job_id']) ?? $scope),
             'act' => $this->act($workspace, $user, $read, $channel, $scope, $link),
-            default => new AgentReply('chat', $read['reply'] !== '' ? $read['reply'] : $this->help()),
+            // Greetings and small talk are answered by Taurus with the floor in view, so "how are you?" gets a
+            // real reply and one useful thing to look at, not a menu.
+            default => $this->answer($workspace, $user, $text, $this->job($workspace, $read['job_id']) ?? $scope, $read['reply'] !== '' ? $read['reply'] : $this->help()),
         };
     }
 
@@ -126,6 +129,15 @@ final readonly class HiringAgent
     /** @param  array{intent: string, action: string|null, job_id: int|null, round: string|null, names: list<string>, top_n: int|null, from_stage: string|null, to_stage: string|null, reason: string|null, reply: string}  $read */
     private function act(EmployerWorkspace $workspace, User $user, array $read, string $channel, ?EmployerJob $scope, ?EmployerWhatsappLink $link): AgentReply
     {
+        // Seeing a report changes nothing, so any member can ask for one and no YES is needed.
+        if ($read['action'] === 'send_report') {
+            $job = $this->job($workspace, $read['job_id']) ?? $scope ?? $this->onlyLiveJob($workspace) ?? $this->latestLiveJob($workspace, $link);
+
+            return $job === null
+                ? new AgentReply('chat', $this->whichRole($workspace))
+                : new AgentReply('answered', $this->reportLinks->reply($job, $read['names'], $read['round'], $read['top_n']));
+        }
+
         if (! HiringActionExecutor::canAct($workspace, $user)) {
             return new AgentReply('chat', 'Only a workspace owner or recruiter can ask me to do that. Ask one of them, or ask your owner for recruiter access.');
         }
@@ -152,6 +164,7 @@ final readonly class HiringAgent
                 ? 'Where should they go: the panel round, an offer, or hired?'
                 : $this->planner->moveStage($job, EmployerApplicationStage::from($read['to_stage']), $read['names'], $from, $read['top_n']),
             'reject' => $this->planner->reject($job, $read['names'], $from, $read['top_n'], $read['reason']),
+            'retake_round' => $this->planner->retakeByName($job, $read['round'], $read['names'], $from, $read['top_n']),
             'publish_job' => $this->planner->jobStatus($job, EmployerJobStatus::Published),
             'pause_job' => $this->planner->jobStatus($job, EmployerJobStatus::Paused),
             'close_job' => $this->planner->jobStatus($job, EmployerJobStatus::Closed),
@@ -170,12 +183,12 @@ final readonly class HiringAgent
         return new AgentReply('proposed', $action->summary.$ask, $action);
     }
 
-    private function answer(EmployerWorkspace $workspace, User $user, string $question, ?EmployerJob $job): AgentReply
+    private function answer(EmployerWorkspace $workspace, User $user, string $question, ?EmployerJob $job, ?string $fallback = null): AgentReply
     {
         try {
             return new AgentReply('answered', $this->ask->handle($user, $workspace, $job, $question)['answer']);
         } catch (BrainNotConfigured|ProviderNotConfigured) {
-            return new AgentReply('chat', 'I cannot answer questions about your pipeline just now. Your hiring floor shows every stage live.');
+            return new AgentReply('chat', $fallback ?? 'I cannot answer questions about your pipeline just now. Your hiring floor shows every stage live.');
         } catch (AiBudgetExceeded) {
             return new AgentReply('chat', 'I have answered a lot today. Please try again tomorrow, or check the hiring floor.');
         } catch (Throwable $e) {

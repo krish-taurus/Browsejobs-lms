@@ -294,6 +294,21 @@ final readonly class HiringActionPlanner
         );
     }
 
+    /**
+     * "Let Kunal retake L1": the people are named (or a stage is said), the round defaults to L1.
+     *
+     * @param  list<string>  $names
+     */
+    public function retakeByName(EmployerJob $job, ?string $roundKey, array $names, ?EmployerApplicationStage $from, ?int $topN): PlannedAction|string
+    {
+        $apps = $this->applications($job, $names, $from, $topN);
+        if (is_string($apps)) {
+            return $apps;
+        }
+
+        return $this->retakeRound($job, $roundKey ?? 'l1', $apps->pluck('id')->map(fn ($id) => (int) $id)->all());
+    }
+
     public function jobStatus(EmployerJob $job, EmployerJobStatus $to): PlannedAction|string
     {
         if ($job->status === $to) {

@@ -7,7 +7,7 @@
  */
 import { apiJson, apiPostBlob, ApiError } from "@/lib/api";
 import type { FloorAgent, FloorStatus, FloorZone } from "./floor";
-import type { ConsoleSource, ConsoleState, FeedItem, FeedStatus, FloorEffect, Proposal } from "./types";
+import { speakable, type ConsoleSource, type ConsoleState, type FeedItem, type FeedStatus, type FloorEffect, type Proposal } from "./types";
 import { HIRING_STAGES } from "./demo";
 
 /* ------------------------------------------------------------------ workspace agent floor */
@@ -383,7 +383,7 @@ export function employerFloorSource(workspaceId: number, jobId?: number | null, 
       let audio: Blob | null = null;
       if (!/[\u0C80-\u0CFF]/.test(answer)) {
         try {
-          audio = await apiPostBlob(`${base}/speak`, { text: answer });
+          audio = await apiPostBlob(`${base}/speak`, { text: speakable(answer) });
         } catch {
           audio = null;
         }

@@ -95,6 +95,15 @@ export interface ConsoleSource {
   restart?(): void;
 }
 
+/** What Taurus says out loud for an answer: no web addresses, and no more than a few sentences. */
+export function speakable(text: string): string {
+  const plain = text.replace(/https?:\/\/\S+/g, "").replace(/[ \t]+/g, " ").replace(/\n{2,}/g, "\n").trim();
+  if (plain.length <= 420) return plain;
+  const cut = plain.slice(0, 420);
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("\u0964"), cut.lastIndexOf("\n"), cut.lastIndexOf("? "));
+  return (end > 120 ? cut.slice(0, end + 1) : cut).trim();
+}
+
 export const STATUS_LABEL: Record<FeedStatus, string> = {
   working: "Working",
   thinking: "Planning",

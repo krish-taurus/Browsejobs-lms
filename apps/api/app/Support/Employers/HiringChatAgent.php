@@ -224,8 +224,8 @@ final readonly class HiringChatAgent
             return;
         }
 
-        // An instruction or a question about the pipeline; a new role falls through to the draft.
-        if (self::looksLikePipelineTalk($text)) {
+        // An instruction or a question about the pipeline, or small talk; a new role falls through to the draft.
+        if (self::looksLikePipelineTalk($text) || self::isSmallTalk($text)) {
             $answer = $this->agent->respond($workspace, $user, $text, EmployerAgentAction::CHANNEL_WHATSAPP, null, $link);
             if (! in_array($answer->intent, ['post_job', 'unknown'], true)) {
                 $this->reply($in->phone, $link, $answer->text);
@@ -514,6 +514,14 @@ final readonly class HiringChatAgent
     {
         return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who|bhejo|bhejiye|kitne|kaun|kaunsa|kya|batao|dikhao|shuru|kalisi|torisi|yeshtu|yaaru)\b/iu', $text) === 1
             || preg_match('/(?<![\p{L}\p{M}])(इंटरव्यू|राउंड|रिपोर्ट|उम्मीदवार|शॉर्टलिस्ट|भेजो|भेजिए|कितने|कौन|बताओ|दिखाओ|शुरू|ऑफर|ಇಂಟರ್ವ್ಯೂ|ರೌಂಡ್|ರಿಪೋರ್ಟ್|ಅಭ್ಯರ್ಥಿ|ಕಳುಹಿಸಿ|ಎಷ್ಟು|ಯಾರು|ತೋರಿಸಿ|ಶುರು)/u', $text) === 1;
+    }
+
+    /** "Good morning", "how are you?", "kaise ho", "what are you doing", "thanks": a person talking, not a role. */
+    public static function isSmallTalk(string $text): bool
+    {
+        return mb_strlen($text) <= 80
+            && preg_match('/\b(good\s+(morning|afternoon|evening|night)|how\s+are\s+you|how\s+r\s+u|what\s+are\s+you\s+doing|what\'?s\s+up|thanks|thank\s+you|kaise\s+ho|kaise\s+hain|kya\s+kar\s+rahe|kya\s+haal|shukriya|dhanyavaad|namaskara|hegiddira|enu\s+maduttiddira)\b/iu', $text) === 1
+            || preg_match('/(सुप्रभात|नमस्ते|शुभ\s*रात्रि|कैसे\s+हो|कैसे\s+हैं|क्या\s+कर\s+रहे|धन्यवाद|शुक्रिया|ಶುಭೋದಯ|ನಮಸ್ಕಾರ|ಹೇಗಿದ್ದೀರಾ|ಧನ್ಯವಾದ)/u', $text) === 1;
     }
 
     private function example(): string
