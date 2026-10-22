@@ -724,6 +724,10 @@
   width: min(500px, calc(100% - 32px));
   padding: 15px 18px;
   font: 400 14.5px/1.5 var(--tc-body);
+  /* a role draft or a list of people runs to several lines: keep them, and scroll rather than run off the top */
+  white-space: pre-line;
+  max-height: min(46vh, 380px);
+  overflow-y: auto;
   animation: tc-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tc-answer small {

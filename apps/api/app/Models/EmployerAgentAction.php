@@ -59,6 +59,9 @@ final class EmployerAgentAction extends Model
 
     public const KIND_RETAKE_ROUND = 'retake_round';
 
+    /** A new role drafted in the web Ask bar, waiting for the client to approve it. No job exists until it is confirmed. */
+    public const KIND_POST_JOB = 'post_job';
+
     public const CHANNEL_WHATSAPP = 'whatsapp';
 
     public const CHANNEL_WEB = 'web';

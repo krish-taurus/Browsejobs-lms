@@ -38,6 +38,7 @@ final readonly class HiringAgent
         private HiringActionPlanner $planner,
         private HiringActionExecutor $executor,
         private AskHiringFloor $ask,
+        private WebJobPosting $posting,
     ) {}
 
     public function respond(EmployerWorkspace $workspace, User $user, string $text, string $channel, ?EmployerJob $scope = null, ?EmployerWhatsappLink $link = null): AgentReply
@@ -57,12 +58,29 @@ final readonly class HiringAgent
             return new AgentReply('unknown', 'I did not catch that. Tell me what you would like to do, for example "send the L1 invites for the Java role", or ask "where are we with hiring?".');
         }
 
+        // On the web a new role is drafted right here; on WhatsApp the chat's own draft flow takes over.
+        $draft = $channel === EmployerAgentAction::CHANNEL_WEB ? $this->openDraft($workspace, $user) : null;
+        if ($channel === EmployerAgentAction::CHANNEL_WEB && ($read['intent'] === 'post_job' || ($draft !== null && $read['intent'] === 'other'))) {
+            return $this->posting->handle($workspace, $user, $text, $draft);
+        }
+
         return match ($read['intent']) {
             'post_job' => new AgentReply('post_job', ''),
             'question' => $this->answer($workspace, $user, $text, $this->job($workspace, $read['job_id']) ?? $scope),
             'act' => $this->act($workspace, $user, $read, $channel, $scope, $link),
             default => new AgentReply('chat', $read['reply'] !== '' ? $read['reply'] : $this->help()),
         };
+    }
+
+    /** The role draft this person has waiting in the web Ask bar, if any. */
+    private function openDraft(EmployerWorkspace $workspace, User $user): ?EmployerAgentAction
+    {
+        return EmployerAgentAction::query()->open()
+            ->where('employer_workspace_id', $workspace->id)
+            ->where('user_id', $user->id)
+            ->where('kind', EmployerAgentAction::KIND_POST_JOB)
+            ->latest('id')
+            ->first();
     }
 
     /** The proposal a bare YES on this channel would answer, newest first. */

@@ -453,7 +453,8 @@ export function TaurusConsole({ source, mode, title, subtitle, variant = "full",
 
   useEffect(() => {
     if (!answer || answerProposal) return;
-    const t = window.setTimeout(() => setAnswer(null), 14000);
+    // long answers (a list of people, a role draft) stay up long enough to read
+    const t = window.setTimeout(() => setAnswer(null), Math.min(60000, Math.max(14000, answer.length * 90)));
     return () => window.clearTimeout(t);
   }, [answer, answerProposal]);
 

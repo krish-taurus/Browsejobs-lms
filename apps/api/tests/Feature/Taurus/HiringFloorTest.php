@@ -225,7 +225,7 @@ function noBrainKeys(): void
     config(['ai.provider' => 'auto', 'ai.providers.custom.base_url' => '', 'taurus.brain.provider' => 'platform', 'taurus.brain.model' => null]);
 }
 
-it('lets a member ask Taurus about the floor without exposing a candidate', function (): void {
+it('lets a member ask Taurus about the floor, with names and results but no contact details', function (): void {
     noBrainKeys();
     config(['ai.providers.openai.api_key' => 'sk-employer-floor-0009']);
     $fake = new FakeAiClient;
@@ -249,9 +249,13 @@ it('lets a member ask Taurus about the floor without exposing a candidate', func
         ->and($prompt)->toContain('- Screened: 2, avg score 70')
         ->and($prompt)->toContain('- Human round: 1')
         ->and($prompt)->toContain('Interview scheduler (needs)')
-        ->and($prompt)->not->toContain('Meera')
-        ->and($prompt)->not->toContain('Kabir')
-        ->and($prompt)->not->toContain('Zoya');
+        // Roles and people are in what the brain is shown, so the client can ask about them...
+        ->and($prompt)->toContain('#'.$this->job->id.' Data Analyst')
+        ->and($prompt)->toContain('- Meera Hidden (Data Analyst): stage graded; screening score 80/100.')
+        ->and($prompt)->toContain('Zoya Hidden')
+        // ...but never a way to reach them.
+        ->and($prompt)->not->toContain('@')
+        ->and($prompt)->not->toContain('+91');
 
     $event = AiEvent::withoutGlobalScopes()->sole();
     expect($event->purpose->value)->toBe('taurus')

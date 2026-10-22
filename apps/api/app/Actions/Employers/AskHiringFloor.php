@@ -18,19 +18,21 @@ use Carbon\CarbonImmutable;
  * "Ask Taurus" for an employer (ADR 0052): a spoken question about their own
  * hiring floor, answered by the Taurus brain from the same aggregates the
  * hiring-floor endpoint shows. The summary carries stage counts, scores,
- * bot activity and the title-only feed — never a candidate's name or contact
- * details — and the brain may describe but never act.
+ * bot activity and the title-only feed, plus the roles and, person by person,
+ * each candidate's name, stage and interview results (HiringFloorDetail). Never
+ * a phone number or an email, and the brain may describe but never act.
  */
 final class AskHiringFloor
 {
     private const PROMPT = 'taurus_hiring_ask';
 
-    private const PROMPT_VERSION = 3;
+    private const PROMPT_VERSION = 4;
 
     public function __construct(
         private readonly BuildHiringFloor $floor,
         private readonly BrainStatus $brain,
         private readonly AiGateway $gateway,
+        private readonly HiringFloorDetail $detail,
     ) {}
 
     /**
@@ -46,9 +48,10 @@ final class AskHiringFloor
         }
 
         $result = $this->gateway->complete($user, AiPurpose::Taurus, self::PROMPT, self::PROMPT_VERSION, [
-            'floor' => $this->summary($this->floor->handle($workspace, $job), $job),
+            'floor' => $this->summary($this->floor->handle($workspace, $job), $job)
+                ."\n\n".implode("\n", $this->detail->lines($workspace, $job)),
             'question' => trim($question),
-        ], ['max_tokens' => 220, ...BrainStatus::gatewayOptions($active)]);
+        ], ['max_tokens' => 450, ...BrainStatus::gatewayOptions($active)]);
 
         return [
             'answer' => trim($result->text),

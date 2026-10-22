@@ -90,7 +90,7 @@ export default function HiringFloorPage() {
       </div>
       {view === "console" ? (
         <div className="tx-floor tx-floor--admin">
-          <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Try: “send the L1 invites” or “where are we?”" subtitle={workspace.name} />
+          <TaurusConsole key={`${workspace.id}-${jobId ?? "all"}`} source={source} mode="recruitment" variant="full" title="HIRING FLOOR" askPlaceholder="Ask anything, or: “post a Java role”, “who cleared L1?”" subtitle={workspace.name} />
         </div>
       ) : (
         <LiveRecruiterFloor key={workspace.id} embedded />

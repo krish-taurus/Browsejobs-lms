@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Employers\Agent;
 
 use App\Actions\Employers\ChangeEmployerJobStatus;
+use App\Actions\Employers\CreateEmployerJob;
 use App\Actions\Employers\InviteToNextRound;
 use App\Actions\Employers\MoveApplicationStage;
 use App\Actions\Employers\PublishEmployerJob;
@@ -43,6 +44,7 @@ final readonly class HiringActionExecutor
         private MoveApplicationStage $move,
         private PublishEmployerJob $publish,
         private ChangeEmployerJobStatus $status,
+        private CreateEmployerJob $createJob,
         private AuditLogger $audit,
     ) {}
 
@@ -73,7 +75,11 @@ final readonly class HiringActionExecutor
         $job = EmployerJob::query()->find($action->employer_job_id);
 
         try {
-            $result = $job === null ? 'That role no longer exists, so nothing was done.' : $this->run($action, $job, $actor);
+            $result = match (true) {
+                $action->kind === EmployerAgentAction::KIND_POST_JOB => $this->postJob($action, $workspace, $actor),
+                $job === null => 'That role no longer exists, so nothing was done.',
+                default => $this->run($action, $job, $actor),
+            };
             $status = EmployerAgentAction::DONE;
         } catch (ValidationException $e) {
             $result = 'I could not do that: '.(string) (collect($e->errors())->flatten()->first() ?? $e->getMessage());
@@ -125,6 +131,31 @@ final readonly class HiringActionExecutor
                 'action' => 'Only a workspace owner or recruiter can approve that.',
             ]);
         }
+    }
+
+    /** Create and publish the role the client approved; the shortlist agent starts on its own. */
+    private function postJob(EmployerAgentAction $action, EmployerWorkspace $workspace, User $actor): string
+    {
+        /** @var array<string, mixed> $d */
+        $d = $action->params;
+
+        $job = $this->createJob->handle($workspace, $actor, [
+            'title' => (string) $d['title'],
+            'description' => (string) $d['description'],
+            'role_family' => $d['role_family'] ?? null,
+            'skills' => array_values((array) ($d['skills'] ?? [])),
+            'experience_min_years' => (int) ($d['experience_min_years'] ?? 0),
+            'experience_max_years' => isset($d['experience_max_years']) ? (int) $d['experience_max_years'] : null,
+            'locations' => array_values((array) ($d['locations'] ?? [])),
+            'remote' => (bool) ($d['remote'] ?? false),
+            'openings' => max(1, (int) ($d['openings'] ?? 1)),
+        ]);
+        $job = $this->publish->handle($job, $actor);
+        $action->update(['employer_job_id' => $job->id]);
+
+        $url = rtrim((string) config('app.frontend_url'), '/')."/employer/jobs/{$job->id}?tab=shortlist";
+
+        return "✅ {$job->title} is live. The shortlist agent is searching BrowseJobs students and your own candidate lists now, and this floor updates as people come in. Ask me for the shortlist any time. Full list: {$url}";
     }
 
     private function run(EmployerAgentAction $action, EmployerJob $job, User $actor): string
