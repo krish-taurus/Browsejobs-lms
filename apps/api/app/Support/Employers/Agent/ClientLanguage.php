@@ -24,7 +24,7 @@ final class ClientLanguage
         // Hindi
         'hai', 'hain', 'kya', 'karo', 'kariye', 'kijiye', 'kijiyega', 'bhejo', 'bhejiye', 'bhej', 'haan', 'nahi', 'nahin', 'aap', 'aapko',
         'mujhe', 'mera', 'meri', 'chahiye', 'dobara', 'dubara', 'abhi', 'kitne', 'kaun', 'kaunsa', 'batao', 'bataiye', 'dikhao', 'dikhaiye',
-        'kripya', 'shukriya', 'dhanyavaad', 'theek', 'thik', 'accha', 'achha', 'sabhi', 'karna', 'dena', 'dijiye', 'kab', 'kyun', 'wala', 'wali',
+        'kaise', 'rahe', 'raha', 'rahi', 'hoon', 'apka', 'aapka', 'suno', 'sunao', 'tumhara', 'kripya', 'shukriya', 'dhanyavaad', 'theek', 'thik', 'accha', 'achha', 'sabhi', 'karna', 'dena', 'dijiye', 'kab', 'kyun', 'wala', 'wali',
         // Kannada
         'illa', 'houdu', 'haudu', 'nanage', 'beku', 'beda', 'maadi', 'madi', 'kalisi', 'helu', 'heli', 'yaaru', 'yeshtu', 'eega', 'matte',
         'mattomme', 'yenu', 'nimma', 'namma', 'banni', 'swalpa', 'agali', 'ide', 'idhe', 'torisi', 'kodi',

@@ -42,13 +42,22 @@ final readonly class ReplyLocalizer
 
         $active = $this->brain->active();
 
+        // Long signed links are easily mangled by a model, so they never go to it: each becomes a {LINK1} marker and
+        // is put back afterwards.
+        $links = [];
+        $masked = (string) preg_replace_callback('#https?://[^\s)>\]]+#', function (array $m) use (&$links): string {
+            $links[] = $m[0];
+
+            return '{LINK'.count($links).'}';
+        }, $reply);
+
         try {
-            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 2, [
+            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 3, [
                 'said' => mb_substr(trim((string) $clientSaid), 0, 600),
                 'language' => $language !== null
                     ? "They chose {$language} in the console: answer in {$language}, in its own script, even if they typed English. This overrides the rule about English below."
                     : 'Use the language and script they wrote in.',
-                'reply' => $reply,
+                'reply' => $masked,
             ], ['max_tokens' => 1200, ...($active !== null ? BrainStatus::gatewayOptions($active) : [])]);
         } catch (Throwable $e) {
             report($e);
@@ -57,6 +66,12 @@ final readonly class ReplyLocalizer
         }
 
         $out = trim($result->text);
+        foreach (array_keys($links) as $i) {
+            if (! str_contains($out, '{LINK'.($i + 1).'}')) {
+                return $reply;
+            }
+            $out = str_replace('{LINK'.($i + 1).'}', $links[$i], $out);
+        }
 
         return $this->keepsWhatMatters($reply, $out) ? $out : $reply;
     }

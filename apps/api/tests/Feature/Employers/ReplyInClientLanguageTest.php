@@ -45,7 +45,7 @@ final class RewritingAi implements AiClient
             }
             $this->rewrites++;
             preg_match("/## Taurus's reply \\(in English\\)\n\n(.*)\n\n## Rewrite it/s", $message->user, $m);
-            $text = $this->breakLinks ? (string) preg_replace('#https?://\S+#', '', $m[1]) : $m[1];
+            $text = $this->breakLinks ? (string) preg_replace('/\{LINK\d+\}/', '', $m[1]) : $m[1];
 
             return new AiResult(text: '[HI] '.$text, promptTokens: 10, completionTokens: 10, model: 'fake', stopReason: 'end_turn');
         }
