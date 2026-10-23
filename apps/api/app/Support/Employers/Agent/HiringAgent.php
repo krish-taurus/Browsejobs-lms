@@ -41,6 +41,7 @@ final readonly class HiringAgent
         private AskHiringFloor $ask,
         private WebJobPosting $posting,
         private InterviewReportLinks $reportLinks,
+        private JobUpdatePlanner $jobUpdates,
     ) {}
 
     public function respond(EmployerWorkspace $workspace, User $user, string $text, string $channel, ?EmployerJob $scope = null, ?EmployerWhatsappLink $link = null): AgentReply
@@ -69,7 +70,7 @@ final readonly class HiringAgent
         return match ($read['intent']) {
             'post_job' => new AgentReply('post_job', ''),
             'question' => $this->answer($workspace, $user, $text, $this->job($workspace, $read['job_id']) ?? $scope),
-            'act' => $this->act($workspace, $user, $read, $channel, $scope, $link),
+            'act' => $this->act($workspace, $user, $read, $channel, $scope, $link, $text),
             // Greetings and small talk are answered by Taurus with the floor in view, so "how are you?" gets a
             // real reply and one useful thing to look at, not a menu.
             default => $this->answer($workspace, $user, $text, $this->job($workspace, $read['job_id']) ?? $scope, $read['reply'] !== '' ? $read['reply'] : $this->help()),
@@ -128,7 +129,7 @@ final readonly class HiringAgent
     }
 
     /** @param  array{intent: string, action: string|null, job_id: int|null, round: string|null, names: list<string>, top_n: int|null, from_stage: string|null, to_stage: string|null, reason: string|null, reply: string}  $read */
-    private function act(EmployerWorkspace $workspace, User $user, array $read, string $channel, ?EmployerJob $scope, ?EmployerWhatsappLink $link): AgentReply
+    private function act(EmployerWorkspace $workspace, User $user, array $read, string $channel, ?EmployerJob $scope, ?EmployerWhatsappLink $link, string $text = ''): AgentReply
     {
         // Seeing a report changes nothing, so any member can ask for one and no YES is needed.
         if ($read['action'] === 'send_report') {
@@ -165,6 +166,7 @@ final readonly class HiringAgent
                 ? 'Where should they go: the panel round, an offer, or hired?'
                 : $this->planner->moveStage($job, EmployerApplicationStage::from($read['to_stage']), $read['names'], $from, $read['top_n']),
             'reject' => $this->planner->reject($job, $read['names'], $from, $read['top_n'], $read['reason']),
+            'update_job' => $this->jobUpdates->plan($job, $user, $text),
             'retake_round' => $this->planner->retakeByName($job, $read['round'], $read['names'], $from, $read['top_n']),
             'publish_job' => $this->planner->jobStatus($job, EmployerJobStatus::Published),
             'pause_job' => $this->planner->jobStatus($job, EmployerJobStatus::Paused),

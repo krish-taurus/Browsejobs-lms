@@ -254,8 +254,24 @@ final readonly class WhatsAppChoice
                 : "There is no finished interview report for *{$job->title}* yet. I send each report here the moment an interview is scored.";
         }
 
-        // One person to choose from, or one named in the request: do it, do not ask.
-        $only = $rows->count() === 1 ? $rows : $this->hinted($rows, (string) ($choice['hint'] ?? ''));
+        $hint = (string) ($choice['hint'] ?? '');
+
+        // Somebody named in the request who has nothing to send (no report yet, never invited): say so. Never
+        // send a different person's report in their place.
+        $absent = $this->namedWithoutRow($job, $rows, $hint);
+        if ($absent !== null) {
+            $link->update(['choice' => null]);
+
+            return $choice['type'] === 'retake'
+                ? "{$absent} has not been invited to ".strtoupper((string) $choice['round'])." for *{$job->title}* yet, so there is nothing to retake."
+                : "{$absent} does not have a finished interview report for *{$job->title}* yet. A report is made once the interview is taken and scored.";
+        }
+
+        // One person named in the request, or the only one there is and nobody else was named: do it, do not ask.
+        $only = $this->hinted($rows, $hint);
+        if ($only->isEmpty() && $rows->count() === 1 && ! $this->namesSomeone($hint)) {
+            $only = $rows;
+        }
         if ($only->isNotEmpty() && $link->user !== null) {
             return $this->finish($workspace, $link->user, $link, $job, $choice, $only->pluck('application_id')->all());
         }
@@ -315,6 +331,33 @@ final readonly class WhatsAppChoice
         $action = $this->planner->propose($plan, $workspace, $user, EmployerAgentAction::CHANNEL_WHATSAPP, $link->id);
 
         return $action->summary."\n\nReply *YES* to go ahead, or *NO* to hold.";
+    }
+
+    /** The name of a person on this role the request named who is not among the rows (no report, never invited). */
+    private function namedWithoutRow(EmployerJob $job, Collection $rows, string $hint): ?string
+    {
+        $everyone = EmployerJobApplication::query()->where('employer_job_id', $job->id)->with('candidate:id,name')->get()
+            ->map(fn (EmployerJobApplication $a): array => ['application_id' => (int) $a->id, 'name' => (string) ($a->candidate?->name ?? ''), 'status' => ''])
+            ->filter(fn (array $r): bool => $r['name'] !== '')
+            ->values();
+        $hit = $this->hinted($everyone, $hint);
+        if ($hit->isEmpty()) {
+            return null;
+        }
+
+        return $rows->contains('application_id', $hit->first()['application_id']) ? null : $hit->first()['name'];
+    }
+
+    /** Does the request carry a word that is not part of asking ("Harshvardhan"), so it may name somebody? */
+    private function namesSomeone(string $hint): bool
+    {
+        $ask = ['send', 'share', 'show', 'get', 'give', 'need', 'want', 'forward', 'resend', 'bhejo', 'bhej', 'bhejiye', 'dena', 'dijiye', 'chahiye', 'dikhao', 'dikhaiye',
+            'report', 'reports', 'recording', 'recordings', 'recorded', 'video', 'the', 'for', 'me', 'my', 'please', 'pls', 'plz', 'retake', 'redo', 'again', 'another',
+            'attempt', 'chance', 'try', 'one', 'more', 'interview', 'round', 'test', 'all', 'candidate', 'candidates', 'his', 'her', 'their', 'and', 'can', 'you', 'could',
+            'would', 'this', 'that', 'karo', 'hai', 'mujhe', 'aap', 'taurus', 'role', 'job', 'hello', 'hey', 'let', 'take', 'interviews'];
+        $words = preg_split('/[^\p{L}]+/u', mb_strtolower($hint), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return array_filter($words, fn (string $w): bool => mb_strlen($w) >= 3 && ! in_array($w, $ask, true)) !== [];
     }
 
     /**

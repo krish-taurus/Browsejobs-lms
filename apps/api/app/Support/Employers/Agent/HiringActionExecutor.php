@@ -11,8 +11,10 @@ use App\Actions\Employers\MoveApplicationStage;
 use App\Actions\Employers\PublishEmployerJob;
 use App\Actions\Employers\RetakeInterviewRound;
 use App\Actions\Employers\SendInterviewInvites;
+use App\Jobs\RevalidatePublicJobBoard;
 use App\Enums\EmployerApplicationStage;
 use App\Enums\EmployerJobStatus;
+use App\Http\Requests\Employers\UpdateJobRequest;
 use App\Models\EmployerAgentAction;
 use App\Models\EmployerJob;
 use App\Models\EmployerJobApplication;
@@ -21,6 +23,8 @@ use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -170,10 +174,32 @@ final readonly class HiringActionExecutor
                 EmployerAgentAction::KIND_MOVE_STAGE => $this->moveAll($job, $actor, EmployerApplicationStage::from((string) $p['stage']), array_map('intval', (array) $p['application_ids']), null),
                 EmployerAgentAction::KIND_REJECT => $this->moveAll($job, $actor, EmployerApplicationStage::Rejected, array_map('intval', (array) $p['application_ids']), (string) $p['reason']),
                 EmployerAgentAction::KIND_JOB_STATUS => $this->jobStatus($job, $actor, EmployerJobStatus::from((string) $p['status'])),
+                EmployerAgentAction::KIND_UPDATE_JOB => $this->updateJob($job, $actor, (array) ($p['changes'] ?? [])),
                 EmployerAgentAction::KIND_RETAKE_ROUND => $this->retake($job, $actor, (string) $p['round'], array_map('intval', (array) ($p['application_ids'] ?? []))),
                 default => throw ValidationException::withMessages(['action' => 'I do not know how to do that.']),
             };
         });
+    }
+
+    /**
+     * Save the approved changes with the same rules the job form uses.
+     *
+     * @param  array<string, mixed>  $changes
+     */
+    private function updateJob(EmployerJob $job, User $actor, array $changes): string
+    {
+        $allowed = ['experience_min_years', 'experience_max_years', 'openings', 'locations', 'remote', 'skills', 'description'];
+        $rules = Arr::only((new UpdateJobRequest)->rules(), [...$allowed, 'skills.*', 'locations.*']);
+        $data = Validator::make(Arr::only($changes, $allowed), $rules)->validate();
+
+        $job->update($data);
+        $this->audit->log('employer.job_updated_from_chat', $job, ['fields' => array_keys($data)], $actor);
+        if ($job->status === EmployerJobStatus::Published) {
+            RevalidatePublicJobBoard::dispatch($job->id);
+        }
+
+        return "✅ Updated *{$job->title}*: ".implode(', ', array_map(fn (string $f): string => str_replace('_', ' ', $f), array_keys($data)))
+            .'. It stays live with the new details.';
     }
 
     /** @param  list<int>  $entryIds */

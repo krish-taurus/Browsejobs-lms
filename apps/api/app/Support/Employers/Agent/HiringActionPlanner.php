@@ -321,7 +321,7 @@ final readonly class HiringActionPlanner
         $summary = match ($to) {
             EmployerJobStatus::Published => "Publish *{$job->title}*. It goes live on the job board and the shortlist agent starts looking.",
             EmployerJobStatus::Paused => "Pause *{$job->title}*. It leaves the job board; candidates already in the pipeline stay.",
-            EmployerJobStatus::Closed => "Close *{$job->title}*. It leaves the job board for good; this cannot be undone.",
+            EmployerJobStatus::Closed => "Close *{$job->title}* (this is how a role is taken down). It leaves the job board and stops taking applications; the candidates and their reports stay on record. This cannot be undone.",
             default => "Change *{$job->title}* to {$to->value}.",
         };
 

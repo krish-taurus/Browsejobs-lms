@@ -62,6 +62,9 @@ final class EmployerAgentAction extends Model
     /** A new role drafted in the web Ask bar, waiting for the client to approve it. No job exists until it is confirmed. */
     public const KIND_POST_JOB = 'post_job';
 
+    /** Changes to a role that is already posted (experience, openings, location, skills, description). */
+    public const KIND_UPDATE_JOB = 'update_job';
+
     public const CHANNEL_WHATSAPP = 'whatsapp';
 
     public const CHANNEL_WEB = 'web';

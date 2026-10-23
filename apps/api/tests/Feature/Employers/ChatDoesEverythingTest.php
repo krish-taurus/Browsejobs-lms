@@ -203,3 +203,61 @@ it('answers a pipeline question and small talk while a job draft waits, without 
         ->and($this->link->fresh()->draft)->toEqual($before)
         ->and($this->link->fresh()->state)->toBe('confirming');
 });
+
+it('never sends another person\'s report when the one asked for has none', function (): void {
+    $other = User::factory()->for($this->tenant)->create(['user_type' => 'student', 'name' => 'Harshvardhan Bhardwaj', 'phone' => '+919845077777']);
+    EmployerJobApplication::factory()->for($this->tenant)->create([
+        'employer_job_id' => $this->job->id, 'candidate_id' => $other->id, 'stage' => EmployerApplicationStage::Graded->value, 'mock_score' => 62,
+    ]);
+
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'I want Harshvardhan report', '--id' => 'wamid.h1']);
+    $last = collect($this->wa->sent)->where('to', '919800000001')->last()['body'];
+    expect($last)->toContain('Harshvardhan Bhardwaj does not have a finished interview report')
+        ->and($this->wa->documents)->toBeEmpty()
+        ->and($this->link->fresh()->choice)->toBeNull();
+
+    // Somebody nobody has heard of: ask, do not send Kunal's just because he is the only report.
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'I want Zoya report', '--id' => 'wamid.h2']);
+    expect(collect($this->wa->sent)->where('to', '919800000001')->last()['body'])->toContain('Whose report do you want?')
+        ->and($this->wa->documents)->toBeEmpty();
+
+    // And with nobody named, the only report is sent.
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'CANCEL', '--id' => 'wamid.h3']);
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'send the report', '--id' => 'wamid.h4']);
+    expect(collect($this->wa->sent)->where('to', '919800000001')->last()['body'])->toContain('Sent the report and the recording link for Kunal Shah');
+});
+
+it('changes a role that is already live from the chat, after a go-ahead', function (): void {
+    Sanctum::actingAs($this->owner);
+    $this->job->update(['experience_min_years' => 2, 'experience_max_years' => 4, 'openings' => 1, 'skills' => ['SQL', 'Python'], 'description' => 'Build pipelines.']);
+    $this->ai->replies = [
+        chatRead(['action' => 'update_job']),
+        json_encode(['title' => '', 'experience_min_years' => 4, 'experience_max_years' => 7, 'locations' => [], 'openings' => 3, 'remote' => false]),
+        json_encode(['description' => 'Build pipelines with Kafka.', 'skills' => ['SQL', 'Python', 'Kafka'], 'summary' => 'Added Kafka.']),
+    ];
+
+    $reply = $this->postJson($this->url, ['text' => 'make it 4 to 7 years, 3 openings and add kafka'])->assertOk()->json('data');
+
+    expect($reply['intent'])->toBe('proposed')
+        ->and($reply['action']['kind'])->toBe('update_job')
+        ->and($reply['reply'])->toContain('minimum experience 4')->toContain('openings 3')->toContain('+kafka')
+        ->and($this->job->fresh()->openings)->toBe(1); // nothing changes before the go-ahead
+
+    $this->postJson("/api/v1/employer/workspaces/{$this->workspace->id}/agent/actions/{$reply['action']['id']}/confirm")->assertOk()->assertJsonPath('data.intent', 'done');
+
+    $job = $this->job->fresh();
+    expect($job->experience_min_years)->toBe(4)->and($job->experience_max_years)->toBe(7)->and($job->openings)->toBe(3)
+        ->and(array_map('strtolower', (array) $job->skills))->toContain('kafka')
+        ->and($job->status->value)->toBe('published');
+});
+
+it('says what taking a role down really does', function (): void {
+    Sanctum::actingAs($this->owner);
+    $this->ai->replies = [chatRead(['action' => 'close_job'])];
+
+    $reply = $this->postJson($this->url, ['text' => 'delete the data engineer role'])->assertOk()->json('data');
+
+    expect($reply['intent'])->toBe('proposed')
+        ->and($reply['reply'])->toContain('this is how a role is taken down')->toContain('stay on record')
+        ->and($this->job->fresh()->status->value)->toBe('published');
+});
