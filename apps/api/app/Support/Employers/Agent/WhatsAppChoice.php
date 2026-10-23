@@ -269,7 +269,7 @@ final readonly class WhatsAppChoice
 
         // One person named in the request, or the only one there is and nobody else was named: do it, do not ask.
         $only = $this->hinted($rows, $hint);
-        if ($only->isEmpty() && $rows->count() === 1 && ! $this->namesSomeone($hint)) {
+        if ($only->isEmpty() && $rows->count() === 1 && ! self::namesSomeone($hint)) {
             $only = $rows;
         }
         if ($only->isNotEmpty() && $link->user !== null) {
@@ -349,7 +349,7 @@ final readonly class WhatsAppChoice
     }
 
     /** Does the request carry a word that is not part of asking ("Harshvardhan"), so it may name somebody? */
-    private function namesSomeone(string $hint): bool
+    public static function namesSomeone(string $hint): bool
     {
         $ask = ['send', 'share', 'show', 'get', 'give', 'need', 'want', 'forward', 'resend', 'bhejo', 'bhej', 'bhejiye', 'dena', 'dijiye', 'chahiye', 'dikhao', 'dikhaiye',
             'report', 'reports', 'recording', 'recordings', 'recorded', 'video', 'the', 'for', 'me', 'my', 'please', 'pls', 'plz', 'retake', 'redo', 'again', 'another',

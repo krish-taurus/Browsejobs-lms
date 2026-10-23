@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Support\Employers\Agent;
 
 use App\Enums\AiPurpose;
+use App\Models\EmployerJob;
+use App\Models\EmployerJobApplication;
+use App\Models\EmployerWorkspace;
 use App\Models\User;
 use App\Services\AI\AiGateway;
 use App\Support\Taurus\BrainStatus;
@@ -33,10 +36,11 @@ final readonly class ReplyLocalizer
     private const PICKED = ['hi' => 'Hindi', 'kn' => 'Kannada'];
 
     /** @param  string|null  $picked  'hi' or 'kn' when the recruiter chose that language in the console, whatever they typed */
-    public function localize(?User $user, ?string $clientSaid, string $reply, ?string $picked = null): string
+    public function localize(?User $user, ?string $clientSaid, string $reply, ?string $picked = null, ?EmployerWorkspace $workspace = null): string
     {
         $language = self::PICKED[(string) $picked] ?? null;
-        if ($user === null || trim($reply) === '' || ($language === null && ($clientSaid === null || ! ClientLanguage::needsLocalizing($clientSaid)))) {
+        $written = $clientSaid !== null ? ClientLanguage::describe($clientSaid) : null;
+        if ($user === null || trim($reply) === '' || ($language === null && $written === null)) {
             return $reply;
         }
 
@@ -51,13 +55,16 @@ final readonly class ReplyLocalizer
             return '{LINK'.count($links).'}';
         }, $reply);
 
+        // The same for people and roles: a name must come back exactly as it went in.
+        $names = $this->knownNames($workspace);
+        $masked = $this->mask($masked, $names);
+
         try {
-            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 3, [
-                'said' => mb_substr(trim((string) $clientSaid), 0, 600),
+            $result = $this->ai->complete($user, AiPurpose::Taurus, 'taurus_localize', 4, [
                 'language' => $language !== null
-                    ? "They chose {$language} in the console: answer in {$language}, in its own script, even if they typed English. This overrides the rule about English below."
-                    : 'Use the language and script they wrote in.',
-                'reply' => $masked,
+                    ? "They chose {$language} in the console: write the reply in {$language}, in its own script, even if the reply below is in English."
+                    : "The recruiter writes in: {$written}. Write the reply in that language and script.",
+                'reply' => $masked['text'],
             ], ['max_tokens' => 1200, ...($active !== null ? BrainStatus::gatewayOptions($active) : [])]);
         } catch (Throwable $e) {
             report($e);
@@ -66,6 +73,12 @@ final readonly class ReplyLocalizer
         }
 
         $out = trim($result->text);
+        foreach ($masked['map'] as $token => $original) {
+            if (! str_contains($out, $token)) {
+                return $reply;
+            }
+            $out = str_replace($token, $original, $out);
+        }
         foreach (array_keys($links) as $i) {
             if (! str_contains($out, '{LINK'.($i + 1).'}')) {
                 return $reply;
@@ -74,6 +87,57 @@ final readonly class ReplyLocalizer
         }
 
         return $this->keepsWhatMatters($reply, $out) ? $out : $reply;
+    }
+
+    /**
+     * Role titles, then the words of candidate names, each swapped for {N1}, {N2}… so the model cannot change
+     * or swap them. Longest first, so "Data Engineer" goes before "Data".
+     *
+     * @return list<string>
+     */
+    private function knownNames(?EmployerWorkspace $workspace): array
+    {
+        if ($workspace === null) {
+            return [];
+        }
+
+        try {
+            $titles = EmployerJob::query()->where('employer_workspace_id', $workspace->id)->pluck('title')->all();
+            $people = EmployerJobApplication::query()
+                ->whereIn('employer_job_id', EmployerJob::query()->select('id')->where('employer_workspace_id', $workspace->id))
+                ->with('candidate:id,name')->limit(300)->get()
+                ->flatMap(fn (EmployerJobApplication $a): array => preg_split('/[^\p{L}]+/u', (string) ($a->candidate?->name ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [])
+                ->filter(fn (string $w): bool => mb_strlen($w) >= 3)
+                ->all();
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
+
+        $all = array_values(array_unique(array_filter([...$titles, (string) $workspace->name, ...$people], fn ($n): bool => is_string($n) && mb_strlen(trim($n)) >= 3)));
+        usort($all, fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+
+        return $all;
+    }
+
+    /**
+     * @param  list<string>  $names
+     * @return array{text: string, map: array<string, string>}
+     */
+    private function mask(string $text, array $names): array
+    {
+        $map = [];
+        foreach ($names as $name) {
+            $text = (string) preg_replace_callback('/(?<![\p{L}\p{N}])'.preg_quote($name, '/').'(?![\p{L}\p{N}])/iu', function (array $m) use (&$map): string {
+                $token = '{N'.(count($map) + 1).'}';
+                $map[$token] = $m[0];
+
+                return $token;
+            }, $text);
+        }
+
+        return ['text' => $text, 'map' => $map];
     }
 
     /** Links, role numbers and the typed commands must survive the rewrite. */

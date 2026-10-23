@@ -109,7 +109,7 @@ it('says so when there is no report for the person asked about', function (): vo
     $this->ai->replies = [chatRead(['action' => 'send_report', 'names' => ['Priya']])];
 
     expect($this->postJson($this->url, ['text' => 'Priya report'])->json('data.reply'))
-        ->toContain('could not find a report for "Priya"')->toContain('Kunal Shah');
+        ->toContain('could not find anyone called "Priya"')->toContain('Kunal Shah');
 });
 
 it('lets someone retake a round from the web chat, as a proposal to approve', function (): void {
@@ -260,4 +260,47 @@ it('says what taking a role down really does', function (): void {
     expect($reply['intent'])->toBe('proposed')
         ->and($reply['reply'])->toContain('this is how a role is taken down')->toContain('stay on record')
         ->and($this->job->fresh()->status->value)->toBe('published');
+});
+
+it('finds a person on whichever role they are on, and says so when they have no report', function (): void {
+    Sanctum::actingAs($this->owner);
+    $java = EmployerJob::factory()->for($this->tenant)->published()->create([
+        'employer_workspace_id' => $this->workspace->id, 'created_by_id' => $this->owner->id, 'title' => 'Java Developer',
+    ]);
+    $harsh = User::factory()->for($this->tenant)->create(['user_type' => 'student', 'name' => 'Harshvardhan Bhardwaj', 'phone' => '+919845077777']);
+    EmployerJobApplication::factory()->for($this->tenant)->create([
+        'employer_job_id' => $java->id, 'candidate_id' => $harsh->id, 'stage' => EmployerApplicationStage::Graded->value, 'mock_score' => 62,
+    ]);
+
+    // No role named: Harshvardhan is on the Java role, has no report, and Kunal's is not given in his place.
+    $this->ai->replies = [chatRead(['action' => 'send_report', 'names' => ['Harshvardhan']])];
+    $none = $this->postJson($this->url, ['text' => 'Harshvardhan report'])->assertOk()->json('data.reply');
+    expect($none)->toContain('Harshvardhan Bhardwaj (Java Developer) does not have a finished interview report yet')->not->toContain('Report: ');
+
+    // Kunal asked for with the wrong role in view: still found, because he is looked for on every role.
+    $this->ai->replies = [chatRead(['action' => 'send_report', 'names' => ['Kunal'], 'job' => $java->id])];
+    expect($this->postJson($this->url, ['text' => 'Kunal report'])->json('data.reply'))->toContain('Kunal Shah: L1 28/100.')->toContain('Report: ');
+});
+
+it('sends the report into the WhatsApp chat when it is asked for by name, in any script', function (): void {
+    Storage::disk('s3')->put('interview-reports/kunal.pdf', 'pdf');
+    $this->ai->replies = [chatRead(['action' => 'send_report', 'names' => ['Kunal']])];
+
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => 'I want कुणाल report', '--id' => 'wamid.r1']);
+
+    expect(collect($this->wa->sent)->where('to', '919800000001')->pluck('body')->implode("\n"))->toContain('Sent the report and the recording link for Kunal Shah.')
+        ->and($this->wa->documents)->toHaveCount(1);
+});
+
+it('does not answer a stray name with a question about the role', function (): void {
+    $this->ai->replies = [
+        json_encode(['title' => '', 'experience_min_years' => null, 'experience_max_years' => null, 'locations' => [], 'openings' => null, 'remote' => false]),
+        chatRead(['intent' => 'question']),
+        'Kunal is the only candidate on the Data Engineer role.',
+    ];
+
+    Artisan::call('employer:whatsapp-inbound', ['from' => '919800000001', '--text' => '1 kunal', '--id' => 'wamid.s1']);
+
+    $last = collect($this->wa->sent)->where('to', '919800000001')->last()['body'];
+    expect($last)->toContain('Kunal is the only candidate')->and($last)->not->toContain('Which role are you hiring for');
 });

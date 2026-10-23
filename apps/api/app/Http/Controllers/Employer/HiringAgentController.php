@@ -52,7 +52,7 @@ final class HiringAgentController extends Controller
         $reply = $agent->respond($workspace, $request->user(), (string) $data['text'], EmployerAgentAction::CHANNEL_WEB, $job);
 
         // Answer in the language the recruiter used (Hindi, Kannada, English).
-        $reply = new AgentReply($reply->intent, $localizer->localize($request->user(), (string) $data['text'], $reply->text, $data['lang'] ?? null), $reply->action);
+        $reply = new AgentReply($reply->intent, $localizer->localize($request->user(), (string) $data['text'], $reply->text, $data['lang'] ?? null, $workspace), $reply->action);
 
         return response()->json(['data' => $reply->toApi()]);
     }

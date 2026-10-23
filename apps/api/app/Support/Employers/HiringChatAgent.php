@@ -165,6 +165,16 @@ final readonly class HiringChatAgent
         // "Retake L1", "send Kunal's report": ask which role, then which candidates. This comes before a
         // waiting job draft, which would otherwise read it as an edit to the draft.
         if (($request = WhatsAppChoice::detect($text)) !== null && $this->canPost($workspace, $user)) {
+            // "I want Harshvardhan report": the person is found on whichever role they are on, not asked for role by role.
+            if ($request['type'] === 'report' && WhatsAppChoice::namesSomeone($text)) {
+                $found = $this->agent->respond($workspace, $user, $text, EmployerAgentAction::CHANNEL_WHATSAPP, null, $link);
+                if ($found->intent === 'answered') {
+                    $this->reply($in->phone, $link, $found->text);
+
+                    return;
+                }
+            }
+
             $reply = $this->choices->start($workspace, $link, $request, $text);
             $draftWaiting = $link->state === EmployerWhatsappLink::STATE_CONFIRMING && is_array($link->draft);
             $this->reply($in->phone, $link, $reply.($draftWaiting ? "\n\n(Your new job draft is still waiting. Reply *YES* to post it or *CANCEL* to discard it when we are done.)" : ''));
@@ -311,6 +321,15 @@ final readonly class HiringChatAgent
         }
 
         if ($intent['title'] === '') {
+            // Not a role. It may still be a question, a name or a request for something Taurus can do.
+            if (! self::looksLikePipelineTalk($text)) {
+                $answer = $this->agent->respond($workspace, $user, $text, EmployerAgentAction::CHANNEL_WHATSAPP, null, $link);
+                if (! in_array($answer->intent, ['post_job', 'unknown'], true) && $answer->text !== '') {
+                    $this->reply($phone, $link, $answer->text);
+
+                    return;
+                }
+            }
             $this->reply($phone, $link, "Which role are you hiring for?\n\n".$this->example());
 
             return;
@@ -528,7 +547,7 @@ final readonly class HiringChatAgent
      */
     public static function looksLikePipelineTalk(string $text): bool
     {
-        return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|pipeline|cleared|passed|panel|how many|where are we|who|bhejo|bhejiye|kitne|kaun|kaunsa|kya|batao|dikhao|shuru|kalisi|torisi|yeshtu|yaaru)\b/iu', $text) === 1
+        return preg_match('/\?\s*$|\b(l\s?[1-9]|round|rounds|interviews?|invites?|invitations?|send|start|proceed|go ahead|move|advance|shortlisted|reject|offers?|hired?|pause|close|publish|candidates?|reports?|recordings?|pipeline|cleared|passed|panel|how many|where are we|who|bhejo|bhejiye|kitne|kaun|kaunsa|kya|batao|dikhao|shuru|kalisi|torisi|yeshtu|yaaru)\b/iu', $text) === 1
             || preg_match('/(?<![\p{L}\p{M}])(इंटरव्यू|राउंड|रिपोर्ट|उम्मीदवार|शॉर्टलिस्ट|भेजो|भेजिए|कितने|कौन|बताओ|दिखाओ|शुरू|ऑफर|ಇಂಟರ್ವ್ಯೂ|ರೌಂಡ್|ರಿಪೋರ್ಟ್|ಅಭ್ಯರ್ಥಿ|ಕಳುಹಿಸಿ|ಎಷ್ಟು|ಯಾರು|ತೋರಿಸಿ|ಶುರು)/u', $text) === 1;
     }
 
@@ -557,7 +576,7 @@ final readonly class HiringChatAgent
 
     private function reply(string $phone, ?EmployerWhatsappLink $link, string $body): void
     {
-        $body = $this->localizer->localize($link?->user, $this->said->text(), $body);
+        $body = $this->localizer->localize($link?->user, $this->said->text(), $body, null, $link?->workspace);
 
         $message = EmployerWhatsappMessage::query()->create([
             'tenant_id' => $link->tenant_id ?? app(TenantContext::class)->id(),

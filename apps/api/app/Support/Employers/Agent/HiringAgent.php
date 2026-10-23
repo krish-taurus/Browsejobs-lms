@@ -14,6 +14,7 @@ use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWorkspace;
 use App\Models\User;
 use App\Support\Employers\HiringChatAgent;
+use App\Support\Employers\InterviewReportDelivery;
 use App\Services\AI\AiBudgetExceeded;
 use App\Support\AI\ProviderNotConfigured;
 use Illuminate\Validation\ValidationException;
@@ -42,6 +43,7 @@ final readonly class HiringAgent
         private WebJobPosting $posting,
         private InterviewReportLinks $reportLinks,
         private JobUpdatePlanner $jobUpdates,
+        private InterviewReportDelivery $delivery,
     ) {}
 
     public function respond(EmployerWorkspace $workspace, User $user, string $text, string $channel, ?EmployerJob $scope = null, ?EmployerWhatsappLink $link = null): AgentReply
@@ -133,11 +135,27 @@ final readonly class HiringAgent
     {
         // Seeing a report changes nothing, so any member can ask for one and no YES is needed.
         if ($read['action'] === 'send_report') {
-            $job = $this->job($workspace, $read['job_id']) ?? $scope ?? $this->onlyLiveJob($workspace) ?? $this->latestLiveJob($workspace, $link);
+            // A named person is looked for on every role; with nobody named, the role in view or the only live one.
+            $job = $this->job($workspace, $read['job_id']) ?? $scope;
+            if ($job === null && $read['names'] === []) {
+                $job = $this->onlyLiveJob($workspace) ?? $this->latestLiveJob($workspace, $link);
+            }
 
-            return $job === null
-                ? new AgentReply('chat', $this->whichRole($workspace))
-                : new AgentReply('answered', $this->reportLinks->reply($job, $read['names'], $read['round'], $read['top_n']));
+            $found = $this->reportLinks->find($workspace, $job, $read['names'], $read['round'], $read['top_n']);
+            if (is_string($found)) {
+                return new AgentReply('answered', $found);
+            }
+
+            // On WhatsApp the report itself is sent into the chat; on the web it comes as links.
+            if ($channel === EmployerAgentAction::CHANNEL_WHATSAPP && $link !== null) {
+                foreach ($found as $report) {
+                    $this->delivery->resend($report, $link);
+                }
+
+                return new AgentReply('answered', '📄 Sent the report and the recording link for '.$found->map(fn ($r): string => $this->reportLinks->nameOf($r))->unique()->implode(', ').'.');
+            }
+
+            return new AgentReply('answered', $this->reportLinks->reply($workspace, $job, $read['names'], $read['round'], $read['top_n']));
         }
 
         if (! HiringActionExecutor::canAct($workspace, $user)) {

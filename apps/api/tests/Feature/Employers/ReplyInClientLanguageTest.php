@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\EmployerJob;
+use App\Models\EmployerJobApplication;
 use App\Models\EmployerMember;
 use App\Models\EmployerWhatsappLink;
 use App\Models\EmployerWorkspace;
@@ -37,15 +38,21 @@ final class RewritingAi implements AiClient
 
     public bool $fail = false;
 
+    public bool $dropNames = false;
+
+    public string $lastPrompt = '';
+
     public function complete(AiMessage $message): AiResult
     {
         if (str_contains($message->user, 'You rewrite one message from Taurus')) {
+            $this->lastPrompt = $message->user;
             if ($this->fail) {
                 throw new RuntimeException('model is down');
             }
             $this->rewrites++;
             preg_match("/## Taurus's reply \\(in English\\)\n\n(.*)\n\n## Rewrite it/s", $message->user, $m);
             $text = $this->breakLinks ? (string) preg_replace('/\{LINK\d+\}/', '', $m[1]) : $m[1];
+            $text = $this->dropNames ? (string) preg_replace('/\{N\d+\}/', 'someone', $text) : $text;
 
             return new AiResult(text: '[HI] '.$text, promptTokens: 10, completionTokens: 10, model: 'fake', stopReason: 'end_turn');
         }
@@ -199,4 +206,26 @@ it('answers in the language picked in the console even when the words typed are 
     $url = "/api/v1/employer/workspaces/{$this->workspace->id}/agent/command";
     expect($this->postJson($url, ['text' => 'Where are we in hiring?', 'lang' => 'hi'])->assertOk()->json('data.reply'))->toStartWith('[HI] ');
     $this->postJson($url, ['text' => 'hello', 'lang' => 'de'])->assertStatus(422);
+});
+
+it('keeps people and roles as they are, and never shows the model the recruiter\'s own words', function (): void {
+    $kunal = User::factory()->for($this->tenant)->create(['user_type' => 'student', 'name' => 'Kunal Shah']);
+    EmployerJobApplication::factory()->for($this->tenant)->create(['employer_job_id' => $this->job->id, 'candidate_id' => $kunal->id]);
+    $localizer = app(ReplyLocalizer::class);
+    $reply = 'Sent the report for Kunal Shah on '.$this->job->title.'.';
+
+    $out = $localizer->localize($this->recruiter, 'मुझे हर्षवर्धन की रिपोर्ट चाहिए', $reply, null, $this->workspace);
+
+    expect($out)->toBe('[HI] '.$reply)
+        ->and($this->ai->lastPrompt)->not->toContain('हर्षवर्धन')->not->toContain('Kunal')->not->toContain($this->job->title)
+        ->and($this->ai->lastPrompt)->toContain('{N1}')->toContain('Hindi, written in Devanagari script');
+});
+
+it('falls back to English when the rewrite loses a name marker', function (): void {
+    $kunal = User::factory()->for($this->tenant)->create(['user_type' => 'student', 'name' => 'Kunal Shah']);
+    EmployerJobApplication::factory()->for($this->tenant)->create(['employer_job_id' => $this->job->id, 'candidate_id' => $kunal->id]);
+    $this->ai->dropNames = true;
+    $reply = 'Sent the report for Kunal Shah.';
+
+    expect(app(ReplyLocalizer::class)->localize($this->recruiter, 'रिपोर्ट भेजो', $reply, null, $this->workspace))->toBe($reply);
 });

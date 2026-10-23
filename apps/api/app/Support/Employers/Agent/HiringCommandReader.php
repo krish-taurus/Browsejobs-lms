@@ -59,7 +59,7 @@ final readonly class HiringCommandReader
         $active = $this->brain->active();
 
         try {
-            $result = $this->ai->complete($user, AiPurpose::Taurus, 'hiring_command', 4, [
+            $result = $this->ai->complete($user, AiPurpose::Taurus, 'hiring_command', 5, [
                 'jobs' => $this->describe($jobs),
                 'scope' => $scope !== null ? "They are looking at the role with id {$scope->id} ({$scope->title}); a request that names no role means this one." : '',
                 'said' => mb_substr($said, 0, 1200),

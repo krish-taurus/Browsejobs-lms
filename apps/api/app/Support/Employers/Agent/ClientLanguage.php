@@ -30,6 +30,44 @@ final class ClientLanguage
         'mattomme', 'yenu', 'nimma', 'namma', 'banni', 'swalpa', 'agali', 'ide', 'idhe', 'torisi', 'kodi',
     ];
 
+    /** Kannada words in English letters (a subset of ROMAN_MARKERS, to tell Kannada from Hindi). */
+    private const KANNADA_ROMAN = [
+        'illa', 'houdu', 'haudu', 'nanage', 'beku', 'beda', 'maadi', 'madi', 'kalisi', 'helu', 'heli', 'yaaru', 'yeshtu', 'eega', 'matte',
+        'mattomme', 'yenu', 'nimma', 'namma', 'banni', 'swalpa', 'agali', 'torisi', 'kodi',
+    ];
+
+    /** Script ranges and what to call the language written in them. */
+    private const SCRIPTS = [
+        ['/[\x{0900}-\x{097F}]/u', 'Hindi, written in Devanagari script'],
+        ['/[\x{0C80}-\x{0CFF}]/u', 'Kannada, written in Kannada script'],
+        ['/[\x{0B80}-\x{0BFF}]/u', 'Tamil, written in Tamil script'],
+        ['/[\x{0C00}-\x{0C7F}]/u', 'Telugu, written in Telugu script'],
+        ['/[\x{0D00}-\x{0D7F}]/u', 'Malayalam, written in Malayalam script'],
+        ['/[\x{0980}-\x{09FF}]/u', 'Bengali, written in Bengali script'],
+        ['/[\x{0A80}-\x{0AFF}]/u', 'Gujarati, written in Gujarati script'],
+        ['/[\x{0A00}-\x{0A7F}]/u', 'Punjabi, written in Gurmukhi script'],
+    ];
+
+    /**
+     * What the client wrote in, named for the translator, so the model never needs to see their words (it
+     * once copied a name from the message into the reply). Null when it is English.
+     */
+    public static function describe(string $text): ?string
+    {
+        foreach (self::SCRIPTS as [$pattern, $name]) {
+            if (preg_match($pattern, $text) === 1) {
+                return $name;
+            }
+        }
+
+        $words = preg_split('/[^a-z]+/', mb_strtolower($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (array_intersect($words, self::KANNADA_ROMAN) !== []) {
+            return 'Kannada, written in English letters';
+        }
+
+        return array_intersect($words, self::ROMAN_MARKERS) !== [] ? 'Hindi, written in English letters (Hinglish)' : null;
+    }
+
     public static function needsLocalizing(string $text): bool
     {
         $text = trim($text);
